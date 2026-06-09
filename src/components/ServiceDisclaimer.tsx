@@ -82,9 +82,6 @@ export function ContentRiskNotice() {
   return (
     <aside className="content-risk-notice" role="note" aria-label={t.legal.contentNoticeLabel}>
       <p className="content-risk-notice__text">{t.footer.disclaimer}</p>
-      <p className="content-risk-notice__highlight">
-        <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
-      </p>
     </aside>
   )
 }

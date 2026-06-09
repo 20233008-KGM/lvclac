@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { calculateEvaluate, calculateOrder } from '../calc/leverage'
 import type { CalculatorInputs, EvaluateResult, OrderResult, PositionSide } from '../types'
 import { useLanguage } from '../i18n'
+import { LegalEmphasis } from './ServiceDisclaimer'
 import {
   formatLeverageValue,
   formatNumber,
@@ -259,13 +260,18 @@ export function ResultPanel({ inputs }: ResultPanelProps) {
   )
 
   return (
-    <section className="panel result-panel">
-      <h2>{t.result}</h2>
-      {mode === 'evaluate' && evaluateResult ? (
-        <EvaluateResults result={evaluateResult} positionSide={positionSide} />
-      ) : orderResult ? (
-        <OrderResults result={orderResult} positionSide={positionSide} />
-      ) : null}
-    </section>
+    <div className="result-column">
+      <section className="panel result-panel">
+        <h2>{t.result}</h2>
+        {mode === 'evaluate' && evaluateResult ? (
+          <EvaluateResults result={evaluateResult} positionSide={positionSide} />
+        ) : orderResult ? (
+          <OrderResults result={orderResult} positionSide={positionSide} />
+        ) : null}
+      </section>
+      <p className="result-panel__warning" role="note">
+        <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
+      </p>
+    </div>
   )
 }

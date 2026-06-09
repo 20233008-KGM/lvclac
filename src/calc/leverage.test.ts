@@ -163,7 +163,7 @@ describe('calculateEvaluate', () => {
     expect(result.toleranceRate).toBeCloseTo(1995, 0)
     expect(result.margins?.maintenanceMargin).toBeCloseTo(25_000, 5)
     expect(result.margins?.entrustedMargin).toBeCloseTo(50_000, 5)
-    expect(result.margins?.availableMargin).toBeCloseTo(25_000, 5)
+    expect(result.margins?.availableMargin).toBeCloseTo(9_950_000, 5)
     expect(result.margins?.perContractEntrusted).toBeCloseTo(25_000, 5)
     expect(result.margins?.perContractMaintenance).toBeCloseTo(12_500, 5)
     expect(result.margins?.contractNotional).toBeCloseTo(500_000, 5)

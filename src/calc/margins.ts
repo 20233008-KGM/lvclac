@@ -157,7 +157,7 @@ export function calcMargins(
       maintenanceMarginSource,
       entrustedMargin,
       entrustedMarginSource,
-      availableMargin: entrustedMargin - maintenanceMargin,
+      availableMargin: (inputs.accountEval ?? 0) - entrustedMargin,
       perContractMaintenance,
       perContractEntrusted,
     },

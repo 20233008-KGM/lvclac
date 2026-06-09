@@ -28,7 +28,7 @@ export interface MarginAmounts {
   maintenanceMarginSource: MaintenanceMarginSource
   entrustedMargin: number
   entrustedMarginSource: EntrustedMarginSource
-  /** 위탁증거금 − 유지증거금 */
+  /** 계좌 평가금액 − 위탁증거금 */
   availableMargin: number
   perContractEntrusted: number
   perContractMaintenance: number

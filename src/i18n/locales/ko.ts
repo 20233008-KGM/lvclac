@@ -102,7 +102,7 @@ export const ko: Messages = {
     contractNotional: '약정가치',
     entrustedMargin: '위탁증거금 (개시)',
     availableMargin: '가용증거금',
-    availableMarginSub: '위탁증거금 − 유지증거금',
+    availableMarginSub: '계좌 평가금액 − 위탁증거금',
     perContractEntrusted: '1계약당 위탁증거금',
     perContractMaintenance: '1계약당 유지증거금',
     toleranceLong: '청산 여유(%)',

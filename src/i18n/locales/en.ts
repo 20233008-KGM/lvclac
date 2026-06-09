@@ -102,7 +102,7 @@ export const en: Messages = {
     contractNotional: 'Notional value',
     entrustedMargin: 'Initial margin',
     availableMargin: 'Excess margin',
-    availableMarginSub: 'Initial margin − maintenance margin',
+    availableMarginSub: 'Account equity − initial margin',
     perContractEntrusted: 'Initial margin / contract',
     perContractMaintenance: 'Maintenance margin / contract',
     toleranceLong: 'Cushion (downside %)',

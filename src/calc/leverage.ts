@@ -60,13 +60,13 @@ export function calcToleranceDelta(
     : liquidationPrice - currentPrice
 }
 
-/** 레버리지 = 약정가치 ÷ 위탁증거금 */
+/** 레버리지 = 약정가치 ÷ 계좌 평가금액 */
 export function calcLeverageRatio(
   contractNotional: number,
-  entrustedMargin: number,
+  accountEval: number,
 ): number | null {
-  if (contractNotional <= 0 || entrustedMargin <= 0) return null
-  const ratio = contractNotional / entrustedMargin
+  if (contractNotional <= 0 || accountEval <= 0) return null
+  const ratio = contractNotional / accountEval
   return Number.isFinite(ratio) ? ratio : null
 }
 
@@ -120,6 +120,10 @@ function calcAfterOrderLiquidation(
 
   const heldContracts = inputs.contracts ?? 0
   const newContracts = heldContracts > 0 ? heldContracts + orderContracts : orderContracts
+
+  if (newContracts < 0) {
+    return { price: null, afterMargins: null, message: 'order_exceeds_position' }
+  }
 
   const result = calcMargins(inputs, newContracts)
   if (!result) {
@@ -238,10 +242,7 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
     margins.entrustedMargin,
     margins.perContractEntrusted,
   )
-  const leverageRatio = calcLeverageRatio(
-    margins.contractNotional,
-    margins.entrustedMargin,
-  )
+  const leverageRatio = calcLeverageRatio(margins.contractNotional, accountEval)
 
   return {
     liquidationPrice,
@@ -349,10 +350,10 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
       : null
 
   const beforeLeverageRatio = beforeMargins
-    ? calcLeverageRatio(beforeMargins.contractNotional, beforeMargins.entrustedMargin)
+    ? calcLeverageRatio(beforeMargins.contractNotional, accountEval)
     : null
   const afterLeverageRatio = afterMargins
-    ? calcLeverageRatio(afterMargins.contractNotional, afterMargins.entrustedMargin)
+    ? calcLeverageRatio(afterMargins.contractNotional, accountEval)
     : null
 
   return {

@@ -8,6 +8,7 @@ export type CalcMessageCode =
   | 'no_available_margin'
   | 'cannot_calc_per_contract_entrusted'
   | 'order_exceeds_max_buyable'
+  | 'order_exceeds_position'
   | 'at_risk'
 
 export function isCalcMessageCode(value: string | null | undefined): value is CalcMessageCode {
@@ -21,6 +22,7 @@ export function isCalcMessageCode(value: string | null | undefined): value is Ca
     value === 'no_available_margin' ||
     value === 'cannot_calc_per_contract_entrusted' ||
     value === 'order_exceeds_max_buyable' ||
+    value === 'order_exceeds_position' ||
     value === 'at_risk'
   )
 }

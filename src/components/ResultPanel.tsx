@@ -1,17 +1,20 @@
 import { useMemo } from 'react'
-import { calculateEvaluate, calculateOrder } from '../calc/leverage'
+import { calculateEvaluate, calculateOrder, checkOrderExceedsMaxBuyable } from '../calc/leverage'
+import { calcMargins, inputsReadyForEvaluate } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult, PositionSide } from '../types'
 import { useLanguage } from '../i18n'
 import { LegalEmphasis } from './ServiceDisclaimer'
+import { NumberStepper } from './NumberStepper'
 import {
   formatLeverageValue,
   formatNumber,
-  formatPercentValue,
   formatToleranceDelta,
+  formatTolerancePercent,
 } from '../utils/format'
 
 interface ResultPanelProps {
   inputs: CalculatorInputs
+  onChange: (patch: Partial<CalculatorInputs>) => void
 }
 
 function ResultHero({
@@ -56,6 +59,45 @@ function ResultRow({
   )
 }
 
+function ResultSheet({
+  indexHeader,
+  beforeHeader,
+  afterHeader,
+  rows,
+}: {
+  indexHeader: string
+  beforeHeader: string
+  afterHeader: string
+  rows: {
+    index: string
+    before: string
+    after: string
+    dangerBefore?: boolean
+    dangerAfter?: boolean
+  }[]
+}) {
+  return (
+    <table className="result-sheet">
+      <thead>
+        <tr>
+          <th scope="col">{indexHeader}</th>
+          <th scope="col">{beforeHeader}</th>
+          <th scope="col">{afterHeader}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.index}>
+            <th scope="row">{row.index}</th>
+            <td className={row.dangerBefore ? 'danger' : undefined}>{row.before}</td>
+            <td className={row.dangerAfter ? 'danger' : undefined}>{row.after}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 function EvaluateResults({
   result,
   positionSide,
@@ -68,8 +110,7 @@ function EvaluateResults({
   const isLong = positionSide === 'long'
   const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
-  const toleranceValue =
-    result.toleranceRate !== null ? formatPercentValue(result.toleranceRate) : '-'
+  const toleranceValue = formatTolerancePercent(result.toleranceRate, positionSide)
 
   return (
     <>
@@ -140,137 +181,141 @@ function EvaluateResults({
 function OrderResults({
   result,
   positionSide,
+  orderBlocked,
 }: {
   result: OrderResult
   positionSide: PositionSide
+  orderBlocked: boolean
 }) {
-  const { t, translateCalcMessage } = useLanguage()
+  const { t } = useLanguage()
   const r = t.results
   const isLong = positionSide === 'long'
   const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
+  const afterAtRisk = !orderBlocked && result.isAtRiskAfter
+  const hasAfter = result.afterMargins !== null
 
-  const deltaLabel =
-    result.liquidationDelta !== null
-      ? `${result.liquidationDelta >= 0 ? '+' : ''}${formatNumber(result.liquidationDelta)}`
-      : '-'
-
-  const capacityWarning = translateCalcMessage(result.orderCapacityMessage)
+  const sheetRows = [
+    {
+      index: toleranceLabel,
+      before: formatTolerancePercent(result.beforeTolerance, positionSide),
+      after: formatTolerancePercent(result.afterTolerance, positionSide),
+      dangerBefore: result.isAtRiskBefore,
+      dangerAfter: afterAtRisk,
+    },
+    {
+      index: toleranceDeltaLabel,
+      before: formatToleranceDelta(result.beforeToleranceDelta, positionSide),
+      after: formatToleranceDelta(result.afterToleranceDelta, positionSide),
+      dangerBefore: result.isAtRiskBefore,
+      dangerAfter: afterAtRisk,
+    },
+    {
+      index: r.leverage,
+      before: formatLeverageValue(result.beforeLeverageRatio),
+      after: hasAfter
+        ? formatLeverageValue(result.afterLeverageRatio)
+        : '-',
+    },
+    {
+      index: r.maintenanceMargin,
+      before: formatNumber(result.beforeMargins?.maintenanceMargin ?? null),
+      after: hasAfter
+        ? formatNumber(result.afterMargins?.maintenanceMargin ?? null)
+        : '-',
+    },
+    {
+      index: r.entrustedMargin,
+      before: formatNumber(result.beforeMargins?.entrustedMargin ?? null),
+      after: hasAfter
+        ? formatNumber(result.afterMargins?.entrustedMargin ?? null)
+        : '-',
+    },
+    {
+      index: r.availableMargin,
+      before: formatNumber(result.beforeMargins?.availableMargin ?? null),
+      after: hasAfter
+        ? formatNumber(result.afterMargins?.availableMargin ?? null)
+        : '-',
+      dangerAfter: afterAtRisk,
+    },
+  ]
 
   return (
-    <>
-      {capacityWarning && (
-        <p className="order-capacity-warning" role="alert">
-          {capacityWarning}
-        </p>
-      )}
-      <div className="result-hero">
-        <ResultHero
-          label={r.beforeLiquidation}
-          value={
-            result.beforeLiquidation !== null
-              ? formatNumber(result.beforeLiquidation)
-              : '-'
-          }
-          danger={result.isAtRiskBefore}
-        />
-        <ResultHero
-          label={r.afterLiquidation}
-          value={
-            result.afterLiquidation !== null
-              ? formatNumber(result.afterLiquidation)
-              : '-'
-          }
-          sub={translateCalcMessage(result.orderMessage)}
-          danger={result.isAtRiskAfter}
-        />
-        <ResultHero label={r.liquidationDelta} value={deltaLabel} />
-      </div>
-      <div className="result-table">
-        <ResultRow
-          label={`${r.beforeTolerance} ${toleranceLabel}`}
-          value={
-            result.beforeTolerance !== null
-              ? formatPercentValue(result.beforeTolerance)
-              : '-'
-          }
-          sub={
-            result.beforeToleranceDelta !== null
-              ? `${toleranceDeltaLabel} ${formatToleranceDelta(result.beforeToleranceDelta, positionSide)}`
-              : null
-          }
-          danger={result.isAtRiskBefore}
-        />
-        <ResultRow
-          label={`${r.afterTolerance} ${toleranceLabel}`}
-          value={
-            result.afterTolerance !== null
-              ? formatPercentValue(result.afterTolerance)
-              : '-'
-          }
-          sub={
-            result.isAtRiskAfter
-              ? translateCalcMessage('at_risk')
-              : result.afterToleranceDelta !== null
-                ? `${toleranceDeltaLabel} ${formatToleranceDelta(result.afterToleranceDelta, positionSide)}`
-                : null
-          }
-          danger={result.isAtRiskAfter}
-        />
-        <ResultRow
-          label={r.beforeLeverage}
-          value={formatLeverageValue(result.beforeLeverageRatio)}
-          sub={r.leverageSub}
-        />
-        <ResultRow
-          label={r.afterLeverage}
-          value={formatLeverageValue(result.afterLeverageRatio)}
-          sub={r.leverageSub}
-        />
-        <ResultRow
-          label={r.afterMaintenance}
-          value={formatNumber(result.afterMargins?.maintenanceMargin ?? null)}
-        />
-        <ResultRow
-          label={r.afterEntrusted}
-          value={formatNumber(result.afterMargins?.entrustedMargin ?? null)}
-        />
-        <ResultRow
-          label={r.afterAvailable}
-          value={formatNumber(result.afterMargins?.availableMargin ?? null)}
-          sub={r.availableMarginSub}
-        />
-      </div>
-    </>
+    <ResultSheet
+      indexHeader={r.sheetIndex}
+      beforeHeader={r.sheetBefore}
+      afterHeader={r.sheetAfter}
+      rows={sheetRows}
+    />
   )
 }
 
-export function ResultPanel({ inputs }: ResultPanelProps) {
+export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
-  const { mode, positionSide } = inputs
+  const { positionSide, orderContracts } = inputs
+  const f = t.fields
 
-  const evaluateResult = useMemo(
-    () => (mode === 'evaluate' ? calculateEvaluate(inputs) : null),
-    [inputs, mode],
-  )
+  const evaluateResult = useMemo(() => calculateEvaluate(inputs), [inputs])
   const orderResult = useMemo(
-    () => (mode === 'order' ? calculateOrder(inputs) : null),
-    [inputs, mode],
+    () => calculateOrder(inputs),
+    [inputs, orderContracts],
   )
+
+  const orderBlocked = useMemo(() => {
+    if (!inputsReadyForEvaluate(inputs)) return false
+    const marginResult = calcMargins(inputs, inputs.contracts)
+    if (!marginResult) return false
+    return (
+      checkOrderExceedsMaxBuyable(
+        orderContracts,
+        inputs.accountEval!,
+        marginResult.margins,
+      ) !== null
+    )
+  }, [inputs, orderContracts])
 
   return (
     <div className="result-column">
       <section className="panel result-panel">
         <h2>{t.result}</h2>
-        {mode === 'evaluate' && evaluateResult ? (
-          <EvaluateResults result={evaluateResult} positionSide={positionSide} />
-        ) : orderResult ? (
-          <OrderResults result={orderResult} positionSide={positionSide} />
-        ) : null}
+        <EvaluateResults result={evaluateResult} positionSide={positionSide} />
+        <p className="result-panel__warning" role="note">
+          <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
+        </p>
       </section>
-      <p className="result-panel__warning" role="note">
-        <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
-      </p>
+
+      <section className="panel result-panel result-panel--order">
+        <h2>{t.modes.order}</h2>
+        <div className="field result-order-input">
+          <span className="field-label-row" id="order-contracts-label">
+            {f.orderContracts.label}
+          </span>
+          <div className="result-order-input__row">
+            <NumberStepper
+              value={orderContracts}
+              allowNegative
+              step={1}
+              placeholder={f.orderContracts.placeholder || undefined}
+              stepUpLabel={t.stepUp}
+              stepDownLabel={t.stepDown}
+              ariaLabelledBy="order-contracts-label"
+              onChange={(v) => onChange({ orderContracts: v })}
+            />
+            {orderBlocked && (
+              <span className="order-blocked-badge" role="status">
+                {t.orderBlocked}
+              </span>
+            )}
+          </div>
+        </div>
+        <OrderResults
+          key={orderContracts ?? 'empty'}
+          result={orderResult}
+          positionSide={positionSide}
+          orderBlocked={orderBlocked}
+        />
+      </section>
     </div>
   )
 }

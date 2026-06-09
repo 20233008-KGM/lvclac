@@ -5,6 +5,7 @@ import {
   formatNumber,
   formatPercent,
   formatToleranceDelta,
+  formatTolerancePercent,
   roundTo,
 } from './format'
 
@@ -54,6 +55,20 @@ describe('formatLeverage', () => {
 
   it('NaN은 -', () => {
     expect(formatLeverage(Number.NaN, '배')).toBe('-')
+  })
+})
+
+describe('formatTolerancePercent', () => {
+  it('롱은 마이너스', () => {
+    expect(formatTolerancePercent(17.06, 'long')).toBe('-17.06')
+  })
+
+  it('숏은 플러스', () => {
+    expect(formatTolerancePercent(10.92, 'short')).toBe('+10.92')
+  })
+
+  it('0은 부호 없음', () => {
+    expect(formatTolerancePercent(0, 'long')).toBe('0')
   })
 })
 

@@ -26,6 +26,9 @@ export interface Messages {
   short: string
   position: string
   modeLabel: string
+  orderBlocked: string
+  stepUp: string
+  stepDown: string
   contractsUnit: string
   leverageUnit: string
   modes: { evaluate: string; order: string }

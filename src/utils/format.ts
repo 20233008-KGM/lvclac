@@ -55,6 +55,19 @@ export function formatLeverageValue(value: number | null | undefined): string {
   return trimTrailingZeros(rounded.toFixed(2))
 }
 
+/** 청산 여유(%) — 롱: -, 숏: + */
+export function formatTolerancePercent(
+  value: number | null,
+  side: 'long' | 'short',
+  decimals = 2,
+): string {
+  if (value === null || Number.isNaN(value)) return '-'
+  const magnitude = Math.abs(value)
+  if (magnitude === 0) return '0'
+  const formatted = formatPercentValue(magnitude, decimals)
+  return side === 'long' ? `-${formatted}` : `+${formatted}`
+}
+
 /** 청산까지 가격 변동폭 — 롱: 하락(-), 숏: 상승(+) */
 export function formatToleranceDelta(
   value: number | null,

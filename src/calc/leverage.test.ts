@@ -121,8 +121,8 @@ describe('calcToleranceDelta', () => {
 })
 
 describe('calcLeverageRatio', () => {
-  it('약정가치 ÷ 위탁증거금', () => {
-    expect(calcLeverageRatio(500_000, 50_000)).toBe(10)
+  it('약정가치 ÷ 계좌 평가금액', () => {
+    expect(calcLeverageRatio(500_000, 10_000_000)).toBe(0.05)
   })
 
   it('분모 0이면 null', () => {
@@ -169,7 +169,7 @@ describe('calculateEvaluate', () => {
     expect(result.margins?.perContractMaintenance).toBeCloseTo(12_500, 5)
     expect(result.margins?.contractNotional).toBeCloseTo(500_000, 5)
     expect(result.toleranceDelta).toBeCloseTo(6982.5, 1)
-    expect(result.leverageRatio).toBe(10)
+    expect(result.leverageRatio).toBe(0.05)
   })
 
   it('약정금액·계약승수·비율로 유지증거금 산출', () => {
@@ -207,7 +207,7 @@ describe('calculateEvaluate (direct margin)', () => {
     expect(result.margins?.maintenanceMargin).toBe(2_000)
     expect(result.margins?.entrustedMargin).toBe(12_000)
     expect(result.liquidationPrice).toBeCloseTo(4_520, 1)
-    expect(result.leverageRatio).toBeCloseTo(41.67, 1)
+    expect(result.leverageRatio).toBe(10)
     expect(result.maxBuyable).toBe(6)
   })
 })
@@ -232,5 +232,25 @@ describe('calculateOrder', () => {
     })
     expect(result.orderCapacityMessage).toBeNull()
     expect(result.isAtRiskAfter).toBe(false)
+  })
+
+  it('음수 주문으로 포지션 축소 시뮬레이션', () => {
+    const result = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: -1,
+    })
+    expect(result.orderCapacityMessage).toBeNull()
+    expect(result.afterMargins?.entrustedMargin).toBeCloseTo(25_000, 5)
+  })
+
+  it('보유 계약보다 많이 매도하면 주문 후 결과 없음', () => {
+    const result = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: -99,
+    })
+    expect(result.orderMessage).toBe('order_exceeds_position')
+    expect(result.afterMargins).toBeNull()
   })
 })

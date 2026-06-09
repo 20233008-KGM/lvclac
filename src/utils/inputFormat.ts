@@ -10,16 +10,23 @@ function sanitizeDecimalDigits(raw: string): string {
 }
 
 /** 입력 중 천 단위 콤마 포맷 */
-export function formatRawNumericInput(raw: string, allowDecimal = false): string {
+export function formatRawNumericInput(
+  raw: string,
+  allowDecimal = false,
+  allowNegative = false,
+): string {
   const stripped = raw.replace(/,/g, '')
+  const negative = allowNegative && stripped.startsWith('-')
+  const unsigned = negative ? stripped.slice(1) : stripped
 
   if (!allowDecimal) {
-    const digits = stripped.replace(/\D/g, '')
-    if (digits === '') return ''
-    return Number(digits).toLocaleString('ko-KR')
+    const digits = unsigned.replace(/\D/g, '')
+    if (digits === '') return negative ? '-' : ''
+    const formatted = Number(digits).toLocaleString('ko-KR')
+    return negative ? `-${formatted}` : formatted
   }
 
-  const s = sanitizeDecimalDigits(stripped)
+  const s = sanitizeDecimalDigits(unsigned)
   const hasTrailingDot = s.endsWith('.')
   const [intPart = '', decPart = ''] = s.split('.')
 
@@ -31,7 +38,7 @@ export function formatRawNumericInput(raw: string, allowDecimal = false): string
     return `${formattedInt}.${decPart}`
   }
 
-  return formattedInt
+  return negative ? `-${formattedInt}` : formattedInt
 }
 
 /** 비율 입력용 — 콤마 없이 소수만 (예: 0.247) */
@@ -46,12 +53,16 @@ export function parseFormattedInput(text: string): number | '' {
   return Number.isNaN(value) ? '' : value
 }
 
-export function formatNumberForInput(value: number | undefined | null, allowDecimal = false): string {
+export function formatNumberForInput(
+  value: number | undefined | null,
+  allowDecimal = false,
+  allowNegative = false,
+): string {
   if (value === undefined || value === null || Number.isNaN(value)) return ''
   const decimals = allowDecimal ? 2 : 0
   const rounded = roundTo(value, decimals)
   const raw = decimals > 0 ? String(rounded) : String(Math.round(rounded))
-  return formatRawNumericInput(raw, allowDecimal)
+  return formatRawNumericInput(raw, allowDecimal, allowNegative)
 }
 
 export function formatRateForInput(value: number | undefined | null): string {

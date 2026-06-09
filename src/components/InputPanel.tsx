@@ -1,6 +1,3 @@
-import { useMemo } from 'react'
-import { checkOrderExceedsMaxBuyable } from '../calc/leverage'
-import { calcMargins, inputsReadyForEvaluate } from '../calc/margins'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import { useLanguage } from '../i18n'
@@ -71,44 +68,14 @@ function numField(
 }
 
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
-  const { t, translateCalcMessage } = useLanguage()
-  const isOrder = inputs.mode === 'order'
+  const { t } = useLanguage()
   const f = t.fields
-
-  const orderCapacityMessage = useMemo(() => {
-    if (!isOrder || !inputsReadyForEvaluate(inputs)) return null
-    const marginResult = calcMargins(inputs, inputs.contracts)
-    if (!marginResult) return null
-    return checkOrderExceedsMaxBuyable(
-      inputs.orderContracts,
-      inputs.accountEval!,
-      marginResult.margins,
-    )
-  }, [isOrder, inputs])
-
-  const orderCapacityWarning = translateCalcMessage(orderCapacityMessage)
 
   return (
     <section className="panel input-panel">
       <h2>{t.input}</h2>
 
       <div className="input-controls">
-        <div className="field">
-          <span className="field-label-row">{t.modeLabel}</span>
-          <div className="mode-toggle">
-            {(['evaluate', 'order'] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                className={`mode-btn ${inputs.mode === mode ? 'active' : ''}`}
-                onClick={() => onChange({ mode })}
-              >
-                {t.modes[mode]}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div className="field">
           <span className="field-label-row">{t.position}</span>
           <div className="side-toggle">
@@ -138,16 +105,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           <SectionTitle>{t.sections.instrument}</SectionTitle>
           {numField(f.currentPrice, 'currentPrice', inputs, onChange)}
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
-          {isOrder && (
-            <>
-              {numField(f.orderContracts, 'orderContracts', inputs, onChange)}
-              {orderCapacityWarning && (
-                <p className="field-warning" role="alert">
-                  {orderCapacityWarning}
-                </p>
-              )}
-            </>
-          )}
         </div>
 
         <div className="field-section">

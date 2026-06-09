@@ -26,7 +26,7 @@ function CalculatorApp() {
         </header>
         <main className="calc-grid">
           <InputPanel inputs={inputs} onChange={updateInputs} />
-          <ResultPanel inputs={inputs} />
+          <ResultPanel inputs={inputs} onChange={updateInputs} />
         </main>
         <ContentRiskNotice />
       </div>

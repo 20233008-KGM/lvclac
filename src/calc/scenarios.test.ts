@@ -344,6 +344,7 @@ const orderScenarios: {
     isAtRiskBefore?: boolean
     isAtRiskAfter?: boolean
     orderMessage?: string
+    orderCapacityMessage?: string
   }
 }[] = [
   {
@@ -373,7 +374,7 @@ const orderScenarios: {
   },
   {
     id: 'order-us-short-add',
-    description: '미국 ES 숏 — 1계약에서 2계약 추가 (총 3), 충분한 계좌',
+    description: '미국 ES 숏 — 1계약에서 1계약 추가 (총 2), 가용 증거금 한도 이내',
     inputs: {
       mode: 'order',
       accountEval: 50_000,
@@ -384,12 +385,12 @@ const orderScenarios: {
       contractMultiplier: 1,
       currentPrice: 5_000,
       positionSide: 'short',
-      orderContracts: 2,
+      orderContracts: 1,
     },
     expected: {
       beforeLiquidation: 5_800,
-      afterLiquidation: 5_133.33,
-      liquidationDelta: -666.67,
+      afterLiquidation: 5_300,
+      liquidationDelta: -500,
       beforeLeverageRatio: 12.5,
       afterLeverageRatio: 12.5,
       isAtRiskBefore: false,
@@ -414,7 +415,8 @@ const orderScenarios: {
     expected: {
       beforeLiquidation: 5_300,
       afterLiquidation: undefined,
-      orderMessage: 'maintenance_exceeds_equity',
+      orderMessage: 'order_exceeds_max_buyable',
+      orderCapacityMessage: 'order_exceeds_max_buyable',
       isAtRiskBefore: false,
       isAtRiskAfter: true,
     },
@@ -538,6 +540,9 @@ describe.each(orderScenarios)('주문 시뮬 [$id]', (scenario) => {
     }
     if (exp.orderMessage != null) {
       expect(result.orderMessage).toBe(exp.orderMessage)
+    }
+    if (exp.orderCapacityMessage != null) {
+      expect(result.orderCapacityMessage).toBe(exp.orderCapacityMessage)
     }
   })
 })

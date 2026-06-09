@@ -1,5 +1,10 @@
 import type { CalcMessageCode } from '../i18n/calcMessages'
-import type { CalculatorInputs, EvaluateResult, MarginAmounts, OrderResult } from '../types'
+import type {
+  CalculatorInputs,
+  EvaluateResult,
+  MarginAmounts,
+  OrderResult,
+} from '../types'
 import {
   calcMargins,
   inputsReadyForEvaluate,
@@ -84,6 +89,25 @@ export function calcMaxBuyable(
     return { value: null, message: 'cannot_calc_per_contract_entrusted' }
   }
   return { value: count, message: null }
+}
+
+/** 주문 계약 수가 가용 증거금 기준 추가 매수 한도를 초과하는지 검사 */
+export function checkOrderExceedsMaxBuyable(
+  orderContracts: number | undefined,
+  accountEval: number,
+  beforeMargins: MarginAmounts,
+): CalcMessageCode | null {
+  if (!orderContracts || orderContracts <= 0) return null
+
+  const { value: maxBuyable } = calcMaxBuyable(
+    accountEval,
+    beforeMargins.entrustedMargin,
+    beforeMargins.perContractEntrusted,
+  )
+
+  if (maxBuyable === null) return null
+  if (orderContracts > maxBuyable) return 'order_exceeds_max_buyable'
+  return null
 }
 
 function calcAfterOrderLiquidation(
@@ -248,6 +272,7 @@ function emptyOrderResult(
     isAtRiskBefore: false,
     isAtRiskAfter: false,
     orderMessage: null,
+    orderCapacityMessage: null,
     beforeLeverageRatio: null,
     afterLeverageRatio: null,
     ...overrides,
@@ -275,6 +300,12 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   }
 
   const { margins: beforeMargins, pointValue: beforePointValue } = beforeResult
+
+  const orderCapacityMessage = checkOrderExceedsMaxBuyable(
+    inputs.orderContracts,
+    accountEval,
+    beforeMargins,
+  )
 
   const beforeInputError =
     contracts > 0
@@ -338,9 +369,12 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
       beforeInputError !== null ||
       (beforeTolerance !== null && beforeTolerance <= 0),
     isAtRiskAfter:
+      orderCapacityMessage !== null ||
       afterOrderMessage === 'maintenance_exceeds_equity' ||
       (afterTolerance !== null && afterTolerance <= 0),
-    orderMessage: rateWarning ?? beforeInputError ?? afterOrderMessage,
+    orderMessage:
+      rateWarning ?? beforeInputError ?? orderCapacityMessage ?? afterOrderMessage,
+    orderCapacityMessage,
     beforeLeverageRatio,
     afterLeverageRatio,
   }

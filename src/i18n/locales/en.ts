@@ -132,6 +132,8 @@ export const en: Messages = {
     maintenance_rate_exceeds_entrusted: 'Maintenance rate exceeds initial margin rate.',
     no_available_margin: 'No excess margin available. (Equity − initial margin)',
     cannot_calc_per_contract_entrusted: 'Cannot compute initial margin per contract.',
+    order_exceeds_max_buyable:
+      'Order size exceeds the add-on limit for your available margin. This order cannot be filled at the current account level.',
     at_risk: 'Liquidation risk',
   },
   auth: {

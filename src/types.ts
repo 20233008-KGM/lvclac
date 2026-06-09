@@ -59,6 +59,7 @@ export interface OrderResult {
   isAtRiskBefore: boolean
   isAtRiskAfter: boolean
   orderMessage: CalcMessageCode | null
+  orderCapacityMessage: CalcMessageCode | null
   beforeLeverageRatio: number | null
   afterLeverageRatio: number | null
 }

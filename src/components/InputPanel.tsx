@@ -1,3 +1,6 @@
+import { useMemo } from 'react'
+import { checkOrderExceedsMaxBuyable } from '../calc/leverage'
+import { calcMargins, inputsReadyForEvaluate } from '../calc/margins'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import { useLanguage } from '../i18n'
@@ -68,9 +71,22 @@ function numField(
 }
 
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
-  const { t } = useLanguage()
+  const { t, translateCalcMessage } = useLanguage()
   const isOrder = inputs.mode === 'order'
   const f = t.fields
+
+  const orderCapacityMessage = useMemo(() => {
+    if (!isOrder || !inputsReadyForEvaluate(inputs)) return null
+    const marginResult = calcMargins(inputs, inputs.contracts)
+    if (!marginResult) return null
+    return checkOrderExceedsMaxBuyable(
+      inputs.orderContracts,
+      inputs.accountEval!,
+      marginResult.margins,
+    )
+  }, [isOrder, inputs])
+
+  const orderCapacityWarning = translateCalcMessage(orderCapacityMessage)
 
   return (
     <section className="panel input-panel">
@@ -122,7 +138,16 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           <SectionTitle>{t.sections.instrument}</SectionTitle>
           {numField(f.currentPrice, 'currentPrice', inputs, onChange)}
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
-          {isOrder && numField(f.orderContracts, 'orderContracts', inputs, onChange)}
+          {isOrder && (
+            <>
+              {numField(f.orderContracts, 'orderContracts', inputs, onChange)}
+              {orderCapacityWarning && (
+                <p className="field-warning" role="alert">
+                  {orderCapacityWarning}
+                </p>
+              )}
+            </>
+          )}
         </div>
 
         <div className="field-section">

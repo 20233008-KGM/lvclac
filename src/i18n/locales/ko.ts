@@ -132,6 +132,8 @@ export const ko: Messages = {
     maintenance_rate_exceeds_entrusted: '유지증거금률이 개시증거금률보다 큽니다.',
     no_available_margin: '가용 증거금이 없습니다. (계좌 평가금액 − 위탁증거금)',
     cannot_calc_per_contract_entrusted: '1계약당 위탁증거금을 계산할 수 없습니다.',
+    order_exceeds_max_buyable:
+      '주문 계약 수가 가용 증거금 기준 추가 매수 한도를 초과합니다. 현재 계좌 상태로는 체결할 수 없습니다.',
     at_risk: '청산 위험',
   },
   auth: {

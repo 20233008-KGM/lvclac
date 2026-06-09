@@ -7,6 +7,7 @@ export type CalcMessageCode =
   | 'maintenance_rate_exceeds_entrusted'
   | 'no_available_margin'
   | 'cannot_calc_per_contract_entrusted'
+  | 'order_exceeds_max_buyable'
   | 'at_risk'
 
 export function isCalcMessageCode(value: string | null | undefined): value is CalcMessageCode {
@@ -19,6 +20,7 @@ export function isCalcMessageCode(value: string | null | undefined): value is Ca
     value === 'maintenance_rate_exceeds_entrusted' ||
     value === 'no_available_margin' ||
     value === 'cannot_calc_per_contract_entrusted' ||
+    value === 'order_exceeds_max_buyable' ||
     value === 'at_risk'
   )
 }

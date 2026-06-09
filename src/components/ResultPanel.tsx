@@ -155,8 +155,15 @@ function OrderResults({
       ? `${result.liquidationDelta >= 0 ? '+' : ''}${formatNumber(result.liquidationDelta)}`
       : '-'
 
+  const capacityWarning = translateCalcMessage(result.orderCapacityMessage)
+
   return (
     <>
+      {capacityWarning && (
+        <p className="order-capacity-warning" role="alert">
+          {capacityWarning}
+        </p>
+      )}
       <div className="result-hero">
         <ResultHero
           label={r.beforeLiquidation}

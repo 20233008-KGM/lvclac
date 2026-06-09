@@ -6,6 +6,7 @@ import {
   calcToleranceDelta,
   calcToleranceRate,
   calculateEvaluate,
+  calculateOrder,
 } from './leverage'
 import { getPointValue, resolvePointValue } from './pointValue'
 import {
@@ -208,5 +209,28 @@ describe('calculateEvaluate (direct margin)', () => {
     expect(result.liquidationPrice).toBeCloseTo(4_520, 1)
     expect(result.leverageRatio).toBeCloseTo(41.67, 1)
     expect(result.maxBuyable).toBe(6)
+  })
+})
+
+describe('calculateOrder', () => {
+  it('주문 계약 수가 추가 매수 한도를 초과하면 경고', () => {
+    const result = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: 399,
+    })
+    expect(result.orderCapacityMessage).toBe('order_exceeds_max_buyable')
+    expect(result.orderMessage).toBe('order_exceeds_max_buyable')
+    expect(result.isAtRiskAfter).toBe(true)
+  })
+
+  it('추가 매수 한도 이내 주문은 경고 없음', () => {
+    const result = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: 1,
+    })
+    expect(result.orderCapacityMessage).toBeNull()
+    expect(result.isAtRiskAfter).toBe(false)
   })
 })

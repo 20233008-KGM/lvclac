@@ -944,8 +944,12 @@ input:focus:not(:focus-visible) {
   color: var(--color-danger);
 }
 
+.result-panel:has(.result-panel__warning) {
+  padding-bottom: var(--space-sm);
+}
+
 .result-panel__warning {
-  margin: var(--space-md) 0 0;
+  margin: var(--space-sm) 0 0;
   padding: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);

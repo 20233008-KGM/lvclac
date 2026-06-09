@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 import {
   createLocalStorageAuthRepository,
   createLocalStoragePreferencesRepository,
@@ -7,14 +8,18 @@ import {
   createSupabasePreferencesRepository,
 } from './adapters/supabaseAdapter'
 
-function useSupabase(): boolean {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL)
+/** 어댑터 구현 완료 후 VITE_SUPABASE_ENABLED=true 와 URL을 함께 설정하세요. */
+function isSupabaseEnabled(): boolean {
+  return (
+    import.meta.env.VITE_SUPABASE_ENABLED === 'true' &&
+    Boolean(import.meta.env.VITE_SUPABASE_URL)
+  )
 }
 
-export const authRepo = useSupabase()
+export const authRepo = isSupabaseEnabled()
   ? createSupabaseAuthRepository()
   : createLocalStorageAuthRepository()
 
-export const prefsRepo = useSupabase()
+export const prefsRepo = isSupabaseEnabled()
   ? createSupabasePreferencesRepository()
   : createLocalStoragePreferencesRepository()

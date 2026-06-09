@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { formatNumber, formatPercent, formatToleranceDelta, roundTo } from './format'
+import {
+  formatContractsCount,
+  formatLeverage,
+  formatNumber,
+  formatPercent,
+  formatToleranceDelta,
+  roundTo,
+} from './format'
 
 describe('roundTo', () => {
   it('정수 반올림', () => {
@@ -26,6 +33,27 @@ describe('formatPercent', () => {
     expect(formatPercent(5)).toBe('5%')
     expect(formatPercent(0.714)).toBe('0.71%')
     expect(formatPercent(12.1)).toBe('12.1%')
+  })
+})
+
+describe('formatContractsCount', () => {
+  it('NaN은 -', () => {
+    expect(formatContractsCount(Number.NaN, '계약')).toBe('-')
+  })
+
+  it('정상 계약 수', () => {
+    expect(formatContractsCount(3, '계약')).toBe('3\u00a0계약')
+  })
+})
+
+describe('formatLeverage', () => {
+  it('레버리지 배수', () => {
+    expect(formatLeverage(10, '배')).toBe('10배')
+    expect(formatLeverage(3.5, 'x')).toBe('3.5x')
+  })
+
+  it('NaN은 -', () => {
+    expect(formatLeverage(Number.NaN, '배')).toBe('-')
   })
 })
 

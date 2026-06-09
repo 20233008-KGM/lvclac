@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 import { useState, type FormEvent } from 'react'
 import { validatePassword, validateUsername } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'

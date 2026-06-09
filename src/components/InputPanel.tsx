@@ -1,6 +1,8 @@
 import type { CalculatorInputs } from '../types'
+import type { FieldCopy } from '../i18n/types'
 import { useLanguage } from '../i18n'
 import { NumberInput } from './NumberInput'
+import { SaveDraftToggle } from './SaveDraftToggle'
 
 interface InputPanelProps {
   inputs: CalculatorInputs
@@ -8,11 +10,10 @@ interface InputPanelProps {
 }
 
 const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>(['contractMultiplier'])
-
-const RATE_PLACEHOLDERS: Partial<Record<keyof CalculatorInputs, string>> = {
-  maintenanceMarginRate: '0.247',
-  entrustedMarginRate: '0.350',
-}
+const RATE_FIELDS = new Set<keyof CalculatorInputs>([
+  'maintenanceMarginRate',
+  'entrustedMarginRate',
+])
 
 function Field({
   label,
@@ -36,8 +37,12 @@ function Field({
   )
 }
 
+function SectionTitle({ children }: { children: string }) {
+  return <h3 className="field-section-title">{children}</h3>
+}
+
 function numField(
-  label: string,
+  field: FieldCopy,
   key: keyof CalculatorInputs,
   inputs: CalculatorInputs,
   onChange: (patch: Partial<CalculatorInputs>) => void,
@@ -46,16 +51,16 @@ function numField(
 ) {
   const value = inputs[key] as number | undefined
   const allowDecimal = DECIMAL_FIELDS.has(key)
-  const isRate = key in RATE_PLACEHOLDERS
+  const isRate = RATE_FIELDS.has(key)
 
   return (
-    <Field key={key} label={label} optionalText={optional ? optionalText : undefined}>
+    <Field key={key} label={field.label} optionalText={optional ? optionalText : undefined}>
       <NumberInput
         value={value}
         allowDecimal={allowDecimal || isRate}
         isRate={isRate}
         optional={optional}
-        placeholder={RATE_PLACEHOLDERS[key]}
+        placeholder={field.placeholder || undefined}
         onChange={(v) => onChange({ [key]: v })}
       />
     </Field>
@@ -73,9 +78,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
 
       <div className="input-controls">
         <div className="field">
-          <span className="field-label-spacer" aria-hidden="true">
-            &nbsp;
-          </span>
+          <span className="field-label-row">{t.modeLabel}</span>
           <div className="mode-toggle">
             {(['evaluate', 'order'] as const).map((mode) => (
               <button
@@ -91,7 +94,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
         </div>
 
         <div className="field">
-          <span>{t.position}</span>
+          <span className="field-label-row">{t.position}</span>
           <div className="side-toggle">
             {(['long', 'short'] as const).map((side) => (
               <button
@@ -107,17 +110,31 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
         </div>
       </div>
 
-      <div className="field-grid">
-        {numField(f.accountEquity.label, 'accountEval', inputs, onChange)}
-        {numField(f.maintenanceMarginRate.label, 'maintenanceMarginRate', inputs, onChange)}
-        {numField(f.maintenanceMargin.label, 'maintenanceMargin', inputs, onChange, true, t.optional)}
-        {numField(f.entrustedMarginRate.label, 'entrustedMarginRate', inputs, onChange)}
-        {numField(f.contracts.label, 'contracts', inputs, onChange)}
-        {numField(f.contractAmount.label, 'contractAmount', inputs, onChange)}
-        {numField(f.currentPrice.label, 'currentPrice', inputs, onChange)}
-        {numField(f.contractMultiplier.label, 'contractMultiplier', inputs, onChange)}
-        {isOrder && numField(f.orderContracts.label, 'orderContracts', inputs, onChange)}
+      <div className="input-sections">
+        <div className="field-section">
+          <SectionTitle>{t.sections.account}</SectionTitle>
+          {numField(f.accountEquity, 'accountEval', inputs, onChange)}
+          {numField(f.contracts, 'contracts', inputs, onChange)}
+          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional)}
+        </div>
+
+        <div className="field-section">
+          <SectionTitle>{t.sections.instrument}</SectionTitle>
+          {numField(f.currentPrice, 'currentPrice', inputs, onChange)}
+          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
+          {isOrder && numField(f.orderContracts, 'orderContracts', inputs, onChange)}
+        </div>
+
+        <div className="field-section">
+          <SectionTitle>{t.sections.margin}</SectionTitle>
+          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, true, t.optional)}
+          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, true, t.optional)}
+          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, true, t.optional)}
+          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, true, t.optional)}
+        </div>
       </div>
+
+      <SaveDraftToggle />
     </section>
   )
 }

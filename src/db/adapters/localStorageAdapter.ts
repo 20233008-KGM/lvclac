@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 import type { AuthRepository } from '../repositories/authRepository'
 import type { PreferencesRepository } from '../repositories/preferencesRepository'
 import { STORAGE_KEYS, type PreferencesMap, type Session, type User } from '../types'
@@ -32,6 +33,11 @@ function writePrefs(prefs: PreferencesMap): void {
 
 export function createLocalStorageAuthRepository(): AuthRepository {
   return {
+    async findById(userId) {
+      const users = readUsers()
+      return users.find((u) => u.id === userId) ?? null
+    },
+
     async findByUsername(username) {
       const users = readUsers()
       return users.find((u) => u.username === username.trim()) ?? null
@@ -90,17 +96,4 @@ export function createLocalStoragePreferencesRepository(): PreferencesRepository
       writePrefs(prefs)
     },
   }
-}
-
-export function getLocalStorageData() {
-  return {
-    users: readUsers(),
-    prefs: readPrefs(),
-  }
-}
-
-export function clearLocalStorageData(): void {
-  localStorage.removeItem(STORAGE_KEYS.users)
-  localStorage.removeItem(STORAGE_KEYS.prefs)
-  localStorage.removeItem(STORAGE_KEYS.session)
 }

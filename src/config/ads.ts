@@ -1,4 +1,4 @@
-import type { AdVariant } from '../components/AdSlot'
+export type AdVariant = 'banner' | 'sidebar' | 'sidebar-tall'
 
 export const ADSENSE_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT?.trim() || undefined
 

@@ -1,8 +1,11 @@
 import { useEffect, useRef, type CSSProperties } from 'react'
-import { ADSENSE_CLIENT, getAdSlotUnitId, isAdSenseConfigured } from '../config/ads'
+import {
+  ADSENSE_CLIENT,
+  getAdSlotUnitId,
+  isAdSenseConfigured,
+  type AdVariant,
+} from '../config/ads'
 import { ensureAdSenseScript } from '../lib/adsense'
-
-export type AdVariant = 'banner' | 'sidebar' | 'sidebar-tall'
 
 interface AdSlotProps {
   slotId: string

@@ -3,11 +3,11 @@ import type { Messages } from '../types'
 export const en: Messages = {
   lang: 'en',
   htmlLang: 'en',
-  siteTitle: 'Leverage Liquidation Calculator',
+  siteTitle: 'Leverage Calculator',
   siteDescription:
     'Free liquidation price and margin cushion calculator for futures and leveraged positions. Enter equity and margin rates from your broker.',
   appIntro:
-    'Estimate liquidation price and margin headroom for futures and leveraged positions. Enter values as shown in your broker app.',
+    'Estimate liquidation price and margin headroom for futures and leveraged positions. Enter whichever values your broker displays.',
   loading: 'Loading...',
   login: 'Log in',
   logout: 'Log out',
@@ -19,34 +19,85 @@ export const en: Messages = {
   long: 'Long',
   short: 'Short',
   position: 'Position',
+  modeLabel: 'Mode',
   contractsUnit: 'contracts',
   modes: { evaluate: 'Evaluate', order: 'Order' },
+  sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
+  draftSave: {
+    label: 'Save inputs on this device',
+    hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values.',
+    cleared: 'Saved data has been removed.',
+    enableModalTitle: 'Save inputs on this device',
+    enableModalBody: [
+      'When you turn on "Save inputs on this device," values you enter in the calculator (account equity, margin rates, number of contracts, etc.) may be stored in your browser\'s local storage (localStorage) on your device.',
+      'This feature is provided for convenience only; we do not transmit or store this information on our servers.',
+      'When you turn saving off, stored inputs on that device are deleted.',
+      'However, if others use the same device, or if malware, browser extensions, or an insecure environment is present, stored values may be exposed. We do not guarantee the security of your device environment; you should decide whether to store sensitive information.',
+    ],
+    enableConfirm: 'Agree and save',
+    skipModalLabel: "Don't show this again",
+    showGuideAgain: 'Show save notice again',
+    clearedModalTitle: 'Save disabled',
+    confirm: 'OK',
+  },
   fields: {
     accountEquity: {
       label: 'Account equity',
       hint: 'Cash + unrealized P&L — same as broker "Equity" or "Net liquidation value"',
+      placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
       label: 'Maintenance margin rate',
       hint: 'Ratio of notional (e.g. 0.247 = 24.7%)',
+      placeholder: 'e.g. 0.25',
     },
     maintenanceMargin: {
       label: 'Maintenance margin (direct)',
       hint: 'Broker-displayed amount overrides rate-based estimate',
+      placeholder: '500,000',
     },
     entrustedMarginRate: {
       label: 'Initial margin rate',
-      hint: 'Ratio of notional for initial / entrusted margin',
+      hint: 'Ratio of notional for initial margin. For fixed broker amounts, use direct input',
+      placeholder: 'e.g. 0.35',
     },
-    contracts: { label: 'Open contracts', hint: 'Current position size' },
-    contractAmount: { label: 'Notional per contract', hint: 'Contract specification from your broker' },
-    currentPrice: { label: 'Mark price', hint: 'Current reference price' },
-    contractMultiplier: { label: 'Contract multiplier', hint: 'P&L per 1 point move' },
-    orderContracts: { label: 'Order size (contracts)', hint: 'Additional contracts to simulate' },
+    entrustedMargin: {
+      label: 'Initial margin (direct)',
+      hint: 'Broker-displayed amount overrides rate-based estimate',
+      placeholder: '12,000',
+    },
+    contracts: {
+      label: 'Open contracts',
+      hint: 'Current position size',
+      placeholder: '2',
+    },
+    contractAmount: {
+      label: 'Notional per contract',
+      hint: 'Broker-displayed per-contract notional',
+      placeholder: '250,000',
+    },
+    currentPrice: {
+      label: 'Mark price',
+      hint: 'Current reference price',
+      placeholder: '35,000',
+    },
+    contractMultiplier: {
+      label: 'Contract multiplier',
+      hint: 'Size factor for notional calc. Defaults to 1 if blank',
+      placeholder: '1',
+    },
+    orderContracts: {
+      label: 'Order size (contracts)',
+      hint: 'Additional contracts to simulate',
+      placeholder: '1',
+    },
   },
   results: {
     liquidationPrice: 'Liquidation price',
-    maxBuyable: 'Max additional size',
+    maxBuyableLong: 'Addl. buy limit (contracts)',
+    maxBuyableShort: 'Addl. sell limit (contracts)',
+    leverageRatio: 'Current leverage',
+    leverageSub: 'Notional ÷ initial margin',
     maintenanceMargin: 'Maintenance margin',
     contractNotional: 'Notional value',
     entrustedMargin: 'Initial margin',
@@ -68,7 +119,10 @@ export const en: Messages = {
     afterAvailable: 'Excess margin (after)',
     afterPerEntrusted: 'Initial / contract (after)',
     afterPerMaintenance: 'Maintenance / contract (after)',
+    beforeLeverage: 'Leverage (before)',
+    afterLeverage: 'Leverage (after)',
   },
+  leverageUnit: 'x',
   calcMessages: {
     contracts_zero: 'Enter the number of contracts.',
     multiplier_zero: 'Contract multiplier cannot be zero.',
@@ -81,7 +135,7 @@ export const en: Messages = {
     at_risk: 'Liquidation risk',
   },
   auth: {
-    title: 'Leverage Liquidation Calculator',
+    title: 'Leverage Calculator',
     modalTitle: 'Log in',
     subtitle: 'Sign in to save your calculator inputs automatically.',
     tabLogin: 'Log in',
@@ -96,6 +150,9 @@ export const en: Messages = {
   legal: {
     bannerShort:
       'For reference only — not investment advice. You are solely responsible for trading decisions.',
+    resultMismatchWarning:
+      'Displayed results may not match actual liquidation prices or margin call timing.',
+    contentNoticeLabel: 'Investment risk and calculation limitations',
     modalTitle: 'Before you continue',
     modalIntro:
       'Please read the following. Leveraged and futures trading can result in losses exceeding your deposit.',
@@ -106,7 +163,7 @@ export const en: Messages = {
       },
       {
         title: 'Limitations',
-        body: 'Brokers and exchanges use different rounding, fees, and margin rules. Results may differ from your platform. We do not guarantee accuracy or completeness.',
+        body: 'Brokers and exchanges use different rounding, fees, and margin rules. We do not guarantee accuracy or completeness.',
       },
       {
         title: 'Your responsibility',
@@ -120,32 +177,65 @@ export const en: Messages = {
     acknowledge:
       'I have read the above and will use this tool for reference only.',
     confirmButton: 'Agree and continue',
+    dismissButton: 'OK',
+    skipModalLabel: "Don't show this again",
+    showModalAgain: 'View service notice again',
     termsLink: 'Terms of use',
     privacyLink: 'Privacy policy',
     termsTitle: 'Terms of use',
     privacyTitle: 'Privacy policy',
     back: 'Back',
     termsBody: [
-      '1. Scope: These terms govern use of the Leverage Liquidation Calculator ("Service").',
+      '1. Scope: These terms govern use of the Leverage Calculator ("Service") operated by Farfield Software ("we", "us").',
       '2. Nature: The Service is a free web calculator. We do not provide brokerage or investment advisory services.',
       '3. User duty: Enter values matching your trading environment and use results for reference only.',
-      '4. Accounts: Optional sign-up may store username, password hash, and inputs in localStorage or connected database.',
+      '4. Input storage: Calculator inputs are saved in your browser localStorage only when you turn on “Save inputs on this device.” They are not sent to a server; turning it off deletes saved values.',
       '5. Advertising: We may show third-party ads (e.g. Google AdSense) subject to their policies and cookies.',
       '6. Limitation of liability: We are not liable for losses due to outages, third-party changes, or differences from broker rules except where required by law.',
       '7. Changes: Terms may be updated on the site; continued use constitutes acceptance.',
     ],
     privacyBody: [
-      '1. Data: optional username, password hash, calculator inputs; with GA4/AdSense — cookies and usage logs',
+      '1. Data: calculator inputs (device localStorage when save is enabled); with GA4/AdSense — cookies and usage logs',
       '2. Purpose: save/restore inputs, improve service, analytics and ads',
-      '3. Storage: localStorage on your device, or Supabase when configured',
+      '3. Storage: when enabled, inputs stay on your device only; not transmitted to our servers. Disabling removes them.',
       '4. Third parties: Google Analytics / AdSense when enabled',
-      '5. Your rights: clear browser data; request account/data deletion via contact below',
-      '6. Contact: see footer',
+      '5. Your rights: turn off the save toggle or clear browser data to remove saved inputs.',
+      '6. Contact: Farfield Software — see footer for contact details',
     ],
   },
   footer: {
-    tagline: 'Liquidation & margin calculator for futures traders',
-    copyright: '© Leverage Liquidation Calculator',
+    navAriaLabel: 'Footer navigation',
+    disclaimer:
+      'Investing involves the risk of loss, including loss exceeding your deposit. All investment decisions and responsibility rest solely with you.',
+    tagline: 'Futures trading margin & margin call calculator',
+    copyright: '© 2026 Farfield Software. All rights reserved.',
+    soon: 'Coming soon',
+    columns: [
+      {
+        title: 'Product',
+        links: [
+          { label: 'Leverage Calculator', href: '#calculator' },
+          { label: 'Pro', soon: true },
+          { label: 'Changelog', soon: true },
+        ],
+      },
+      {
+        title: 'Company',
+        links: [
+          { label: 'About Farfield Software', soon: true },
+          { label: 'Contact', href: 'mailto:contact@farfield.software' },
+          { label: 'Careers', soon: true },
+        ],
+      },
+      {
+        title: 'Resources',
+        links: [
+          { label: 'User guide', soon: true },
+          { label: 'API docs', soon: true },
+          { label: 'Status page', soon: true },
+        ],
+      },
+    ],
   },
   ads: {
     leftTop: 'Left sidebar ad',

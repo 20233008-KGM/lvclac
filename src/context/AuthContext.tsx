@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 import {
   createContext,
   useCallback,
@@ -17,7 +18,6 @@ interface AuthContextValue {
   user: User | null
   loading: boolean
   inputs: CalculatorInputs
-  setInputs: (inputs: CalculatorInputs) => void
   updateInputs: (patch: Partial<CalculatorInputs>) => void
   login: (username: string, password: string) => Promise<string | null>
   register: (username: string, password: string) => Promise<string | null>
@@ -32,32 +32,21 @@ function mergeInputs(prefs: Partial<CalculatorInputs>): CalculatorInputs {
     additionalContracts?: number
     priceMultiplier?: number
     maintenanceMargin?: number
-    entrustedMargin?: number
-    initialMarginPerContract?: number
   }
   return {
     ...defaultInputs,
     ...prefs,
     mode: prefs.mode ?? 'evaluate',
-    maintenanceMarginRate: normalizeStoredRate(
-      prefs.maintenanceMarginRate,
-      defaultInputs.maintenanceMarginRate,
-    ),
+    positionSide: prefs.positionSide ?? 'long',
+    maintenanceMarginRate: normalizeStoredRate(prefs.maintenanceMarginRate),
     maintenanceMargin: prefs.maintenanceMargin ?? legacy.maintenanceMargin,
-    entrustedMarginRate: normalizeStoredRate(
-      prefs.entrustedMarginRate,
-      defaultInputs.entrustedMarginRate,
-    ),
+    entrustedMarginRate: normalizeStoredRate(prefs.entrustedMarginRate),
     contractMultiplier:
       prefs.contractMultiplier ??
-      (typeof legacy.priceMultiplier === 'number'
-        ? legacy.priceMultiplier
-        : defaultInputs.contractMultiplier),
+      (typeof legacy.priceMultiplier === 'number' ? legacy.priceMultiplier : undefined),
     orderContracts:
       prefs.orderContracts ??
-      (typeof legacy.additionalContracts === 'number'
-        ? legacy.additionalContracts
-        : defaultInputs.orderContracts),
+      (typeof legacy.additionalContracts === 'number' ? legacy.additionalContracts : undefined),
   }
 }
 
@@ -71,12 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userId = await authRepo.getSession()
         if (!userId) return
-        const users = await loadUserById(userId)
-        if (!users) {
+        const found = await authRepo.findById(userId)
+        if (!found) {
           await authRepo.clearSession()
           return
         }
-        setUser(users)
+        setUser(found)
         const prefs = await prefsRepo.getPreferences(userId)
         if (prefs) setInputs(mergeInputs(prefs))
       } finally {
@@ -85,22 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     restoreSession()
   }, [])
-
-  async function loadUserById(userId: string): Promise<User | null> {
-    const sessionUserId = userId
-    const allUsers = await getAllUsers()
-    return allUsers.find((u) => u.id === sessionUserId) ?? null
-  }
-
-  async function getAllUsers(): Promise<User[]> {
-    const raw = localStorage.getItem('leverage_users')
-    if (!raw) return []
-    try {
-      return JSON.parse(raw) as User[]
-    } catch {
-      return []
-    }
-  }
 
   const checkUsername = useCallback(async (username: string) => {
     const err = validateUsername(username)
@@ -157,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, inputs, setInputs, updateInputs, login, register, logout, checkUsername }}
+      value={{ user, loading, inputs, updateInputs, login, register, logout, checkUsername }}
     >
       {children}
     </AuthContext.Provider>

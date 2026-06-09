@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 const MAX_USERNAME_LENGTH = 32
 
 export function validateUsername(username: string): string | null {

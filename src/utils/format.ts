@@ -5,7 +5,7 @@ export function roundTo(value: number, decimals: number): number {
   return Math.round(value * factor) / factor
 }
 
-function trimTrailingZeros(fixed: string): string {
+export function trimTrailingZeros(fixed: string): string {
   return fixed.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
 }
 
@@ -24,6 +24,35 @@ export function formatPercent(value: number | null, decimals = 2): string {
   if (value === null || Number.isNaN(value)) return '-'
   const rounded = roundTo(value, decimals)
   return `${trimTrailingZeros(rounded.toFixed(decimals))}%`
+}
+
+/** 비율 숫자만 (단위 없음) */
+export function formatPercentValue(value: number | null, decimals = 2): string {
+  if (value === null || Number.isNaN(value)) return '-'
+  const rounded = roundTo(value, decimals)
+  return trimTrailingZeros(rounded.toFixed(decimals))
+}
+
+/** 계약 수 표시 — NaN·무한대는 '-' */
+export function formatContractsCount(
+  value: number | null | undefined,
+  unit: string,
+): string {
+  if (value == null || !Number.isFinite(value)) return '-'
+  return `${formatNumber(value)}\u00a0${unit}`
+}
+
+/** 레버리지 배수 — 예: 10배 / 10x */
+export function formatLeverage(value: number | null | undefined, unit: string): string {
+  if (value == null || !Number.isFinite(value)) return '-'
+  return `${formatLeverageValue(value)}${unit}`
+}
+
+/** 레버리지 배수 숫자만 (단위 없음) */
+export function formatLeverageValue(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '-'
+  const rounded = roundTo(value, 2)
+  return trimTrailingZeros(rounded.toFixed(2))
 }
 
 /** 청산까지 가격 변동폭 — 롱: 하락(-), 숏: 상승(+) */

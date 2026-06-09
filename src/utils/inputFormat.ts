@@ -1,4 +1,13 @@
-import { roundTo } from './format'
+import { roundTo, trimTrailingZeros } from './format'
+
+function sanitizeDecimalDigits(raw: string): string {
+  let s = raw.replace(/,/g, '').replace(/[^\d.]/g, '')
+  const dotIndex = s.indexOf('.')
+  if (dotIndex !== -1) {
+    s = s.slice(0, dotIndex + 1) + s.slice(dotIndex + 1).replace(/\./g, '')
+  }
+  return s
+}
 
 /** 입력 중 천 단위 콤마 포맷 */
 export function formatRawNumericInput(raw: string, allowDecimal = false): string {
@@ -10,12 +19,7 @@ export function formatRawNumericInput(raw: string, allowDecimal = false): string
     return Number(digits).toLocaleString('ko-KR')
   }
 
-  let s = stripped.replace(/[^\d.]/g, '')
-  const dotIndex = s.indexOf('.')
-  if (dotIndex !== -1) {
-    s = s.slice(0, dotIndex + 1) + s.slice(dotIndex + 1).replace(/\./g, '')
-  }
-
+  const s = sanitizeDecimalDigits(stripped)
   const hasTrailingDot = s.endsWith('.')
   const [intPart = '', decPart = ''] = s.split('.')
 
@@ -32,12 +36,7 @@ export function formatRawNumericInput(raw: string, allowDecimal = false): string
 
 /** 비율 입력용 — 콤마 없이 소수만 (예: 0.247) */
 export function formatRawRateInput(raw: string): string {
-  let s = raw.replace(/,/g, '').replace(/[^\d.]/g, '')
-  const dotIndex = s.indexOf('.')
-  if (dotIndex !== -1) {
-    s = s.slice(0, dotIndex + 1) + s.slice(dotIndex + 1).replace(/\./g, '')
-  }
-  return s
+  return sanitizeDecimalDigits(raw)
 }
 
 export function parseFormattedInput(text: string): number | '' {
@@ -58,7 +57,7 @@ export function formatNumberForInput(value: number | undefined | null, allowDeci
 export function formatRateForInput(value: number | undefined | null): string {
   if (value === undefined || value === null || Number.isNaN(value)) return ''
   const rounded = roundTo(value, 3)
-  const raw = rounded.toFixed(3).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
+  const raw = trimTrailingZeros(rounded.toFixed(3))
   return formatRawRateInput(raw)
 }
 
@@ -73,7 +72,10 @@ export function normalizeInputValue(
 }
 
 /** 예전 퍼센트(5 = 5%) 저장값 → 소수(0.05)로 변환 */
-export function normalizeStoredRate(rate: number | undefined, fallback: number): number {
+export function normalizeStoredRate(
+  rate: number | undefined,
+  fallback?: number,
+): number | undefined {
   if (rate === undefined || Number.isNaN(rate)) return fallback
   if (rate > 1) return rate / 100
   return rate

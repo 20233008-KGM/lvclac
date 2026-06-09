@@ -1,18 +1,82 @@
 import { describe, expect, it } from 'vitest'
 import {
   calcLiquidationPrice,
+  calcLeverageRatio,
   calcMaxBuyable,
   calcToleranceDelta,
   calcToleranceRate,
   calculateEvaluate,
-  getPointValue,
 } from './leverage'
-import { calcContractNotional, calcMarginFromNotional } from './margins'
-import { defaultInputs } from '../types'
+import { getPointValue, resolvePointValue } from './pointValue'
+import {
+  calcContractNotional,
+  calcMarginFromNotional,
+  calcPositionNotional,
+} from './margins'
+import { directMarginSampleInputs, sampleInputs } from '../types'
 
 describe('getPointValue', () => {
   it('약정금액×계약승수 ÷ 현재가', () => {
     expect(getPointValue(200_000, 10, 350)).toBeCloseTo(5714.286, 2)
+  })
+})
+
+describe('resolvePointValue', () => {
+  it('약정금액×승수÷현재가로 산출', () => {
+    expect(
+      resolvePointValue({
+        contractAmount: 250_000,
+        contractMultiplier: 1,
+        currentPrice: 350,
+      }),
+    ).toBeCloseTo(714.286, 2)
+  })
+
+  it('계약승수 미입력 시 1로 간주', () => {
+    expect(
+      resolvePointValue({
+        contractAmount: 250_000,
+        currentPrice: 350,
+      }),
+    ).toBeCloseTo(714.286, 2)
+  })
+})
+
+describe('calcPositionNotional', () => {
+  it('현재가 × 포인트가치 × 계약수', () => {
+    expect(
+      calcPositionNotional(
+        {
+          contractAmount: 250_000,
+          contractMultiplier: 1,
+          currentPrice: 5_000,
+        },
+        2,
+      ),
+    ).toBe(500_000)
+  })
+
+  it('명목가치 경로: 1계약 약정금액 × 승수 × 계약수', () => {
+    expect(
+      calcPositionNotional(
+        {
+          contractAmount: 250_000,
+          contractMultiplier: 1,
+          currentPrice: 350,
+        },
+        2,
+      ),
+    ).toBe(500_000)
+  })
+
+  it('price×pointValue 취소 시 부동소수 오차 없이 약정금액 경로 사용', () => {
+    // 350 × (250_000/350) 는 IEEE754에서 250_000.00000000003 → maxBuyable 1계약 오차 유발
+    expect(
+      calcPositionNotional(
+        { contractAmount: 250_000, contractMultiplier: 1, currentPrice: 350 },
+        1,
+      ),
+    ).toBe(250_000)
   })
 })
 
@@ -55,6 +119,16 @@ describe('calcToleranceDelta', () => {
   })
 })
 
+describe('calcLeverageRatio', () => {
+  it('약정가치 ÷ 위탁증거금', () => {
+    expect(calcLeverageRatio(500_000, 50_000)).toBe(10)
+  })
+
+  it('분모 0이면 null', () => {
+    expect(calcLeverageRatio(500_000, 0)).toBeNull()
+  })
+})
+
 describe('calcMaxBuyable', () => {
   it('위탁증거금이 계좌평가를 초과하면 0계약', () => {
     const entrusted = calcMarginFromNotional(
@@ -75,25 +149,31 @@ describe('calcMaxBuyable', () => {
     const { value } = calcMaxBuyable(20_000_000, entrusted, perContract)
     expect(value).toBe(799)
   })
+
+  it('부동소수 나눗셈 경계에서 1계약 누락 방지', () => {
+    const { value } = calcMaxBuyable(3_000_000, 25_000, 25_000)
+    expect(value).toBe(119)
+  })
 })
 
 describe('calculateEvaluate', () => {
   it('기본값으로 청산가·하락율 산출', () => {
-    const result = calculateEvaluate(defaultInputs)
+    const result = calculateEvaluate(sampleInputs)
     expect(result.liquidationPrice).toBeCloseTo(-6632.5, 1)
     expect(result.toleranceRate).toBeCloseTo(1995, 0)
-    expect(result.margins?.maintenanceMargin).toBe(25_000)
-    expect(result.margins?.entrustedMargin).toBe(50_000)
-    expect(result.margins?.availableMargin).toBe(25_000)
-    expect(result.margins?.perContractEntrusted).toBe(25_000)
-    expect(result.margins?.perContractMaintenance).toBe(12_500)
-    expect(result.margins?.contractNotional).toBe(500_000)
+    expect(result.margins?.maintenanceMargin).toBeCloseTo(25_000, 5)
+    expect(result.margins?.entrustedMargin).toBeCloseTo(50_000, 5)
+    expect(result.margins?.availableMargin).toBeCloseTo(25_000, 5)
+    expect(result.margins?.perContractEntrusted).toBeCloseTo(25_000, 5)
+    expect(result.margins?.perContractMaintenance).toBeCloseTo(12_500, 5)
+    expect(result.margins?.contractNotional).toBeCloseTo(500_000, 5)
     expect(result.toleranceDelta).toBeCloseTo(6982.5, 1)
+    expect(result.leverageRatio).toBe(10)
   })
 
   it('약정금액·계약승수·비율로 유지증거금 산출', () => {
     const result = calculateEvaluate({
-      ...defaultInputs,
+      ...sampleInputs,
       contracts: 10,
       contractAmount: 200_000,
       contractMultiplier: 10,
@@ -106,7 +186,7 @@ describe('calculateEvaluate', () => {
 
   it('직접 입력 유지증거금 우선', () => {
     const result = calculateEvaluate({
-      ...defaultInputs,
+      ...sampleInputs,
       maintenanceMargin: 2_000_000,
     })
     expect(result.margins?.maintenanceMargin).toBe(2_000_000)
@@ -116,5 +196,17 @@ describe('calculateEvaluate', () => {
       calcLiquidationPrice(10_000_000, 2_000_000, 2, 350, pointValue, 'long')!,
       2,
     )
+  })
+})
+
+describe('calculateEvaluate (direct margin)', () => {
+  it('약정금액·직접 증거금으로 청산가 산출', () => {
+    const result = calculateEvaluate(directMarginSampleInputs)
+    expect(result.margins?.contractNotional).toBe(500_000)
+    expect(result.margins?.maintenanceMargin).toBe(2_000)
+    expect(result.margins?.entrustedMargin).toBe(12_000)
+    expect(result.liquidationPrice).toBeCloseTo(4_520, 1)
+    expect(result.leverageRatio).toBeCloseTo(41.67, 1)
+    expect(result.maxBuyable).toBe(6)
   })
 })

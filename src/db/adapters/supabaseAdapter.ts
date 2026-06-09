@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 import type { AuthRepository } from '../repositories/authRepository'
 import type { PreferencesRepository } from '../repositories/preferencesRepository'
 
@@ -6,6 +7,9 @@ const NOT_IMPLEMENTED =
 
 export function createSupabaseAuthRepository(): AuthRepository {
   return {
+    async findById() {
+      throw new Error(NOT_IMPLEMENTED)
+    },
     async findByUsername() {
       throw new Error(NOT_IMPLEMENTED)
     },

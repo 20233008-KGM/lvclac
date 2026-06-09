@@ -1,12 +1,16 @@
-import type { CalculatorMode, EvaluateResult, OrderResult, PositionSide } from '../types'
+import { useMemo } from 'react'
+import { calculateEvaluate, calculateOrder } from '../calc/leverage'
+import type { CalculatorInputs, EvaluateResult, OrderResult, PositionSide } from '../types'
 import { useLanguage } from '../i18n'
-import { formatNumber, formatPercent, formatToleranceDelta } from '../utils/format'
+import {
+  formatLeverageValue,
+  formatNumber,
+  formatPercentValue,
+  formatToleranceDelta,
+} from '../utils/format'
 
 interface ResultPanelProps {
-  mode: CalculatorMode
-  positionSide: PositionSide
-  evaluateResult: EvaluateResult
-  orderResult: OrderResult
+  inputs: CalculatorInputs
 }
 
 function ResultHero({
@@ -64,7 +68,7 @@ function EvaluateResults({
   const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
   const toleranceValue =
-    result.toleranceRate !== null ? formatPercent(result.toleranceRate) : '-'
+    result.toleranceRate !== null ? formatPercentValue(result.toleranceRate) : '-'
 
   return (
     <>
@@ -86,12 +90,8 @@ function EvaluateResults({
           danger={result.isAtRisk}
         />
         <ResultHero
-          label={r.maxBuyable}
-          value={
-            result.maxBuyable !== null
-              ? `${result.maxBuyable} ${t.contractsUnit}`
-              : '-'
-          }
+          label={isLong ? r.maxBuyableLong : r.maxBuyableShort}
+          value={formatNumber(result.maxBuyable ?? null)}
           sub={translateCalcMessage(result.maxBuyableMessage)}
         />
       </div>
@@ -103,6 +103,11 @@ function EvaluateResults({
         <ResultRow
           label={r.contractNotional}
           value={formatNumber(result.margins?.contractNotional ?? null)}
+        />
+        <ResultRow
+          label={r.leverageRatio}
+          value={formatLeverageValue(result.leverageRatio)}
+          sub={r.leverageSub}
         />
         <ResultRow
           label={r.entrustedMargin}
@@ -178,7 +183,7 @@ function OrderResults({
           label={`${r.beforeTolerance} ${toleranceLabel}`}
           value={
             result.beforeTolerance !== null
-              ? formatPercent(result.beforeTolerance)
+              ? formatPercentValue(result.beforeTolerance)
               : '-'
           }
           sub={
@@ -192,7 +197,7 @@ function OrderResults({
           label={`${r.afterTolerance} ${toleranceLabel}`}
           value={
             result.afterTolerance !== null
-              ? formatPercent(result.afterTolerance)
+              ? formatPercentValue(result.afterTolerance)
               : '-'
           }
           sub={
@@ -203,6 +208,16 @@ function OrderResults({
                 : null
           }
           danger={result.isAtRiskAfter}
+        />
+        <ResultRow
+          label={r.beforeLeverage}
+          value={formatLeverageValue(result.beforeLeverageRatio)}
+          sub={r.leverageSub}
+        />
+        <ResultRow
+          label={r.afterLeverage}
+          value={formatLeverageValue(result.afterLeverageRatio)}
+          sub={r.leverageSub}
         />
         <ResultRow
           label={r.afterMaintenance}
@@ -230,22 +245,27 @@ function OrderResults({
   )
 }
 
-export function ResultPanel({
-  mode,
-  positionSide,
-  evaluateResult,
-  orderResult,
-}: ResultPanelProps) {
+export function ResultPanel({ inputs }: ResultPanelProps) {
   const { t } = useLanguage()
+  const { mode, positionSide } = inputs
+
+  const evaluateResult = useMemo(
+    () => (mode === 'evaluate' ? calculateEvaluate(inputs) : null),
+    [inputs, mode],
+  )
+  const orderResult = useMemo(
+    () => (mode === 'order' ? calculateOrder(inputs) : null),
+    [inputs, mode],
+  )
 
   return (
     <section className="panel result-panel">
       <h2>{t.result}</h2>
-      {mode === 'evaluate' ? (
+      {mode === 'evaluate' && evaluateResult ? (
         <EvaluateResults result={evaluateResult} positionSide={positionSide} />
-      ) : (
+      ) : orderResult ? (
         <OrderResults result={orderResult} positionSide={positionSide} />
-      )}
+      ) : null}
     </section>
   )
 }

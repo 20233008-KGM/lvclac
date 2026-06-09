@@ -12,6 +12,7 @@
   --color-text: #e8eaed;
   --color-text-muted: #9aa3b2;
   --color-text-dim: #7a8494;
+  --color-text-placeholder: rgba(154, 163, 178, 0.32);
 
   /* Single interactive accent — desaturated blue */
   --color-primary: #5b8def;

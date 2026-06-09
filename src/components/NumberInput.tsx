@@ -22,7 +22,6 @@ export function NumberInput({
   value,
   onChange,
   allowDecimal = false,
-  optional = false,
   isRate = false,
   placeholder,
 }: NumberInputProps) {
@@ -67,7 +66,7 @@ export function NumberInput({
 
         const parsed = parseFormattedInput(formatted)
         if (parsed === '') {
-          onChange(optional ? undefined : 0)
+          onChange(undefined)
           return
         }
         onChange(parsed)

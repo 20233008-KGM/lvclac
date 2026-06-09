@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 import type { CalculatorInputs } from '../types'
 
 export interface User {

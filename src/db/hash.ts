@@ -1,3 +1,4 @@
+// Launch: unused — auth deferred
 export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder()
   const salt = crypto.getRandomValues(new Uint8Array(16))

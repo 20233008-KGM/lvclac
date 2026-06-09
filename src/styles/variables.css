@@ -1,0 +1,61 @@
+:root {
+  /* Elevation layers — tonal shift, not color (Toptal / fintech dark UI) */
+  --color-bg: #12151c;
+  --color-bg-elevated: #181c25;
+  --color-surface: #1e232d;
+  --color-surface-2: #262c38;
+  --color-surface-3: #2f3644;
+  --color-border: #3a4252;
+  --color-border-subtle: #2a3040;
+
+  /* Text — off-white on charcoal, WCAG AA */
+  --color-text: #e8eaed;
+  --color-text-muted: #9aa3b2;
+  --color-text-dim: #7a8494;
+
+  /* Single interactive accent — desaturated blue */
+  --color-primary: #5b8def;
+  --color-primary-hover: #4a7de0;
+  --color-primary-muted: rgba(91, 141, 239, 0.15);
+
+  /* Semantic only — long / short / danger */
+  --color-long: #5cb88a;
+  --color-long-muted: rgba(92, 184, 138, 0.12);
+  --color-short: #d47a8a;
+  --color-short-muted: rgba(212, 122, 138, 0.12);
+  --color-danger: #e07070;
+  --color-danger-muted: rgba(224, 112, 112, 0.1);
+  --color-success: #6bc48a;
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  --font-size-base: 15px;
+  --font-size-sm: 13px;
+  --font-size-lg: 17px;
+  --font-size-xl: 20px;
+  --font-size-label: 13px;
+  --font-mono: 'JetBrains Mono', 'D2Coding', 'Consolas', monospace;
+
+  --touch-min: 44px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
+  --bp-sidebar: 1024px;
+
+  --max-width: 1200px;
+  --layout-max-width: 920px;
+
+  --ad-sidebar-width: 160px;
+  --ad-banner-height: 50px;
+  --ad-sidebar-height: 600px;
+  --ad-sidebar-short-height: 250px;
+
+  --transition-fast: 120ms ease;
+}

@@ -1,0 +1,135 @@
+@media (min-width: 768px) {
+  .auth-card {
+    padding: var(--space-xl);
+  }
+
+  .page-shell {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .page-content {
+    gap: var(--space-sm);
+  }
+
+  .service-disclaimer {
+    display: none;
+  }
+
+  .calc-viewport {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .app-header {
+    margin-bottom: 0;
+    padding: var(--space-sm) var(--space-md);
+    flex-wrap: nowrap;
+    position: static;
+  }
+
+  .app-intro {
+    display: none;
+  }
+
+  .app-header h1 {
+    font-size: var(--font-size-base);
+  }
+
+  .calc-grid {
+    align-items: start;
+    gap: var(--space-sm);
+  }
+
+  .app-header .btn-ghost {
+    min-height: 32px;
+    padding: 0 var(--space-md);
+  }
+
+  .input-panel .mode-btn,
+  .input-panel .side-btn {
+    min-height: 36px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+  }
+
+  .result-panel .result-hero {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+
+  .result-panel .result-hero-card {
+    padding: var(--space-sm) var(--space-md);
+    gap: 4px;
+  }
+
+  .result-panel .result-hero-label {
+    font-size: var(--font-size-sm);
+  }
+
+  .result-panel .result-hero-sub {
+    display: none;
+  }
+
+  .result-panel .result-hero-card.danger .result-hero-sub {
+    display: block;
+    font-size: 11px;
+  }
+
+  .result-panel .result-table {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .result-panel .result-row {
+    padding: 8px var(--space-md);
+    border-right: 1px solid var(--color-border-subtle);
+  }
+
+  .result-panel .result-row:nth-child(2n) {
+    border-right: none;
+  }
+
+  .result-panel .result-row:last-child {
+    border-bottom: none;
+  }
+
+  .result-panel .result-row:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+
+  .result-panel .result-row-value {
+    font-size: var(--font-size-base);
+    max-width: none;
+  }
+
+  .result-panel .result-row-sub {
+    display: none;
+  }
+
+  .result-panel .result-row.danger .result-row-sub {
+    display: block;
+    font-size: 11px;
+  }
+
+  .page-ads {
+    margin-top: var(--space-sm);
+  }
+
+  .page-ads .ad-slot--banner {
+    min-height: 40px;
+  }
+
+  .page-ads .ad-slot--banner.ad-slot--live {
+    min-height: 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-header {
+    flex-wrap: nowrap;
+  }
+}
+

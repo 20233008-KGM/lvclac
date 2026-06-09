@@ -50,9 +50,10 @@
   --bp-sidebar: 1024px;
 
   --max-width: 1200px;
-  --layout-max-width: 920px;
+  --layout-max-width: 860px;
 
   --ad-sidebar-width: 160px;
+  --ad-gutter: 24px;
   --ad-banner-height: 50px;
   --ad-sidebar-height: 600px;
   --ad-sidebar-short-height: 250px;

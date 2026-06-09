@@ -149,6 +149,7 @@ input:focus:not(:focus-visible) {
 @media (min-width: 1024px) {
   .page-shell {
     grid-template-columns: var(--ad-sidebar-width) minmax(0, 1fr) var(--ad-sidebar-width);
+    gap: var(--ad-gutter);
     align-items: start;
   }
 
@@ -165,6 +166,7 @@ input:focus:not(:focus-visible) {
 
   .page-main {
     grid-column: 2;
+    padding-inline: var(--space-sm);
   }
 
   .ad-column-right {
@@ -310,7 +312,7 @@ input:focus:not(:focus-visible) {
 }
 
 .input-panel {
-  padding: var(--space-md);
+  padding: 12px;
 }
 
 .input-panel h2 {
@@ -459,7 +461,7 @@ input:focus:not(:focus-visible) {
 
 /* Results */
 .result-panel {
-  padding: var(--space-md);
+  padding: 12px;
 }
 
 .result-panel h2 {

@@ -117,8 +117,6 @@ export const ko: Messages = {
     afterMaintenance: '주문 후 유지증거금',
     afterEntrusted: '주문 후 위탁증거금',
     afterAvailable: '주문 후 가용증거금',
-    afterPerEntrusted: '주문 후 1계약당 위탁증거금',
-    afterPerMaintenance: '주문 후 1계약당 유지증거금',
     beforeLeverage: '주문 전 레버리지',
     afterLeverage: '주문 후 레버리지',
   },

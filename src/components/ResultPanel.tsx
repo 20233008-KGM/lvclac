@@ -240,14 +240,6 @@ function OrderResults({
           value={formatNumber(result.afterMargins?.availableMargin ?? null)}
           sub={r.availableMarginSub}
         />
-        <ResultRow
-          label={r.afterPerEntrusted}
-          value={formatNumber(result.afterMargins?.perContractEntrusted ?? null)}
-        />
-        <ResultRow
-          label={r.afterPerMaintenance}
-          value={formatNumber(result.afterMargins?.perContractMaintenance ?? null)}
-        />
       </div>
     </>
   )

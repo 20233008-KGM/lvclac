@@ -117,8 +117,6 @@ export const en: Messages = {
     afterMaintenance: 'Maintenance (after)',
     afterEntrusted: 'Initial margin (after)',
     afterAvailable: 'Excess margin (after)',
-    afterPerEntrusted: 'Initial / contract (after)',
-    afterPerMaintenance: 'Maintenance / contract (after)',
     beforeLeverage: 'Leverage (before)',
     afterLeverage: 'Leverage (after)',
   },

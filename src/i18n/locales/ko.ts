@@ -29,7 +29,7 @@ export const ko: Messages = {
   sections: { instrument: '종목 스펙', margin: '증거금', account: '계좌' },
   singleInstrument: {
     label: '단일 종목 투자',
-    hint: '켜면 현재가만 바꿔도 계좌 평가금액이 보유 포지션 손익(델타)만큼 함께 변합니다.',
+    hint: '시나리오 가격을 확정(blur)하거나 현재가 스테퍼로 틱 이동 시, 계좌 평가금액에 포지션 손익(델타)이 반영되고 현재가가 갱신됩니다.',
   },
   draftSave: {
     label: '이 기기에 입력값 저장',
@@ -88,6 +88,16 @@ export const ko: Messages = {
       label: '현재가',
       hint: '기준 시세',
       placeholder: '35,000',
+    },
+    scenarioPrice: {
+      label: '시나리오 가격',
+      hint: '입력 후 포커스를 벗어나면 (현재가→시나리오) 델타만큼 계좌 평가금액에 반영되고 현재가가 갱신됩니다.',
+      placeholder: '변동 가격',
+    },
+    tickSize: {
+      label: '틱 사이즈',
+      hint: '입력 시 현재가·시나리오 가격에 스테퍼가 나타납니다. 현재가 스테퍼는 틱마다 손익 반영.',
+      placeholder: '1',
     },
     contractMultiplier: {
       label: '계약 승수',

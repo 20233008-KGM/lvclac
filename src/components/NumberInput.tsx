@@ -11,6 +11,10 @@ import {
 interface NumberInputProps {
   value: number | undefined
   onChange: (value: number | undefined) => void
+  /** blur 시에만 onChange/onCommit 호출 (타이핑 중 부모 state 미갱신) */
+  deferChangeUntilBlur?: boolean
+  /** defer 모드에서 blur 확정 시 호출 (없으면 onChange 사용) */
+  onCommit?: (value: number | undefined) => void
   allowDecimal?: boolean
   allowNegative?: boolean
   optional?: boolean
@@ -23,6 +27,8 @@ interface NumberInputProps {
 export function NumberInput({
   value,
   onChange,
+  deferChangeUntilBlur = false,
+  onCommit,
   allowDecimal = false,
   allowNegative = false,
   isRate = false,
@@ -46,6 +52,12 @@ export function NumberInput({
     }
   }, [value, focused, isRate, allowDecimal, allowNegative])
 
+  function commitValue(normalized: number | undefined) {
+    if (normalized === value) return
+    const handler = onCommit ?? onChange
+    handler(normalized)
+  }
+
   return (
     <input
       type="text"
@@ -62,12 +74,18 @@ export function NumberInput({
           return
         }
         const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
-        if (normalized !== value) onChange(normalized)
+        if (deferChangeUntilBlur) {
+          commitValue(normalized)
+        } else if (normalized !== value) {
+          onChange(normalized)
+        }
         setText(formatValue(normalized))
       }}
       onChange={(e) => {
         const formatted = formatRaw(e.target.value)
         setText(formatted)
+
+        if (deferChangeUntilBlur) return
 
         const parsed = parseFormattedInput(formatted)
         if (parsed === '') {

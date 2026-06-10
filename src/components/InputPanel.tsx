@@ -1,5 +1,6 @@
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
+import type { CalculatorInputPatch } from '../calc/mtmLink'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import { NumberInput } from './NumberInput'
@@ -8,7 +9,7 @@ import { SaveDraftToggle } from './SaveDraftToggle'
 
 interface InputPanelProps {
   inputs: CalculatorInputs
-  onChange: (patch: Partial<CalculatorInputs>) => void
+  onChange: (patch: CalculatorInputPatch) => void
 }
 
 const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>(['contractMultiplier'])
@@ -54,11 +55,15 @@ function numField(
   field: FieldCopy,
   key: keyof CalculatorInputs,
   inputs: CalculatorInputs,
-  onChange: (patch: Partial<CalculatorInputs>) => void,
+  onChange: (patch: CalculatorInputPatch) => void,
   optional = false,
   optionalText?: string,
   showTooltip = false,
   tooltipLabel?: string,
+  inputProps?: Partial<{
+    deferChangeUntilBlur: boolean
+    onCommit: (value: number | undefined) => void
+  }>,
 ) {
   const value = inputs[key] as number | undefined
   const allowDecimal = DECIMAL_FIELDS.has(key)
@@ -78,7 +83,139 @@ function numField(
         isRate={isRate}
         optional={optional}
         placeholder={field.placeholder || undefined}
+        deferChangeUntilBlur={inputProps?.deferChangeUntilBlur}
+        onCommit={inputProps?.onCommit}
         onChange={(v) => onChange({ [key]: v })}
+      />
+    </Field>
+  )
+}
+
+function CurrentPriceField({
+  inputs,
+  onChange,
+  field,
+  stepUpLabel,
+  stepDownLabel,
+}: {
+  inputs: CalculatorInputs
+  onChange: (patch: CalculatorInputPatch) => void
+  field: FieldCopy
+  stepUpLabel: string
+  stepDownLabel: string
+}) {
+  const single = inputs.singleInstrument ?? false
+  const tickSize = inputs.tickSize
+  const useStepper = single && tickSize != null && tickSize > 0
+
+  if (useStepper) {
+    return (
+      <Field label={field.label} labelId="current-price-label">
+        <NumberStepper
+          value={inputs.currentPrice}
+          step={tickSize}
+          allowNegative={false}
+          placeholder={field.placeholder || undefined}
+          stepUpLabel={stepUpLabel}
+          stepDownLabel={stepDownLabel}
+          ariaLabelledBy="current-price-label"
+          onChange={(v) => {
+            if (v == null || inputs.currentPrice == null) return
+            if (v > inputs.currentPrice) onChange({ tickCurrentPrice: 1 })
+            else if (v < inputs.currentPrice) onChange({ tickCurrentPrice: -1 })
+          }}
+        />
+      </Field>
+    )
+  }
+
+  if (single) {
+    return (
+      <Field label={field.label} labelId="current-price-label">
+        <NumberInput
+          value={inputs.currentPrice}
+          allowDecimal={false}
+          placeholder={field.placeholder || undefined}
+          aria-labelledby="current-price-label"
+          deferChangeUntilBlur
+          onCommit={(v) => {
+            if (v != null) onChange({ commitCurrentPrice: v })
+          }}
+          onChange={() => {}}
+        />
+      </Field>
+    )
+  }
+
+  return (
+    <Field label={field.label}>
+      <NumberInput
+        value={inputs.currentPrice}
+        allowDecimal={false}
+        placeholder={field.placeholder || undefined}
+        onChange={(v) => onChange({ currentPrice: v })}
+      />
+    </Field>
+  )
+}
+
+function ScenarioPriceField({
+  inputs,
+  onChange,
+  field,
+  stepUpLabel,
+  stepDownLabel,
+  tooltipLabel,
+}: {
+  inputs: CalculatorInputs
+  onChange: (patch: CalculatorInputPatch) => void
+  field: FieldCopy
+  stepUpLabel: string
+  stepDownLabel: string
+  tooltipLabel: string
+}) {
+  const tickSize = inputs.tickSize
+  const useStepper = tickSize != null && tickSize > 0
+
+  if (useStepper) {
+    return (
+      <Field
+        label={field.label}
+        labelId="scenario-price-label"
+        tooltip={field.hint}
+        tooltipLabel={tooltipLabel}
+      >
+        <NumberStepper
+          value={inputs.scenarioPrice}
+          step={tickSize}
+          allowNegative={false}
+          placeholder={field.placeholder || undefined}
+          stepUpLabel={stepUpLabel}
+          stepDownLabel={stepDownLabel}
+          ariaLabelledBy="scenario-price-label"
+          onChange={(v) => onChange({ scenarioPrice: v })}
+        />
+      </Field>
+    )
+  }
+
+  return (
+    <Field
+      label={field.label}
+      labelId="scenario-price-label"
+      tooltip={field.hint}
+      tooltipLabel={tooltipLabel}
+    >
+      <NumberInput
+        value={inputs.scenarioPrice}
+        allowDecimal={false}
+        placeholder={field.placeholder || undefined}
+        aria-labelledby="scenario-price-label"
+        deferChangeUntilBlur
+        onCommit={(v) => {
+          if (v != null) onChange({ commitScenarioPrice: v })
+        }}
+        onChange={() => {}}
       />
     </Field>
   )
@@ -87,6 +224,7 @@ function numField(
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
+  const singleInstrument = inputs.singleInstrument ?? false
 
   return (
     <section className="panel input-panel">
@@ -146,7 +284,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             <label className="input-option-toggle">
               <input
                 type="checkbox"
-                checked={inputs.singleInstrument ?? false}
+                checked={singleInstrument}
                 onChange={(e) => onChange({ singleInstrument: e.target.checked })}
               />
               <span className="input-option-toggle__label">
@@ -159,8 +297,36 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
 
         <div className="field-section">
           <SectionTitle>{t.sections.instrument}</SectionTitle>
-          {numField(f.currentPrice, 'currentPrice', inputs, onChange)}
+          <CurrentPriceField
+            inputs={inputs}
+            onChange={onChange}
+            field={f.currentPrice}
+            stepUpLabel={t.stepUp}
+            stepDownLabel={t.stepDown}
+          />
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
+          {singleInstrument && (
+            <>
+              <ScenarioPriceField
+                inputs={inputs}
+                onChange={onChange}
+                field={f.scenarioPrice}
+                stepUpLabel={t.stepUp}
+                stepDownLabel={t.stepDown}
+                tooltipLabel={t.fieldTooltipLabel}
+              />
+              {numField(
+                f.tickSize,
+                'tickSize',
+                inputs,
+                onChange,
+                true,
+                t.optional,
+                true,
+                t.fieldTooltipLabel,
+              )}
+            </>
+          )}
         </div>
 
         <div className="field-section">

@@ -30,7 +30,7 @@ export const en: Messages = {
   sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
   singleInstrument: {
     label: 'Single-instrument account',
-    hint: 'When on, changing mark price updates account equity by open P&L (delta).',
+    hint: 'Committing a scenario price or stepping mark price applies open P&L (delta) to equity and rolls the mark price.',
   },
   draftSave: {
     label: 'Save inputs on this device',
@@ -89,6 +89,16 @@ export const en: Messages = {
       label: 'Mark price',
       hint: 'Current reference price',
       placeholder: '35,000',
+    },
+    scenarioPrice: {
+      label: 'Scenario price',
+      hint: 'On blur, applies (scenario − mark) delta to equity and updates mark price.',
+      placeholder: 'Target price',
+    },
+    tickSize: {
+      label: 'Tick size',
+      hint: 'Enables steppers on mark and scenario prices. Mark stepper applies P&L per tick.',
+      placeholder: '1',
     },
     contractMultiplier: {
       label: 'Contract multiplier',

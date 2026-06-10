@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useDebouncedSave } from '../hooks/useDebouncedSave'
-import { applyInputPatch } from '../calc/mtmLink'
+import { applyInputPatch, type CalculatorInputPatch } from '../calc/mtmLink'
 import { defaultInputs, type CalculatorInputs } from '../types'
 import { normalizeStoredRate } from '../utils/inputFormat'
 
@@ -15,7 +15,7 @@ const SAVE_ENABLED_KEY = 'leverage_save_enabled'
 
 interface CalculatorContextValue {
   inputs: CalculatorInputs
-  updateInputs: (patch: Partial<CalculatorInputs>) => void
+  updateInputs: (patch: CalculatorInputPatch) => void
   saveEnabled: boolean
   setSaveEnabled: (enabled: boolean) => void
 }
@@ -92,7 +92,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [saveEnabled, setSaveEnabledState] = useState(readSaveEnabled)
   const [inputs, setInputs] = useState(() => getInitialInputs(readSaveEnabled()))
 
-  const updateInputs = useCallback((patch: Partial<CalculatorInputs>) => {
+  const updateInputs = useCallback((patch: CalculatorInputPatch) => {
     setInputs((prev) => applyInputPatch(prev, patch))
   }, [])
 

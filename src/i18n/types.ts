@@ -70,6 +70,8 @@ export interface Messages {
     contracts: FieldCopy
     contractAmount: FieldCopy
     currentPrice: FieldCopy
+    scenarioPrice: FieldCopy
+    tickSize: FieldCopy
     contractMultiplier: FieldCopy
     orderContracts: FieldCopy
   }

@@ -1,87 +1,107 @@
 import type { CalculatorInputs } from '../types'
 import { calcTotalQuantity } from './liquidation/common'
 
-/** 앵커 가격 대비 newPrice에서의 연동 계좌 평가금액 — Key_Formula Q = N × M */
-export function calcLinkedEquity(
-  inputs: CalculatorInputs,
-  newPrice: number,
-): number | null {
-  const anchorEquity = inputs.mtmAnchorEquity ?? inputs.accountEval
-  const anchorPrice = inputs.mtmAnchorPrice ?? inputs.currentPrice
-  if (anchorEquity == null || anchorPrice == null) return null
-
-  const contracts = inputs.contracts
-  if (contracts == null || contracts <= 0) return anchorEquity
-
-  const Q = calcTotalQuantity(inputs, contracts)
-  if (Q == null) return anchorEquity
-
-  const delta = (newPrice - anchorPrice) * Q
-  const pnl = inputs.positionSide === 'long' ? delta : -delta
-  return anchorEquity + pnl
+export type CalculatorInputPatch = Partial<CalculatorInputs> & {
+  /** 시나리오 가격 blur 확정 */
+  commitScenarioPrice?: number
+  /** 현재가 blur 확정 (단일 종목 ON) */
+  commitCurrentPrice?: number
+  /** 현재가 스테퍼 ±1틱 */
+  tickCurrentPrice?: 1 | -1
 }
 
-function mtmAnchorPatch(inputs: CalculatorInputs): Partial<CalculatorInputs> {
-  return {
-    mtmAnchorEquity: inputs.accountEval,
-    mtmAnchorPrice: inputs.currentPrice,
+/** 가격 변화량에 대한 손익 — Key_Formula Q = N × M */
+export function calcPnlDelta(inputs: CalculatorInputs, priceDelta: number): number {
+  const contracts = inputs.contracts
+  if (contracts == null || contracts <= 0) return 0
+  const Q = calcTotalQuantity(inputs, contracts)
+  if (Q == null) return 0
+  const delta = priceDelta * Q
+  return inputs.positionSide === 'long' ? delta : -delta
+}
+
+/** 기준 현재가 → newPrice 이동 후 롤링 갱신 */
+export function applyPriceMove(
+  prev: CalculatorInputs,
+  newPrice: number,
+): Partial<CalculatorInputs> | null {
+  const currentPrice = prev.currentPrice
+  const accountEval = prev.accountEval
+  if (currentPrice == null || accountEval == null) return null
+
+  if (newPrice === currentPrice) {
+    return { currentPrice: newPrice, scenarioPrice: undefined }
   }
+
+  const pnl = calcPnlDelta(prev, newPrice - currentPrice)
+  return {
+    accountEval: accountEval + pnl,
+    currentPrice: newPrice,
+    scenarioPrice: undefined,
+    evalSnapshotSide: prev.positionSide,
+  }
+}
+
+/** 현재가 ±1틱 MTM 이동 */
+export function applyTickMove(
+  prev: CalculatorInputs,
+  direction: 1 | -1,
+): Partial<CalculatorInputs> | null {
+  const tickSize = prev.tickSize
+  const currentPrice = prev.currentPrice
+  if (tickSize == null || tickSize <= 0 || currentPrice == null) return null
+  return applyPriceMove(prev, currentPrice + direction * tickSize)
 }
 
 /** 단일 종목 MTM 연동 시 입력 패치 보정 */
 export function applyInputPatch(
   prev: CalculatorInputs,
-  patch: Partial<CalculatorInputs>,
+  patch: CalculatorInputPatch,
 ): CalculatorInputs {
-  if (patch.singleInstrument === true && !prev.singleInstrument) {
-    return {
-      ...prev,
-      ...patch,
-      ...mtmAnchorPatch({ ...prev, ...patch }),
-    }
+  const {
+    commitScenarioPrice,
+    commitCurrentPrice,
+    tickCurrentPrice,
+    ...inputPatch
+  } = patch
+
+  if (tickCurrentPrice != null) {
+    const direction = tickCurrentPrice === 1 ? 1 : -1
+    const base = { ...prev, ...inputPatch }
+    const moved = applyTickMove(base, direction)
+    if (moved) return { ...base, ...moved }
+    return base
+  }
+
+  if (commitScenarioPrice != null) {
+    const base = { ...prev, ...inputPatch }
+    const moved = applyPriceMove(base, commitScenarioPrice)
+    if (moved) return { ...base, ...moved }
+    return base
+  }
+
+  if (commitCurrentPrice != null) {
+    const base = { ...prev, ...inputPatch }
+    const moved = applyPriceMove(base, commitCurrentPrice)
+    if (moved) return { ...base, ...moved }
+    return base
   }
 
   if (patch.singleInstrument === false) {
     return {
       ...prev,
-      ...patch,
-      mtmAnchorPrice: undefined,
-      mtmAnchorEquity: undefined,
+      ...inputPatch,
+      singleInstrument: false,
+      scenarioPrice: undefined,
+      tickSize: undefined,
     }
   }
 
-  const next = { ...prev, ...patch }
-  if (!next.singleInstrument) return next
+  const next = { ...prev, ...inputPatch }
 
-  if (
-    patch.accountEval !== undefined &&
-    patch.currentPrice === undefined &&
-    patch.accountEval !== prev.accountEval
-  ) {
-    return {
-      ...next,
-      mtmAnchorEquity: patch.accountEval,
-      mtmAnchorPrice: prev.currentPrice ?? next.currentPrice,
-    }
-  }
-
-  if (
-    patch.currentPrice !== undefined &&
-    patch.currentPrice !== prev.currentPrice
-  ) {
-    const linked = calcLinkedEquity(prev, patch.currentPrice)
-    if (linked != null) {
-      return {
-        ...next,
-        accountEval: linked,
-        evalSnapshotSide: next.positionSide,
-      }
-    }
-  }
-
-  const reanchorKeys = ['contracts', 'contractMultiplier', 'positionSide'] as const
-  if (reanchorKeys.some((key) => patch[key] !== undefined && patch[key] !== prev[key])) {
-    return { ...next, ...mtmAnchorPatch(next) }
+  if (next.singleInstrument && inputPatch.currentPrice !== undefined) {
+    const { currentPrice: _ignored, ...rest } = inputPatch
+    return { ...prev, ...rest }
   }
 
   return next

@@ -1,5 +1,5 @@
 import type { Messages } from '../types'
-
+import { boardPath } from '../../config/boards'
 export const ko: Messages = {
   lang: 'ko',
   htmlLang: 'ko',
@@ -14,6 +14,7 @@ export const ko: Messages = {
   close: '닫기',
   langToggleLabel: '언어 선택',
   optional: '(선택)',
+  fieldTooltipLabel: '용어 설명',
   input: '입력',
   result: '결과',
   long: '롱',
@@ -46,7 +47,7 @@ export const ko: Messages = {
   fields: {
     accountEquity: {
       label: '계좌 평가금액',
-      hint: '예탁금 + 미결제손익. HTS·MTS 「계좌 평가금액」과 동일하게 입력',
+      hint: '예탁금에 포지션 미결제 손익을 더한 금액입니다. 증권사 HTS·MTS에 표시되는 「계좌 평가금액」과 같습니다.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
@@ -110,10 +111,12 @@ export const ko: Messages = {
     entrustedMargin: '위탁증거금 (개시)',
     availableMargin: '가용증거금',
     availableMarginSub: '계좌 평가금액 − 위탁증거금',
+    maintenanceExcess: '유지증거금 여유',
+    maintenanceExcessSub: '계좌 평가금액 − 유지증거금',
     perContractEntrusted: '1계약당 위탁증거금',
     perContractMaintenance: '1계약당 유지증거금',
-    toleranceLong: '청산 여유(%)',
-    toleranceShort: '청산 여유(%)',
+    toleranceLong: '청산까지 하락 여유(%)',
+    toleranceShort: '청산까지 상승 여유(%)',
     toleranceDeltaLong: '청산까지 하락폭',
     toleranceDeltaShort: '청산까지 상승폭',
     beforeLiquidation: '주문 전 청산가',
@@ -139,6 +142,8 @@ export const ko: Messages = {
     cannot_calc_per_contract_entrusted: '1계약당 위탁증거금을 계산할 수 없습니다.',
     order_exceeds_max_buyable:
       '주문 계약 수가 가용 증거금 기준 추가 매수 한도를 초과합니다. 현재 계좌 상태로는 체결할 수 없습니다.',
+    order_exceeds_max_sellable:
+      '주문 계약 수가 가용 증거금 기준 추가 매도 한도를 초과합니다. 현재 계좌 상태로는 체결할 수 없습니다.',
     order_exceeds_position: '보유 계약 수보다 많이 매도할 수 없습니다.',
     at_risk: '청산 위험',
   },
@@ -209,6 +214,160 @@ export const ko: Messages = {
       '6. 문의: Farfield Software — 서비스 footer에 표시된 연락처로 요청',
     ],
   },
+  formulas: {
+    backToCalculator: '← 계산기로 돌아가기',
+    title: '수식 정의',
+    description:
+      '레버리지 계산기가 사용하는 수식입니다. 브로커·거래소 규정과 다를 수 있으므로 참고용으로만 활용하세요.',
+    disclaimer:
+      '직접 입력한 유지·위탁증거금이 있으면 비율 산출값보다 우선합니다. 청산 시점·반올림은 증권사마다 다를 수 있습니다.',
+    symbolTitle: '용어',
+    symbols: [
+      { symbol: '계좌평가금액', meaning: '입력한 계좌 평가금액 (현재 자산)' },
+      { symbol: '현재가', meaning: '입력한 현재 시세' },
+      { symbol: '변동 후 가격', meaning: '가격이 움직인 뒤의 가격 (청산가를 구할 때 미지수)' },
+      { symbol: '보유 계약수', meaning: '현재 보유 중인 계약 수' },
+      { symbol: '계약승수', meaning: '1계약의 배율 (미입력 시 1)' },
+      {
+        symbol: '총 민감도',
+        meaning: '보유 계약수 × 계약승수 (가격 1단위 움직일 때 손익 크기)',
+      },
+      { symbol: '유지증거금률', meaning: '약정가치 대비 유지증거금 비율 (소수, 예: 0.247)' },
+      { symbol: '위탁증거금률', meaning: '약정가치 대비 개시·위탁증거금 비율' },
+    ],
+    sections: [
+      {
+        title: '약정가치·증거금',
+        intro:
+          '약정금액·계약승수는 명목가치 산출에 씁니다. 아래 「총 민감도」와는 별개입니다.',
+        entries: [
+          {
+            name: '약정가치 (포지션 명목)',
+            expression: '약정가치 = 보유 계약수 × 약정금액(1계약) × 계약승수',
+          },
+          {
+            name: '유지증거금 (비율 입력)',
+            expression: '유지증거금 = 약정가치 × 유지증거금률',
+            description: '증권사 화면에서 직접 입력한 금액이 있으면 그 값을 우선합니다.',
+          },
+          {
+            name: '위탁증거금 (비율 입력)',
+            expression: '위탁증거금 = 약정가치 × 위탁증거금률',
+          },
+          {
+            name: '가용증거금',
+            expression: '가용증거금 = 계좌평가금액 − 위탁증거금',
+          },
+          {
+            name: '1계약당 위탁·유지증거금',
+            expression: '1계약당 = 포지션 증거금 ÷ 보유 계약수',
+          },
+        ],
+      },
+      {
+        title: '청산가 — 공통',
+        intro:
+          '청산은 「변동 후 계좌 자산 = 변동 후 유지증거금」이 되는 가격에서 발생한다고 가정합니다.',
+        entries: [
+          {
+            name: '총 민감도',
+            expression: '총 민감도 = 보유 계약수 × 계약승수',
+            description:
+              '코스피200 예: 보유 58계약, 승수 10 → 총 민감도 580. 승수 1이면 보유 계약수와 같습니다.',
+          },
+          {
+            name: '현재가에서 유지증거금',
+            expression: '현재가 기준 유지증거금 = 현재가 × 총 민감도 × 유지증거금률',
+            description: '직접 입력 시 증권사 표시 유지증거금(계약 수에 비례 조정).',
+          },
+          {
+            name: '변동 후 가격에서 유지증거금',
+            expression:
+              '해당 가격 기준 유지증거금 = 현재가 기준 유지증거금 × (변동 후 가격 ÷ 현재가)',
+          },
+        ],
+      },
+      {
+        title: '청산가 — 롱',
+        entries: [
+          {
+            name: '변동 후 계좌 자산',
+            expression:
+              '변동 후 계좌 자산 = 계좌평가금액 + (변동 후 가격 − 현재가) × 총 민감도',
+          },
+          {
+            name: '청산 조건',
+            expression: '변동 후 계좌 자산 = 해당 가격 기준 유지증거금',
+          },
+          {
+            name: '청산가',
+            expression:
+              '청산가 = (현재가×총 민감도 − 계좌평가금액) ÷ (총 민감도 − 현재가 기준 유지증거금÷현재가)',
+          },
+          {
+            name: '요약 (유지증거금률 기준)',
+            expression:
+              '청산가 = (현재가×총 민감도 − 계좌평가금액) ÷ (총 민감도×(1 − 유지증거금률))',
+            description: '「현재가 기준 유지증거금 = 현재가×총 민감도×유지증거금률」일 때와 같습니다.',
+          },
+        ],
+      },
+      {
+        title: '청산가 — 숏',
+        entries: [
+          {
+            name: '변동 후 계좌 자산',
+            expression:
+              '변동 후 계좌 자산 = 계좌평가금액 − (변동 후 가격 − 현재가) × 총 민감도',
+          },
+          {
+            name: '청산 조건',
+            expression: '변동 후 계좌 자산 = 해당 가격 기준 유지증거금',
+          },
+          {
+            name: '청산가',
+            expression:
+              '청산가 = (계좌평가금액 + 현재가×총 민감도) ÷ (총 민감도 + 현재가 기준 유지증거금÷현재가)',
+          },
+          {
+            name: '요약 (유지증거금률 기준)',
+            expression:
+              '청산가 = (계좌평가금액 + 현재가×총 민감도) ÷ (총 민감도×(1 + 유지증거금률))',
+          },
+        ],
+        notes: [
+          '같은 계좌평가금액·총 민감도에서 숏 상승 여유(%) < 롱 하락 여유(%) — 대칭이 아닙니다.',
+        ],
+      },
+      {
+        title: '청산 여유·레버리지·추가 주문',
+        entries: [
+          {
+            name: '롱 — 청산까지 하락 여유(%)',
+            expression: '((현재가 − 청산가) ÷ 현재가) × 100',
+          },
+          {
+            name: '숏 — 청산까지 상승 여유(%)',
+            expression: '((청산가 − 현재가) ÷ 현재가) × 100',
+          },
+          {
+            name: '청산까지 가격 변동폭',
+            expression: '롱: 현재가 − 청산가  /  숏: 청산가 − 현재가',
+          },
+          {
+            name: '레버리지',
+            expression: '레버리지 = 약정가치 ÷ 계좌평가금액',
+          },
+          {
+            name: '추가 매수·매도 한도',
+            expression:
+              '내림((계좌평가금액 − 위탁증거금) ÷ 1계약당 위탁증거금)',
+            description: '롱은 추가 매수, 숏은 추가 매도(신규 숏) 한도. 증거금 기준은 동일합니다.',
+          },
+        ],
+      },
+    ],
+  },
   footer: {
     navAriaLabel: '사이트 하단 메뉴',
     disclaimer:
@@ -220,7 +379,7 @@ export const ko: Messages = {
       {
         title: '제품',
         links: [
-          { label: '레버리지 계산기', href: '#calculator' },
+          { label: '레버리지 계산기', href: '/' },
           { label: 'Pro', soon: true },
           { label: '업데이트 노트', soon: true },
         ],
@@ -241,7 +400,51 @@ export const ko: Messages = {
           { label: '상태 페이지', soon: true },
         ],
       },
+      {
+        title: '의견 보내기',
+        links: [
+          { label: '개발 의뢰', href: boardPath('dev-request') },
+          { label: '버그 제보', href: boardPath('bugs') },
+          { label: '개선 제안', href: boardPath('suggestions') },
+        ],
+      },
     ],
+  },
+  boards: {
+    backToCalculator: '← 계산기로 돌아가기',
+    storageNotice:
+      '각 게시판은 용도별로 분리되어 있습니다. 현재는 이 기기 브라우저에만 글이 저장되며, 서버 연동 후 다른 이용자와 공유됩니다.',
+    writePost: '글쓰기',
+    postList: '게시글',
+    postTitle: '제목',
+    postTitlePlaceholder: '요청·버그·개선 내용을 한 줄로 적어 주세요',
+    postBody: '내용',
+    postBodyPlaceholder: '상세 내용, 재현 방법, 기대 동작 등을 적어 주세요',
+    postAuthor: '작성자',
+    postAuthorPlaceholder: '닉네임 (미입력 시 익명)',
+    submit: '등록',
+    empty: '아직 등록된 글이 없습니다. 첫 글을 남겨 주세요.',
+    anonymous: '익명',
+    items: {
+      'dev-request': {
+        title: '개발 의뢰',
+        footerLabel: '개발 의뢰',
+        description:
+          '원하시는 소프트웨어·기능 개발 의뢰를 남겨 주세요. Farfield Software가 검토합니다.',
+      },
+      bugs: {
+        title: '버그 제보',
+        footerLabel: '버그 제보',
+        description:
+          '화면·입력 버그, 계산 결과 불일치, 수식 논리 오류 등을 알려 주세요.',
+      },
+      suggestions: {
+        title: '개선 제안',
+        footerLabel: '개선 제안',
+        description:
+          'UI, 기능, 사용성 등 개선 아이디어를 자유롭게 제안해 주세요.',
+      },
+    },
   },
   ads: {
     leftTop: '좌측 상단 광고',

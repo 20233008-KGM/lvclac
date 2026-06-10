@@ -1,10 +1,15 @@
+import { FeedbackBoardPage } from './components/FeedbackBoardPage'
+import { FormulasPage } from './components/FormulasPage'
 import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
 import { LanguageToggle } from './components/LanguageToggle'
 import { SiteFooter } from './components/SiteFooter'
+import { parseBoardPath } from './config/boards'
+import { isFormulasPath } from './config/routes'
 import { useCalculator } from './context/CalculatorContext'
+import { usePathname } from './hooks/usePathname'
 import { useLanguage } from './i18n'
 import './App.css'
 
@@ -35,10 +40,19 @@ function CalculatorApp() {
   )
 }
 
+function AppRouter() {
+  const pathname = usePathname()
+  const boardId = parseBoardPath(pathname)
+
+  if (boardId) return <FeedbackBoardPage boardId={boardId} />
+  if (isFormulasPath(pathname)) return <FormulasPage />
+  return <CalculatorApp />
+}
+
 function App() {
   return (
     <DisclaimerProvider>
-      <CalculatorApp />
+      <AppRouter />
     </DisclaimerProvider>
   )
 }

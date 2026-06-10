@@ -87,7 +87,7 @@
     border-right: 1px solid var(--color-border-subtle);
   }
 
-  .result-panel .result-row:nth-child(2n) {
+  .result-panel .result-row:nth-child(2n of .result-row) {
     border-right: none;
   }
 
@@ -95,9 +95,17 @@
     border-bottom: none;
   }
 
-  .result-panel .result-row:last-child:nth-child(odd) {
+  .result-panel .result-row:last-child:nth-child(odd of .result-row) {
     grid-column: 1 / -1;
     border-right: none;
+  }
+
+  .result-panel .result-row-pair {
+    display: contents;
+  }
+
+  .result-panel .result-row-pair > .result-row {
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
   .result-panel .result-row-value {

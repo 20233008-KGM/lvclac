@@ -55,16 +55,15 @@ export function formatLeverageValue(value: number | null | undefined): string {
   return trimTrailingZeros(rounded.toFixed(2))
 }
 
-/** 청산 여유(%) — 롱: -, 숏: + */
+/** 청산 여유(%) — 롱: -, 숏: + (이미 청산 위험이면 계산값 부호 유지) */
 export function formatTolerancePercent(
   value: number | null,
   side: 'long' | 'short',
   decimals = 2,
 ): string {
   if (value === null || Number.isNaN(value)) return '-'
-  const magnitude = Math.abs(value)
-  if (magnitude === 0) return '0'
-  const formatted = formatPercentValue(magnitude, decimals)
+  if (value <= 0) return formatPercentValue(value, decimals)
+  const formatted = formatPercentValue(value, decimals)
   return side === 'long' ? `-${formatted}` : `+${formatted}`
 }
 

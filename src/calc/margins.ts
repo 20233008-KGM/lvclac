@@ -5,15 +5,26 @@ import type {
   MaintenanceMarginSource,
   MarginAmounts,
 } from '../types'
+import {
+  calcIndexNotionalWon,
+  isWonAccountIndexFieldMismatch,
+} from './indexNotional'
 import { hasContractSpec, resolvePointValue } from './pointValue'
 
 type NotionalInputs = Pick<
   CalculatorInputs,
-  'contractAmount' | 'contractMultiplier' | 'currentPrice'
+  'accountEval' | 'contractAmount' | 'contractMultiplier' | 'currentPrice'
 >
 
 export function calcPositionNotional(inputs: NotionalInputs, contracts: number): number {
   const multiplier = inputs.contractMultiplier ?? 1
+  if (
+    inputs.contractAmount != null &&
+    inputs.currentPrice != null &&
+    isWonAccountIndexFieldMismatch(inputs as CalculatorInputs)
+  ) {
+    return calcIndexNotionalWon(inputs.currentPrice, contracts, inputs.contractMultiplier)
+  }
   // 약정금액 경로: price×pointValue와 동치이나 부동소수 취소 오차 방지
   if (inputs.contractAmount != null) {
     return contracts * inputs.contractAmount * multiplier
@@ -158,6 +169,7 @@ export function calcMargins(
       entrustedMargin,
       entrustedMarginSource,
       availableMargin: (inputs.accountEval ?? 0) - entrustedMargin,
+      maintenanceExcess: (inputs.accountEval ?? 0) - maintenanceMargin,
       perContractMaintenance,
       perContractEntrusted,
     },

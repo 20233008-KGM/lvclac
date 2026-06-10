@@ -70,6 +70,10 @@ describe('formatTolerancePercent', () => {
   it('0은 부호 없음', () => {
     expect(formatTolerancePercent(0, 'long')).toBe('0')
   })
+
+  it('청산 위험(음수)은 포지션 부호를 덮어쓰지 않음', () => {
+    expect(formatTolerancePercent(-4, 'short')).toBe('-4')
+  })
 })
 
 describe('formatToleranceDelta', () => {

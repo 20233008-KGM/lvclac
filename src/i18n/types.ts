@@ -1,3 +1,4 @@
+import type { BoardId } from '../config/boards'
 import type { CalcMessageCode } from './calcMessages'
 
 export type Locale = 'ko' | 'en'
@@ -6,6 +7,19 @@ export interface FieldCopy {
   label: string
   hint: string
   placeholder: string
+}
+
+export interface FormulaEntry {
+  name: string
+  expression: string
+  description?: string
+}
+
+export interface FormulaSection {
+  title: string
+  intro?: string
+  entries: FormulaEntry[]
+  notes?: string[]
 }
 
 export interface Messages {
@@ -20,6 +34,7 @@ export interface Messages {
   close: string
   langToggleLabel: string
   optional: string
+  fieldTooltipLabel: string
   input: string
   result: string
   long: string
@@ -87,6 +102,34 @@ export interface Messages {
     disclaimer: string
     soon: string
     columns: { title: string; links: { label: string; href?: string; soon?: boolean }[] }[]
+  }
+  formulas: {
+    backToCalculator: string
+    title: string
+    description: string
+    disclaimer: string
+    symbolTitle: string
+    symbols: { symbol: string; meaning: string }[]
+    sections: FormulaSection[]
+  }
+  boards: {
+    backToCalculator: string
+    storageNotice: string
+    writePost: string
+    postList: string
+    postTitle: string
+    postTitlePlaceholder: string
+    postBody: string
+    postBodyPlaceholder: string
+    postAuthor: string
+    postAuthorPlaceholder: string
+    submit: string
+    empty: string
+    anonymous: string
+    items: Record<
+      BoardId,
+      { title: string; description: string; footerLabel: string }
+    >
   }
   ads: Record<string, string>
 }

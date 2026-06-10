@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 import { calculateEvaluate, calculateOrder, checkOrderExceedsMaxBuyable } from '../calc/leverage'
 import { calcMargins, inputsReadyForEvaluate } from '../calc/margins'
-import type { CalculatorInputs, EvaluateResult, OrderResult, PositionSide } from '../types'
+import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
+import { maxAddableLabel } from '../utils/positionLabels'
+import { FORMULAS_PATH } from '../config/routes'
+import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { LegalEmphasis } from './ServiceDisclaimer'
 import { NumberStepper } from './NumberStepper'
@@ -59,6 +62,21 @@ function ResultRow({
   )
 }
 
+function ResultRowPair({
+  left,
+  right,
+}: {
+  left: { label: string; value: string }
+  right: { label: string; value: string }
+}) {
+  return (
+    <div className="result-row-pair">
+      <ResultRow label={left.label} value={left.value} />
+      <ResultRow label={right.label} value={right.value} />
+    </div>
+  )
+}
+
 function ResultSheet({
   indexHeader,
   beforeHeader,
@@ -98,19 +116,14 @@ function ResultSheet({
   )
 }
 
-function EvaluateResults({
-  result,
-  positionSide,
-}: {
-  result: EvaluateResult
-  positionSide: PositionSide
-}) {
+function EvaluateResults({ result }: { result: EvaluateResult }) {
   const { t, translateCalcMessage } = useLanguage()
   const r = t.results
-  const isLong = positionSide === 'long'
+  const side = result.positionSide
+  const isLong = side === 'long'
   const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
-  const toleranceValue = formatTolerancePercent(result.toleranceRate, positionSide)
+  const toleranceValue = formatTolerancePercent(result.toleranceRate, side)
 
   return (
     <>
@@ -132,7 +145,7 @@ function EvaluateResults({
           danger={result.isAtRisk}
         />
         <ResultHero
-          label={isLong ? r.maxBuyableLong : r.maxBuyableShort}
+          label={maxAddableLabel(side, r)}
           value={formatNumber(result.maxBuyable ?? null)}
           sub={translateCalcMessage(result.maxBuyableMessage)}
         />
@@ -155,22 +168,30 @@ function EvaluateResults({
           label={r.entrustedMargin}
           value={formatNumber(result.margins?.entrustedMargin ?? null)}
         />
+        <ResultRowPair
+          left={{
+            label: r.perContractMaintenance,
+            value: formatNumber(result.margins?.perContractMaintenance ?? null),
+          }}
+          right={{
+            label: r.perContractEntrusted,
+            value: formatNumber(result.margins?.perContractEntrusted ?? null),
+          }}
+        />
         <ResultRow
           label={r.availableMargin}
           value={formatNumber(result.margins?.availableMargin ?? null)}
           sub={r.availableMarginSub}
         />
         <ResultRow
-          label={r.perContractEntrusted}
-          value={formatNumber(result.margins?.perContractEntrusted ?? null)}
-        />
-        <ResultRow
-          label={r.perContractMaintenance}
-          value={formatNumber(result.margins?.perContractMaintenance ?? null)}
+          label={r.maintenanceExcess}
+          value={formatNumber(result.margins?.maintenanceExcess ?? null)}
+          sub={r.maintenanceExcessSub}
+          danger={result.isAtRisk}
         />
         <ResultRow
           label={toleranceDeltaLabel}
-          value={formatToleranceDelta(result.toleranceDelta, positionSide)}
+          value={formatToleranceDelta(result.toleranceDelta, side)}
           danger={result.isAtRisk}
         />
       </div>
@@ -180,33 +201,42 @@ function EvaluateResults({
 
 function OrderResults({
   result,
-  positionSide,
   orderBlocked,
 }: {
   result: OrderResult
-  positionSide: PositionSide
   orderBlocked: boolean
 }) {
   const { t } = useLanguage()
   const r = t.results
-  const isLong = positionSide === 'long'
+  const side = result.positionSide
+  const isLong = side === 'long'
   const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
   const afterAtRisk = !orderBlocked && result.isAtRiskAfter
-  const hasAfter = result.afterMargins !== null
+  const hasAfter = result.afterMargins !== null && !orderBlocked
+
+  const formatLiq = (value: number | null) =>
+    value !== null ? formatNumber(value) : '-'
 
   const sheetRows = [
     {
+      index: r.liquidationPrice,
+      before: formatLiq(result.beforeLiquidation),
+      after: hasAfter ? formatLiq(result.afterLiquidation) : '-',
+      dangerBefore: result.isAtRiskBefore,
+      dangerAfter: afterAtRisk,
+    },
+    {
       index: toleranceLabel,
-      before: formatTolerancePercent(result.beforeTolerance, positionSide),
-      after: formatTolerancePercent(result.afterTolerance, positionSide),
+      before: formatTolerancePercent(result.beforeTolerance, result.positionSide),
+      after: formatTolerancePercent(result.afterTolerance, result.positionSide),
       dangerBefore: result.isAtRiskBefore,
       dangerAfter: afterAtRisk,
     },
     {
       index: toleranceDeltaLabel,
-      before: formatToleranceDelta(result.beforeToleranceDelta, positionSide),
-      after: formatToleranceDelta(result.afterToleranceDelta, positionSide),
+      before: formatToleranceDelta(result.beforeToleranceDelta, result.positionSide),
+      after: formatToleranceDelta(result.afterToleranceDelta, result.positionSide),
       dangerBefore: result.isAtRiskBefore,
       dangerAfter: afterAtRisk,
     },
@@ -223,6 +253,15 @@ function OrderResults({
       after: hasAfter
         ? formatNumber(result.afterMargins?.maintenanceMargin ?? null)
         : '-',
+    },
+    {
+      index: r.maintenanceExcess,
+      before: formatNumber(result.beforeMargins?.maintenanceExcess ?? null),
+      after: hasAfter
+        ? formatNumber(result.afterMargins?.maintenanceExcess ?? null)
+        : '-',
+      dangerBefore: result.isAtRiskBefore,
+      dangerAfter: afterAtRisk,
     },
     {
       index: r.entrustedMargin,
@@ -253,13 +292,17 @@ function OrderResults({
 
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
-  const { positionSide, orderContracts } = inputs
+  const navigate = useNavigate()
+  const { orderContracts, positionSide } = inputs
   const f = t.fields
 
-  const evaluateResult = useMemo(() => calculateEvaluate(inputs), [inputs])
+  const evaluateResult = useMemo(
+    () => calculateEvaluate(inputs),
+    [inputs, positionSide],
+  )
   const orderResult = useMemo(
     () => calculateOrder(inputs),
-    [inputs, orderContracts],
+    [inputs, positionSide, orderContracts],
   )
 
   const orderBlocked = useMemo(() => {
@@ -271,15 +314,28 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         orderContracts,
         inputs.accountEval!,
         marginResult.margins,
+        positionSide,
       ) !== null
     )
-  }, [inputs, orderContracts])
+  }, [inputs, orderContracts, positionSide])
 
   return (
     <div className="result-column">
       <section className="panel result-panel">
-        <h2>{t.result}</h2>
-        <EvaluateResults result={evaluateResult} positionSide={positionSide} />
+        <div className="result-panel__head">
+          <h2>{t.result}</h2>
+          <a
+            className="result-panel__formulas-btn"
+            href={FORMULAS_PATH}
+            onClick={(event) => {
+              event.preventDefault()
+              navigate(FORMULAS_PATH)
+            }}
+          >
+            {t.formulas.title}
+          </a>
+        </div>
+        <EvaluateResults key={positionSide} result={evaluateResult} />
         <p className="result-panel__warning" role="note">
           <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
         </p>
@@ -310,9 +366,8 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           </div>
         </div>
         <OrderResults
-          key={orderContracts ?? 'empty'}
+          key={`${positionSide}-${orderContracts ?? 'empty'}`}
           result={orderResult}
-          positionSide={positionSide}
           orderBlocked={orderBlocked}
         />
       </section>

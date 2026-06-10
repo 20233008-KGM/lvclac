@@ -20,6 +20,8 @@ export interface CalculatorInputs {
   contractMultiplier?: number
   positionSide: PositionSide
   orderContracts?: number
+  /** accountEval 입력 시점의 포지션 — 탭 전환 MTM 보정용 */
+  evalSnapshotSide?: PositionSide
 }
 
 export interface MarginAmounts {
@@ -30,11 +32,15 @@ export interface MarginAmounts {
   entrustedMarginSource: EntrustedMarginSource
   /** 계좌 평가금액 − 위탁증거금 */
   availableMargin: number
+  /** 계좌 평가금액 − 유지증거금 */
+  maintenanceExcess: number
   perContractEntrusted: number
   perContractMaintenance: number
 }
 
 export interface EvaluateResult {
+  /** 계산에 사용된 포지션 방향 — UI 표시와 항상 동기화 */
+  positionSide: PositionSide
   liquidationPrice: number | null
   liquidationMessage: CalcMessageCode | null
   toleranceRate: number | null
@@ -47,6 +53,7 @@ export interface EvaluateResult {
 }
 
 export interface OrderResult {
+  positionSide: PositionSide
   beforeLiquidation: number | null
   afterLiquidation: number | null
   beforeTolerance: number | null

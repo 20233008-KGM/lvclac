@@ -1,84 +1,44 @@
-# 로그인 기능 통합관리
+# 로그인 통합관리
 
-> **상태: 추가 예정** — 현재는 단일 입력값 세트만 저장·복원합니다. 본 문서는 로그인·캐시·유료 혜택을 한곳에서 관리하는 통합 기능의 계획을 정리합니다.
+> **상태: 추가 예정**
+
+로그인·세션·`isPro`를 하나의 정책으로 묶습니다.
 
 ## 현재 동작
 
-- 비로그인: 계산기 사용 가능, 입력값은 세션(브라우저) 단위
-- 로그인: 계산기 입력값 **1세트** 자동 저장·복원 (`AuthContext` + `prefsRepo`, localStorage / Supabase)
-- 유료(Pro): [premium/features.md](./premium/features.md) 참고 — 아직 로그인·캐시와 연동되지 않음
-
-## 추가 예정: 통합관리
-
-로그인, 입력값 캐시, 구독(Pro) 상태를 **하나의 정책**으로 묶어 관리합니다.
-
-| 영역 | 내용 |
+| 항목 | 동작 |
 |------|------|
-| 인증 | 로그인·회원가입·세션 (기존 `AuthContext` 확장) |
-| 캐시 | 사용자별 입력값 **세트** 단위 저장·불러오기 |
-| 구독 | Free / Pro에 따른 세트 개수·광고 노출 분기 |
+| 비로그인 | 계산기 사용, 입력값 세션 단위 |
+| 로그인 | 입력값 1세트 저장·복원 |
+| Pro | 미연동 — [premium/plans.md](./premium/plans.md) |
 
-관련 코드 진입점(예정): `src/context/AuthContext.tsx`, `src/db/` (prefs 저장소), `src/components/PageShell.tsx` (광고 가드).
+## 통합 정책 (예정)
 
-## 캐시 세트 (Set) 계획
-
-로그인 시 저장 가능한 입력값을 **세트** 단위로 확장합니다.
-
-| 구분 | 세트 수 | 설명 |
-|------|---------|------|
-| 비로그인 | 0 (또는 브라우저 임시) | 로그인 없이는 영구 저장 없음 (현행과 동일) |
-| 로그인 (Free) | **세트 1** | 기본 1세트 — 현재 동작과 호환 |
-| 로그인 (Free, 확장) | **세트 2** | 로그인만으로 2번째 세트 제공 검토 (예: 세트1 / 세트2) |
-| Pro (결제) | **세트 N+** | 결제 시 광고 제거 + **더 많은 세트** 제공 |
-
-세트 예시:
-
-- **세트 1** — KOSPI200 롱 기본값
-- **세트 2** — BTC 숏 기본값
-- **세트 3+** — Pro 전용 추가 슬롯
-
-각 세트는 `CalculatorInputs` 전체 스냅샷(모드, 롱/숏, 증거금·계약 수 등)을 담습니다. UI에서는 세트 선택·이름 지정·전환을 한 화면에서 처리하는 것을 목표로 합니다.
-
-## 결제(Pro)와의 연동 예정
-
-[프리미엄 계획](./premium/README.md)과 맞춰, **결제 시** 아래를 로그인 통합관리에 반영합니다.
-
-1. **광고 제거** — `user.isPro`일 때 AdSense 슬롯 미노출 ([features.md](./premium/features.md))
-2. **캐시 세트 확장** — Free 대비 더 많은 named 세트 저장·동기화 (클라우드 prefs / Supabase)
-
-Free는 계산 기능 전체 유지. Pro는 **UI 정리(광고 제거) + 반복 사용(다중 세트)** 에 초점을 둡니다.
-
-## 가격 (확정안 — Pro $5 기준)
-
-| 플랜 | USD | KRW (병행) | 포함 |
-|------|-----|------------|------|
-| **Pro 월간** | **$5/월** | 6,900원/월 | 광고 제거 + 다중 세트·프리셋·Pro 기능 전체 |
-| **Pro 연간** | **$48/년** | 49,900원/년 | 위와 동일 (월 $4 환산, 연 20% 할인) |
-| **Lifetime** | **$79** (1회) | 99,000원 | Pro 전 기능 영구 — **첫 출시 한정** |
-
-### Lifetime — 첫 출시에만 판매
-
-| 항목 | 내용 |
+| 영역 | 문서 |
 |------|------|
-| 가격 | **$79** (월 $5 × 약 16개월) |
-| 판매 기간 | v1 유료 결제 오픈 ~ 첫 출시 기간만 |
-| 종료 후 | Pro 구독($5 / $48)만 — Lifetime 재판매 없음 |
-| 종료 조건 | 기간 만료 또는 판매 수량 상한 도달 |
+| 인증 | 본 문서 · `AuthContext` |
+| 입력 세트 | [premium/input-sets.md](./premium/input-sets.md) |
+| 광고 제거 | [premium/ad-free.md](./premium/ad-free.md) |
+| 결제·플랜 | [premium/](./premium/README.md) |
+| Pro 기능 | [premium/features.md](./premium/features.md) |
 
-출시 일시금 확보 + 이후 MRR은 구독으로만 쌓는 전략.
+## `isPro` 분기
 
-Ad-Free(광고 제거만) 단독 플랜은 선택 사항 — 월 **$3** / 연 **$29**. 상세: [premium/pricing.md](./premium/pricing.md).
+| 상태 | 세트 | 광고 | Pro 기능 |
+|------|------|------|----------|
+| 비로그인 | 0 | 6슬롯 | ✕ |
+| 로그인 Free | 1 | 6슬롯 | ✕ |
+| Pro | N+ | 제거 | ○ |
 
-## 구현 시 고려사항 (메모)
+→ [premium/plans.md](./premium/plans.md)
 
-- 기존 단일 prefs 마이그레이션: 현재 1세트 사용자 데이터 → `sets[0]` 또는 `default` 세트로 이전
-- 세트 상한은 `isPro` 및 서버/로컬 정책으로 중앙 정의
-- debounce 저장·로그인 복원 흐름은 기존 `updateInputs` 패턴 유지
+## 구현 메모
 
-## 관련 문서
+- prefs → `sets[0]` 마이그레이션
+- `isPro` + 세트 상한·광고 가드 중앙 정의
 
-- [premium/pricing.md](./premium/pricing.md) — Pro $5 · Lifetime $79 (첫 출시 한정)
-- [premium/features.md](./premium/features.md) — Free vs Pro 기능 경계
-- [ads-management.md](./ads-management.md) — 광고 슬롯·Pro 연동
-- [premium/implementation.md](./premium/implementation.md) — 결제·`isPro` 기술 로드맵
-- [plan.md](../plan.md) — 앱 초기 구축·로그인·입력값 저장 계획
+## 관련
+
+- [premium/README.md](./premium/README.md)
+- [ads-management.md](./ads-management.md) — AdSense 운영
+- [plan.md](../plan.md)

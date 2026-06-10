@@ -1,8 +1,14 @@
 import { useLanguage } from '../i18n'
+import { useNavigate } from '../hooks/usePathname'
 import { DisclaimerShowAgainLink, LegalLinks } from './ServiceDisclaimer'
+
+function isInternalPath(href: string): boolean {
+  return href.startsWith('/') && !href.startsWith('//')
+}
 
 export function SiteFooter() {
   const { t } = useLanguage()
+  const navigate = useNavigate()
 
   return (
     <footer className="site-footer">
@@ -26,6 +32,17 @@ export function SiteFooter() {
                           {link.label}
                           <span className="site-footer__soon">{t.footer.soon}</span>
                         </span>
+                      ) : link.href && isInternalPath(link.href) ? (
+                        <a
+                          className="site-footer__link"
+                          href={link.href}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            navigate(link.href!)
+                          }}
+                        >
+                          {link.label}
+                        </a>
                       ) : (
                         <a className="site-footer__link" href={link.href}>
                           {link.label}

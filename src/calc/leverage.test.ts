@@ -88,18 +88,18 @@ describe('calcContractNotional', () => {
 })
 
 describe('calcLiquidationPrice', () => {
-  it('롱: 계좌평가 − 유지증거금 만큼 하락 시 청산', () => {
+  it('롱: Equity(P)=Maintenance(P) 해에서 청산가', () => {
     const pointValue = getPointValue(250_000, 1, 350)!
     const maintenance = calcMarginFromNotional(calcContractNotional(2, 250_000, 1), 0.05)
     const price = calcLiquidationPrice(10_000_000, maintenance, 2, 350, pointValue, 'long')
-    expect(price).toBeCloseTo(-6632.5, 1)
+    expect(price).toBeCloseTo(-7_000, 0)
   })
 
-  it('숏: 계좌평가 − 유지증거금 만큼 상승 시 청산', () => {
+  it('숏: Equity(P)=Maintenance(P) 해에서 청산가', () => {
     const pointValue = getPointValue(250_000, 1, 350)!
     const maintenance = calcMarginFromNotional(calcContractNotional(2, 250_000, 1), 0.05)
     const price = calcLiquidationPrice(10_000_000, maintenance, 2, 350, pointValue, 'short')
-    expect(price).toBeCloseTo(7332.5, 1)
+    expect(price).toBeCloseTo(7_000, 0)
   })
 })
 
@@ -160,15 +160,15 @@ describe('calcMaxBuyable', () => {
 describe('calculateEvaluate', () => {
   it('기본값으로 청산가·하락율 산출', () => {
     const result = calculateEvaluate(sampleInputs)
-    expect(result.liquidationPrice).toBeCloseTo(-6632.5, 1)
-    expect(result.toleranceRate).toBeCloseTo(1995, 0)
+    expect(result.liquidationPrice).toBeCloseTo(-5_262_789, 0)
+    expect(result.toleranceRate).toBeCloseTo(1_503_754, 0)
     expect(result.margins?.maintenanceMargin).toBeCloseTo(25_000, 5)
     expect(result.margins?.entrustedMargin).toBeCloseTo(50_000, 5)
     expect(result.margins?.availableMargin).toBeCloseTo(9_950_000, 5)
     expect(result.margins?.perContractEntrusted).toBeCloseTo(25_000, 5)
     expect(result.margins?.perContractMaintenance).toBeCloseTo(12_500, 5)
     expect(result.margins?.contractNotional).toBeCloseTo(500_000, 5)
-    expect(result.toleranceDelta).toBeCloseTo(6982.5, 1)
+    expect(result.toleranceDelta).toBeCloseTo(5_263_139, 0)
     expect(result.leverageRatio).toBe(0.05)
   })
 
@@ -206,7 +206,7 @@ describe('calculateEvaluate (direct margin)', () => {
     expect(result.margins?.contractNotional).toBe(500_000)
     expect(result.margins?.maintenanceMargin).toBe(2_000)
     expect(result.margins?.entrustedMargin).toBe(12_000)
-    expect(result.liquidationPrice).toBeCloseTo(4_520, 1)
+    expect(result.liquidationPrice).toBeCloseTo(-25_000, 0)
     expect(result.leverageRatio).toBe(10)
     expect(result.maxBuyable).toBe(6)
   })

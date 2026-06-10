@@ -1,21 +1,45 @@
-# 레버리지 계산기 Pro — 프리미엄 구독 계획
+# 유료 결제 · Pro 기능
 
-Stripe 기반 유료 구독(광고 제거 + 파워 기능) 설계 문서입니다.
+Stripe 결제 인프라와 **유료 잠금 해제 기능** 문서를 이 폴더에 모읍니다.
 
-## 문서 목차
+---
+
+## 결제·플랜
 
 | 문서 | 내용 |
 |------|------|
-| [features.md](./features.md) | Free vs Pro 기능 경계 |
-| [pricing.md](./pricing.md) | 가격 전략·Stripe Price 설정 |
-| [payment-providers.md](./payment-providers.md) | Stripe (1차) + Lemon Squeezy (대안) |
-| [implementation.md](./implementation.md) | Phase별 기술 로드맵·스키마·API |
+| [plans.md](./plans.md) | 플랜·혜택 비교 · `isPro` |
+| [pricing.md](./pricing.md) | 가격 전략 · Stripe · 환불 |
+| [payment-providers.md](./payment-providers.md) | Stripe · Lemon Squeezy |
+| [implementation.md](./implementation.md) | Checkout · Webhook · DB |
+
+## Pro 기능 (유료)
+
+| 문서 | 내용 |
+|------|------|
+| [features.md](./features.md) | **기능 목록** · Phase 로드맵 |
+| [input-sets.md](./input-sets.md) | 숫자 세트 저장 |
+| [ad-free.md](./ad-free.md) | 광고 제거 |
+| [reverse-calc.md](./reverse-calc.md) | 역산 시스템 |
+
+---
 
 ## 요약
 
-- **결제:** Stripe (Checkout + Customer Portal + Webhook)
-- **대안:** Lemon Squeezy — 해외 매출·세금 부담 커질 때 검토
-- **가격:** Pro 월 **$5** / 연 **$48** · Lifetime **$79** (**첫 출시 한정**, 이후 구독만) · 7일 무료 체험
-- **핵심 원칙:** 기본 청산가 계산은 무료 유지. Pro는 반복 사용 편의 + 리스크 관리 + 깔끔한 UI.
+| 항목 | 내용 |
+|------|------|
+| 결제 | Stripe Checkout + Portal + Webhook |
+| Pro | 월 **$5** / 연 **$48** |
+| Lifetime | **$79** — 첫 출시 한정 |
+| 원칙 | 기본 계산 Free · 결제 = `isPro` unlock |
 
-기존 앱 구축 계획은 프로젝트 루트의 [plan.md](../../plan.md)를 참고하세요.
+---
+
+## 폴더 밖 (연동·운영)
+
+| 문서 | 내용 |
+|------|------|
+| [../login-integration.md](../login-integration.md) | 로그인 · 세트 · `isPro` 통합 |
+| [../ads-management.md](../ads-management.md) | AdSense · GA4 슬롯 운영 (Free) |
+
+[plan.md](../../plan.md) — 앱 초기 구축

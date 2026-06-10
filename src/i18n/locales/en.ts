@@ -1,4 +1,5 @@
 import type { Messages } from '../types'
+import { boardPath } from '../../config/boards'
 
 export const en: Messages = {
   lang: 'en',
@@ -14,6 +15,7 @@ export const en: Messages = {
   close: 'Close',
   langToggleLabel: 'Language',
   optional: '(optional)',
+  fieldTooltipLabel: 'Field definition',
   input: 'Inputs',
   result: 'Results',
   long: 'Long',
@@ -46,7 +48,7 @@ export const en: Messages = {
   fields: {
     accountEquity: {
       label: 'Account equity',
-      hint: 'Cash + unrealized P&L — same as broker "Equity" or "Net liquidation value"',
+      hint: 'Your cash balance plus unrealized P&L on open positions. Matches the Account equity shown in your broker app.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
@@ -110,10 +112,12 @@ export const en: Messages = {
     entrustedMargin: 'Init. margin',
     availableMargin: 'Avail. margin',
     availableMarginSub: 'Equity − init. margin',
+    maintenanceExcess: 'Maint. cushion',
+    maintenanceExcessSub: 'Equity − maint. margin',
     perContractEntrusted: 'Init. margin / contract',
     perContractMaintenance: 'Maint. margin / contract',
-    toleranceLong: 'Buffer %',
-    toleranceShort: 'Buffer %',
+    toleranceLong: 'Buffer to liq. (drop %)',
+    toleranceShort: 'Buffer to liq. (rise %)',
     toleranceDeltaLong: 'Liq. dist.',
     toleranceDeltaShort: 'Liq. dist.',
     beforeLiquidation: 'Liq. price (before)',
@@ -138,7 +142,9 @@ export const en: Messages = {
     no_available_margin: 'No avail. margin. (Equity − init. margin)',
     cannot_calc_per_contract_entrusted: 'Cannot compute initial margin per contract.',
     order_exceeds_max_buyable:
-      'Order size exceeds the add-on limit for your available margin. This order cannot be filled at the current account level.',
+      'Order size exceeds the add-on buy limit for your available margin. This order cannot be filled at the current account level.',
+    order_exceeds_max_sellable:
+      'Order size exceeds the add-on sell limit for your available margin. This order cannot be filled at the current account level.',
     order_exceeds_position: 'Cannot sell more contracts than your open position.',
     at_risk: 'Liquidation risk',
   },
@@ -211,6 +217,125 @@ export const en: Messages = {
       '6. Contact: Farfield Software — see footer for contact details',
     ],
   },
+  formulas: {
+    backToCalculator: '← Back to calculator',
+    title: 'Formula reference',
+    description:
+      'Formulas used by the leverage calculator. Broker and exchange rules may differ — for reference only.',
+    disclaimer:
+      'Direct maintenance or entrusted margin inputs override rate-based values. Liquidation timing and rounding vary by broker.',
+    symbolTitle: 'Symbols',
+    symbols: [
+      { symbol: 'E₀', meaning: 'Account equity (current assets)' },
+      { symbol: 'C₀', meaning: 'Current price' },
+      { symbol: 'P', meaning: 'Price after move (unknown when solving for liquidation)' },
+      { symbol: 'N', meaning: 'Open contracts' },
+      { symbol: 'M', meaning: 'Contract multiplier (default 1)' },
+      { symbol: 'Q', meaning: 'Total sensitivity = N × M (P&L per one price unit)' },
+      { symbol: 'R', meaning: 'Maintenance margin rate (decimal, e.g. 0.247)' },
+      { symbol: 'Rₑ', meaning: 'Initial / entrusted margin rate' },
+    ],
+    sections: [
+      {
+        title: 'Notional & margin',
+        intro: 'Contract amount and multiplier size notional. Q for liquidation is separate.',
+        entries: [
+          {
+            name: 'Position notional',
+            expression: 'Notional = N × contract amount × M',
+          },
+          {
+            name: 'Maintenance margin (rate)',
+            expression: 'Maintenance = notional × R',
+            description: 'Direct HTS amount takes precedence when provided.',
+          },
+          {
+            name: 'Entrusted margin (rate)',
+            expression: 'Entrusted = notional × Rₑ',
+          },
+          {
+            name: 'Available margin',
+            expression: 'Available = E₀ − entrusted margin',
+          },
+          {
+            name: 'Per-contract margin',
+            expression: 'Per contract = position margin ÷ N',
+          },
+        ],
+      },
+      {
+        title: 'Liquidation — common',
+        intro: 'Liquidation occurs when equity at price P equals maintenance at P.',
+        entries: [
+          {
+            name: 'Q (total sensitivity)',
+            expression: 'Q = N × M',
+            description: 'e.g. N=58, M=10 → Q=580. If M=1, Q=N.',
+          },
+          {
+            name: 'Maintenance at current price',
+            expression: 'M(C₀) = C₀ × Q × R',
+            description: 'Or direct HTS maintenance (scaled by contracts).',
+          },
+          {
+            name: 'Maintenance at price P',
+            expression: 'M(P) = M(C₀) × P / C₀',
+          },
+        ],
+      },
+      {
+        title: 'Liquidation — long',
+        entries: [
+          { name: 'Equity at P', expression: 'Equity(P) = E₀ + (P − C₀) × Q' },
+          { name: 'Liquidation condition', expression: 'Equity(P) = M(P)' },
+          { name: 'Liquidation price', expression: 'P = (C₀×Q − E₀) / (Q − M(C₀)/C₀)' },
+          {
+            name: 'Summary (rate form)',
+            expression: 'P = (C₀×Q − E₀) / (Q×(1 − R))',
+            description: 'Equivalent when M(C₀)=C₀×Q×R.',
+          },
+        ],
+      },
+      {
+        title: 'Liquidation — short',
+        entries: [
+          { name: 'Equity at P', expression: 'Equity(P) = E₀ − (P − C₀) × Q' },
+          { name: 'Liquidation condition', expression: 'Equity(P) = M(P)' },
+          { name: 'Liquidation price', expression: 'P = (E₀ + C₀×Q) / (Q + M(C₀)/C₀)' },
+          {
+            name: 'Summary (rate form)',
+            expression: 'P = (E₀ + C₀×Q) / (Q×(1 + R))',
+          },
+        ],
+        notes: [
+          'For the same E₀ and Q, short upside buffer (%) < long downside buffer (%) — not symmetric.',
+        ],
+      },
+      {
+        title: 'Buffer, leverage & add-on limit',
+        entries: [
+          {
+            name: 'Long — buffer to liquidation (%)',
+            expression: '((C₀ − P) / C₀) × 100',
+          },
+          {
+            name: 'Short — buffer to liquidation (%)',
+            expression: '((P − C₀) / C₀) × 100',
+          },
+          {
+            name: 'Price move to liquidation',
+            expression: 'Long: C₀ − P  /  Short: P − C₀',
+          },
+          { name: 'Leverage', expression: 'Leverage = notional ÷ E₀' },
+          {
+            name: 'Add-on buy / sell limit',
+            expression: 'floor((E₀ − entrusted) / per-contract entrusted)',
+            description: 'Same margin math for long adds and short adds.',
+          },
+        ],
+      },
+    ],
+  },
   footer: {
     navAriaLabel: 'Footer navigation',
     disclaimer:
@@ -222,7 +347,7 @@ export const en: Messages = {
       {
         title: 'Product',
         links: [
-          { label: 'Leverage Calculator', href: '#calculator' },
+          { label: 'Leverage Calculator', href: '/' },
           { label: 'Pro', soon: true },
           { label: 'Changelog', soon: true },
         ],
@@ -243,7 +368,50 @@ export const en: Messages = {
           { label: 'Status page', soon: true },
         ],
       },
+      {
+        title: 'Feedback',
+        links: [
+          { label: 'Dev request', href: boardPath('dev-request') },
+          { label: 'Bug report', href: boardPath('bugs') },
+          { label: 'Suggestion', href: boardPath('suggestions') },
+        ],
+      },
     ],
+  },
+  boards: {
+    backToCalculator: '← Back to calculator',
+    storageNotice:
+      'Each board is separate by purpose. Posts are stored in this browser only for now; they will be shared once a server backend is connected.',
+    writePost: 'New post',
+    postList: 'Posts',
+    postTitle: 'Title',
+    postTitlePlaceholder: 'Summarize your request, bug, or idea',
+    postBody: 'Details',
+    postBodyPlaceholder: 'Steps to reproduce, expected behavior, context, etc.',
+    postAuthor: 'Name',
+    postAuthorPlaceholder: 'Display name (optional)',
+    submit: 'Submit',
+    empty: 'No posts yet. Be the first to write one.',
+    anonymous: 'Anonymous',
+    items: {
+      'dev-request': {
+        title: 'Dev request',
+        footerLabel: 'Dev request',
+        description:
+          'Describe software or features you would like Farfield Software to build.',
+      },
+      bugs: {
+        title: 'Bug report',
+        footerLabel: 'Bug report',
+        description:
+          'Report UI bugs, broken inputs, wrong calculations, formula logic issues, and similar problems.',
+      },
+      suggestions: {
+        title: 'Suggestion',
+        footerLabel: 'Suggestion',
+        description: 'Share ideas for UI, features, and usability improvements.',
+      },
+    },
   },
   ads: {
     leftTop: 'Left sidebar ad',

@@ -4,6 +4,7 @@ import type {
   EvaluateResult,
   MarginAmounts,
   OrderResult,
+  PositionSide,
 } from '../types'
 import {
   calcMargins,
@@ -11,14 +12,24 @@ import {
   validateLiquidationInputs,
   validateMarginRates,
 } from './margins'
+import {
+  buildLiquidationParams,
+  calcLiquidationPriceFromParams,
+  calcToleranceDelta,
+  calcToleranceRate,
+} from './liquidation'
 
 export { getPointValue, resolvePointValue } from './pointValue'
+export {
+  buildLiquidationParams,
+  calcLongLiquidationPrice,
+  calcShortLiquidationPrice,
+  calcTotalQuantity,
+  calcToleranceDelta,
+  calcToleranceRate,
+} from './liquidation'
 
-/**
- * 청산 조건: 계좌 평가금액 + 포지션 손익변동 = 유지증거금
- * 롱: 가격 하락 시 손실 → accountEval + Δ < maintenance
- * 숏: 가격 상승 시 손실 → accountEval + Δ < maintenance
- */
+/** @deprecated calcLiquidationPriceForInputs 또는 calcLiquidationPriceFromParams 사용 */
 export function calcLiquidationPrice(
   accountEval: number,
   maintenanceMargin: number,
@@ -27,37 +38,14 @@ export function calcLiquidationPrice(
   pointValue: number,
   side: 'long' | 'short',
 ): number | null {
-  if (contracts === 0 || pointValue === 0) return null
-
-  const buffer = accountEval - maintenanceMargin
-  const pnlPerPoint = contracts * pointValue
-  const delta = buffer / pnlPerPoint
-
-  return side === 'long' ? currentPrice - delta : currentPrice + delta
-}
-
-export function calcToleranceRate(
-  currentPrice: number,
-  liquidationPrice: number | null,
-  side: 'long' | 'short',
-): number | null {
-  if (liquidationPrice === null || currentPrice === 0) return null
-  if (side === 'long') {
-    return ((currentPrice - liquidationPrice) / currentPrice) * 100
+  const Q = contracts * pointValue
+  const params = {
+    equity: accountEval,
+    currentPrice,
+    totalQuantity: Q,
+    maintenanceAtCurrent: maintenanceMargin,
   }
-  return ((liquidationPrice - currentPrice) / currentPrice) * 100
-}
-
-/** 청산까지 허용 가격 변동폭 (롱: 하락폭, 숏: 상승폭) */
-export function calcToleranceDelta(
-  currentPrice: number,
-  liquidationPrice: number | null,
-  side: 'long' | 'short',
-): number | null {
-  if (liquidationPrice === null) return null
-  return side === 'long'
-    ? currentPrice - liquidationPrice
-    : liquidationPrice - currentPrice
+  return calcLiquidationPriceFromParams(params, side)
 }
 
 /** 레버리지 = 약정가치 ÷ 계좌 평가금액 */
@@ -83,7 +71,6 @@ export function calcMaxBuyable(
   if (perContractEntrusted <= 0) {
     return { value: null, message: 'cannot_calc_per_contract_entrusted' }
   }
-  // 부동소수 나눗셈으로 119.999… → 118이 되는 경우 방지
   const count = Math.floor(available / perContractEntrusted + 1e-9)
   if (!Number.isFinite(count)) {
     return { value: null, message: 'cannot_calc_per_contract_entrusted' }
@@ -91,11 +78,24 @@ export function calcMaxBuyable(
   return { value: count, message: null }
 }
 
-/** 주문 계약 수가 가용 증거금 기준 추가 매수 한도를 초과하는지 검사 */
+function withEffectiveAvailableMargin(
+  inputs: CalculatorInputs,
+  margins: MarginAmounts,
+): MarginAmounts {
+  // 가용증거금은 HTS 입력값(원) 기준 — 탭 전환 MTM 보정은 청산가 계산에만 사용
+  const equity = inputs.accountEval ?? 0
+  return {
+    ...margins,
+    availableMargin: equity - margins.entrustedMargin,
+    maintenanceExcess: equity - margins.maintenanceMargin,
+  }
+}
+
 export function checkOrderExceedsMaxBuyable(
   orderContracts: number | undefined,
   accountEval: number,
   beforeMargins: MarginAmounts,
+  positionSide: PositionSide,
 ): CalcMessageCode | null {
   if (!orderContracts || orderContracts <= 0) return null
 
@@ -106,8 +106,37 @@ export function checkOrderExceedsMaxBuyable(
   )
 
   if (maxBuyable === null) return null
-  if (orderContracts > maxBuyable) return 'order_exceeds_max_buyable'
+  if (orderContracts > maxBuyable) {
+    return positionSide === 'short'
+      ? 'order_exceeds_max_sellable'
+      : 'order_exceeds_max_buyable'
+  }
   return null
+}
+
+function resolveLiquidation(
+  inputs: CalculatorInputs,
+  contracts: number,
+): {
+  liquidationPrice: number | null
+  inputError: CalcMessageCode | null
+} {
+  const params = buildLiquidationParams(inputs, contracts)
+  if (!params) {
+    return { liquidationPrice: null, inputError: 'multiplier_zero' }
+  }
+
+  const inputError = validateLiquidationInputs(
+    params.equity,
+    params.maintenanceAtCurrent,
+    contracts,
+  )
+  if (inputError) {
+    return { liquidationPrice: null, inputError }
+  }
+
+  const liquidationPrice = calcLiquidationPriceFromParams(params, inputs.positionSide)
+  return { liquidationPrice, inputError: null }
 }
 
 function calcAfterOrderLiquidation(
@@ -130,35 +159,23 @@ function calcAfterOrderLiquidation(
     return { price: null, afterMargins: null, message: 'multiplier_zero' }
   }
 
-  const accountEval = inputs.accountEval!
-  const currentPrice = inputs.currentPrice!
+  const afterInputs: CalculatorInputs = { ...inputs, contracts: newContracts }
+  const { liquidationPrice, inputError } = resolveLiquidation(afterInputs, newContracts)
 
-  const inputError = validateLiquidationInputs(
-    accountEval,
-    result.margins.maintenanceMargin,
-    newContracts,
-  )
   if (inputError) {
     return { price: null, afterMargins: result.margins, message: inputError }
   }
 
-  const price = calcLiquidationPrice(
-    accountEval,
-    result.margins.maintenanceMargin,
-    newContracts,
-    currentPrice,
-    result.pointValue,
-    inputs.positionSide,
-  )
-
-  return { price, afterMargins: result.margins, message: null }
+  return { price: liquidationPrice, afterMargins: result.margins, message: null }
 }
 
 export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
   const rateWarning = validateMarginRates(inputs)
+  const positionSide = inputs.positionSide
 
   if (inputs.contracts === 0) {
     return {
+      positionSide,
       liquidationPrice: null,
       liquidationMessage: 'contracts_zero',
       toleranceRate: null,
@@ -173,6 +190,7 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
 
   if (!inputsReadyForEvaluate(inputs)) {
     return {
+      positionSide,
       liquidationPrice: null,
       liquidationMessage: rateWarning,
       toleranceRate: null,
@@ -188,6 +206,7 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
   const marginResult = calcMargins(inputs, inputs.contracts)
   if (!marginResult) {
     return {
+      positionSide,
       liquidationPrice: null,
       liquidationMessage: 'multiplier_zero',
       toleranceRate: null,
@@ -200,29 +219,11 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
     }
   }
 
-  const { margins, pointValue: marginPointValue } = marginResult
-
-  const accountEval = inputs.accountEval!
   const contracts = inputs.contracts!
   const currentPrice = inputs.currentPrice!
+  const margins = withEffectiveAvailableMargin(inputs, marginResult.margins)
 
-  const inputError = validateLiquidationInputs(
-    accountEval,
-    margins.maintenanceMargin,
-    contracts,
-  )
-
-  const liquidationPrice =
-    inputError === null && marginPointValue !== null
-      ? calcLiquidationPrice(
-          accountEval,
-          margins.maintenanceMargin,
-          contracts,
-          currentPrice,
-          marginPointValue,
-          inputs.positionSide,
-        )
-      : null
+  const { liquidationPrice, inputError } = resolveLiquidation(inputs, contracts)
 
   const toleranceRate = calcToleranceRate(
     currentPrice,
@@ -237,14 +238,16 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
   const isAtRisk =
     inputError !== null || (toleranceRate !== null && toleranceRate <= 0)
 
+  const marginEquity = inputs.accountEval!
   const { value: maxBuyable, message: maxBuyableMessage } = calcMaxBuyable(
-    accountEval,
+    marginEquity,
     margins.entrustedMargin,
     margins.perContractEntrusted,
   )
-  const leverageRatio = calcLeverageRatio(margins.contractNotional, accountEval)
+  const leverageRatio = calcLeverageRatio(margins.contractNotional, marginEquity)
 
   return {
+    positionSide,
     liquidationPrice,
     liquidationMessage: inputError ?? rateWarning,
     toleranceRate,
@@ -258,9 +261,11 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
 }
 
 function emptyOrderResult(
+  positionSide: PositionSide,
   overrides: Partial<OrderResult> = {},
 ): OrderResult {
   return {
+    positionSide,
     beforeLiquidation: null,
     afterLiquidation: null,
     beforeTolerance: null,
@@ -282,54 +287,47 @@ function emptyOrderResult(
 
 export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   const rateWarning = validateMarginRates(inputs)
+  const positionSide = inputs.positionSide
 
   if (!inputsReadyForEvaluate(inputs)) {
-    return emptyOrderResult({ orderMessage: rateWarning })
+    return emptyOrderResult(positionSide, { orderMessage: rateWarning })
   }
 
-  const accountEval = inputs.accountEval!
+  const marginEquity = inputs.accountEval!
   const contracts = inputs.contracts!
   const currentPrice = inputs.currentPrice!
 
   const beforeResult = calcMargins(inputs, contracts)
   if (!beforeResult) {
-    return emptyOrderResult({
+    return emptyOrderResult(positionSide, {
       orderMessage: 'multiplier_zero',
       isAtRiskBefore: true,
       isAtRiskAfter: true,
     })
   }
 
-  const { margins: beforeMargins, pointValue: beforePointValue } = beforeResult
+  const beforeMargins = withEffectiveAvailableMargin(inputs, beforeResult.margins)
 
   const orderCapacityMessage = checkOrderExceedsMaxBuyable(
     inputs.orderContracts,
-    accountEval,
+    marginEquity,
     beforeMargins,
+    inputs.positionSide,
   )
 
-  const beforeInputError =
+  const { liquidationPrice: beforeLiquidation, inputError: beforeInputError } =
     contracts > 0
-      ? validateLiquidationInputs(accountEval, beforeMargins.maintenanceMargin, contracts)
-      : null
-
-  const beforeLiquidation =
-    beforeInputError === null && contracts > 0 && beforePointValue !== null
-      ? calcLiquidationPrice(
-          accountEval,
-          beforeMargins.maintenanceMargin,
-          contracts,
-          currentPrice,
-          beforePointValue,
-          inputs.positionSide,
-        )
-      : null
+      ? resolveLiquidation(inputs, contracts)
+      : { liquidationPrice: null, inputError: null }
 
   const {
     price: afterLiquidation,
-    afterMargins,
+    afterMargins: rawAfterMargins,
     message: afterOrderMessage,
   } = calcAfterOrderLiquidation(inputs, inputs.orderContracts)
+  const afterMargins = rawAfterMargins
+    ? withEffectiveAvailableMargin(inputs, rawAfterMargins)
+    : null
 
   const beforeTolerance = calcToleranceRate(currentPrice, beforeLiquidation, inputs.positionSide)
   const afterTolerance = calcToleranceRate(currentPrice, afterLiquidation, inputs.positionSide)
@@ -350,13 +348,14 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
       : null
 
   const beforeLeverageRatio = beforeMargins
-    ? calcLeverageRatio(beforeMargins.contractNotional, accountEval)
+    ? calcLeverageRatio(beforeMargins.contractNotional, marginEquity)
     : null
   const afterLeverageRatio = afterMargins
-    ? calcLeverageRatio(afterMargins.contractNotional, accountEval)
+    ? calcLeverageRatio(afterMargins.contractNotional, marginEquity)
     : null
 
   return {
+    positionSide,
     beforeLiquidation,
     afterLiquidation,
     beforeTolerance,

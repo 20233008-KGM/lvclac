@@ -33,11 +33,12 @@ function mergeInputs(prefs: Partial<CalculatorInputs>): CalculatorInputs {
     priceMultiplier?: number
     maintenanceMargin?: number
   }
+  const positionSide = prefs.positionSide ?? 'long'
   return {
     ...defaultInputs,
     ...prefs,
     mode: prefs.mode ?? 'evaluate',
-    positionSide: prefs.positionSide ?? 'long',
+    positionSide,
     maintenanceMarginRate: normalizeStoredRate(prefs.maintenanceMarginRate),
     maintenanceMargin: prefs.maintenanceMargin ?? legacy.maintenanceMargin,
     entrustedMarginRate: normalizeStoredRate(prefs.entrustedMarginRate),

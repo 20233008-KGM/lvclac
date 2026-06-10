@@ -1,21 +1,17 @@
 /**
  * 다국적·다종목 선물거래 시나리오 — 수동 산출 정답값과 계산기 결과 대조
  *
- * 공식 (계산기 내부와 동일):
- *   pointValue = contractAmount × multiplier ÷ currentPrice
- *   notional   = contracts × currentPrice × pointValue = contracts × contractAmount × multiplier
- *   buffer     = accountEval − maintenanceMargin
- *   delta      = buffer ÷ (contracts × pointValue)
- *   롱 청산가  = currentPrice − delta
- *   숏 청산가  = currentPrice + delta
- *   leverage   = notional ÷ accountEval
+ * 청산가 (롱/숏 분리 엔진):
+ *   Q = N × M (계약승수, M=1 포함)
+ *   LONG:  P = (C0×Q − E0) / (Q − M(C0)/C0)
+ *   SHORT: P = (E0 + C0×Q) / (Q + M(C0)/C0)
  */
 import { describe, expect, it } from 'vitest'
 import type { CalculatorInputs } from '../types'
 import { calculateEvaluate, calculateOrder } from './leverage'
 
 interface ScenarioExpect {
-  liquidationPrice?: number
+  liquidationPrice?: number | null
   toleranceRate?: number
   toleranceDelta?: number
   contractNotional?: number
@@ -57,9 +53,9 @@ const scenarios: TradingScenario[] = [
       contractNotional: 250_000,
       maintenanceMargin: 12_500,
       entrustedMargin: 25_000,
-      liquidationPrice: -3_832.5,
-      toleranceRate: 1_195,
-      toleranceDelta: 4_182.5,
+      liquidationPrice: -3_157_526,
+      toleranceRate: 902_250,
+      toleranceDelta: 3_157_876,
       leverageRatio: 250_000 / 3_000_000,
       maxBuyable: 119,
       isAtRisk: false,
@@ -86,9 +82,9 @@ const scenarios: TradingScenario[] = [
       contractNotional: 250_000,
       maintenanceMargin: 10_000,
       entrustedMargin: 20_000,
-      liquidationPrice: 5_300,
-      toleranceRate: 6,
-      toleranceDelta: 300,
+      liquidationPrice: 28_846,
+      toleranceRate: 477,
+      toleranceDelta: 23_846,
       leverageRatio: 250_000 / 25_000,
       maxBuyable: 0,
       isAtRisk: false,
@@ -115,9 +111,7 @@ const scenarios: TradingScenario[] = [
       contractNotional: 7_600_000,
       maintenanceMargin: 80_000,
       entrustedMargin: 200_000,
-      liquidationPrice: 28_400,
-      toleranceRate: 25.26,
-      toleranceDelta: 9_600,
+      liquidationPrice: null,
       leverageRatio: 7_600_000 / 2_000_000,
       maxBuyable: 18,
       isAtRisk: false,
@@ -144,9 +138,9 @@ const scenarios: TradingScenario[] = [
       contractNotional: 250_000,
       maintenanceMargin: 15_000,
       entrustedMargin: 30_000,
-      liquidationPrice: 52_920,
-      toleranceRate: 194,
-      toleranceDelta: 34_920,
+      liquidationPrice: 111_321,
+      toleranceRate: 518,
+      toleranceDelta: 93_321,
       leverageRatio: 250_000 / 500_000,
       maxBuyable: 78,
       isAtRisk: false,
@@ -173,9 +167,9 @@ const scenarios: TradingScenario[] = [
       contractNotional: 450_000,
       maintenanceMargin: 18_000,
       entrustedMargin: 36_000,
-      liquidationPrice: 18_880,
-      toleranceRate: 4.889,
-      toleranceDelta: 880,
+      liquidationPrice: 55_769,
+      toleranceRate: 210,
+      toleranceDelta: 37_769,
       leverageRatio: 450_000 / 40_000,
       maxBuyable: 0,
       isAtRisk: false,
@@ -202,9 +196,9 @@ const scenarios: TradingScenario[] = [
       contractNotional: 200_000,
       maintenanceMargin: 10_000,
       entrustedMargin: 16_000,
-      liquidationPrice: 1_100,
-      toleranceRate: 45,
-      toleranceDelta: 900,
+      liquidationPrice: -103_158,
+      toleranceRate: 5_258,
+      toleranceDelta: 105_158,
       leverageRatio: 200_000 / 100_000,
       maxBuyable: 5,
       isAtRisk: false,
@@ -231,9 +225,9 @@ const scenarios: TradingScenario[] = [
       contractNotional: 20_000_000,
       maintenanceMargin: 4_000_000,
       entrustedMargin: 5_000_000,
-      liquidationPrice: -39_000,
-      toleranceRate: 230,
-      toleranceDelta: 69_000,
+      liquidationPrice: -587_500,
+      toleranceRate: 2_058,
+      toleranceDelta: 617_500,
       leverageRatio: 20_000_000 / 50_000_000,
       maxBuyable: 90,
       isAtRisk: false,
@@ -257,9 +251,10 @@ const scenarios: TradingScenario[] = [
       positionSide: 'long',
     },
     expected: {
-      liquidationPrice: undefined,
-      liquidationMessage: 'maintenance_exceeds_equity',
-      isAtRisk: true,
+      liquidationPrice: -5_263,
+      maxBuyable: 0,
+      maxBuyableMessage: 'no_available_margin',
+      isAtRisk: false,
     },
   },
 
@@ -280,9 +275,9 @@ const scenarios: TradingScenario[] = [
       positionSide: 'long',
     },
     expected: {
-      liquidationPrice: 4_950,
-      toleranceRate: 1,
-      toleranceDelta: 50,
+      liquidationPrice: -10_526,
+      toleranceRate: 311,
+      toleranceDelta: 15_526,
       isAtRisk: false,
     },
   },
@@ -364,9 +359,9 @@ const orderScenarios: {
       orderContracts: 1,
     },
     expected: {
-      beforeLiquidation: -6_632.5,
-      afterLiquidation: -4_299.17,
-      liquidationDelta: 2_333.33,
+      beforeLiquidation: -5_262_789,
+      afterLiquidation: -3_508_404,
+      liquidationDelta: 1_754_386,
       beforeLeverageRatio: 500_000 / 10_000_000,
       afterLeverageRatio: 750_000 / 10_000_000,
       isAtRiskBefore: false,
@@ -389,9 +384,9 @@ const orderScenarios: {
       orderContracts: 1,
     },
     expected: {
-      beforeLiquidation: 5_800,
-      afterLiquidation: 5_300,
-      liquidationDelta: -500,
+      beforeLiquidation: 52_885,
+      afterLiquidation: 28_846,
+      liquidationDelta: -24_038,
       beforeLeverageRatio: 250_000 / 50_000,
       afterLeverageRatio: 500_000 / 50_000,
       isAtRiskBefore: false,
@@ -414,10 +409,10 @@ const orderScenarios: {
       orderContracts: 2,
     },
     expected: {
-      beforeLiquidation: 5_300,
+      beforeLiquidation: 28_846,
       afterLiquidation: undefined,
-      orderMessage: 'order_exceeds_max_buyable',
-      orderCapacityMessage: 'order_exceeds_max_buyable',
+      orderMessage: 'order_exceeds_max_sellable',
+      orderCapacityMessage: 'order_exceeds_max_sellable',
       isAtRiskBefore: false,
       isAtRiskAfter: true,
     },
@@ -438,9 +433,9 @@ const orderScenarios: {
       orderContracts: 1,
     },
     expected: {
-      beforeLiquidation: 4_520,
-      afterLiquidation: 4_686.67,
-      liquidationDelta: 166.67,
+      beforeLiquidation: -25_000,
+      afterLiquidation: -13_462,
+      liquidationDelta: 11_538,
       beforeLeverageRatio: 500_000 / 50_000,
       afterLeverageRatio: 750_000 / 50_000,
       isAtRiskBefore: false,
@@ -474,14 +469,16 @@ describe.each(scenarios)('시나리오 [$id] $description', (scenario) => {
     const result = calculateEvaluate(scenario.inputs)
     const exp = scenario.expected
 
-    if (exp.liquidationPrice != null) {
+    if (exp.liquidationPrice === null) {
+      expect(result.liquidationPrice).toBeNull()
+    } else if (exp.liquidationPrice != null) {
       expect(result.liquidationPrice).toBeCloseTo(exp.liquidationPrice, 0)
     } else if (exp.liquidationMessage === 'maintenance_exceeds_equity') {
       expect(result.liquidationPrice).toBeNull()
     }
 
     if (exp.toleranceRate != null) {
-      expect(result.toleranceRate).toBeCloseTo(exp.toleranceRate, 1)
+      expect(result.toleranceRate).toBeCloseTo(exp.toleranceRate, 0)
     }
     if (exp.toleranceDelta != null) {
       expect(result.toleranceDelta).toBeCloseTo(exp.toleranceDelta, 0)

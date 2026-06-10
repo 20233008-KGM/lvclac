@@ -21,7 +21,9 @@ export function calcLongLiquidationPrice(params: LiquidationParams): number | nu
   const numerator = currentPrice * Q - equity
   const price = numerator / denominator
 
-  return Number.isFinite(price) ? price : null
+  if (!Number.isFinite(price) || price <= 0) return null
+
+  return price
 }
 
 /** 롱: 청산 불가 조건 (분모 ≤ 0 → 유지증거금률 ≥ 100% 수준) */

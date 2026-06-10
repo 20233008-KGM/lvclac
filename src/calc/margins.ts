@@ -17,6 +17,56 @@ type NotionalInputs = Pick<
   'accountEval' | 'contractAmount' | 'contractMultiplier' | 'currentPrice'
 >
 
+/** 주문·청산 계산 기준가 — 현재가 우선, 없으면 주문가 */
+export function resolveReferencePrice(
+  inputs: Pick<CalculatorInputs, 'currentPrice' | 'orderPrice'>,
+): number | undefined {
+  return inputs.currentPrice ?? inputs.orderPrice
+}
+
+/** 약정금액 없이 증거금률만 있을 때 명목: C0 × N × M (청산 엔진과 동일) */
+export function calcRateBasedNotional(
+  price: number,
+  contracts: number,
+  multiplier: number | undefined,
+): number {
+  return price * contracts * (multiplier ?? 1)
+}
+
+export function hasMarginSpec(inputs: CalculatorInputs): boolean {
+  const hasMaintenance =
+    hasDirectMaintenance(inputs) || inputs.maintenanceMarginRate != null
+  const hasEntrusted = hasDirectEntrusted(inputs) || inputs.entrustedMarginRate != null
+  return hasMaintenance && hasEntrusted
+}
+
+export function canUseRateBasedNotional(inputs: CalculatorInputs): boolean {
+  return (
+    !hasContractSpec(inputs) &&
+    resolveReferencePrice(inputs) != null &&
+    (inputs.maintenanceMarginRate != null || inputs.entrustedMarginRate != null)
+  )
+}
+
+/** 주문 시뮬 — 보유 0·약정금액 없이도 증거금률+기준가만으로 가능 */
+export function inputsReadyForOrderSim(inputs: CalculatorInputs): boolean {
+  if (inputs.accountEval == null) return false
+  if (!hasMarginSpec(inputs)) return false
+
+  if (hasContractSpec(inputs)) {
+    return inputs.currentPrice != null
+  }
+
+  return resolveReferencePrice(inputs) != null
+}
+
+/** 기준가가 주문가뿐일 때 청산·증거금 산출용 입력 */
+export function withReferencePrice(inputs: CalculatorInputs): CalculatorInputs {
+  const price = resolveReferencePrice(inputs)
+  if (price == null || inputs.currentPrice != null) return inputs
+  return { ...inputs, currentPrice: price }
+}
+
 export function calcPositionNotional(inputs: NotionalInputs, contracts: number): number {
   const multiplier = inputs.contractMultiplier ?? 1
   if (
@@ -37,6 +87,13 @@ export function calcPositionNotional(inputs: NotionalInputs, contracts: number):
     inputs.currentPrice > 0
   ) {
     return contracts * inputs.currentPrice * pointValue
+  }
+  if (canUseRateBasedNotional(inputs as CalculatorInputs)) {
+    return calcRateBasedNotional(
+      resolveReferencePrice(inputs as CalculatorInputs)!,
+      contracts,
+      inputs.contractMultiplier,
+    )
   }
   return 0
 }
@@ -61,15 +118,13 @@ export function hasDirectEntrusted(inputs: CalculatorInputs): boolean {
 export function inputsReadyForEvaluate(inputs: CalculatorInputs): boolean {
   if (inputs.contracts == null || inputs.contracts <= 0) return false
   if (inputs.accountEval == null) return false
-  if (inputs.currentPrice == null) return false
-  if (!hasContractSpec(inputs)) return false
+  if (!hasMarginSpec(inputs)) return false
 
-  const hasMaintenance =
-    hasDirectMaintenance(inputs) || inputs.maintenanceMarginRate != null
-  const hasEntrusted = hasDirectEntrusted(inputs) || inputs.entrustedMarginRate != null
-  if (!hasMaintenance || !hasEntrusted) return false
+  if (hasContractSpec(inputs)) {
+    return inputs.currentPrice != null
+  }
 
-  return true
+  return canUseRateBasedNotional(inputs)
 }
 
 /** rate: 소수 비율 (예: 0.247) — 포지션 명목가치 기준 */
@@ -144,9 +199,16 @@ export function calcMargins(
   inputs: CalculatorInputs,
   contracts: number | undefined,
 ): { margins: MarginAmounts; pointValue: number } | null {
-  const pointValue = resolvePointValue(inputs)
   const heldContracts = contracts ?? 0
-  if (pointValue === null || heldContracts < 0) return null
+  if (heldContracts < 0) return null
+
+  const pointValue = resolvePointValue(inputs)
+  const marginReady =
+    pointValue != null ||
+    canUseRateBasedNotional(inputs) ||
+    hasDirectMaintenance(inputs) ||
+    hasDirectEntrusted(inputs)
+  if (!marginReady) return null
 
   const contractNotional = calcPositionNotional(inputs, heldContracts)
   const { amount: maintenanceMargin, source: maintenanceMarginSource } =
@@ -164,7 +226,7 @@ export function calcMargins(
   const marginEquity = resolveMarginEquity(inputs)
 
   return {
-    pointValue,
+    pointValue: pointValue ?? 0,
     margins: {
       contractNotional,
       maintenanceMargin,

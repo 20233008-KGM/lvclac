@@ -221,7 +221,7 @@ export function applyInputPatch(
   }
 
   const sanitizedPatch = scenarioLocked
-    ? inputPatch.scenarioPrice !== undefined
+    ? 'scenarioPrice' in inputPatch
       ? { scenarioPrice: inputPatch.scenarioPrice }
       : {}
     : inputPatch

@@ -33,6 +33,15 @@ export interface Messages {
   logout: string
   close: string
   langToggleLabel: string
+  howToUse: {
+    button: string
+    ariaLabel: string
+    beginnerTitle: string
+    beginnerBody: string
+    experiencedTitle: string
+    experiencedBody: string
+    footnote: string
+  }
   optional: string
   fieldTooltipLabel: string
   input: string

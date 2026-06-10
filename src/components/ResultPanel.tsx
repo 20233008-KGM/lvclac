@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { calculateEvaluate, calculateOrder, checkOrderExceedsMaxBuyable } from '../calc/leverage'
 import { resolveEvaluationInputs } from '../calc/mtmLink'
-import { calcMargins, inputsReadyForEvaluate } from '../calc/margins'
+import { calcMargins, inputsReadyForOrderSim, withReferencePrice } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
 import { FORMULAS_PATH } from '../config/routes'
@@ -91,11 +91,13 @@ function ResultRowPair({
 
 function ResultSheet({
   indexHeader,
+  indexHeaderClassName,
   beforeHeader,
   afterHeader,
   rows,
 }: {
-  indexHeader: string
+  indexHeader: React.ReactNode
+  indexHeaderClassName?: string
   beforeHeader: string
   afterHeader: string
   rows: {
@@ -110,7 +112,9 @@ function ResultSheet({
     <table className="result-sheet">
       <thead>
         <tr>
-          <th scope="col">{indexHeader}</th>
+          <th scope="col" className={indexHeaderClassName}>
+            {indexHeader}
+          </th>
           <th scope="col">{beforeHeader}</th>
           <th scope="col">{afterHeader}</th>
         </tr>
@@ -228,21 +232,17 @@ function EvaluateResults({
 function OrderInputs({
   inputs,
   onChange,
-  orderBlocked,
   contractsField,
   priceField,
   useCurrentPriceLabel,
-  orderBlockedLabel,
   stepUpLabel,
   stepDownLabel,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: Partial<CalculatorInputs>) => void
-  orderBlocked: boolean
   contractsField: { label: string; placeholder?: string }
   priceField: { label: string; placeholder?: string }
   useCurrentPriceLabel: string
-  orderBlockedLabel: string
   stepUpLabel: string
   stepDownLabel: string
 }) {
@@ -303,11 +303,6 @@ function OrderInputs({
       >
         {useCurrentPriceLabel}
       </button>
-      {orderBlocked && (
-        <span className="order-blocked-badge result-order-fields__badge" role="status">
-          {orderBlockedLabel}
-        </span>
-      )}
     </div>
   )
 }
@@ -394,7 +389,14 @@ function OrderResults({
 
   return (
     <ResultSheet
-      indexHeader={r.sheetIndex}
+      indexHeader={
+        orderBlocked ? (
+          <span className="order-blocked-badge" role="status">
+            {t.orderBlocked}
+          </span>
+        ) : null
+      }
+      indexHeaderClassName={orderBlocked ? 'result-sheet__index-header--blocked' : undefined}
       beforeHeader={r.sheetBefore}
       afterHeader={r.sheetAfter}
       rows={sheetRows}
@@ -419,9 +421,9 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   )
 
   const orderBlocked = useMemo(() => {
-    const evalInputs = resolveEvaluationInputs(inputs)
-    if (!inputsReadyForEvaluate(evalInputs)) return false
-    const marginResult = calcMargins(evalInputs, evalInputs.contracts)
+    const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
+    if (!inputsReadyForOrderSim(evalInputs)) return false
+    const marginResult = calcMargins(evalInputs, evalInputs.contracts ?? 0)
     if (!marginResult) return false
     return (
       checkOrderExceedsMaxBuyable(
@@ -464,11 +466,9 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         <OrderInputs
           inputs={inputs}
           onChange={onChange}
-          orderBlocked={orderBlocked}
           contractsField={f.orderContracts}
           priceField={f.orderPrice}
           useCurrentPriceLabel={t.useCurrentPrice}
-          orderBlockedLabel={t.orderBlocked}
           stepUpLabel={t.stepUp}
           stepDownLabel={t.stepDown}
         />

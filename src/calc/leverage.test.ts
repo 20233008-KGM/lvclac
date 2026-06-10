@@ -88,11 +88,11 @@ describe('calcContractNotional', () => {
 })
 
 describe('calcLiquidationPrice', () => {
-  it('롱: Equity(P)=Maintenance(P) 해에서 청산가', () => {
+  it('롱: 양의 가격 구간에서 청산 불가 시 null', () => {
     const pointValue = getPointValue(250_000, 1, 350)!
     const maintenance = calcMarginFromNotional(calcContractNotional(2, 250_000, 1), 0.05)
     const price = calcLiquidationPrice(10_000_000, maintenance, 2, 350, pointValue, 'long')
-    expect(price).toBeCloseTo(-7_000, 0)
+    expect(price).toBeNull()
   })
 
   it('숏: Equity(P)=Maintenance(P) 해에서 청산가', () => {
@@ -160,15 +160,15 @@ describe('calcMaxBuyable', () => {
 describe('calculateEvaluate', () => {
   it('기본값으로 청산가·하락율 산출', () => {
     const result = calculateEvaluate(sampleInputs)
-    expect(result.liquidationPrice).toBeCloseTo(-5_262_789, 0)
-    expect(result.toleranceRate).toBeCloseTo(1_503_754, 0)
+    expect(result.liquidationPrice).toBeNull()
+    expect(result.toleranceRate).toBeNull()
     expect(result.margins?.maintenanceMargin).toBeCloseTo(25_000, 5)
     expect(result.margins?.entrustedMargin).toBeCloseTo(50_000, 5)
     expect(result.margins?.availableMargin).toBeCloseTo(9_950_000, 5)
     expect(result.margins?.perContractEntrusted).toBeCloseTo(25_000, 5)
     expect(result.margins?.perContractMaintenance).toBeCloseTo(12_500, 5)
     expect(result.margins?.contractNotional).toBeCloseTo(500_000, 5)
-    expect(result.toleranceDelta).toBeCloseTo(5_263_139, 0)
+    expect(result.toleranceDelta).toBeNull()
     expect(result.leverageRatio).toBe(0.05)
   })
 
@@ -198,6 +198,40 @@ describe('calculateEvaluate', () => {
       2,
     )
   })
+
+  it('최소 입력(보유 0·약정금액 없음)으로 추가 매수 한도 산출', () => {
+    const result = calculateEvaluate({
+      mode: 'evaluate',
+      accountEval: 10_000_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contractMultiplier: 1,
+      currentPrice: 350,
+      positionSide: 'long',
+      contracts: 0,
+    })
+    expect(result.maxBuyable).toBe(285_714)
+    expect(result.maxBuyableMessage).toBeNull()
+    expect(result.liquidationPrice).toBeNull()
+    expect(result.margins?.availableMargin).toBe(10_000_000)
+    expect(result.margins?.perContractEntrusted).toBeCloseTo(35, 5)
+  })
+
+  it('약정금액 없이 보유 계약·현재가·증거금률만으로 청산가·한도 산출', () => {
+    const result = calculateEvaluate({
+      mode: 'evaluate',
+      accountEval: 10_000_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contracts: 2,
+      contractMultiplier: 1,
+      currentPrice: 350,
+      positionSide: 'long',
+    })
+    expect(result.maxBuyable).toBe(285_712)
+    expect(result.liquidationPrice).toBeNull()
+    expect(result.margins?.entrustedMargin).toBeCloseTo(70, 5)
+  })
 })
 
 describe('calculateEvaluate (direct margin)', () => {
@@ -206,7 +240,7 @@ describe('calculateEvaluate (direct margin)', () => {
     expect(result.margins?.contractNotional).toBe(500_000)
     expect(result.margins?.maintenanceMargin).toBe(2_000)
     expect(result.margins?.entrustedMargin).toBe(12_000)
-    expect(result.liquidationPrice).toBeCloseTo(-25_000, 0)
+    expect(result.liquidationPrice).toBeNull()
     expect(result.leverageRatio).toBe(10)
     expect(result.maxBuyable).toBe(6)
   })
@@ -270,7 +304,7 @@ describe('calculateOrder', () => {
     expect(explicit.afterMargins?.availableMargin).toBe(atMark.afterMargins?.availableMargin)
   })
 
-  it('롱 — 저가 매수 시 주문 후 가용증거금·청산 여유 개선', () => {
+  it('롱 — 저가 매수 시 주문 후 가용증거금 개선', () => {
     const atMark = calculateOrder({
       ...sampleInputs,
       mode: 'order',
@@ -285,6 +319,70 @@ describe('calculateOrder', () => {
     expect(belowMark.afterMargins!.availableMargin).toBeGreaterThan(
       atMark.afterMargins!.availableMargin,
     )
-    expect(belowMark.afterTolerance!).toBeGreaterThan(atMark.afterTolerance!)
+  })
+
+  it('보유 0·약정금액 없이 현재가+증거금률만으로 신규 매수 시뮬', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 10_000_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contractMultiplier: 10,
+      currentPrice: 350,
+      positionSide: 'long',
+      orderContracts: 2,
+    })
+    expect(result.orderMessage).toBeNull()
+    expect(result.beforeLiquidation).toBeNull()
+    expect(result.beforeMargins?.entrustedMargin).toBe(0)
+    expect(result.afterMargins?.entrustedMargin).toBeCloseTo(700, 5)
+    expect(result.afterLiquidation).toBeNull()
+  })
+
+  it('현재가 없을 때 주문가를 기준가로 신규 매수 시뮬', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 10_000_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contractMultiplier: 1,
+      positionSide: 'long',
+      orderContracts: 1,
+      orderPrice: 350,
+    })
+    expect(result.orderMessage).toBeNull()
+    expect(result.afterMargins).not.toBeNull()
+    expect(result.afterLiquidation).toBeNull()
+  })
+
+  it('보유 0·약정금액 없이 현재가+증거금률만으로 신규 매도(숏) 시뮬', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 10_000_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contractMultiplier: 1,
+      currentPrice: 350,
+      positionSide: 'short',
+      orderContracts: 1,
+    })
+    expect(result.orderMessage).toBeNull()
+    expect(result.beforeLiquidation).toBeNull()
+    expect(result.afterLiquidation).not.toBeNull()
+    expect(result.afterLiquidation!).toBeGreaterThan(350)
+  })
+
+  it('숏 — 증거금 대비 계좌가 작으면 청산가 미표시', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 10,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contractMultiplier: 1,
+      currentPrice: 350,
+      positionSide: 'short',
+      orderContracts: 1,
+    })
+    expect(result.afterLiquidation).toBeNull()
   })
 })

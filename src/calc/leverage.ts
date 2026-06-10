@@ -14,6 +14,8 @@ import {
 import {
   calcMargins,
   inputsReadyForEvaluate,
+  inputsReadyForOrderSim,
+  withReferencePrice,
   validateLiquidationInputs,
   validateMarginRates,
 } from './margins'
@@ -221,27 +223,16 @@ function calcAfterOrderLiquidation(
 }
 
 export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
-  const evalInputs = resolveEvaluationInputs(inputs)
-  const marginInputs = resolveMarginCalculationInputs(inputs)
+  const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
+  const marginInputs = withReferencePrice(resolveMarginCalculationInputs(inputs))
   const rateWarning = validateMarginRates(marginInputs)
   const positionSide = evalInputs.positionSide
+  const heldContracts = evalInputs.contracts ?? 0
 
-  if (evalInputs.contracts === 0) {
-    return {
-      positionSide,
-      liquidationPrice: null,
-      liquidationMessage: 'contracts_zero',
-      toleranceRate: null,
-      toleranceDelta: null,
-      isAtRisk: true,
-      margins: null,
-      maxBuyable: null,
-      maxBuyableMessage: null,
-      leverageRatio: null,
-    }
-  }
+  const canCalcCapacity = inputsReadyForOrderSim(evalInputs)
+  const canCalcFull = inputsReadyForEvaluate(evalInputs)
 
-  if (!inputsReadyForEvaluate(evalInputs)) {
+  if (!canCalcCapacity && !canCalcFull) {
     return {
       positionSide,
       liquidationPrice: null,
@@ -256,7 +247,7 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
     }
   }
 
-  const marginResult = calcMargins(marginInputs, evalInputs.contracts)
+  const marginResult = calcMargins(marginInputs, heldContracts)
   if (!marginResult) {
     return {
       positionSide,
@@ -272,9 +263,31 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
     }
   }
 
-  const contracts = evalInputs.contracts!
-  const currentPrice = evalInputs.currentPrice!
   const margins = withEffectiveAvailableMargin(evalInputs, marginResult.margins)
+  const marginEquity = resolveMarginEquity(evalInputs)
+  const { value: maxBuyable, message: maxBuyableMessage } = calcMaxBuyable(
+    marginEquity,
+    margins.entrustedMargin,
+    margins.perContractEntrusted,
+  )
+
+  if (!canCalcFull) {
+    return {
+      positionSide,
+      liquidationPrice: null,
+      liquidationMessage: rateWarning,
+      toleranceRate: null,
+      toleranceDelta: null,
+      isAtRisk: false,
+      margins,
+      maxBuyable,
+      maxBuyableMessage,
+      leverageRatio: null,
+    }
+  }
+
+  const contracts = heldContracts
+  const currentPrice = evalInputs.currentPrice!
 
   const { liquidationPrice, inputError } = resolveLiquidation(evalInputs, contracts)
 
@@ -291,12 +304,6 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
   const isAtRisk =
     inputError !== null || (toleranceRate !== null && toleranceRate <= 0)
 
-  const marginEquity = resolveMarginEquity(evalInputs)
-  const { value: maxBuyable, message: maxBuyableMessage } = calcMaxBuyable(
-    marginEquity,
-    margins.entrustedMargin,
-    margins.perContractEntrusted,
-  )
   const leverageRatio = calcLeverageRatio(margins.contractNotional, marginEquity)
 
   return {
@@ -339,20 +346,20 @@ function emptyOrderResult(
 }
 
 export function calculateOrder(inputs: CalculatorInputs): OrderResult {
-  const evalInputs = resolveEvaluationInputs(inputs)
-  const marginInputs = resolveMarginCalculationInputs(inputs)
+  const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
+  const marginInputs = withReferencePrice(resolveMarginCalculationInputs(inputs))
   const rateWarning = validateMarginRates(marginInputs)
   const positionSide = evalInputs.positionSide
 
-  if (!inputsReadyForEvaluate(evalInputs)) {
+  if (!inputsReadyForOrderSim(evalInputs)) {
     return emptyOrderResult(positionSide, { orderMessage: rateWarning })
   }
 
   const marginEquity = resolveMarginEquity(evalInputs)
-  const contracts = evalInputs.contracts!
+  const heldContracts = evalInputs.contracts ?? 0
   const currentPrice = evalInputs.currentPrice!
 
-  const beforeResult = calcMargins(marginInputs, contracts)
+  const beforeResult = calcMargins(marginInputs, heldContracts)
   if (!beforeResult) {
     return emptyOrderResult(positionSide, {
       orderMessage: 'multiplier_zero',
@@ -371,8 +378,8 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   )
 
   const { liquidationPrice: beforeLiquidation, inputError: beforeInputError } =
-    contracts > 0
-      ? resolveLiquidation(evalInputs, contracts)
+    heldContracts > 0
+      ? resolveLiquidation(evalInputs, heldContracts)
       : { liquidationPrice: null, inputError: null }
 
   const {

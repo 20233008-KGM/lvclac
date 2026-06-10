@@ -156,6 +156,14 @@ function EnterCommitIcon() {
   )
 }
 
+function ApplyPnlIcon() {
+  return (
+    <span className="input-commit-btn__glyph input-commit-btn__glyph--pnl" aria-hidden>
+      ✓
+    </span>
+  )
+}
+
 function ScenarioPriceCommitButton({
   label,
   disabled,
@@ -179,6 +187,28 @@ function ScenarioPriceCommitButton({
   )
 }
 
+function ScenarioPriceApplyButton({
+  label,
+  disabled,
+  onClick,
+}: {
+  label: string
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className="input-commit-btn input-commit-btn--apply-pnl"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <ApplyPnlIcon />
+    </button>
+  )
+}
+
 function ScenarioPriceField({
   inputs,
   onChange,
@@ -189,7 +219,6 @@ function ScenarioPriceField({
   commitLabel,
   clearLabel,
   applyPnlLabel,
-  applyPnlShortLabel,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -200,7 +229,6 @@ function ScenarioPriceField({
   commitLabel: string
   clearLabel: string
   applyPnlLabel: string
-  applyPnlShortLabel: string
 }) {
   const inputRef = useRef<NumberInputHandle>(null)
   const wasScenarioModeRef = useRef(false)
@@ -269,31 +297,18 @@ function ScenarioPriceField({
   const applyPnlDisabled = useStepper && inputs.scenarioPrice == null
 
   const applyPnlButton = (
-    <button
-      type="button"
-      className="scenario-apply-pnl-btn scenario-apply-pnl-btn--inline"
+    <ScenarioPriceApplyButton
+      label={applyPnlLabel}
       disabled={applyPnlDisabled}
-      tabIndex={scenarioModeActive ? 0 : -1}
-      aria-hidden={!scenarioModeActive}
-      aria-label={applyPnlLabel}
-      title={applyPnlLabel}
       onClick={() => applyScenarioToMark()}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          applyScenarioToMark()
-        }
-      }}
-    >
-      {applyPnlShortLabel}
-    </button>
+    />
   )
 
   const labelRow = (
     <span className="field-label-row field-label-row--with-action" id="scenario-price-label">
       <span className="field-label-text">
         {field.label}
-        <FieldLabelTooltip text={field.hint} label={tooltipLabel} />
+        <FieldLabelTooltip text={field.hint} label={tooltipLabel} highlight={scenarioModeActive} />
       </span>
       <span className="field-label-action-slot">
         <button
@@ -322,42 +337,40 @@ function ScenarioPriceField({
     />
   )
 
-  const commitRowClassName = scenarioModeActive
-    ? 'input-commit-row input-commit-row--apply'
-    : 'input-commit-row input-commit-row--enter'
+  const commitBtnSlot = (
+    <span className="input-commit-btn-slot">
+      <span
+        className={scenarioModeActive ? 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden' : 'input-commit-btn-slot__layer'}
+        aria-hidden={scenarioModeActive}
+      >
+        {commitButton}
+      </span>
+      <span
+        className={scenarioModeActive ? 'input-commit-btn-slot__layer' : 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden'}
+        aria-hidden={!scenarioModeActive}
+      >
+        {applyPnlButton}
+      </span>
+    </span>
+  )
 
   if (useStepper) {
     return (
       <div className="field">
         {labelRow}
-        <div className={commitRowClassName}>
-          <NumberStepper
-            ref={inputRef}
-            value={inputs.scenarioPrice}
-            step={tickSize}
-            allowNegative={false}
-            placeholder={field.placeholder || undefined}
-            stepUpLabel={stepUpLabel}
-            stepDownLabel={stepDownLabel}
-            ariaLabelledBy="scenario-price-label"
-            onEnterKey={handleScenarioEnter}
-            onChange={handleScenarioPriceChange}
-          />
-          <span className="input-commit-btn-slot">
-            <span
-              className={scenarioModeActive ? 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden' : 'input-commit-btn-slot__layer'}
-              aria-hidden={scenarioModeActive}
-            >
-              {commitButton}
-            </span>
-            <span
-              className={scenarioModeActive ? 'input-commit-btn-slot__layer' : 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden'}
-              aria-hidden={!scenarioModeActive}
-            >
-              {applyPnlButton}
-            </span>
-          </span>
-        </div>
+        <NumberStepper
+          ref={inputRef}
+          value={inputs.scenarioPrice}
+          step={tickSize}
+          allowNegative={false}
+          placeholder={field.placeholder || undefined}
+          stepUpLabel={stepUpLabel}
+          stepDownLabel={stepDownLabel}
+          ariaLabelledBy="scenario-price-label"
+          inlineSlot={commitBtnSlot}
+          onEnterKey={handleScenarioEnter}
+          onChange={handleScenarioPriceChange}
+        />
       </div>
     )
   }
@@ -365,7 +378,7 @@ function ScenarioPriceField({
   return (
     <div className="field">
       {labelRow}
-      <div className={commitRowClassName}>
+      <div className="input-commit-row input-commit-row--enter">
         <NumberInput
           ref={inputRef}
           value={inputs.scenarioPrice}
@@ -373,31 +386,10 @@ function ScenarioPriceField({
           placeholder={field.placeholder || undefined}
           aria-labelledby="scenario-price-label"
           className="input-commit-row__input"
-          deferChangeUntilBlur={!scenarioModeActive}
           onEnterKey={handleScenarioEnter}
-          onCommit={
-            scenarioModeActive
-              ? undefined
-              : (v) => {
-                  if (v != null) handleScenarioPriceChange(v)
-                }
-          }
-          onChange={scenarioModeActive ? handleScenarioPriceChange : () => {}}
+          onChange={handleScenarioPriceChange}
         />
-        <span className="input-commit-btn-slot">
-          <span
-            className={scenarioModeActive ? 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden' : 'input-commit-btn-slot__layer'}
-            aria-hidden={scenarioModeActive}
-          >
-            {commitButton}
-          </span>
-          <span
-            className={scenarioModeActive ? 'input-commit-btn-slot__layer' : 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden'}
-            aria-hidden={!scenarioModeActive}
-          >
-            {applyPnlButton}
-          </span>
-        </span>
+        {commitBtnSlot}
       </div>
     </div>
   )
@@ -493,7 +485,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             commitLabel={t.scenarioPriceCommit}
             clearLabel={t.scenarioPriceClear}
             applyPnlLabel={t.scenarioApplyPnl}
-            applyPnlShortLabel={t.scenarioApplyPnlShort}
           />
           {numField(
             f.tickSize,

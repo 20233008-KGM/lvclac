@@ -4,16 +4,27 @@ import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
 export const ko: Messages = {
   lang: 'ko',
   htmlLang: 'ko',
-  siteTitle: '레버리지 계산기',
+  siteTitle: '선물 청산가 계산기',
   siteDescription:
-    '선물·레버리지 포지션의 청산가와 증거금 여유를 즉시 계산하는 무료 도구. 계좌 평가금액, 개시·유지증거금을 입력하세요.',
+    '선물·레버리지 포지션의 청산가와 증거금 여유를 즉시 계산하는 무료 도구. 계좌 평가금액과 증거금만 입력하면 청산가·마진콜 시점을 확인합니다.',
   appIntro:
-    '선물·레버리지 포지션의 청산가와 증거금 여유를 즉시 계산합니다. 브로커 앱 표시값 중 아는 항목만 입력하세요.',
+    '한 종목 포지션의 청산가와 증거금 여유를 즉시 계산합니다. 가격을 바꿔가며 모든 상황을 시뮬레이션해 보세요.',
   loading: '불러오는 중...',
   login: '로그인',
   logout: '로그아웃',
   close: '닫기',
   langToggleLabel: '언어 선택',
+  howToUse: {
+    button: '사용법',
+    ariaLabel: '사용 방법 안내',
+    beginnerTitle: '선물거래가 처음이신가요?',
+    beginnerBody:
+      ' 계좌 평가금액과 유지·개시 증거금률을 입력한 뒤, 아래 「주문」 섹션에서 주문 계약수·주문 가격을 조정하면 체결 직후 계좌 상태를 미리 볼 수 있습니다.',
+    experiencedTitle: '이미 선물거래를 하시나요?',
+    experiencedBody:
+      ' 계좌, 종목 스펙, 증거금 필드를 입력하면 청산 여유(버퍼)와 레버리지를 편하게 확인할 수 있습니다.',
+    footnote: '이 계산기는 한 종목만 보유한 경우를 기준으로 계산합니다.',
+  },
   optional: '(선택)',
   fieldTooltipLabel: '용어 설명',
   input: '입력',
@@ -22,7 +33,7 @@ export const ko: Messages = {
   short: '숏',
   position: '포지션',
   modeLabel: '모드',
-  orderBlocked: '주문 불가',
+  orderBlocked: '주문불가',
   stepUp: '1 증가',
   stepDown: '1 감소',
   contractsUnit: '계약',
@@ -92,7 +103,7 @@ export const ko: Messages = {
     },
     scenarioPrice: {
       label: '시나리오 가격',
-      hint: 'Enter(↵) 첫 입력은 시나리오 모드 진입. 시나리오 모드에서 Enter를 누르면 「반영」 버튼이 눌린 것과 같습니다. 「반영」 시 현재가에서 시나리오 가격만큼 움직였을 때의 손익을 계좌 평가금액에 반영합니다. Esc로 복원.',
+      hint: '가격이 변동했을 때의 계좌 평가금액 변화를 계산합니다.\n\n· Enter(↵) 첫 입력 → 시나리오 모드 진입\n· 모드 중 Enter → 시나리오 가격으로 손익 반영\n· Esc → 시나리오 모드 종료',
       placeholder: '변동 가격',
     },
     tickSize: {
@@ -170,7 +181,7 @@ export const ko: Messages = {
     at_risk: '청산 위험',
   },
   auth: {
-    title: '레버리지 계산기',
+    title: '선물 청산가 계산기',
     modalTitle: '로그인',
     subtitle: '로그인하면 입력값이 자동으로 저장됩니다.',
     tabLogin: '로그인',
@@ -189,7 +200,7 @@ export const ko: Messages = {
     contentNoticeLabel: '투자 위험 및 계산 한계 안내',
     modalTitle: '서비스 이용 안내',
     modalIntro:
-      '레버리지 계산기를 이용하기 전에 아래 내용을 확인해 주세요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있습니다.',
+      '선물 청산가 계산기를 이용하기 전에 아래 내용을 확인해 주세요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있습니다.',
     sections: [
       {
         title: '정보 제공 목적',
@@ -219,7 +230,7 @@ export const ko: Messages = {
     privacyTitle: '개인정보 처리방침',
     back: '돌아가기',
     termsBody: [
-      '제1조 (목적) 본 약관은 Farfield Software(이하 「회사」)가 제공하는 레버리지 계산기(이하 「서비스」)의 이용 조건을 정합니다.',
+      '제1조 (목적) 본 약관은 Farfield Software(이하 「회사」)가 제공하는 선물 청산가 계산기(이하 「서비스」)의 이용 조건을 정합니다.',
       '제2조 (서비스 성격) 서비스는 청산가·증거금을 추정하는 무료 웹 도구이며, 금융투자업·투자자문업을 영위하지 않습니다.',
       '제3조 (이용자 의무) 이용자는 자신의 거래 환경에 맞는 값을 입력하고, 결과를 참고용으로만 활용해야 합니다.',
       '제4조 (입력값 저장) 계산기 입력값은 이용자가 「이 기기에 입력값 저장」을 켠 경우에만 해당 기기의 브라우저 localStorage에 저장됩니다. 서버로 전송되지 않으며, 끄면 저장된 값이 삭제됩니다.',
@@ -240,7 +251,7 @@ export const ko: Messages = {
     backToCalculator: '← 계산기로 돌아가기',
     title: '수식 정의',
     description:
-      '레버리지 계산기가 사용하는 수식입니다. 브로커·거래소 규정과 다를 수 있으므로 참고용으로만 활용하세요.',
+      '선물 청산가 계산기가 사용하는 수식입니다. 브로커·거래소 규정과 다를 수 있으므로 참고용으로만 활용하세요.',
     disclaimer:
       '직접 입력한 유지·위탁증거금이 있으면 비율 산출값보다 우선합니다. 청산 시점·반올림은 증권사마다 다를 수 있습니다.',
     symbolTitle: '용어',
@@ -408,7 +419,7 @@ export const ko: Messages = {
       {
         title: '제품',
         links: [
-          { label: '레버리지 계산기', href: '/' },
+          { label: '선물 청산가 계산기', href: '/' },
           { label: 'Pro', soon: true },
           { label: '업데이트 노트', soon: true },
         ],

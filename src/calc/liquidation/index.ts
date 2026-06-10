@@ -17,13 +17,28 @@ export {
 export { calcLongLiquidationPrice, isLongLiquidationValid } from './long'
 export { calcShortLiquidationPrice } from './short'
 
+/** UI·시뮬에 쓸 수 있는 청산가만 반환 — 음수·현재가 반대편은 null */
+export function sanitizeLiquidationPrice(
+  price: number | null,
+  side: PositionSide,
+  currentPrice: number,
+): number | null {
+  if (price == null || !Number.isFinite(price) || price <= 0) return null
+  if (side === 'long' && price >= currentPrice) return null
+  if (side === 'short' && price <= currentPrice) return null
+  return price
+}
+
 export function calcLiquidationPriceFromParams(
   params: LiquidationParams,
   side: PositionSide,
 ): number | null {
-  return side === 'long'
-    ? calcLongLiquidationPrice(params)
-    : calcShortLiquidationPrice(params)
+  const raw =
+    side === 'long'
+      ? calcLongLiquidationPrice(params)
+      : calcShortLiquidationPrice(params)
+
+  return sanitizeLiquidationPrice(raw, side, params.currentPrice)
 }
 
 export function calcLiquidationPriceForInputs(

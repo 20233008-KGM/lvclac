@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { calculateEvaluate } from './leverage'
 import {
   buildLiquidationParams,
+  calcLiquidationPriceFromParams,
   calcLongLiquidationPrice,
   calcShortLiquidationPrice,
   calcToleranceRate,
   calcTotalQuantity,
+  sanitizeLiquidationPrice,
 } from './liquidation'
 
 /** 사용자 제공 KOSPI200 시나리오 — Q = N×M = 580 */
@@ -92,5 +94,76 @@ describe('calcShortLiquidationPrice — 경계', () => {
       maintenanceAtCurrent: 50,
     })
     expect(price).toBeGreaterThan(100)
+  })
+})
+
+describe('sanitizeLiquidationPrice', () => {
+  it('롱 — 음수·현재가 이상 청산가는 null', () => {
+    expect(sanitizeLiquidationPrice(-100, 'long', 350)).toBeNull()
+    expect(sanitizeLiquidationPrice(0, 'long', 350)).toBeNull()
+    expect(sanitizeLiquidationPrice(400, 'long', 350)).toBeNull()
+    expect(sanitizeLiquidationPrice(300, 'long', 350)).toBe(300)
+  })
+
+  it('숏 — 0 이하·현재가 이하 청산가는 null', () => {
+    expect(sanitizeLiquidationPrice(-50, 'short', 350)).toBeNull()
+    expect(sanitizeLiquidationPrice(0, 'short', 350)).toBeNull()
+    expect(sanitizeLiquidationPrice(340, 'short', 350)).toBeNull()
+    expect(sanitizeLiquidationPrice(400, 'short', 350)).toBe(400)
+  })
+})
+
+describe('calcLiquidationPriceFromParams — 최소 입력 시뮬', () => {
+  it('롱 — 계좌 대비 소량 신규 진입: 양의 가격 구간 청산 없음', () => {
+    const params = buildLiquidationParams(
+      {
+        mode: 'order',
+        accountEval: 10_000_000,
+        maintenanceMarginRate: 0.05,
+        entrustedMarginRate: 0.1,
+        contractMultiplier: 1,
+        currentPrice: 350,
+        positionSide: 'long',
+        contracts: 1,
+      },
+      1,
+    )!
+    expect(calcLiquidationPriceFromParams(params, 'long')).toBeNull()
+  })
+
+  it('숏 — 계좌 대비 소량 신규 진입: 현재가 위 양수 청산가', () => {
+    const params = buildLiquidationParams(
+      {
+        mode: 'order',
+        accountEval: 10_000_000,
+        maintenanceMarginRate: 0.05,
+        entrustedMarginRate: 0.1,
+        contractMultiplier: 1,
+        currentPrice: 350,
+        positionSide: 'short',
+        contracts: 1,
+      },
+      1,
+    )!
+    const price = calcLiquidationPriceFromParams(params, 'short')
+    expect(price).not.toBeNull()
+    expect(price!).toBeGreaterThan(350)
+  })
+
+  it('숏 — 증거금 대비 계좌가 너무 작으면 현재가 아래 해 → null', () => {
+    const params = buildLiquidationParams(
+      {
+        mode: 'order',
+        accountEval: 10,
+        maintenanceMarginRate: 0.05,
+        entrustedMarginRate: 0.1,
+        contractMultiplier: 1,
+        currentPrice: 350,
+        positionSide: 'short',
+        contracts: 1,
+      },
+      1,
+    )!
+    expect(calcLiquidationPriceFromParams(params, 'short')).toBeNull()
   })
 })

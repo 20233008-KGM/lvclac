@@ -4,6 +4,7 @@ import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
+import { HowToUseButton } from './components/HowToUseButton'
 import { LanguageToggle } from './components/LanguageToggle'
 import { SiteFooter } from './components/SiteFooter'
 import { parseBoardPath } from './config/boards'
@@ -31,6 +32,7 @@ function CalculatorApp() {
             <p className="app-intro">{t.appIntro}</p>
           </div>
           <div className="header-right">
+            <HowToUseButton />
             <LanguageToggle variant="header" />
           </div>
         </header>

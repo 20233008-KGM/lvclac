@@ -9,6 +9,17 @@ import { maxAddableLabel } from '../utils/positionLabels'
 import { ko } from '../i18n/locales/ko'
 import { en } from '../i18n/locales/en'
 
+const kospiCompareBase = {
+  mode: 'evaluate' as const,
+  accountEval: 73_511_744,
+  maintenanceMarginRate: 0.247,
+  entrustedMarginRate: 0.35,
+  contracts: 58,
+  contractAmount: 320_500,
+  contractMultiplier: 10,
+  currentPrice: 320_500,
+}
+
 const esShortBase = {
   mode: 'evaluate' as const,
   accountEval: 25_000,
@@ -22,17 +33,17 @@ const esShortBase = {
 }
 
 describe('숏 vs 롱 — 동일 입력에서 청산가·버퍼 비대칭', () => {
-  const longInputs = { ...esShortBase, positionSide: 'long' as const }
-  const shortInputs = { ...esShortBase, positionSide: 'short' as const }
+  const longInputs = { ...kospiCompareBase, positionSide: 'long' as const }
+  const shortInputs = { ...kospiCompareBase, positionSide: 'short' as const }
 
   it('청산가가 현재가 기준 롱/숏 반대편에 위치', () => {
     const long = calculateEvaluate(longInputs)
     const short = calculateEvaluate(shortInputs)
 
-    expect(long.liquidationPrice).toBeCloseTo(-20_833, 0)
-    expect(short.liquidationPrice).toBeCloseTo(28_846, 0)
+    expect(long.liquidationPrice).toBeCloseTo(257_312, -1)
+    expect(short.liquidationPrice).toBeCloseTo(358_656, 0)
 
-    const price = esShortBase.currentPrice!
+    const price = kospiCompareBase.currentPrice!
     expect(long.liquidationPrice! < price).toBe(true)
     expect(short.liquidationPrice! > price).toBe(true)
   })
@@ -41,16 +52,16 @@ describe('숏 vs 롱 — 동일 입력에서 청산가·버퍼 비대칭', () =>
     const long = calculateEvaluate(longInputs)
     const short = calculateEvaluate(shortInputs)
 
-    expect(long.toleranceRate).toBeCloseTo(516.67, 0)
-    expect(short.toleranceRate).toBeCloseTo(476.92, 0)
+    expect(long.toleranceRate).toBeCloseTo(19.72, 1)
+    expect(short.toleranceRate).toBeCloseTo(11.91, 1)
     expect(short.toleranceRate!).toBeLessThan(long.toleranceRate!)
 
-    expect(formatTolerancePercent(long.toleranceRate, 'long')).toBe('-516.67')
-    expect(formatTolerancePercent(short.toleranceRate, 'short')).toBe('+476.92')
+    expect(formatTolerancePercent(long.toleranceRate, 'long')).toBe('-19.72')
+    expect(formatTolerancePercent(short.toleranceRate, 'short')).toBe('+11.91')
   })
 
   it('가격 변동폭 — 롱 하락(-), 숏 상승(+)', () => {
-    const short = calculateEvaluate(shortInputs)
+    const short = calculateEvaluate({ ...esShortBase, positionSide: 'short' })
     expect(short.toleranceDelta).toBeCloseTo(23_846, 0)
     expect(formatToleranceDelta(short.toleranceDelta, 'short')).toBe('+23,846')
     expect(formatToleranceDelta(short.toleranceDelta, 'long')).toBe('-23,846')
@@ -80,13 +91,13 @@ describe('숏 vs 롱 — 동일 입력에서 청산가·버퍼 비대칭', () =>
         calculateEvaluate(longInputs).toleranceRate,
         calculateEvaluate(longInputs).positionSide,
       ),
-    ).toBe('-516.67')
+    ).toBe('-19.72')
     expect(
       formatTolerancePercent(
         calculateEvaluate(shortInputs).toleranceRate,
         calculateEvaluate(shortInputs).positionSide,
       ),
-    ).toBe('+476.92')
+    ).toBe('+11.91')
   })
 })
 

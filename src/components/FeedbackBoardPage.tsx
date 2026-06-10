@@ -3,6 +3,7 @@ import type { BoardId } from '../config/boards'
 import { useNavigate } from '../hooks/usePathname'
 import { addBoardPost, listBoardPosts, type BoardPost } from '../lib/feedbackBoardStorage'
 import { useLanguage } from '../i18n'
+import { HowToUseButton } from './HowToUseButton'
 import { LanguageToggle } from './LanguageToggle'
 import { PageShell } from './PageShell'
 import { SiteFooter } from './SiteFooter'
@@ -40,6 +41,7 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
             <h1 className="board-page__title">{board.title}</h1>
             <p className="board-page__desc">{board.description}</p>
           </div>
+          <HowToUseButton />
           <LanguageToggle variant="header" />
         </header>
 

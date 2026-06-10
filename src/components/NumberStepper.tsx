@@ -1,4 +1,12 @@
-import { forwardRef, useCallback, useEffect, useRef, type MouseEvent, type PointerEvent } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react'
 import { NumberInput, type NumberInputHandle } from './NumberInput'
 
 interface NumberStepperProps {
@@ -13,6 +21,8 @@ interface NumberStepperProps {
   onEnterKey?: () => void
   onDeleteKey?: () => void
   disabled?: boolean
+  /** 입력과 스테퍼 사이에 끼우는 버튼 등 (시나리오 가격 ↵/반영) */
+  inlineSlot?: ReactNode
 }
 
 const HOLD_DELAY_MS = 400
@@ -31,6 +41,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     onEnterKey,
     onDeleteKey,
     disabled = false,
+    inlineSlot,
   },
   ref,
 ) {
@@ -110,7 +121,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
   }
 
   return (
-    <div className="number-stepper">
+    <div className={`number-stepper${inlineSlot ? ' number-stepper--with-inline-slot' : ''}`}>
       <div className="number-stepper__input">
         <NumberInput
           ref={ref}
@@ -127,6 +138,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           onChange={onChange}
         />
       </div>
+      {inlineSlot && <div className="number-stepper__inline-slot">{inlineSlot}</div>}
       <div className="number-stepper__controls">
         <button {...stepButtonProps(step, stepUpLabel)}>▲</button>
         <button {...stepButtonProps(-step, stepDownLabel)}>▼</button>

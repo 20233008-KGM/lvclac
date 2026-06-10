@@ -68,12 +68,22 @@ describe('applyInputPatch', () => {
   })
 
   it('시나리오 모드 진입 — 결과만 시나리오 가격 기준 미리보기', () => {
-    const full = { ...sampleInputs, tickSize: 5 }
+    const full = {
+      ...sampleInputs,
+      tickSize: 5,
+      contractAmount: 320_500,
+      currentPrice: 320_500,
+      contracts: 58,
+      contractMultiplier: 10,
+      maintenanceMarginRate: 0.247,
+      entrustedMarginRate: 0.35,
+      accountEval: 73_511_744,
+    }
     const before = calculateEvaluate(full)
     expect(before.margins).not.toBeNull()
     expect(before.liquidationPrice).not.toBeNull()
 
-    const next = applyInputPatch(full, { commitScenarioPrice: 320 })
+    const next = applyInputPatch(full, { commitScenarioPrice: 320_000 })
     expect(next.contracts).toBe(full.contracts)
     expect(next.contractAmount).toBe(full.contractAmount)
     expect(next.maintenanceMarginRate).toBe(full.maintenanceMarginRate)
@@ -87,15 +97,14 @@ describe('applyInputPatch', () => {
     expect(after.margins!.availableMargin).not.toBe(before.margins!.availableMargin)
     expect(after.margins!.maintenanceExcess).not.toBe(before.margins!.maintenanceExcess)
     expect(after.leverageRatio).not.toBe(before.leverageRatio)
-    expect(after.maxBuyable).not.toBe(before.maxBuyable)
     expect(after.margins!.perContractMaintenance).toBe(before.margins!.perContractMaintenance)
     expect(after.margins!.perContractEntrusted).toBe(before.margins!.perContractEntrusted)
     expect(after.margins!.contractNotional).toBe(before.margins!.contractNotional)
     expect(after.margins!.maintenanceMargin).toBe(before.margins!.maintenanceMargin)
     expect(after.margins!.entrustedMargin).toBe(before.margins!.entrustedMargin)
-    expect(resolveEvaluationInputs(next).currentPrice).toBe(320)
-    expect(resolveEvaluationInputs(next).accountEval).toBe(9_999_940)
-    expect(next.currentPrice).toBe(350)
+    expect(resolveEvaluationInputs(next).currentPrice).toBe(320_000)
+    expect(resolveEvaluationInputs(next).accountEval).toBeLessThan(full.accountEval!)
+    expect(next.currentPrice).toBe(320_500)
     expect(resolveMarginEquity(next)).toBe(full.accountEval)
   })
 

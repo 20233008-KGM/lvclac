@@ -5,16 +5,27 @@ import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
 export const en: Messages = {
   lang: 'en',
   htmlLang: 'en',
-  siteTitle: 'Leverage Calculator',
+  siteTitle: 'Futures Liquidation Calculator',
   siteDescription:
     'Free liquidation price and margin cushion calculator for futures and leveraged positions. Enter equity and margin rates from your broker.',
   appIntro:
-    'Estimate liquidation price and margin headroom for futures and leveraged positions. Enter whichever values your broker displays.',
+    'Instantly estimate liquidation price and margin headroom for a single-instrument position. Vary the price to simulate any scenario.',
   loading: 'Loading...',
   login: 'Log in',
   logout: 'Log out',
   close: 'Close',
   langToggleLabel: 'Language',
+  howToUse: {
+    button: 'How?',
+    ariaLabel: 'How to use this calculator',
+    beginnerTitle: 'New to futures?',
+    beginnerBody:
+      ' Enter account equity plus maintenance and initial margin rates, then adjust order size and price in the Order section below to preview your account right after a fill.',
+    experiencedTitle: 'Already trading?',
+    experiencedBody:
+      ' Fill in Account, Instrument, and Margin to check liquidation buffer and leverage at a glance.',
+    footnote: 'Assumes one open instrument per account.',
+  },
   optional: '(optional)',
   fieldTooltipLabel: 'Field definition',
   input: 'Inputs',
@@ -93,7 +104,7 @@ export const en: Messages = {
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: 'First Enter (↵) enters scenario mode. In scenario mode, Enter acts like the 「Apply」 button. Apply reflects the P&L from moving mark price to the scenario price into account equity. Esc restores.',
+      hint: 'Calculates how your account equity changes when the price moves.\n\n· First Enter (↵) → enter scenario mode\n· Enter again → apply P&L at the scenario price\n· Esc → exit scenario mode',
       placeholder: 'Target price',
     },
     tickSize: {
@@ -171,7 +182,7 @@ export const en: Messages = {
     at_risk: 'Liquidation risk',
   },
   auth: {
-    title: 'Leverage Calculator',
+    title: 'Futures Liquidation Calculator',
     modalTitle: 'Log in',
     subtitle: 'Sign in to save your calculator inputs automatically.',
     tabLogin: 'Log in',
@@ -222,7 +233,7 @@ export const en: Messages = {
     privacyTitle: 'Privacy policy',
     back: 'Back',
     termsBody: [
-      '1. Scope: These terms govern use of the Leverage Calculator ("Service") operated by Farfield Software ("we", "us").',
+      '1. Scope: These terms govern use of the Futures Liquidation Calculator ("Service") operated by Farfield Software ("we", "us").',
       '2. Nature: The Service is a free web calculator. We do not provide brokerage or investment advisory services.',
       '3. User duty: Enter values matching your trading environment and use results for reference only.',
       '4. Input storage: Calculator inputs are saved in your browser localStorage only when you turn on “Save inputs on this device.” They are not sent to a server; turning it off deletes saved values.',
@@ -243,7 +254,7 @@ export const en: Messages = {
     backToCalculator: '← Back to calculator',
     title: 'Formula reference',
     description:
-      'Formulas used by the leverage calculator. Broker and exchange rules may differ — for reference only.',
+      'Formulas used by the futures liquidation calculator. Broker and exchange rules may differ — for reference only.',
     disclaimer:
       'Direct maintenance or entrusted margin inputs override rate-based values. Liquidation timing and rounding vary by broker.',
     symbolTitle: 'Symbols',
@@ -375,7 +386,7 @@ export const en: Messages = {
       {
         title: 'Product',
         links: [
-          { label: 'Leverage Calculator', href: '/' },
+          { label: 'Futures Liquidation Calculator', href: '/' },
           { label: 'Pro', soon: true },
           { label: 'Changelog', soon: true },
         ],

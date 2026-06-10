@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import {
   formatNumberForInput,
   formatRateForInput,
@@ -8,6 +8,10 @@ import {
   parseFormattedInput,
 } from '../utils/inputFormat'
 
+export interface NumberInputHandle {
+  commit: () => boolean
+}
+
 interface NumberInputProps {
   value: number | undefined
   onChange: (value: number | undefined) => void
@@ -15,6 +19,8 @@ interface NumberInputProps {
   deferChangeUntilBlur?: boolean
   /** defer 모드에서 blur 확정 시 호출 (없으면 onChange 사용) */
   onCommit?: (value: number | undefined) => void
+  /** defer 모드에서 onCommit이 있으면 값이 같아도 commit 호출 */
+  forceCommit?: boolean
   allowDecimal?: boolean
   allowNegative?: boolean
   optional?: boolean
@@ -22,19 +28,25 @@ interface NumberInputProps {
   isRate?: boolean
   placeholder?: string
   'aria-labelledby'?: string
+  className?: string
 }
 
-export function NumberInput({
-  value,
-  onChange,
-  deferChangeUntilBlur = false,
-  onCommit,
-  allowDecimal = false,
-  allowNegative = false,
-  isRate = false,
-  placeholder,
-  'aria-labelledby': ariaLabelledBy,
-}: NumberInputProps) {
+export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(function NumberInput(
+  {
+    value,
+    onChange,
+    deferChangeUntilBlur = false,
+    onCommit,
+    forceCommit = false,
+    allowDecimal = false,
+    allowNegative = false,
+    isRate = false,
+    placeholder,
+    'aria-labelledby': ariaLabelledBy,
+    className,
+  },
+  ref,
+) {
   const formatValue = isRate
     ? (v: number | undefined | null) => formatRateForInput(v)
     : (v: number | undefined | null) => formatNumberForInput(v, allowDecimal, allowNegative)
@@ -52,11 +64,30 @@ export function NumberInput({
     }
   }, [value, focused, isRate, allowDecimal, allowNegative])
 
-  function commitValue(normalized: number | undefined) {
-    if (normalized === value) return
+  function commitFromText(): boolean {
+    const parsed = parseFormattedInput(text)
+    if (parsed === '') {
+      setText(formatValue(value))
+      return false
+    }
+    const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
     const handler = onCommit ?? onChange
-    handler(normalized)
+    const shouldCommit =
+      deferChangeUntilBlur && onCommit
+        ? forceCommit || normalized !== value
+        : normalized !== value
+
+    if (shouldCommit) {
+      handler(normalized)
+    }
+    setText(formatValue(normalized))
+    setFocused(false)
+    return shouldCommit
   }
+
+  useImperativeHandle(ref, () => ({
+    commit: commitFromText,
+  }))
 
   return (
     <input
@@ -64,22 +95,30 @@ export function NumberInput({
       inputMode={allowDecimal || isRate ? 'decimal' : 'numeric'}
       placeholder={placeholder}
       aria-labelledby={ariaLabelledBy}
+      className={className}
       value={text}
       onFocus={() => setFocused(true)}
       onBlur={() => {
-        setFocused(false)
-        const parsed = parseFormattedInput(text)
-        if (parsed === '') {
-          setText(formatValue(value))
+        if (!deferChangeUntilBlur) {
+          setFocused(false)
+          const parsed = parseFormattedInput(text)
+          if (parsed === '') {
+            setText(formatValue(value))
+            return
+          }
+          const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
+          if (normalized !== value) onChange(normalized)
+          setText(formatValue(normalized))
           return
         }
-        const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
-        if (deferChangeUntilBlur) {
-          commitValue(normalized)
-        } else if (normalized !== value) {
-          onChange(normalized)
+        commitFromText()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && deferChangeUntilBlur) {
+          e.preventDefault()
+          commitFromText()
+          e.currentTarget.blur()
         }
-        setText(formatValue(normalized))
       }}
       onChange={(e) => {
         const formatted = formatRaw(e.target.value)
@@ -96,4 +135,4 @@ export function NumberInput({
       }}
     />
   )
-}
+})

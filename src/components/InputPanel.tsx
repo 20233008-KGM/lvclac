@@ -1,9 +1,10 @@
+import { useRef } from 'react'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import type { CalculatorInputPatch } from '../calc/mtmLink'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
-import { NumberInput } from './NumberInput'
+import { NumberInput, type NumberInputHandle } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
 import { SaveDraftToggle } from './SaveDraftToggle'
 
@@ -159,6 +160,29 @@ function CurrentPriceField({
   )
 }
 
+function ScenarioPriceCommitButton({
+  label,
+  disabled,
+  onClick,
+}: {
+  label: string
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className="input-commit-btn"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      ↵
+    </button>
+  )
+}
+
 function ScenarioPriceField({
   inputs,
   onChange,
@@ -166,6 +190,7 @@ function ScenarioPriceField({
   stepUpLabel,
   stepDownLabel,
   tooltipLabel,
+  commitLabel,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -173,9 +198,15 @@ function ScenarioPriceField({
   stepUpLabel: string
   stepDownLabel: string
   tooltipLabel: string
+  commitLabel: string
 }) {
+  const inputRef = useRef<NumberInputHandle>(null)
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
+
+  function commitScenario(price: number) {
+    onChange({ commitScenarioPrice: price })
+  }
 
   if (useStepper) {
     return (
@@ -185,16 +216,25 @@ function ScenarioPriceField({
         tooltip={field.hint}
         tooltipLabel={tooltipLabel}
       >
-        <NumberStepper
-          value={inputs.scenarioPrice}
-          step={tickSize}
-          allowNegative={false}
-          placeholder={field.placeholder || undefined}
-          stepUpLabel={stepUpLabel}
-          stepDownLabel={stepDownLabel}
-          ariaLabelledBy="scenario-price-label"
-          onChange={(v) => onChange({ scenarioPrice: v })}
-        />
+        <div className="input-commit-row">
+          <NumberStepper
+            value={inputs.scenarioPrice}
+            step={tickSize}
+            allowNegative={false}
+            placeholder={field.placeholder || undefined}
+            stepUpLabel={stepUpLabel}
+            stepDownLabel={stepDownLabel}
+            ariaLabelledBy="scenario-price-label"
+            onChange={(v) => onChange({ scenarioPrice: v })}
+          />
+          <ScenarioPriceCommitButton
+            label={commitLabel}
+            disabled={inputs.scenarioPrice == null}
+            onClick={() => {
+              if (inputs.scenarioPrice != null) commitScenario(inputs.scenarioPrice)
+            }}
+          />
+        </div>
       </Field>
     )
   }
@@ -206,17 +246,26 @@ function ScenarioPriceField({
       tooltip={field.hint}
       tooltipLabel={tooltipLabel}
     >
-      <NumberInput
-        value={inputs.scenarioPrice}
-        allowDecimal={false}
-        placeholder={field.placeholder || undefined}
-        aria-labelledby="scenario-price-label"
-        deferChangeUntilBlur
-        onCommit={(v) => {
-          if (v != null) onChange({ commitScenarioPrice: v })
-        }}
-        onChange={() => {}}
-      />
+      <div className="input-commit-row">
+        <NumberInput
+          ref={inputRef}
+          value={inputs.scenarioPrice}
+          allowDecimal={false}
+          placeholder={field.placeholder || undefined}
+          aria-labelledby="scenario-price-label"
+          className="input-commit-row__input"
+          deferChangeUntilBlur
+          forceCommit
+          onCommit={(v) => {
+            if (v != null) commitScenario(v)
+          }}
+          onChange={() => {}}
+        />
+        <ScenarioPriceCommitButton
+          label={commitLabel}
+          onClick={() => inputRef.current?.commit()}
+        />
+      </div>
     </Field>
   )
 }
@@ -314,6 +363,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
                 stepUpLabel={t.stepUp}
                 stepDownLabel={t.stepDown}
                 tooltipLabel={t.fieldTooltipLabel}
+                commitLabel={t.scenarioPriceCommit}
               />
               {numField(
                 f.tickSize,

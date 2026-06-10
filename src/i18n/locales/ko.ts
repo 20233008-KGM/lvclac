@@ -31,6 +31,7 @@ export const ko: Messages = {
     label: '단일 종목 투자',
     hint: '시나리오 가격을 확정(blur)하거나 현재가 스테퍼로 틱 이동 시, 계좌 평가금액에 포지션 손익(델타)이 반영되고 현재가가 갱신됩니다.',
   },
+  scenarioPriceCommit: 'Enter로 시나리오 가격 적용',
   draftSave: {
     label: '이 기기에 입력값 저장',
     hint: '활성화 시 입력값이 이 브라우저에만 저장되어 다음 방문 시 불러옵니다. 서버로 전송되지 않습니다. 비활성화 시 저장된 값이 삭제됩니다.',
@@ -91,7 +92,7 @@ export const ko: Messages = {
     },
     scenarioPrice: {
       label: '시나리오 가격',
-      hint: '입력 후 포커스를 벗어나면 (현재가→시나리오) 델타만큼 계좌 평가금액에 반영되고 현재가가 갱신됩니다.',
+      hint: 'Enter(↵) 또는 오른쪽 버튼으로 확정하면 (현재가→시나리오) 델타만큼 계좌 평가금액에 반영되고 현재가가 갱신됩니다.',
       placeholder: '변동 가격',
     },
     tickSize: {

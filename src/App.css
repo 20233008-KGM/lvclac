@@ -838,6 +838,62 @@ input:focus:not(:focus-visible) {
   gap: var(--space-sm);
 }
 
+.input-commit-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.input-commit-row__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.input-commit-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 40px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.input-commit-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  border-color: var(--color-primary-muted);
+  background: var(--color-surface);
+}
+
+.input-commit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.input-commit-row .number-stepper__input input {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  border-right: 1px solid var(--color-border-subtle);
+}
+
 .number-stepper {
   display: flex;
   align-items: stretch;

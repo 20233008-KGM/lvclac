@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
-import type { CalculatorInputPatch } from '../calc/mtmLink'
+import { isScenarioModeActive, type CalculatorInputPatch } from '../calc/mtmLink'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import { NumberInput, type NumberInputHandle } from './NumberInput'
@@ -105,9 +105,8 @@ function CurrentPriceField({
   stepUpLabel: string
   stepDownLabel: string
 }) {
-  const single = inputs.singleInstrument ?? false
   const tickSize = inputs.tickSize
-  const useStepper = single && tickSize != null && tickSize > 0
+  const useStepper = tickSize != null && tickSize > 0
 
   if (useStepper) {
     return (
@@ -120,40 +119,19 @@ function CurrentPriceField({
           stepUpLabel={stepUpLabel}
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="current-price-label"
-          onChange={(v) => {
-            if (v == null || inputs.currentPrice == null) return
-            if (v > inputs.currentPrice) onChange({ tickCurrentPrice: 1 })
-            else if (v < inputs.currentPrice) onChange({ tickCurrentPrice: -1 })
-          }}
-        />
-      </Field>
-    )
-  }
-
-  if (single) {
-    return (
-      <Field label={field.label} labelId="current-price-label">
-        <NumberInput
-          value={inputs.currentPrice}
-          allowDecimal={false}
-          placeholder={field.placeholder || undefined}
-          aria-labelledby="current-price-label"
-          deferChangeUntilBlur
-          onCommit={(v) => {
-            if (v != null) onChange({ commitCurrentPrice: v })
-          }}
-          onChange={() => {}}
+          onChange={(v) => onChange({ currentPrice: v })}
         />
       </Field>
     )
   }
 
   return (
-    <Field label={field.label}>
+    <Field label={field.label} labelId="current-price-label">
       <NumberInput
         value={inputs.currentPrice}
         allowDecimal={false}
         placeholder={field.placeholder || undefined}
+        aria-labelledby="current-price-label"
         onChange={(v) => onChange({ currentPrice: v })}
       />
     </Field>
@@ -191,6 +169,8 @@ function ScenarioPriceField({
   stepDownLabel,
   tooltipLabel,
   commitLabel,
+  clearLabel,
+  applyPnlLabel,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -199,24 +179,107 @@ function ScenarioPriceField({
   stepDownLabel: string
   tooltipLabel: string
   commitLabel: string
+  clearLabel: string
+  applyPnlLabel: string
 }) {
   const inputRef = useRef<NumberInputHandle>(null)
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
+  const scenarioModeActive = isScenarioModeActive(inputs)
 
   function commitScenario(price: number) {
     onChange({ commitScenarioPrice: price })
   }
 
+  function clearScenario() {
+    onChange({ clearScenario: true })
+  }
+
+  function resolveScenarioPrice(): number | undefined {
+    if (useStepper) return inputs.scenarioPrice
+    return inputRef.current?.readDraft() ?? inputs.scenarioPrice
+  }
+
+  function applyScenarioToMark(price?: number) {
+    const resolved = price ?? resolveScenarioPrice()
+    if (resolved == null) return
+    onChange({ applyScenarioToMark: resolved })
+  }
+
+  /** Enter/↵ — 미진입 시 시나리오 모드, 진입 후에는 현재가 반영·모드 종료 */
+  function confirmScenario(price: number) {
+    if (scenarioModeActive) {
+      applyScenarioToMark(price)
+    } else {
+      commitScenario(price)
+    }
+  }
+
+  function handleScenarioEnter() {
+    const price = resolveScenarioPrice()
+    if (price == null) return
+    confirmScenario(price)
+  }
+
+  const applyPnlDisabled = useStepper && inputs.scenarioPrice == null
+
+  const applyPnlButton = (
+    <button
+      type="button"
+      className="scenario-apply-pnl-btn scenario-apply-pnl-btn--inline"
+      disabled={applyPnlDisabled}
+      tabIndex={scenarioModeActive ? 0 : -1}
+      aria-hidden={!scenarioModeActive}
+      onClick={() => applyScenarioToMark()}
+    >
+      {applyPnlLabel}
+    </button>
+  )
+
+  const labelRow = (
+    <span className="field-label-row field-label-row--with-action" id="scenario-price-label">
+      <span className="field-label-text">
+        {field.label}
+        <FieldLabelTooltip text={field.hint} label={tooltipLabel} />
+      </span>
+      <span className="field-label-action-slot">
+        <button
+          type="button"
+          className={`field-label-del-btn field-label-del-btn--scenario${scenarioModeActive ? '' : ' field-label-del-btn--hidden'}`}
+          aria-label={clearLabel}
+          title={clearLabel}
+          tabIndex={scenarioModeActive ? 0 : -1}
+          aria-hidden={!scenarioModeActive}
+          onClick={clearScenario}
+        >
+          del
+        </button>
+      </span>
+    </span>
+  )
+
+  const commitButton = (
+    <ScenarioPriceCommitButton
+      label={commitLabel}
+      disabled={!scenarioModeActive && inputs.scenarioPrice == null}
+      onClick={() => {
+        if (scenarioModeActive) {
+          handleScenarioEnter()
+          return
+        }
+        if (inputs.scenarioPrice != null) confirmScenario(inputs.scenarioPrice)
+        else inputRef.current?.commit()
+      }}
+    />
+  )
+
   if (useStepper) {
     return (
-      <Field
-        label={field.label}
-        labelId="scenario-price-label"
-        tooltip={field.hint}
-        tooltipLabel={tooltipLabel}
-      >
-        <div className="input-commit-row">
+      <div className="field">
+        {labelRow}
+        <div
+          className={`input-commit-row${scenarioModeActive ? ' input-commit-row--no-commit' : ''}`}
+        >
           <NumberStepper
             value={inputs.scenarioPrice}
             step={tickSize}
@@ -225,55 +288,73 @@ function ScenarioPriceField({
             stepUpLabel={stepUpLabel}
             stepDownLabel={stepDownLabel}
             ariaLabelledBy="scenario-price-label"
+            onEnterKey={handleScenarioEnter}
+            onDeleteKey={scenarioModeActive ? clearScenario : undefined}
             onChange={(v) => onChange({ scenarioPrice: v })}
           />
-          <ScenarioPriceCommitButton
-            label={commitLabel}
-            disabled={inputs.scenarioPrice == null}
-            onClick={() => {
-              if (inputs.scenarioPrice != null) commitScenario(inputs.scenarioPrice)
-            }}
-          />
+          <span className="input-commit-btn-slot">
+            <span
+              className={scenarioModeActive ? 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden' : 'input-commit-btn-slot__layer'}
+              aria-hidden={scenarioModeActive}
+            >
+              {commitButton}
+            </span>
+            <span
+              className={scenarioModeActive ? 'input-commit-btn-slot__layer' : 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden'}
+              aria-hidden={!scenarioModeActive}
+            >
+              {applyPnlButton}
+            </span>
+          </span>
         </div>
-      </Field>
+      </div>
     )
   }
 
   return (
-    <Field
-      label={field.label}
-      labelId="scenario-price-label"
-      tooltip={field.hint}
-      tooltipLabel={tooltipLabel}
-    >
-      <div className="input-commit-row">
+    <div className="field">
+      {labelRow}
+      <div
+        className={`input-commit-row${scenarioModeActive ? ' input-commit-row--no-commit' : ''}`}
+      >
         <NumberInput
           ref={inputRef}
           value={inputs.scenarioPrice}
           allowDecimal={false}
           placeholder={field.placeholder || undefined}
           aria-labelledby="scenario-price-label"
-          className="input-commit-row__input"
+          className={scenarioModeActive ? undefined : 'input-commit-row__input'}
           deferChangeUntilBlur
           forceCommit
+          onEnterKey={handleScenarioEnter}
+          onDeleteKey={scenarioModeActive ? clearScenario : undefined}
           onCommit={(v) => {
-            if (v != null) commitScenario(v)
+            if (v != null) confirmScenario(v)
           }}
           onChange={() => {}}
         />
-        <ScenarioPriceCommitButton
-          label={commitLabel}
-          onClick={() => inputRef.current?.commit()}
-        />
+        <span className="input-commit-btn-slot">
+          <span
+            className={scenarioModeActive ? 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden' : 'input-commit-btn-slot__layer'}
+            aria-hidden={scenarioModeActive}
+          >
+            {commitButton}
+          </span>
+          <span
+            className={scenarioModeActive ? 'input-commit-btn-slot__layer' : 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden'}
+            aria-hidden={!scenarioModeActive}
+          >
+            {applyPnlButton}
+          </span>
+        </span>
       </div>
-    </Field>
+    </div>
   )
 }
 
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
-  const singleInstrument = inputs.singleInstrument ?? false
 
   return (
     <section className="panel input-panel">
@@ -329,19 +410,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               }
             />
           </Field>
-          <div className="account-single-instrument-cell">
-            <label className="input-option-toggle">
-              <input
-                type="checkbox"
-                checked={singleInstrument}
-                onChange={(e) => onChange({ singleInstrument: e.target.checked })}
-              />
-              <span className="input-option-toggle__label">
-                {t.singleInstrument.label}
-                <FieldLabelTooltip text={t.singleInstrument.hint} label={t.fieldTooltipLabel} />
-              </span>
-            </label>
-          </div>
         </div>
 
         <div className="field-section">
@@ -354,28 +422,26 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             stepDownLabel={t.stepDown}
           />
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
-          {singleInstrument && (
-            <>
-              <ScenarioPriceField
-                inputs={inputs}
-                onChange={onChange}
-                field={f.scenarioPrice}
-                stepUpLabel={t.stepUp}
-                stepDownLabel={t.stepDown}
-                tooltipLabel={t.fieldTooltipLabel}
-                commitLabel={t.scenarioPriceCommit}
-              />
-              {numField(
-                f.tickSize,
-                'tickSize',
-                inputs,
-                onChange,
-                true,
-                t.optional,
-                true,
-                t.fieldTooltipLabel,
-              )}
-            </>
+          <ScenarioPriceField
+            inputs={inputs}
+            onChange={onChange}
+            field={f.scenarioPrice}
+            stepUpLabel={t.stepUp}
+            stepDownLabel={t.stepDown}
+            tooltipLabel={t.fieldTooltipLabel}
+            commitLabel={t.scenarioPriceCommit}
+            clearLabel={t.scenarioPriceClear}
+            applyPnlLabel={t.scenarioApplyPnl}
+          />
+          {numField(
+            f.tickSize,
+            'tickSize',
+            inputs,
+            onChange,
+            true,
+            t.optional,
+            true,
+            t.fieldTooltipLabel,
           )}
         </div>
 

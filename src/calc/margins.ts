@@ -9,6 +9,7 @@ import {
   calcIndexNotionalWon,
   isWonAccountIndexFieldMismatch,
 } from './indexNotional'
+import { resolveMarginEquity } from './mtmLink'
 import { hasContractSpec, resolvePointValue } from './pointValue'
 
 type NotionalInputs = Pick<
@@ -160,6 +161,8 @@ export function calcMargins(
       ? entrustedMargin / heldContracts
       : resolveEntrustedMargin(inputs, 1).amount
 
+  const marginEquity = resolveMarginEquity(inputs)
+
   return {
     pointValue,
     margins: {
@@ -168,8 +171,8 @@ export function calcMargins(
       maintenanceMarginSource,
       entrustedMargin,
       entrustedMarginSource,
-      availableMargin: (inputs.accountEval ?? 0) - entrustedMargin,
-      maintenanceExcess: (inputs.accountEval ?? 0) - maintenanceMargin,
+      availableMargin: marginEquity - entrustedMargin,
+      maintenanceExcess: marginEquity - maintenanceMargin,
       perContractMaintenance,
       perContractEntrusted,
     },

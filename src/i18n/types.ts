@@ -48,8 +48,9 @@ export interface Messages {
   leverageUnit: string
   modes: { evaluate: string; order: string }
   sections: { instrument: string; margin: string; account: string }
-  singleInstrument: { label: string; hint: string }
   scenarioPriceCommit: string
+  scenarioPriceClear: string
+  scenarioApplyPnl: string
   draftSave: {
     label: string
     hint: string

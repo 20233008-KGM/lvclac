@@ -22,10 +22,18 @@ export interface CalculatorInputs {
   orderContracts?: number
   /** accountEval 입력 시점의 포지션 — 탭 전환 MTM 보정용 */
   evalSnapshotSide?: PositionSide
-  /** 단일 종목(몰빵) — 시나리오/틱 확정 시 계좌 평가금액을 포지션 델타로 연동 */
-  singleInstrument?: boolean
-  /** 시나리오 가격 draft (blur 확정 전) */
+  /** accountEval·시나리오 롤링 기준 현재가 */
+  mtmPriceAnchor?: number
+  /** 시나리오 가격 */
   scenarioPrice?: number
+  /** 시나리오 확정(Enter) 기준가 — 연속 확정 시 증분 손익용 */
+  scenarioAppliedPrice?: number
+  /** 시나리오 적용 전 스냅샷 — del 시 복원 */
+  scenarioRevertSnapshot?: {
+    accountEval: number
+    mtmPriceAnchor?: number
+    evalSnapshotSide?: PositionSide
+  }
   /** 가격 스테퍼 1틱 크기 */
   tickSize?: number
 }

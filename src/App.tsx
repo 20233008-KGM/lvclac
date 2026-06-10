@@ -8,6 +8,7 @@ import { LanguageToggle } from './components/LanguageToggle'
 import { SiteFooter } from './components/SiteFooter'
 import { parseBoardPath } from './config/boards'
 import { isFormulasPath } from './config/routes'
+import { isScenarioModeActive } from './calc/mtmLink'
 import { useCalculator } from './context/CalculatorContext'
 import { usePathname } from './hooks/usePathname'
 import { useLanguage } from './i18n'
@@ -16,10 +17,14 @@ import './App.css'
 function CalculatorApp() {
   const { t } = useLanguage()
   const { inputs, updateInputs } = useCalculator()
+  const scenarioMode = isScenarioModeActive(inputs)
 
   return (
     <PageShell>
-      <div className="calc-viewport" id="calculator">
+      <div
+        className={`calc-viewport${scenarioMode ? ' calc-viewport--scenario' : ''}`}
+        id="calculator"
+      >
         <header className="app-header">
           <div className="header-left">
             <h1>{t.siteTitle}</h1>

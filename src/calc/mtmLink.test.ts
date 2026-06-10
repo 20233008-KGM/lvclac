@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { applyInputPatch, applyPriceMove, applyTickMove, calcPnlDelta } from './mtmLink'
-import type { CalculatorInputs } from '../types'
+import {
+  applyInputPatch,
+  applyPriceMove,
+  applyTickMove,
+  calcPnlDelta,
+  isScenarioModeActive,
+  resolveMarginEquity,
+} from './mtmLink'
+import { calculateEvaluate } from './leverage'
+import { sampleInputs, type CalculatorInputs } from '../types'
 
 const base: CalculatorInputs = {
   mode: 'evaluate',
@@ -9,7 +17,6 @@ const base: CalculatorInputs = {
   currentPrice: 350,
   contracts: 2,
   contractMultiplier: 1,
-  singleInstrument: true,
   tickSize: 5,
 }
 
@@ -28,7 +35,6 @@ describe('applyPriceMove', () => {
     const moved = applyPriceMove(base, 345)
     expect(moved?.accountEval).toBe(9_999_990)
     expect(moved?.currentPrice).toBe(345)
-    expect(moved?.scenarioPrice).toBeUndefined()
   })
 
   it('두 번째 이동은 갱신된 현재가 기준', () => {
@@ -48,48 +54,77 @@ describe('applyTickMove', () => {
 })
 
 describe('applyInputPatch', () => {
-  it('시나리오 blur 확정', () => {
+  it('시나리오 확정 — 손익 반영, 현재가·시나리오 유지', () => {
     const next = applyInputPatch(base, { commitScenarioPrice: 345 })
     expect(next.accountEval).toBe(9_999_990)
-    expect(next.currentPrice).toBe(345)
-    expect(next.scenarioPrice).toBeUndefined()
-  })
-
-  it('현재가 blur 확정', () => {
-    const next = applyInputPatch(base, { commitCurrentPrice: 360 })
-    expect(next.accountEval).toBe(10_000_020)
-    expect(next.currentPrice).toBe(360)
-  })
-
-  it('tickCurrentPrice 스테퍼', () => {
-    const next = applyInputPatch(base, { tickCurrentPrice: 1 })
-    expect(next.accountEval).toBe(10_000_010)
-    expect(next.currentPrice).toBe(355)
-  })
-
-  it('시나리오 draft 저장 — equity 불변', () => {
-    const next = applyInputPatch(base, { scenarioPrice: 360 })
-    expect(next.scenarioPrice).toBe(360)
-    expect(next.accountEval).toBe(10_000_000)
     expect(next.currentPrice).toBe(350)
+    expect(next.contracts).toBe(base.contracts)
+    expect(next.contractMultiplier).toBe(base.contractMultiplier)
+    expect(next.scenarioPrice).toBe(345)
+    expect(next.scenarioAppliedPrice).toBe(345)
+    expect(next.scenarioRevertSnapshot?.accountEval).toBe(10_000_000)
+    expect(isScenarioModeActive(next)).toBe(true)
   })
 
-  it('단일종목 OFF → tick/scenario 초기화', () => {
-    const prev = { ...base, scenarioPrice: 360, tickSize: 5 }
-    const next = applyInputPatch(prev, { singleInstrument: false })
-    expect(next.singleInstrument).toBe(false)
-    expect(next.scenarioPrice).toBeUndefined()
-    expect(next.tickSize).toBeUndefined()
+  it('시나리오 확정 — 다른 입력 필드·결과 계산 유지', () => {
+    const full = { ...sampleInputs, tickSize: 5 }
+    const before = calculateEvaluate(full)
+    expect(before.margins).not.toBeNull()
+    expect(before.liquidationPrice).not.toBeNull()
+
+    const next = applyInputPatch(full, { commitScenarioPrice: 345 })
+    expect(next.contracts).toBe(full.contracts)
+    expect(next.contractAmount).toBe(full.contractAmount)
+    expect(next.maintenanceMarginRate).toBe(full.maintenanceMarginRate)
+    expect(next.entrustedMarginRate).toBe(full.entrustedMarginRate)
+
+    const after = calculateEvaluate(next)
+    expect(after.margins).not.toBeNull()
+    expect(after.liquidationPrice).not.toBeNull()
+    expect(after.margins!.availableMargin).not.toBe(before.margins!.availableMargin)
   })
 
-  it('단일종목 ON 시 currentPrice 직접 패치 무시', () => {
+  it('시나리오 연속 확정 — 이전 확정가 기준 증분', () => {
+    const once = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const twice = applyInputPatch(once, { commitScenarioPrice: 355 })
+    expect(twice.accountEval).toBe(10_000_010)
+    expect(twice.currentPrice).toBe(350)
+    expect(twice.scenarioPrice).toBe(355)
+  })
+
+  it('clearScenario — 스냅샷 복원', () => {
+    const committed = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const cleared = applyInputPatch(committed, { clearScenario: true })
+    expect(isScenarioModeActive(cleared)).toBe(false)
+    expect(cleared.accountEval).toBe(10_000_000)
+    expect(cleared.scenarioPrice).toBeUndefined()
+  })
+
+  it('시나리오 draft만 — 모드 미진입', () => {
+    const draft = applyInputPatch(base, { scenarioPrice: 360 })
+    expect(isScenarioModeActive(draft)).toBe(false)
+  })
+
+  it('손익 반영 — 현재가 롤링·모드 종료', () => {
+    const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const rolled = applyInputPatch(preview, { applyScenarioToMark: 345 })
+    expect(rolled.accountEval).toBe(9_999_990)
+    expect(rolled.currentPrice).toBe(345)
+    expect(isScenarioModeActive(rolled)).toBe(false)
+  })
+
+  it('시나리오 모드 중 재확정 — 증분 손익 후 현재가 반영', () => {
+    const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const rolled = applyInputPatch(preview, { applyScenarioToMark: 355 })
+    expect(rolled.accountEval).toBe(10_000_010)
+    expect(rolled.currentPrice).toBe(355)
+    expect(isScenarioModeActive(rolled)).toBe(false)
+  })
+
+  it('currentPrice 직접 패치', () => {
     const next = applyInputPatch(base, { currentPrice: 400 })
-    expect(next.currentPrice).toBe(350)
-  })
-
-  it('단일종목 OFF 시 currentPrice 직접 패치 허용', () => {
-    const prev = { ...base, singleInstrument: false }
-    const next = applyInputPatch(prev, { currentPrice: 400 })
     expect(next.currentPrice).toBe(400)
+    expect(next.accountEval).toBe(10_000_000)
+    expect(resolveMarginEquity(next)).toBe(10_000_000)
   })
 })

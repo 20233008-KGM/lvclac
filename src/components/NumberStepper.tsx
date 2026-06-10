@@ -10,6 +10,8 @@ interface NumberStepperProps {
   stepUpLabel: string
   stepDownLabel: string
   ariaLabelledBy?: string
+  onEnterKey?: () => void
+  onDeleteKey?: () => void
 }
 
 const HOLD_DELAY_MS = 400
@@ -24,6 +26,8 @@ export function NumberStepper({
   stepUpLabel,
   stepDownLabel,
   ariaLabelledBy,
+  onEnterKey,
+  onDeleteKey,
 }: NumberStepperProps) {
   const valueRef = useRef(value)
   const onChangeRef = useRef(onChange)
@@ -109,6 +113,8 @@ export function NumberStepper({
           optional={false}
           placeholder={placeholder}
           aria-labelledby={ariaLabelledBy}
+          onEnterKey={onEnterKey}
+          onDeleteKey={onDeleteKey}
           onChange={onChange}
         />
       </div>

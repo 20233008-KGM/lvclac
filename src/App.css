@@ -196,6 +196,170 @@ input:focus:not(:focus-visible) {
   flex-direction: column;
   gap: var(--space-md);
   width: 100%;
+  border-radius: var(--radius);
+  transition:
+    background 0.28s ease,
+    box-shadow 0.28s ease,
+    color 0.28s ease;
+}
+
+.calc-viewport--scenario {
+  --scenario-bg: #121520;
+  --scenario-surface: #181d2a;
+  --scenario-surface-2: #1f2636;
+  --scenario-border: #2c3650;
+  --scenario-text: #e8ecf4;
+  --scenario-text-muted: #94a3b8;
+  --scenario-accent: #5ec4e8;
+  --scenario-accent-strong: #8eddf5;
+  --scenario-accent-muted: rgba(94, 196, 232, 0.14);
+
+  background: linear-gradient(168deg, var(--scenario-bg) 0%, #0e1219 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--scenario-border),
+    0 0 48px rgba(94, 196, 232, 0.07);
+  color: var(--scenario-text);
+}
+
+.calc-viewport--scenario .app-header {
+  background: color-mix(in srgb, var(--scenario-bg) 88%, transparent);
+  border-bottom-color: var(--scenario-border);
+}
+
+.calc-viewport--scenario .app-header h1 {
+  color: var(--scenario-text);
+}
+
+.calc-viewport--scenario .app-intro {
+  color: var(--scenario-text-muted);
+}
+
+.calc-viewport--scenario .panel {
+  background: var(--scenario-surface);
+  border-color: var(--scenario-border);
+  box-shadow: inset 0 1px 0 rgba(142, 221, 245, 0.05);
+}
+
+.calc-viewport--scenario .panel h2,
+.calc-viewport--scenario .input-panel .field-section-title {
+  color: var(--scenario-text-muted);
+  border-bottom-color: var(--scenario-border);
+}
+
+.calc-viewport--scenario .input-panel .field-section-title {
+  border-left-color: var(--scenario-accent);
+}
+
+.calc-viewport--scenario .input-panel .field > span,
+.calc-viewport--scenario .input-panel .field-label-row,
+.calc-viewport--scenario .field > span {
+  color: var(--scenario-text-muted);
+}
+
+.calc-viewport--scenario .field input,
+.calc-viewport--scenario .number-stepper__input input {
+  background: var(--scenario-surface-2);
+  border-color: var(--scenario-border);
+  color: var(--scenario-text);
+}
+
+.calc-viewport--scenario .field input:hover:not(:focus),
+.calc-viewport--scenario .number-stepper__input input:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--scenario-accent) 45%, var(--scenario-border));
+}
+
+.calc-viewport--scenario .field input:focus,
+.calc-viewport--scenario .number-stepper__input input:focus {
+  border-color: var(--scenario-accent);
+  box-shadow: 0 0 0 3px var(--scenario-accent-muted);
+}
+
+.calc-viewport--scenario .number-stepper__btn,
+.calc-viewport--scenario .input-commit-btn,
+.calc-viewport--scenario .mode-btn,
+.calc-viewport--scenario .side-btn {
+  background: var(--scenario-surface-2);
+  border-color: var(--scenario-border);
+  color: var(--scenario-text-muted);
+}
+
+.calc-viewport--scenario .result-hero-card,
+.calc-viewport--scenario .result-row,
+.calc-viewport--scenario .result-sheet {
+  background: var(--scenario-surface-2);
+  border-color: var(--scenario-border);
+}
+
+.calc-viewport--scenario .result-hero-value,
+.calc-viewport--scenario .result-row-value {
+  color: var(--scenario-text);
+}
+
+.calc-viewport--scenario .content-risk-notice {
+  border-color: var(--scenario-border);
+  background: color-mix(in srgb, var(--scenario-surface) 80%, transparent);
+}
+
+.calc-viewport--scenario .content-risk-notice__text {
+  color: var(--scenario-text-muted);
+}
+
+.calc-viewport--scenario .field-label-del-btn--scenario {
+  color: #ffc9c9;
+  border-color: rgba(224, 112, 112, 0.55);
+  background: rgba(224, 112, 112, 0.16);
+  box-shadow: 0 0 0 1px rgba(224, 112, 112, 0.2);
+  font-weight: 700;
+}
+
+.calc-viewport--scenario .field-label-del-btn--scenario:hover {
+  color: #fff;
+  border-color: var(--color-danger);
+  background: rgba(224, 112, 112, 0.32);
+}
+
+.scenario-apply-pnl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 10.5rem;
+  min-height: 36px;
+  margin-top: var(--space-xs);
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.scenario-apply-pnl-btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+
+.scenario-apply-pnl-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.calc-viewport--scenario .scenario-apply-pnl-btn {
+  border-color: color-mix(in srgb, var(--scenario-accent) 55%, var(--color-primary));
+  background: color-mix(in srgb, var(--scenario-accent-muted) 60%, var(--color-primary-muted));
+  color: var(--scenario-accent-strong);
+}
+
+.calc-viewport--scenario .scenario-apply-pnl-btn:hover:not(:disabled) {
+  border-color: var(--scenario-accent);
+  background: color-mix(in srgb, var(--scenario-accent) 35%, var(--color-primary));
+  color: var(--scenario-bg);
 }
 
 .app-header {
@@ -470,6 +634,114 @@ input:focus:not(:focus-visible) {
   margin: 0;
   padding: 0 var(--space-md);
   font-size: var(--font-size-base);
+}
+
+.input-panel .number-stepper {
+  width: 100%;
+  max-width: 10.5rem;
+  min-width: 0;
+}
+
+.input-panel .number-stepper__input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.input-panel .number-stepper__input input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-sm);
+}
+
+.input-panel .input-commit-row .number-stepper {
+  flex: 0 1 10.5rem;
+  width: auto;
+  max-width: 10.5rem;
+}
+
+.field-label-row--with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.field-label-action-slot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 2.5rem;
+  min-height: 1.6em;
+}
+
+.field-label-del-btn--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.input-commit-btn-slot {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  min-width: 2.5rem;
+  min-height: 40px;
+}
+
+.input-commit-btn-slot__layer {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-commit-btn-slot__layer--hidden {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.input-commit-btn-slot__layer:not(.input-commit-btn-slot__layer--hidden) {
+  width: 100%;
+}
+
+.scenario-apply-pnl-btn--inline {
+  width: 100%;
+  max-width: none;
+  min-width: 2.5rem;
+  min-height: 40px;
+  margin-top: 0;
+  padding: 0 var(--space-xs);
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.field-label-del-btn {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.field-label-del-btn:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger-muted);
+  background: var(--color-danger-muted);
 }
 
 .input-panel .mode-toggle,
@@ -843,6 +1115,12 @@ input:focus:not(:focus-visible) {
   align-items: stretch;
   gap: var(--space-xs);
   min-width: 0;
+}
+
+.input-commit-row--no-commit .input-commit-row__input {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  border-right: 1px solid var(--color-border-subtle);
 }
 
 .input-commit-row__input {

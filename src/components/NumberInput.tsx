@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import {
   formatNumberForInput,
   formatRateForInput,
@@ -10,6 +10,8 @@ import {
 
 export interface NumberInputHandle {
   commit: () => boolean
+  /** defer 모드에서 입력 중 draft 값 읽기 */
+  readDraft: () => number | undefined
 }
 
 interface NumberInputProps {
@@ -29,6 +31,10 @@ interface NumberInputProps {
   placeholder?: string
   'aria-labelledby'?: string
   className?: string
+  /** Delete 키 입력 시 (시나리오 초기화 등) */
+  onDeleteKey?: () => void
+  /** Enter 키 입력 시 (defer 없이도 사용 가능) */
+  onEnterKey?: () => void
 }
 
 export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(function NumberInput(
@@ -44,9 +50,12 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     placeholder,
     'aria-labelledby': ariaLabelledBy,
     className,
+    onDeleteKey,
+    onEnterKey,
   },
   ref,
 ) {
+  const skipBlurCommitRef = useRef(false)
   const formatValue = isRate
     ? (v: number | undefined | null) => formatRateForInput(v)
     : (v: number | undefined | null) => formatNumberForInput(v, allowDecimal, allowNegative)
@@ -64,13 +73,18 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     }
   }, [value, focused, isRate, allowDecimal, allowNegative])
 
-  function commitFromText(): boolean {
+  function readDraftFromText(): number | undefined {
     const parsed = parseFormattedInput(text)
-    if (parsed === '') {
+    if (parsed === '') return undefined
+    return normalizeInputValue(parsed, { isRate, allowDecimal })
+  }
+
+  function commitFromText(): boolean {
+    const normalized = readDraftFromText()
+    if (normalized === undefined) {
       setText(formatValue(value))
       return false
     }
-    const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
     const handler = onCommit ?? onChange
     const shouldCommit =
       deferChangeUntilBlur && onCommit
@@ -87,6 +101,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
 
   useImperativeHandle(ref, () => ({
     commit: commitFromText,
+    readDraft: readDraftFromText,
   }))
 
   return (
@@ -99,6 +114,11 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
       value={text}
       onFocus={() => setFocused(true)}
       onBlur={() => {
+        if (skipBlurCommitRef.current) {
+          skipBlurCommitRef.current = false
+          setFocused(false)
+          return
+        }
         if (!deferChangeUntilBlur) {
           setFocused(false)
           const parsed = parseFormattedInput(text)
@@ -114,8 +134,21 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
         commitFromText()
       }}
       onKeyDown={(e) => {
+        if (e.key === 'Delete' && onDeleteKey) {
+          e.preventDefault()
+          onDeleteKey()
+          return
+        }
+        if (e.key === 'Enter' && onEnterKey) {
+          e.preventDefault()
+          skipBlurCommitRef.current = true
+          onEnterKey()
+          e.currentTarget.blur()
+          return
+        }
         if (e.key === 'Enter' && deferChangeUntilBlur) {
           e.preventDefault()
+          skipBlurCommitRef.current = true
           commitFromText()
           e.currentTarget.blur()
         }

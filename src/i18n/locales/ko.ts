@@ -27,11 +27,9 @@ export const ko: Messages = {
   contractsUnit: '계약',
   modes: { evaluate: '평가', order: '주문' },
   sections: { instrument: '종목 스펙', margin: '증거금', account: '계좌' },
-  singleInstrument: {
-    label: '단일 종목 투자',
-    hint: '시나리오 가격을 확정(blur)하거나 현재가 스테퍼로 틱 이동 시, 계좌 평가금액에 포지션 손익(델타)이 반영되고 현재가가 갱신됩니다.',
-  },
-  scenarioPriceCommit: 'Enter로 시나리오 가격 적용',
+  scenarioPriceCommit: 'Enter로 시나리오 모드 진입',
+  scenarioPriceClear: '시나리오 가격 삭제 및 적용 전 상태로 복원',
+  scenarioApplyPnl: '손익 반영',
   draftSave: {
     label: '이 기기에 입력값 저장',
     hint: '활성화 시 입력값이 이 브라우저에만 저장되어 다음 방문 시 불러옵니다. 서버로 전송되지 않습니다. 비활성화 시 저장된 값이 삭제됩니다.',
@@ -92,12 +90,12 @@ export const ko: Messages = {
     },
     scenarioPrice: {
       label: '시나리오 가격',
-      hint: 'Enter(↵) 또는 오른쪽 버튼으로 확정하면 (현재가→시나리오) 델타만큼 계좌 평가금액에 반영되고 현재가가 갱신됩니다.',
+      hint: 'Enter(↵) 첫 입력은 시나리오 모드 진입, 모드 중 Enter는 현재가 반영·종료. 「손익 반영」도 동일. del 또는 Delete로 복원.',
       placeholder: '변동 가격',
     },
     tickSize: {
       label: '틱 사이즈',
-      hint: '입력 시 현재가·시나리오 가격에 스테퍼가 나타납니다. 현재가 스테퍼는 틱마다 손익 반영.',
+      hint: '입력 시 현재가·시나리오 가격에 스테퍼가 나타납니다.',
       placeholder: '1',
     },
     contractMultiplier: {

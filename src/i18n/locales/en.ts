@@ -28,11 +28,9 @@ export const en: Messages = {
   contractsUnit: 'contracts',
   modes: { evaluate: 'Evaluate', order: 'Order' },
   sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
-  singleInstrument: {
-    label: 'Single-instrument account',
-    hint: 'Committing a scenario price or stepping mark price applies open P&L (delta) to equity and rolls the mark price.',
-  },
-  scenarioPriceCommit: 'Apply scenario price with Enter',
+  scenarioPriceCommit: 'Enter scenario preview mode',
+  scenarioPriceClear: 'Clear scenario and restore pre-scenario state',
+  scenarioApplyPnl: 'Apply P&L',
   draftSave: {
     label: 'Save inputs on this device',
     hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values.',
@@ -93,12 +91,12 @@ export const en: Messages = {
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: 'Press Enter (↵) or the button to apply (scenario − mark) delta to equity and update mark price.',
+      hint: 'First Enter (↵) enters scenario mode; Enter again applies to mark and exits. 「Apply P&L」 does the same. del or Delete restores.',
       placeholder: 'Target price',
     },
     tickSize: {
       label: 'Tick size',
-      hint: 'Enables steppers on mark and scenario prices. Mark stepper applies P&L per tick.',
+      hint: 'Enables steppers on mark and scenario prices.',
       placeholder: '1',
     },
     contractMultiplier: {

@@ -6,6 +6,7 @@ import type {
   OrderResult,
   PositionSide,
 } from '../types'
+import { resolveMarginEquity } from './mtmLink'
 import {
   calcMargins,
   inputsReadyForEvaluate,
@@ -82,8 +83,7 @@ function withEffectiveAvailableMargin(
   inputs: CalculatorInputs,
   margins: MarginAmounts,
 ): MarginAmounts {
-  // 가용증거금은 HTS 입력값(원) 기준 — 탭 전환 MTM 보정은 청산가 계산에만 사용
-  const equity = inputs.accountEval ?? 0
+  const equity = resolveMarginEquity(inputs)
   return {
     ...margins,
     availableMargin: equity - margins.entrustedMargin,
@@ -238,7 +238,7 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
   const isAtRisk =
     inputError !== null || (toleranceRate !== null && toleranceRate <= 0)
 
-  const marginEquity = inputs.accountEval!
+  const marginEquity = resolveMarginEquity(inputs)
   const { value: maxBuyable, message: maxBuyableMessage } = calcMaxBuyable(
     marginEquity,
     margins.entrustedMargin,
@@ -293,7 +293,7 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
     return emptyOrderResult(positionSide, { orderMessage: rateWarning })
   }
 
-  const marginEquity = inputs.accountEval!
+  const marginEquity = resolveMarginEquity(inputs)
   const contracts = inputs.contracts!
   const currentPrice = inputs.currentPrice!
 

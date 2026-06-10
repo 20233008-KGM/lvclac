@@ -951,7 +951,7 @@ input:focus:not(:focus-visible) {
 /* ↵ → ✓ 로 형상이 바뀐 「손익 반영」 버튼: 주변 스테퍼 버튼과 섞이되,
    옅은 액센트 틴트 + 액센트 글리프로 「특별한 동작」임을 은근히 알림 */
 .calc-viewport--scenario .input-commit-btn--apply-pnl {
-  border-color: color-mix(in srgb, var(--scenario-accent) 35%, var(--scenario-border));
+  border-color: var(--scenario-border);
   background: color-mix(in srgb, var(--scenario-accent) 9%, var(--scenario-surface-2));
   color: var(--scenario-accent-strong);
 }

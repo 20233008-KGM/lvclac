@@ -164,6 +164,23 @@ describe('applyInputPatch', () => {
     expect(isScenarioModeActive(rolled)).toBe(false)
   })
 
+  it('손익 반영 — Ctrl+Z로 시나리오 미리보기 복원', () => {
+    const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const rolled = applyInputPatch(preview, { applyScenarioToMark: 345 })
+    expect(rolled.scenarioApplyUndoSnapshot?.accountEval).toBe(10_000_000)
+    expect(rolled.scenarioApplyUndoSnapshot?.currentPrice).toBe(350)
+    expect(rolled.scenarioApplyUndoSnapshot?.scenarioPrice).toBe(345)
+
+    const undone = applyInputPatch(rolled, { undoScenarioApply: true })
+    expect(undone.accountEval).toBe(10_000_000)
+    expect(undone.currentPrice).toBe(350)
+    expect(undone.scenarioPrice).toBe(345)
+    expect(isScenarioModeActive(undone)).toBe(true)
+    expect(undone.scenarioApplyUndoSnapshot).toBeUndefined()
+    expect(resolveEvaluationInputs(undone).currentPrice).toBe(345)
+    expect(resolveEvaluationInputs(undone).accountEval).toBe(9_999_990)
+  })
+
   it('currentPrice 직접 패치', () => {
     const next = applyInputPatch(base, { currentPrice: 400 })
     expect(next.currentPrice).toBe(400)

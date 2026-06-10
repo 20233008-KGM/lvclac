@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import {
+  hasScenarioApplyUndo,
   isScenarioModeActive,
   resolveEvaluationInputs,
   type CalculatorInputPatch,
@@ -235,6 +236,7 @@ function ScenarioPriceField({
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
   const scenarioModeActive = isScenarioModeActive(inputs)
+  const scenarioApplyUndoAvailable = hasScenarioApplyUndo(inputs)
 
   function focusScenarioInput() {
     requestAnimationFrame(() => inputRef.current?.focus())
@@ -249,7 +251,7 @@ function ScenarioPriceField({
   }
 
   useEffect(() => {
-    if (wasScenarioModeRef.current && !scenarioModeActive) {
+    if (wasScenarioModeRef.current !== scenarioModeActive) {
       focusScenarioInput()
     }
     wasScenarioModeRef.current = scenarioModeActive
@@ -267,6 +269,19 @@ function ScenarioPriceField({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [scenarioModeActive, onChange])
+
+  useEffect(() => {
+    if (!scenarioApplyUndoAvailable) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
+      e.preventDefault()
+      onChange({ undoScenarioApply: true })
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [scenarioApplyUndoAvailable, onChange])
 
   function resolveScenarioPrice(): number | undefined {
     if (useStepper) return inputs.scenarioPrice

@@ -12,6 +12,8 @@ export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   clearScenario?: true
   /** 시나리오 → 현재가 롤링 + 손익 반영 + 시나리오 모드 종료 */
   applyScenarioToMark?: number
+  /** 손익 반영 취소 — 시나리오 미리보기 복원 */
+  undoScenarioApply?: true
 }
 
 export interface ScenarioRevertSnapshot {
@@ -101,6 +103,26 @@ export function applyScenarioToMarkPrice(
     scenarioAppliedPrice: undefined,
     scenarioRevertSnapshot: undefined,
     evalSnapshotSide: prev.positionSide,
+  }
+}
+
+export function hasScenarioApplyUndo(inputs: CalculatorInputs): boolean {
+  return inputs.scenarioApplyUndoSnapshot != null
+}
+
+export function revertScenarioApply(prev: CalculatorInputs): Partial<CalculatorInputs> | null {
+  const snap = prev.scenarioApplyUndoSnapshot
+  if (!snap) return null
+
+  return {
+    accountEval: snap.accountEval,
+    currentPrice: snap.currentPrice,
+    mtmPriceAnchor: snap.mtmPriceAnchor,
+    evalSnapshotSide: snap.evalSnapshotSide,
+    scenarioPrice: snap.scenarioPrice,
+    scenarioRevertSnapshot: snap.scenarioRevertSnapshot,
+    scenarioAppliedPrice: undefined,
+    scenarioApplyUndoSnapshot: undefined,
   }
 }
 
@@ -196,15 +218,38 @@ export function applyInputPatch(
     tickCurrentPrice,
     clearScenario,
     applyScenarioToMark,
+    undoScenarioApply,
     ...inputPatch
   } = patch
 
   const scenarioLocked = isScenarioModeActive(prev)
 
+  if (undoScenarioApply) {
+    const undone = revertScenarioApply(prev)
+    if (undone) return { ...prev, ...inputPatch, ...undone }
+    return { ...prev, ...inputPatch }
+  }
+
   if (applyScenarioToMark != null) {
     const base = { ...prev, ...inputPatch }
     const rolled = applyScenarioToMarkPrice(base, applyScenarioToMark)
-    if (rolled) return { ...base, ...rolled }
+    if (rolled) {
+      const undoSnapshot =
+        isScenarioModeActive(base) &&
+        base.accountEval != null &&
+        base.currentPrice != null &&
+        base.scenarioRevertSnapshot != null
+          ? {
+              accountEval: base.accountEval,
+              currentPrice: base.currentPrice,
+              mtmPriceAnchor: base.mtmPriceAnchor,
+              evalSnapshotSide: base.evalSnapshotSide,
+              scenarioPrice: applyScenarioToMark,
+              scenarioRevertSnapshot: base.scenarioRevertSnapshot,
+            }
+          : undefined
+      return { ...base, ...rolled, scenarioApplyUndoSnapshot: undoSnapshot }
+    }
     return base
   }
 

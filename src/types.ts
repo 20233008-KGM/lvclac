@@ -36,6 +36,19 @@ export interface CalculatorInputs {
     mtmPriceAnchor?: number
     evalSnapshotSide?: PositionSide
   }
+  /** 손익 반영 직전 스냅샷 — Ctrl+Z 시 시나리오 미리보기 복원 */
+  scenarioApplyUndoSnapshot?: {
+    accountEval: number
+    currentPrice: number
+    mtmPriceAnchor?: number
+    evalSnapshotSide?: PositionSide
+    scenarioPrice: number
+    scenarioRevertSnapshot: {
+      accountEval: number
+      mtmPriceAnchor?: number
+      evalSnapshotSide?: PositionSide
+    }
+  }
   /** 가격 스테퍼 1틱 크기 */
   tickSize?: number
 }

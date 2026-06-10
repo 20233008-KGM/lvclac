@@ -74,6 +74,12 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   useEffect(() => {
     if (!focused) {
       setText(formatValue(value))
+      return
+    }
+    // 포커스 중에도 외부에서 값이 바뀌면(undo 등) 표시 텍스트를 재동기화한다.
+    // 타이핑으로 인한 변경은 draft===value 이므로 클로버되지 않는다.
+    if (readDraftFromText() !== value) {
+      setText(formatValue(value))
     }
   }, [value, focused, isRate, allowDecimal, allowNegative])
 

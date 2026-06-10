@@ -1,5 +1,6 @@
 import type { Messages } from '../types'
 import { boardPath } from '../../config/boards'
+import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
 export const ko: Messages = {
   lang: 'ko',
   htmlLang: 'ko',
@@ -135,8 +136,9 @@ export const ko: Messages = {
     maintenanceExcessSub: '계좌 평가금액 − 유지증거금',
     perContractEntrusted: '1계약당 위탁증거금',
     perContractMaintenance: '1계약당 유지증거금',
-    toleranceLong: '청산까지 하락 여유(%)',
-    toleranceShort: '청산까지 상승 여유(%)',
+    toleranceLong: '청산 여유',
+    toleranceShort: '청산 여유',
+    tolerancePercent: '청산 여유 (%)',
     toleranceDeltaLong: '청산까지 하락폭',
     toleranceDeltaShort: '청산까지 상승폭',
     beforeLiquidation: '주문 전 청산가',
@@ -414,8 +416,9 @@ export const ko: Messages = {
       {
         title: '회사',
         links: [
-          { label: 'Farfield Software 소개', soon: true },
-          { label: '문의', href: 'mailto:contact@farfield.software' },
+          { label: 'Farfield Software', soon: true },
+          { label: '문의', href: `mailto:${CONTACT_EMAIL}` },
+          { label: '후원', href: SUPPORT_URL },
           { label: '채용', soon: true },
         ],
       },

@@ -6,7 +6,11 @@ import type {
   OrderResult,
   PositionSide,
 } from '../types'
-import { resolveEvaluationInputs, resolveMarginEquity } from './mtmLink'
+import {
+  resolveEvaluationInputs,
+  resolveMarginCalculationInputs,
+  resolveMarginEquity,
+} from './mtmLink'
 import {
   calcMargins,
   inputsReadyForEvaluate,
@@ -218,7 +222,8 @@ function calcAfterOrderLiquidation(
 
 export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
   const evalInputs = resolveEvaluationInputs(inputs)
-  const rateWarning = validateMarginRates(evalInputs)
+  const marginInputs = resolveMarginCalculationInputs(inputs)
+  const rateWarning = validateMarginRates(marginInputs)
   const positionSide = evalInputs.positionSide
 
   if (evalInputs.contracts === 0) {
@@ -251,7 +256,7 @@ export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {
     }
   }
 
-  const marginResult = calcMargins(evalInputs, evalInputs.contracts)
+  const marginResult = calcMargins(marginInputs, evalInputs.contracts)
   if (!marginResult) {
     return {
       positionSide,
@@ -335,7 +340,8 @@ function emptyOrderResult(
 
 export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   const evalInputs = resolveEvaluationInputs(inputs)
-  const rateWarning = validateMarginRates(evalInputs)
+  const marginInputs = resolveMarginCalculationInputs(inputs)
+  const rateWarning = validateMarginRates(marginInputs)
   const positionSide = evalInputs.positionSide
 
   if (!inputsReadyForEvaluate(evalInputs)) {
@@ -346,7 +352,7 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   const contracts = evalInputs.contracts!
   const currentPrice = evalInputs.currentPrice!
 
-  const beforeResult = calcMargins(evalInputs, contracts)
+  const beforeResult = calcMargins(marginInputs, contracts)
   if (!beforeResult) {
     return emptyOrderResult(positionSide, {
       orderMessage: 'multiplier_zero',

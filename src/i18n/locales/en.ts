@@ -1,5 +1,6 @@
 import type { Messages } from '../types'
 import { boardPath } from '../../config/boards'
+import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
 
 export const en: Messages = {
   lang: 'en',
@@ -136,8 +137,9 @@ export const en: Messages = {
     maintenanceExcessSub: 'Equity − maint. margin',
     perContractEntrusted: 'Init. margin / contract',
     perContractMaintenance: 'Maint. margin / contract',
-    toleranceLong: 'Buffer to liq. (drop %)',
-    toleranceShort: 'Buffer to liq. (rise %)',
+    toleranceLong: 'Liq. buffer',
+    toleranceShort: 'Liq. buffer',
+    tolerancePercent: 'Liq. buffer (%)',
     toleranceDeltaLong: 'Liq. dist.',
     toleranceDeltaShort: 'Liq. dist.',
     beforeLiquidation: 'Liq. price (before)',
@@ -381,8 +383,9 @@ export const en: Messages = {
       {
         title: 'Company',
         links: [
-          { label: 'About Farfield Software', soon: true },
-          { label: 'Contact', href: 'mailto:contact@farfield.software' },
+          { label: 'Farfield Software', soon: true },
+          { label: 'Contact', href: `mailto:${CONTACT_EMAIL}` },
+          { label: 'Support', href: SUPPORT_URL },
           { label: 'Careers', soon: true },
         ],
       },

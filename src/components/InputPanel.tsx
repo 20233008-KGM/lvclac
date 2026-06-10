@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
-import { isScenarioModeActive, type CalculatorInputPatch } from '../calc/mtmLink'
+import {
+  isScenarioModeActive,
+  resolveEvaluationInputs,
+  type CalculatorInputPatch,
+} from '../calc/mtmLink'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import { NumberInput, type NumberInputHandle } from './NumberInput'
@@ -225,34 +229,14 @@ function ScenarioPriceField({
     if (!scenarioModeActive) return
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        clearScenario()
-        return
-      }
-
-      if (e.key !== 'Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
-
-      const target = e.target
-      if (target instanceof HTMLInputElement) {
-        if (target.getAttribute('aria-labelledby') !== 'scenario-price-label') return
-      } else if (target instanceof HTMLButtonElement) {
-        if (!target.classList.contains('scenario-apply-pnl-btn--inline')) return
-      } else {
-        return
-      }
-
+      if (e.key !== 'Escape') return
       e.preventDefault()
-      const price = useStepper
-        ? inputs.scenarioPrice
-        : (inputRef.current?.readDraft() ?? inputs.scenarioPrice)
-      if (price == null) return
-      onChange({ applyScenarioToMark: price })
+      onChange({ clearScenario: true })
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [scenarioModeActive, onChange, inputs.scenarioPrice, useStepper])
+  }, [scenarioModeActive, onChange])
 
   function resolveScenarioPrice(): number | undefined {
     if (useStepper) return inputs.scenarioPrice
@@ -265,20 +249,15 @@ function ScenarioPriceField({
     onChange({ applyScenarioToMark: resolved })
   }
 
-  /** Enter/↵ — 미진입 시 시나리오 모드, 진입 후에는 현재가 반영·모드 종료 */
-  function confirmScenario(price: number) {
+  /** Enter/↵ — 미진입: 시나리오 모드 진입 / 진입 후: 손익 반영 */
+  function handleScenarioEnter() {
+    const price = resolveScenarioPrice()
+    if (price == null) return
     if (scenarioModeActive) {
       applyScenarioToMark(price)
     } else {
       commitScenario(price)
     }
-  }
-
-  function handleScenarioEnter() {
-    if (scenarioModeActive) return
-    const price = resolveScenarioPrice()
-    if (price == null) return
-    commitScenario(price)
   }
 
   function handleScenarioPriceChange(v: number | undefined) {
@@ -357,7 +336,7 @@ function ScenarioPriceField({
             stepUpLabel={stepUpLabel}
             stepDownLabel={stepDownLabel}
             ariaLabelledBy="scenario-price-label"
-            onEnterKey={scenarioModeActive ? undefined : handleScenarioEnter}
+            onEnterKey={handleScenarioEnter}
             onChange={handleScenarioPriceChange}
           />
           <span className="input-commit-btn-slot">
@@ -394,12 +373,12 @@ function ScenarioPriceField({
           className={scenarioModeActive ? undefined : 'input-commit-row__input'}
           deferChangeUntilBlur={!scenarioModeActive}
           forceCommit={!scenarioModeActive}
-          onEnterKey={scenarioModeActive ? undefined : handleScenarioEnter}
+          onEnterKey={handleScenarioEnter}
           onCommit={
             scenarioModeActive
               ? undefined
               : (v) => {
-                  if (v != null) confirmScenario(v)
+                  if (v != null) commitScenario(v)
                 }
           }
           onChange={scenarioModeActive ? handleScenarioPriceChange : () => {}}
@@ -427,6 +406,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
   const scenarioModeActive = isScenarioModeActive(inputs)
+  const previewInputs = scenarioModeActive ? resolveEvaluationInputs(inputs) : inputs
 
   return (
     <section className="panel input-panel">
@@ -459,9 +439,10 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             tooltipLabel={t.fieldTooltipLabel}
           >
             <NumberInput
-              value={inputs.accountEval}
+              value={previewInputs.accountEval}
               allowDecimal={false}
               placeholder={f.accountEquity.placeholder || undefined}
+              disabled={scenarioModeActive}
               onChange={(v) =>
                 onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
               }

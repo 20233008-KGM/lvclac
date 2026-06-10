@@ -148,6 +148,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
         }
         if (e.key === 'Enter' && onEnterKey) {
           e.preventDefault()
+          e.stopPropagation()
           skipBlurCommitRef.current = true
           onEnterKey()
           e.currentTarget.blur()

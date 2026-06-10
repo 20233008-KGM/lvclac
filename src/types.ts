@@ -28,7 +28,7 @@ export interface CalculatorInputs {
   mtmPriceAnchor?: number
   /** 시나리오 가격 */
   scenarioPrice?: number
-  /** 시나리오 확정(Enter) 기준가 — 연속 확정 시 증분 손익용 */
+  /** 시나리오 손익 반영(Apply) 시 확정가 — 미리보기 모드에서는 미설정 */
   scenarioAppliedPrice?: number
   /** 시나리오 적용 전 스냅샷 — Esc 시 복원 */
   scenarioRevertSnapshot?: {

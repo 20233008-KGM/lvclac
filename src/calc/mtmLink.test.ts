@@ -55,25 +55,25 @@ describe('applyTickMove', () => {
 })
 
 describe('applyInputPatch', () => {
-  it('시나리오 확정 — 손익 반영, 현재가·시나리오 유지', () => {
+  it('시나리오 모드 진입 — 손익·현재가 유지', () => {
     const next = applyInputPatch(base, { commitScenarioPrice: 345 })
-    expect(next.accountEval).toBe(9_999_990)
+    expect(next.accountEval).toBe(10_000_000)
     expect(next.currentPrice).toBe(350)
     expect(next.contracts).toBe(base.contracts)
     expect(next.contractMultiplier).toBe(base.contractMultiplier)
     expect(next.scenarioPrice).toBe(345)
-    expect(next.scenarioAppliedPrice).toBe(345)
+    expect(next.scenarioAppliedPrice).toBeUndefined()
     expect(next.scenarioRevertSnapshot?.accountEval).toBe(10_000_000)
     expect(isScenarioModeActive(next)).toBe(true)
   })
 
-  it('시나리오 확정 — 다른 입력 필드·결과 계산 유지', () => {
+  it('시나리오 모드 진입 — 결과만 시나리오 가격 기준 미리보기', () => {
     const full = { ...sampleInputs, tickSize: 5 }
     const before = calculateEvaluate(full)
     expect(before.margins).not.toBeNull()
     expect(before.liquidationPrice).not.toBeNull()
 
-    const next = applyInputPatch(full, { commitScenarioPrice: 345 })
+    const next = applyInputPatch(full, { commitScenarioPrice: 320 })
     expect(next.contracts).toBe(full.contracts)
     expect(next.contractAmount).toBe(full.contractAmount)
     expect(next.maintenanceMarginRate).toBe(full.maintenanceMarginRate)
@@ -82,22 +82,31 @@ describe('applyInputPatch', () => {
     const after = calculateEvaluate(next)
     expect(after.margins).not.toBeNull()
     expect(after.liquidationPrice).not.toBeNull()
-    expect(after.liquidationPrice).toBe(before.liquidationPrice)
     expect(after.toleranceRate).not.toBe(before.toleranceRate)
+    expect(after.toleranceDelta).not.toBe(before.toleranceDelta)
     expect(after.margins!.availableMargin).not.toBe(before.margins!.availableMargin)
     expect(after.margins!.maintenanceExcess).not.toBe(before.margins!.maintenanceExcess)
     expect(after.leverageRatio).not.toBe(before.leverageRatio)
     expect(after.maxBuyable).not.toBe(before.maxBuyable)
-    expect(resolveEvaluationInputs(next).currentPrice).toBe(345)
+    expect(after.margins!.perContractMaintenance).toBe(before.margins!.perContractMaintenance)
+    expect(after.margins!.perContractEntrusted).toBe(before.margins!.perContractEntrusted)
+    expect(after.margins!.contractNotional).toBe(before.margins!.contractNotional)
+    expect(after.margins!.maintenanceMargin).toBe(before.margins!.maintenanceMargin)
+    expect(after.margins!.entrustedMargin).toBe(before.margins!.entrustedMargin)
+    expect(resolveEvaluationInputs(next).currentPrice).toBe(320)
+    expect(resolveEvaluationInputs(next).accountEval).toBe(9_999_940)
     expect(next.currentPrice).toBe(350)
+    expect(resolveMarginEquity(next)).toBe(full.accountEval)
   })
 
-  it('시나리오 연속 확정 — 이전 확정가 기준 증분', () => {
+  it('시나리오 모드 — 가격 조정 시 미리보기만 갱신', () => {
     const once = applyInputPatch(base, { commitScenarioPrice: 345 })
-    const twice = applyInputPatch(once, { commitScenarioPrice: 355 })
-    expect(twice.accountEval).toBe(10_000_010)
+    const twice = applyInputPatch(once, { scenarioPrice: 355 })
+    expect(twice.accountEval).toBe(10_000_000)
     expect(twice.currentPrice).toBe(350)
     expect(twice.scenarioPrice).toBe(355)
+    expect(resolveEvaluationInputs(once).currentPrice).toBe(345)
+    expect(resolveEvaluationInputs(twice).currentPrice).toBe(355)
   })
 
   it('clearScenario — 스냅샷 복원, 시나리오 가격 유지', () => {
@@ -121,10 +130,10 @@ describe('applyInputPatch', () => {
     expect(blocked.accountEval).toBe(preview.accountEval)
   })
 
-  it('시나리오 모드 — scenarioPrice onChange로 손익 증분', () => {
+  it('시나리오 모드 — scenarioPrice onChange는 미리보기만 갱신', () => {
     const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
     const adjusted = applyInputPatch(preview, { scenarioPrice: 355 })
-    expect(adjusted.accountEval).toBe(10_000_010)
+    expect(adjusted.accountEval).toBe(10_000_000)
     expect(adjusted.currentPrice).toBe(350)
     expect(adjusted.scenarioPrice).toBe(355)
     expect(isScenarioModeActive(adjusted)).toBe(true)
@@ -138,7 +147,7 @@ describe('applyInputPatch', () => {
     expect(isScenarioModeActive(rolled)).toBe(false)
   })
 
-  it('시나리오 모드 중 재확정 — 증분 손익 후 현재가 반영', () => {
+  it('시나리오 모드 — 반영 시 현재가 기준 손익 적용', () => {
     const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
     const rolled = applyInputPatch(preview, { applyScenarioToMark: 355 })
     expect(rolled.accountEval).toBe(10_000_010)

@@ -6,6 +6,10 @@ function isInternalPath(href: string): boolean {
   return href.startsWith('/') && !href.startsWith('//')
 }
 
+function isExternalPath(href: string): boolean {
+  return href.startsWith('http://') || href.startsWith('https://')
+}
+
 export function SiteFooter() {
   const { t } = useLanguage()
   const navigate = useNavigate()
@@ -44,7 +48,13 @@ export function SiteFooter() {
                           {link.label}
                         </a>
                       ) : (
-                        <a className="site-footer__link" href={link.href}>
+                        <a
+                          className="site-footer__link"
+                          href={link.href}
+                          {...(link.href && isExternalPath(link.href)
+                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                            : {})}
+                        >
                           {link.label}
                         </a>
                       )}

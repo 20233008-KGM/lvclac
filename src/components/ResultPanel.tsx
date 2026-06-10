@@ -68,13 +68,23 @@ function ResultRowPair({
   left,
   right,
 }: {
-  left: { label: string; value: string }
-  right: { label: string; value: string }
+  left: { label: string; value: string; sub?: string | null; danger?: boolean }
+  right: { label: string; value: string; sub?: string | null; danger?: boolean }
 }) {
   return (
     <div className="result-row-pair">
-      <ResultRow label={left.label} value={left.value} />
-      <ResultRow label={right.label} value={right.value} />
+      <ResultRow
+        label={left.label}
+        value={left.value}
+        sub={left.sub}
+        danger={left.danger}
+      />
+      <ResultRow
+        label={right.label}
+        value={right.value}
+        sub={right.sub}
+        danger={right.danger}
+      />
     </div>
   )
 }
@@ -118,12 +128,17 @@ function ResultSheet({
   )
 }
 
-function EvaluateResults({ result }: { result: EvaluateResult }) {
+function EvaluateResults({
+  result,
+  currentPrice,
+}: {
+  result: EvaluateResult
+  currentPrice?: number
+}) {
   const { t, translateCalcMessage } = useLanguage()
   const r = t.results
   const side = result.positionSide
   const isLong = side === 'long'
-  const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
   const toleranceValue = formatTolerancePercent(result.toleranceRate, side)
 
@@ -141,60 +156,69 @@ function EvaluateResults({ result }: { result: EvaluateResult }) {
           danger={result.isAtRisk}
         />
         <ResultHero
-          label={toleranceLabel}
+          label={t.fields.currentPrice.label}
+          value={formatNumber(currentPrice ?? null)}
+        />
+        <ResultHero
+          label={r.tolerancePercent}
           value={toleranceValue}
           sub={result.isAtRisk ? translateCalcMessage('at_risk') : null}
           danger={result.isAtRisk}
         />
-        <ResultHero
-          label={maxAddableLabel(side, r)}
-          value={formatNumber(result.maxBuyable ?? null)}
-          sub={translateCalcMessage(result.maxBuyableMessage)}
-        />
       </div>
       <div className="result-table">
-        <ResultRow
-          label={r.maintenanceMargin}
-          value={formatNumber(result.margins?.maintenanceMargin ?? null)}
-        />
-        <ResultRow
-          label={r.contractNotional}
-          value={formatNumber(result.margins?.contractNotional ?? null)}
-        />
-        <ResultRow
-          label={r.leverageRatio}
-          value={formatLeverageValue(result.leverageRatio)}
-          sub={r.leverageSub}
-        />
-        <ResultRow
-          label={r.entrustedMargin}
-          value={formatNumber(result.margins?.entrustedMargin ?? null)}
+        <ResultRowPair
+          left={{
+            label: r.maintenanceExcess,
+            value: formatNumber(result.margins?.maintenanceExcess ?? null),
+            danger: result.isAtRisk,
+          }}
+          right={{
+            label: toleranceDeltaLabel,
+            value: formatToleranceDelta(result.toleranceDelta, side),
+            danger: result.isAtRisk,
+          }}
         />
         <ResultRowPair
           left={{
-            label: r.perContractMaintenance,
-            value: formatNumber(result.margins?.perContractMaintenance ?? null),
+            label: r.availableMargin,
+            value: formatNumber(result.margins?.availableMargin ?? null),
           }}
           right={{
+            label: maxAddableLabel(side, r),
+            value: formatNumber(result.maxBuyable ?? null),
+            sub: translateCalcMessage(result.maxBuyableMessage),
+          }}
+        />
+        <ResultRowPair
+          left={{
             label: r.perContractEntrusted,
             value: formatNumber(result.margins?.perContractEntrusted ?? null),
           }}
+          right={{
+            label: r.perContractMaintenance,
+            value: formatNumber(result.margins?.perContractMaintenance ?? null),
+          }}
         />
-        <ResultRow
-          label={r.availableMargin}
-          value={formatNumber(result.margins?.availableMargin ?? null)}
-          sub={r.availableMarginSub}
+        <ResultRowPair
+          left={{
+            label: r.contractNotional,
+            value: formatNumber(result.margins?.contractNotional ?? null),
+          }}
+          right={{
+            label: r.leverageRatio,
+            value: formatLeverageValue(result.leverageRatio),
+          }}
         />
-        <ResultRow
-          label={r.maintenanceExcess}
-          value={formatNumber(result.margins?.maintenanceExcess ?? null)}
-          sub={r.maintenanceExcessSub}
-          danger={result.isAtRisk}
-        />
-        <ResultRow
-          label={toleranceDeltaLabel}
-          value={formatToleranceDelta(result.toleranceDelta, side)}
-          danger={result.isAtRisk}
+        <ResultRowPair
+          left={{
+            label: r.maintenanceMargin,
+            value: formatNumber(result.margins?.maintenanceMargin ?? null),
+          }}
+          right={{
+            label: r.entrustedMargin,
+            value: formatNumber(result.margins?.entrustedMargin ?? null),
+          }}
         />
       </div>
     </>
@@ -299,7 +323,6 @@ function OrderResults({
   const r = t.results
   const side = result.positionSide
   const isLong = side === 'long'
-  const toleranceLabel = isLong ? r.toleranceLong : r.toleranceShort
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
   const afterAtRisk = !orderBlocked && result.isAtRiskAfter
   const hasAfter = result.afterMargins !== null && !orderBlocked
@@ -316,7 +339,7 @@ function OrderResults({
       dangerAfter: afterAtRisk,
     },
     {
-      index: toleranceLabel,
+      index: r.tolerancePercent,
       before: formatTolerancePercent(result.beforeTolerance, result.positionSide),
       after: formatTolerancePercent(result.afterTolerance, result.positionSide),
       dangerBefore: result.isAtRiskBefore,
@@ -385,6 +408,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
 
+  const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
   const evaluateResult = useMemo(
     () => calculateEvaluate(inputs),
     [inputs, positionSide],
@@ -425,7 +449,11 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
             {t.formulas.title}
           </a>
         </div>
-        <EvaluateResults key={positionSide} result={evaluateResult} />
+        <EvaluateResults
+          key={positionSide}
+          result={evaluateResult}
+          currentPrice={evalInputs.currentPrice}
+        />
         <p className="result-panel__warning" role="note">
           <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
         </p>

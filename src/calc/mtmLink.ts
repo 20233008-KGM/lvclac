@@ -2,7 +2,7 @@ import type { CalculatorInputs, PositionSide } from '../types'
 import { calcTotalQuantity } from './liquidation/common'
 
 export type CalculatorInputPatch = Partial<CalculatorInputs> & {
-  /** 시나리오 가격 Enter 확정 — 손익만 반영, 현재가 유지 */
+  /** 시나리오 가격 Enter — 시나리오 모드 진입 (손익·현재가 유지) */
   commitScenarioPrice?: number
   /** 현재가 blur 확정 */
   commitCurrentPrice?: number
@@ -52,8 +52,8 @@ export function applyPriceMove(
   }
 }
 
-/** 시나리오 가격 확정 — 손익 반영, 현재가·시나리오 가격 유지 */
-export function applyScenarioCommit(
+/** 시나리오 모드 진입 — 손익·현재가 유지, 결과만 시나리오 가격 기준 미리보기 */
+export function enterScenarioPreview(
   prev: CalculatorInputs,
   scenarioPrice: number,
 ): Partial<CalculatorInputs> | null {
@@ -61,23 +61,14 @@ export function applyScenarioCommit(
   const currentPrice = prev.currentPrice
   if (accountEval == null || currentPrice == null) return null
 
-  const referencePrice = prev.scenarioAppliedPrice ?? currentPrice
-  const snapshot: ScenarioRevertSnapshot =
-    prev.scenarioRevertSnapshot ?? {
+  return {
+    scenarioPrice,
+    scenarioAppliedPrice: undefined,
+    scenarioRevertSnapshot: {
       accountEval,
       mtmPriceAnchor: prev.mtmPriceAnchor,
       evalSnapshotSide: prev.evalSnapshotSide,
-    }
-
-  const pnl = calcPnlDelta(prev, scenarioPrice - referencePrice)
-  const nextAccountEval = accountEval + pnl
-
-  return {
-    ...prev,
-    accountEval: nextAccountEval,
-    scenarioPrice,
-    scenarioAppliedPrice: scenarioPrice,
-    scenarioRevertSnapshot: snapshot,
+    },
     evalSnapshotSide: prev.positionSide,
   }
 }
@@ -98,12 +89,7 @@ export function applyScenarioToMarkPrice(
 
   let nextEquity = accountEval
 
-  if (prev.scenarioRevertSnapshot) {
-    const applied = prev.scenarioAppliedPrice
-    if (applied != null && targetPrice !== applied) {
-      nextEquity += calcPnlDelta(prev, targetPrice - applied)
-    }
-  } else if (targetPrice !== currentPrice) {
+  if (targetPrice !== currentPrice) {
     nextEquity += calcPnlDelta(prev, targetPrice - currentPrice)
   }
 
@@ -140,19 +126,52 @@ export function resolveMarginEquity(inputs: CalculatorInputs): number {
   return inputs.accountEval ?? 0
 }
 
+/** 시나리오 모드 미리보기 평가금액 — 스냅샷 + 미실현 손익 (저장값은 유지) */
+export function resolveScenarioPreviewEquity(inputs: CalculatorInputs): number | null {
+  if (!isScenarioModeActive(inputs)) return null
+
+  const scenarioMark = inputs.scenarioAppliedPrice ?? inputs.scenarioPrice
+  const currentPrice = inputs.currentPrice
+  const snap = inputs.scenarioRevertSnapshot
+  if (scenarioMark == null || currentPrice == null || snap == null) return null
+
+  if (scenarioMark === currentPrice) return snap.accountEval
+  return snap.accountEval + calcPnlDelta(inputs, scenarioMark - currentPrice)
+}
+
 /**
  * 결과·주문 계산용 입력.
- * 시나리오 모드에서는 손익이 반영된 accountEval과 짝을 이루도록
- * 시나리오 확정가를 마크(현재가)로 사용한다. 입력란의 currentPrice는 유지된다.
+ * 시나리오 모드: 시나리오 가격·미실현 손익 반영 평가금액으로 미리보기.
+ * 입력란에 저장된 currentPrice·accountEval은 「반영」 전까지 유지된다.
  */
 export function resolveEvaluationInputs(inputs: CalculatorInputs): CalculatorInputs {
   if (!isScenarioModeActive(inputs)) return inputs
 
   const scenarioMark = inputs.scenarioAppliedPrice ?? inputs.scenarioPrice
-  if (scenarioMark == null || inputs.currentPrice == null) return inputs
-  if (scenarioMark === inputs.currentPrice) return inputs
+  const currentPrice = inputs.currentPrice
+  if (scenarioMark == null || currentPrice == null) return inputs
 
-  return { ...inputs, currentPrice: scenarioMark }
+  const previewEquity = resolveScenarioPreviewEquity(inputs)
+  if (previewEquity == null) return inputs
+
+  if (scenarioMark === currentPrice && previewEquity === inputs.accountEval) {
+    return inputs
+  }
+
+  return {
+    ...inputs,
+    currentPrice: scenarioMark,
+    accountEval: previewEquity,
+  }
+}
+
+/**
+ * 유지·위탁 증거금 명목 산출용 — 시나리오 모드에서는 진입 시점 입력(실제 현재가) 기준 고정.
+ * 약정금액·비율·1계약당 증거금이 시나리오 가격으로 흔들리지 않게 한다.
+ */
+export function resolveMarginCalculationInputs(inputs: CalculatorInputs): CalculatorInputs {
+  if (!isScenarioModeActive(inputs)) return inputs
+  return inputs
 }
 
 /** 현재가 ±1틱 MTM 이동 */
@@ -215,9 +234,10 @@ export function applyInputPatch(
   }
 
   if (commitScenarioPrice != null) {
-    const committed = applyScenarioCommit({ ...prev, ...sanitizedPatch }, commitScenarioPrice)
-    if (committed) return committed as CalculatorInputs
-    return { ...prev, ...sanitizedPatch }
+    const base = { ...prev, ...sanitizedPatch }
+    const entered = enterScenarioPreview(base, commitScenarioPrice)
+    if (entered) return { ...base, ...entered }
+    return base
   }
 
   if (commitCurrentPrice != null) {
@@ -225,18 +245,6 @@ export function applyInputPatch(
     const moved = applyPriceMove(base, commitCurrentPrice)
     if (moved) return { ...base, ...moved }
     return base
-  }
-
-  if (
-    sanitizedPatch.scenarioPrice !== undefined &&
-    scenarioLocked &&
-    sanitizedPatch.scenarioPrice != null
-  ) {
-    const committed = applyScenarioCommit(
-      { ...prev, ...sanitizedPatch },
-      sanitizedPatch.scenarioPrice,
-    )
-    if (committed) return committed as CalculatorInputs
   }
 
   if (sanitizedPatch.accountEval !== undefined) {

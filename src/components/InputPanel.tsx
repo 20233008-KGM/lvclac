@@ -111,41 +111,24 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
       </div>
 
       <div className="input-sections">
-        <div className="field-section">
+        <div className="field-section field-section--account">
           <SectionTitle>{t.sections.account}</SectionTitle>
-          <div className="account-equity-group">
-            <Field
-              label={f.accountEquity.label}
-              tooltip={f.accountEquity.hint}
-              tooltipLabel={t.fieldTooltipLabel}
-            >
-              <NumberInput
-                value={inputs.accountEval}
-                allowDecimal={false}
-                placeholder={f.accountEquity.placeholder || undefined}
-                onChange={(v) =>
-                  onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
-                }
-              />
-            </Field>
-            <label className="input-option-toggle">
-              <input
-                type="checkbox"
-                checked={inputs.singleInstrument ?? false}
-                onChange={(e) => onChange({ singleInstrument: e.target.checked })}
-              />
-              <span className="input-option-toggle__label">
-                {t.singleInstrument.label}
-                <FieldLabelTooltip text={t.singleInstrument.hint} label={t.fieldTooltipLabel} />
-              </span>
-            </label>
-          </div>
           <Field
-            label={f.contracts.label}
-            labelId="contracts-label"
-            tooltip={f.contracts.hint}
+            label={f.accountEquity.label}
+            tooltip={f.accountEquity.hint}
             tooltipLabel={t.fieldTooltipLabel}
           >
+            <NumberInput
+              value={inputs.accountEval}
+              allowDecimal={false}
+              placeholder={f.accountEquity.placeholder || undefined}
+              onChange={(v) =>
+                onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
+              }
+            />
+          </Field>
+          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional)}
+          <Field label={f.contracts.label} labelId="contracts-label">
             <NumberStepper
               value={inputs.contracts}
               step={1}
@@ -159,7 +142,19 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               }
             />
           </Field>
-          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional)}
+          <div className="account-single-instrument-cell">
+            <label className="input-option-toggle">
+              <input
+                type="checkbox"
+                checked={inputs.singleInstrument ?? false}
+                onChange={(e) => onChange({ singleInstrument: e.target.checked })}
+              />
+              <span className="input-option-toggle__label">
+                {t.singleInstrument.label}
+                <FieldLabelTooltip text={t.singleInstrument.hint} label={t.fieldTooltipLabel} />
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="field-section">

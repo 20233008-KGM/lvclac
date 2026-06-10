@@ -51,6 +51,9 @@ export interface Messages {
   scenarioPriceCommit: string
   scenarioPriceClear: string
   scenarioApplyPnl: string
+  /** 손익 반영 버튼 표시용 짧은 라벨 */
+  scenarioApplyPnlShort: string
+  useCurrentPrice: string
   draftSave: {
     label: string
     hint: string
@@ -76,6 +79,7 @@ export interface Messages {
     tickSize: FieldCopy
     contractMultiplier: FieldCopy
     orderContracts: FieldCopy
+    orderPrice: FieldCopy
   }
   results: Record<string, string>
   calcMessages: Record<CalcMessageCode, string>

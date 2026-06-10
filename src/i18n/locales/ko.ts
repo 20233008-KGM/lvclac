@@ -28,8 +28,9 @@ export const ko: Messages = {
   modes: { evaluate: '평가', order: '주문' },
   sections: { instrument: '종목 스펙', margin: '증거금', account: '계좌' },
   scenarioPriceCommit: 'Enter로 시나리오 모드 진입',
-  scenarioPriceClear: '시나리오 가격 삭제 및 적용 전 상태로 복원',
+  scenarioPriceClear: 'Esc — 시나리오 모드 종료 및 적용 전 상태 복원',
   scenarioApplyPnl: '손익 반영',
+  scenarioApplyPnlShort: '반영',
   draftSave: {
     label: '이 기기에 입력값 저장',
     hint: '활성화 시 입력값이 이 브라우저에만 저장되어 다음 방문 시 불러옵니다. 서버로 전송되지 않습니다. 비활성화 시 저장된 값이 삭제됩니다.',
@@ -90,7 +91,7 @@ export const ko: Messages = {
     },
     scenarioPrice: {
       label: '시나리오 가격',
-      hint: 'Enter(↵) 첫 입력은 시나리오 모드 진입, 모드 중 Enter는 현재가 반영·종료. 「손익 반영」도 동일. del 또는 Delete로 복원.',
+      hint: 'Enter(↵) 첫 입력은 시나리오 모드 진입. 시나리오 모드에서 Enter를 누르면 「반영」 버튼이 눌린 것과 같습니다. 「반영」 시 현재가에서 시나리오 가격만큼 움직였을 때의 손익을 계좌 평가금액에 반영합니다. Esc로 복원.',
       placeholder: '변동 가격',
     },
     tickSize: {
@@ -108,7 +109,13 @@ export const ko: Messages = {
       hint: '매수·매도 추가 수량',
       placeholder: '+/-0',
     },
+    orderPrice: {
+      label: '주문 가격',
+      hint: '체결 가정 가격. 미입력 시 현재가와 동일',
+      placeholder: '주문 가격',
+    },
   },
+  useCurrentPrice: '현재가',
   results: {
     sheetIndex: '지표',
     sheetBefore: '주문 전',
@@ -376,6 +383,13 @@ export const ko: Messages = {
             expression:
               '내림((계좌평가금액 − 위탁증거금) ÷ 1계약당 위탁증거금)',
             description: '롱은 추가 매수, 숏은 추가 매도(신규 숏) 한도. 증거금 기준은 동일합니다.',
+          },
+          {
+            name: '주문 체결 손익 (현재가 기준)',
+            expression:
+              '롱: (현재가 − 주문가) × Q  /  숏: (주문가 − 현재가) × Q',
+            description:
+              'Q = 주문 계약수 × 계약승수. 주문 후 평가금액·청산가·레버리지에 반영됩니다. 미입력 시 주문가 = 현재가.',
           },
         ],
       },

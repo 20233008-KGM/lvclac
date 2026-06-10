@@ -122,13 +122,11 @@ export function revertScenarioState(prev: CalculatorInputs): Partial<CalculatorI
   const snap = prev.scenarioRevertSnapshot
   if (!snap) {
     return {
-      scenarioPrice: undefined,
       scenarioAppliedPrice: undefined,
       scenarioRevertSnapshot: undefined,
     }
   }
   return {
-    scenarioPrice: undefined,
     scenarioAppliedPrice: undefined,
     scenarioRevertSnapshot: undefined,
     accountEval: snap.accountEval,
@@ -140,6 +138,21 @@ export function revertScenarioState(prev: CalculatorInputs): Partial<CalculatorI
 /** 결과 증거금·레버리지에 쓸 계좌 평가금액 */
 export function resolveMarginEquity(inputs: CalculatorInputs): number {
   return inputs.accountEval ?? 0
+}
+
+/**
+ * 결과·주문 계산용 입력.
+ * 시나리오 모드에서는 손익이 반영된 accountEval과 짝을 이루도록
+ * 시나리오 확정가를 마크(현재가)로 사용한다. 입력란의 currentPrice는 유지된다.
+ */
+export function resolveEvaluationInputs(inputs: CalculatorInputs): CalculatorInputs {
+  if (!isScenarioModeActive(inputs)) return inputs
+
+  const scenarioMark = inputs.scenarioAppliedPrice ?? inputs.scenarioPrice
+  if (scenarioMark == null || inputs.currentPrice == null) return inputs
+  if (scenarioMark === inputs.currentPrice) return inputs
+
+  return { ...inputs, currentPrice: scenarioMark }
 }
 
 /** 현재가 ±1틱 MTM 이동 */
@@ -167,6 +180,8 @@ export function applyInputPatch(
     ...inputPatch
   } = patch
 
+  const scenarioLocked = isScenarioModeActive(prev)
+
   if (applyScenarioToMark != null) {
     const base = { ...prev, ...inputPatch }
     const rolled = applyScenarioToMarkPrice(base, applyScenarioToMark)
@@ -178,30 +193,59 @@ export function applyInputPatch(
     return { ...prev, ...inputPatch, ...revertScenarioState(prev) }
   }
 
+  if (scenarioLocked && tickCurrentPrice != null) {
+    return prev
+  }
+
+  if (scenarioLocked && commitCurrentPrice != null) {
+    return prev
+  }
+
+  const sanitizedPatch =
+    scenarioLocked && inputPatch.currentPrice !== undefined
+      ? (({ currentPrice: _currentPrice, ...rest }) => rest)(inputPatch)
+      : inputPatch
+
   if (tickCurrentPrice != null) {
     const direction = tickCurrentPrice === 1 ? 1 : -1
-    const base = { ...prev, ...inputPatch }
+    const base = { ...prev, ...sanitizedPatch }
     const moved = applyTickMove(base, direction)
     if (moved) return { ...base, ...moved }
     return base
   }
 
   if (commitScenarioPrice != null) {
-    const committed = applyScenarioCommit({ ...prev, ...inputPatch }, commitScenarioPrice)
+    const committed = applyScenarioCommit({ ...prev, ...sanitizedPatch }, commitScenarioPrice)
     if (committed) return committed as CalculatorInputs
-    return { ...prev, ...inputPatch }
+    return { ...prev, ...sanitizedPatch }
   }
 
   if (commitCurrentPrice != null) {
-    const base = { ...prev, ...inputPatch }
+    const base = { ...prev, ...sanitizedPatch }
     const moved = applyPriceMove(base, commitCurrentPrice)
     if (moved) return { ...base, ...moved }
     return base
   }
 
-  if (inputPatch.accountEval !== undefined) {
-    return { ...prev, ...inputPatch, mtmPriceAnchor: inputPatch.currentPrice ?? prev.currentPrice }
+  if (
+    sanitizedPatch.scenarioPrice !== undefined &&
+    scenarioLocked &&
+    sanitizedPatch.scenarioPrice != null
+  ) {
+    const committed = applyScenarioCommit(
+      { ...prev, ...sanitizedPatch },
+      sanitizedPatch.scenarioPrice,
+    )
+    if (committed) return committed as CalculatorInputs
   }
 
-  return { ...prev, ...inputPatch }
+  if (sanitizedPatch.accountEval !== undefined) {
+    return {
+      ...prev,
+      ...sanitizedPatch,
+      mtmPriceAnchor: inputPatch.currentPrice ?? prev.currentPrice,
+    }
+  }
+
+  return { ...prev, ...sanitizedPatch }
 }

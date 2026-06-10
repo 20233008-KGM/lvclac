@@ -29,8 +29,9 @@ export const en: Messages = {
   modes: { evaluate: 'Evaluate', order: 'Order' },
   sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
   scenarioPriceCommit: 'Enter scenario preview mode',
-  scenarioPriceClear: 'Clear scenario and restore pre-scenario state',
+  scenarioPriceClear: 'Esc — exit scenario mode and restore pre-scenario state',
   scenarioApplyPnl: 'Apply P&L',
+  scenarioApplyPnlShort: 'Apply',
   draftSave: {
     label: 'Save inputs on this device',
     hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values.',
@@ -91,7 +92,7 @@ export const en: Messages = {
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: 'First Enter (↵) enters scenario mode; Enter again applies to mark and exits. 「Apply P&L」 does the same. del or Delete restores.',
+      hint: 'First Enter (↵) enters scenario mode. In scenario mode, Enter acts like the 「Apply」 button. Apply reflects the P&L from moving mark price to the scenario price into account equity. Esc restores.',
       placeholder: 'Target price',
     },
     tickSize: {
@@ -109,7 +110,13 @@ export const en: Messages = {
       hint: 'Additional contracts to simulate',
       placeholder: '+/-0',
     },
+    orderPrice: {
+      label: 'Order price',
+      hint: 'Assumed fill price. Defaults to mark price if blank',
+      placeholder: 'Order price',
+    },
   },
+  useCurrentPrice: 'Mark',
   results: {
     sheetIndex: 'Metric',
     sheetBefore: 'Before',
@@ -344,6 +351,12 @@ export const en: Messages = {
             name: 'Add-on buy / sell limit',
             expression: 'floor((E₀ − entrusted) / per-contract entrusted)',
             description: 'Same margin math for long adds and short adds.',
+          },
+          {
+            name: 'Order fill P&L (at mark)',
+            expression: 'Long: (C₀ − order price) × Q  /  Short: (order price − C₀) × Q',
+            description:
+              'Q = order size × contract multiplier. Applied to post-order equity, liquidation, and leverage. Blank order price = mark.',
           },
         ],
       },

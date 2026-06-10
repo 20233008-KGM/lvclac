@@ -636,6 +636,25 @@ input:focus:not(:focus-visible) {
   font-size: var(--font-size-base);
 }
 
+.field input:disabled,
+.number-stepper__input input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.number-stepper__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.calc-viewport--scenario .field input:disabled,
+.calc-viewport--scenario .number-stepper__input input:disabled {
+  background: color-mix(in srgb, var(--scenario-surface-2) 70%, var(--scenario-bg));
+  border-color: var(--scenario-border);
+  color: var(--scenario-text-muted);
+}
+
 .input-panel .number-stepper {
   width: 100%;
   max-width: 10.5rem;
@@ -686,7 +705,6 @@ input:focus:not(:focus-visible) {
   flex-shrink: 0;
   display: flex;
   align-items: stretch;
-  min-width: 2.5rem;
   min-height: 40px;
 }
 
@@ -703,19 +721,34 @@ input:focus:not(:focus-visible) {
 }
 
 .input-commit-btn-slot__layer:not(.input-commit-btn-slot__layer--hidden) {
-  width: 100%;
+  display: flex;
+  align-items: stretch;
 }
 
 .scenario-apply-pnl-btn--inline {
-  width: 100%;
+  width: auto;
+  min-width: 2.35rem;
   max-width: none;
-  min-width: 2.5rem;
   min-height: 40px;
   margin-top: 0;
-  padding: 0 var(--space-xs);
+  padding: 0 5px;
   font-size: 11px;
-  line-height: 1.15;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
   white-space: nowrap;
+}
+
+.calc-viewport--scenario .scenario-apply-pnl-btn--inline {
+  border-color: color-mix(in srgb, var(--scenario-accent) 70%, var(--scenario-border));
+  background: color-mix(in srgb, var(--scenario-accent) 22%, var(--scenario-surface-2));
+  color: var(--scenario-text);
+}
+
+.calc-viewport--scenario .scenario-apply-pnl-btn--inline:hover:not(:disabled) {
+  border-color: var(--scenario-accent);
+  background: color-mix(in srgb, var(--scenario-accent) 45%, var(--scenario-surface-2));
+  color: #fff;
 }
 
 .field-label-del-btn {
@@ -1087,16 +1120,42 @@ input:focus:not(:focus-visible) {
   margin-top: 0;
 }
 
-.result-order-input {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: fit-content;
+.result-order-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: end;
+  column-gap: var(--space-xs);
+  row-gap: 4px;
+  width: 100%;
   max-width: 100%;
   margin-bottom: var(--space-sm);
 }
 
-.result-order-input .field-label-row {
+.result-order-fields .result-order-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin: 0;
+}
+
+.result-order-fields .result-order-field:first-of-type {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.result-order-fields .result-order-field:nth-of-type(2) {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+
+.result-order-fields__mark-btn {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.result-order-fields .field-label-row {
   font-size: var(--font-size-label);
   font-weight: 500;
   color: var(--color-text-muted);
@@ -1104,10 +1163,37 @@ input:focus:not(:focus-visible) {
   white-space: nowrap;
 }
 
-.result-order-input__row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+.result-order-fields .number-stepper,
+.result-order-fields .result-order-field > input {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.result-order-fields .number-stepper__input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.result-order-fields .field input,
+.result-order-fields .number-stepper__input input {
+  min-height: 40px;
+  margin: 0;
+  padding: 0 var(--space-sm);
+}
+
+.result-order-fields .number-stepper__input input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.result-order-fields__badge {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  justify-self: center;
+  padding-top: var(--space-xs);
+  text-align: center;
 }
 
 .input-commit-row {
@@ -1137,22 +1223,29 @@ input:focus:not(:focus-visible) {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.5rem;
+  width: var(--stepper-btn-width, 1.375rem);
+  min-width: var(--stepper-btn-width, 1.375rem);
   min-height: 40px;
-  padding: 0 var(--space-sm);
+  padding: 0;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   background: var(--color-surface-2);
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--color-text-dim);
+  color: var(--color-text);
   cursor: pointer;
   transition:
     color 0.15s,
     border-color 0.15s,
     background 0.15s;
+}
+
+.input-commit-btn__glyph {
+  display: block;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  transform: translateY(-1px);
 }
 
 .input-commit-btn:hover:not(:disabled) {
@@ -1173,6 +1266,7 @@ input:focus:not(:focus-visible) {
 }
 
 .number-stepper {
+  --stepper-btn-width: 1.375rem;
   display: flex;
   align-items: stretch;
 }
@@ -1203,7 +1297,7 @@ input:focus:not(:focus-visible) {
   align-items: center;
   justify-content: center;
   flex: 1;
-  width: 2rem;
+  width: var(--stepper-btn-width);
   min-height: 0;
   padding: 0;
   border: 1px solid var(--color-border-subtle);
@@ -1377,10 +1471,6 @@ input:focus:not(:focus-visible) {
   color: var(--color-danger);
 }
 
-.result-panel--order .number-stepper__input input {
-  width: 6.5rem;
-}
-
 .result-row {
   padding: 10px var(--space-md);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -1474,6 +1564,40 @@ input:focus:not(:focus-visible) {
   font-weight: 600;
   color: var(--color-danger);
   line-height: 1.2;
+}
+
+.order-use-current-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  min-height: 40px;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.order-use-current-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  border-color: var(--color-primary-muted);
+  background: var(--color-primary-muted);
+}
+
+.order-use-current-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Buttons */

@@ -108,7 +108,8 @@
     border-bottom: 1px solid var(--color-border-subtle);
   }
 
-  .result-panel .result-row-value {
+  .result-panel .result-row-value,
+  .result-panel .result-sheet tbody td {
     font-size: var(--font-size-base);
     max-width: none;
   }

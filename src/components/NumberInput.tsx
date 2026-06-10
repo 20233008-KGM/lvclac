@@ -12,6 +12,7 @@ export interface NumberInputHandle {
   commit: () => boolean
   /** defer 모드에서 입력 중 draft 값 읽기 */
   readDraft: () => number | undefined
+  focus: () => void
 }
 
 interface NumberInputProps {
@@ -35,6 +36,7 @@ interface NumberInputProps {
   onDeleteKey?: () => void
   /** Enter 키 입력 시 (defer 없이도 사용 가능) */
   onEnterKey?: () => void
+  disabled?: boolean
 }
 
 export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(function NumberInput(
@@ -52,10 +54,12 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     className,
     onDeleteKey,
     onEnterKey,
+    disabled = false,
   },
   ref,
 ) {
   const skipBlurCommitRef = useRef(false)
+  const inputElRef = useRef<HTMLInputElement>(null)
   const formatValue = isRate
     ? (v: number | undefined | null) => formatRateForInput(v)
     : (v: number | undefined | null) => formatNumberForInput(v, allowDecimal, allowNegative)
@@ -102,15 +106,18 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   useImperativeHandle(ref, () => ({
     commit: commitFromText,
     readDraft: readDraftFromText,
+    focus: () => inputElRef.current?.focus(),
   }))
 
   return (
     <input
+      ref={inputElRef}
       type="text"
       inputMode={allowDecimal || isRate ? 'decimal' : 'numeric'}
       placeholder={placeholder}
       aria-labelledby={ariaLabelledBy}
       className={className}
+      disabled={disabled}
       value={text}
       onFocus={() => setFocused(true)}
       onBlur={() => {
@@ -164,7 +171,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
           onChange(undefined)
           return
         }
-        onChange(parsed)
+        onChange(normalizeInputValue(parsed, { isRate, allowDecimal }))
       }}
     />
   )

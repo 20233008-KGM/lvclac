@@ -20,6 +20,8 @@ export interface CalculatorInputs {
   contractMultiplier?: number
   positionSide: PositionSide
   orderContracts?: number
+  /** 주문 체결 가격 — 미입력 시 현재가와 동일하게 간주 */
+  orderPrice?: number
   /** accountEval 입력 시점의 포지션 — 탭 전환 MTM 보정용 */
   evalSnapshotSide?: PositionSide
   /** accountEval·시나리오 롤링 기준 현재가 */
@@ -28,7 +30,7 @@ export interface CalculatorInputs {
   scenarioPrice?: number
   /** 시나리오 확정(Enter) 기준가 — 연속 확정 시 증분 손익용 */
   scenarioAppliedPrice?: number
-  /** 시나리오 적용 전 스냅샷 — del 시 복원 */
+  /** 시나리오 적용 전 스냅샷 — Esc 시 복원 */
   scenarioRevertSnapshot?: {
     accountEval: number
     mtmPriceAnchor?: number

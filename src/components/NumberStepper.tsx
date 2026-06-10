@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, type MouseEvent, type PointerEvent } from 'react'
-import { NumberInput } from './NumberInput'
+import { forwardRef, useCallback, useEffect, useRef, type MouseEvent, type PointerEvent } from 'react'
+import { NumberInput, type NumberInputHandle } from './NumberInput'
 
 interface NumberStepperProps {
   value: number | undefined
@@ -12,23 +12,28 @@ interface NumberStepperProps {
   ariaLabelledBy?: string
   onEnterKey?: () => void
   onDeleteKey?: () => void
+  disabled?: boolean
 }
 
 const HOLD_DELAY_MS = 400
 const HOLD_INTERVAL_MS = 80
 
-export function NumberStepper({
-  value,
-  onChange,
-  step = 1,
-  allowNegative = false,
-  placeholder,
-  stepUpLabel,
-  stepDownLabel,
-  ariaLabelledBy,
-  onEnterKey,
-  onDeleteKey,
-}: NumberStepperProps) {
+export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(function NumberStepper(
+  {
+    value,
+    onChange,
+    step = 1,
+    allowNegative = false,
+    placeholder,
+    stepUpLabel,
+    stepDownLabel,
+    ariaLabelledBy,
+    onEnterKey,
+    onDeleteKey,
+    disabled = false,
+  },
+  ref,
+) {
   const valueRef = useRef(value)
   const onChangeRef = useRef(onChange)
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -90,7 +95,9 @@ export function NumberStepper({
       type: 'button' as const,
       className: 'number-stepper__btn',
       'aria-label': label,
+      disabled,
       onPointerDown: (e: PointerEvent<HTMLButtonElement>) => {
+        if (disabled) return
         e.preventDefault()
         e.currentTarget.setPointerCapture(e.pointerId)
         startHold(delta)
@@ -106,6 +113,7 @@ export function NumberStepper({
     <div className="number-stepper">
       <div className="number-stepper__input">
         <NumberInput
+          ref={ref}
           value={value}
           allowDecimal={false}
           allowNegative={allowNegative}
@@ -115,6 +123,7 @@ export function NumberStepper({
           aria-labelledby={ariaLabelledBy}
           onEnterKey={onEnterKey}
           onDeleteKey={onDeleteKey}
+          disabled={disabled}
           onChange={onChange}
         />
       </div>
@@ -124,4 +133,4 @@ export function NumberStepper({
       </div>
     </div>
   )
-}
+})

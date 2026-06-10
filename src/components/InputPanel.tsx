@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import { isScenarioModeActive, type CalculatorInputPatch } from '../calc/mtmLink'
@@ -98,12 +98,14 @@ function CurrentPriceField({
   field,
   stepUpLabel,
   stepDownLabel,
+  disabled = false,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
   field: FieldCopy
   stepUpLabel: string
   stepDownLabel: string
+  disabled?: boolean
 }) {
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
@@ -119,6 +121,7 @@ function CurrentPriceField({
           stepUpLabel={stepUpLabel}
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="current-price-label"
+          disabled={disabled}
           onChange={(v) => onChange({ currentPrice: v })}
         />
       </Field>
@@ -132,9 +135,18 @@ function CurrentPriceField({
         allowDecimal={false}
         placeholder={field.placeholder || undefined}
         aria-labelledby="current-price-label"
+        disabled={disabled}
         onChange={(v) => onChange({ currentPrice: v })}
       />
     </Field>
+  )
+}
+
+function EnterCommitIcon() {
+  return (
+    <span className="input-commit-btn__glyph" aria-hidden>
+      ↵
+    </span>
   )
 }
 
@@ -156,7 +168,7 @@ function ScenarioPriceCommitButton({
       disabled={disabled}
       onClick={onClick}
     >
-      ↵
+      <EnterCommitIcon />
     </button>
   )
 }
@@ -171,6 +183,7 @@ function ScenarioPriceField({
   commitLabel,
   clearLabel,
   applyPnlLabel,
+  applyPnlShortLabel,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -181,11 +194,17 @@ function ScenarioPriceField({
   commitLabel: string
   clearLabel: string
   applyPnlLabel: string
+  applyPnlShortLabel: string
 }) {
   const inputRef = useRef<NumberInputHandle>(null)
+  const wasScenarioModeRef = useRef(false)
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
   const scenarioModeActive = isScenarioModeActive(inputs)
+
+  function focusScenarioInput() {
+    requestAnimationFrame(() => inputRef.current?.focus())
+  }
 
   function commitScenario(price: number) {
     onChange({ commitScenarioPrice: price })
@@ -194,6 +213,46 @@ function ScenarioPriceField({
   function clearScenario() {
     onChange({ clearScenario: true })
   }
+
+  useEffect(() => {
+    if (wasScenarioModeRef.current && !scenarioModeActive) {
+      focusScenarioInput()
+    }
+    wasScenarioModeRef.current = scenarioModeActive
+  }, [scenarioModeActive])
+
+  useEffect(() => {
+    if (!scenarioModeActive) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        clearScenario()
+        return
+      }
+
+      if (e.key !== 'Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
+
+      const target = e.target
+      if (target instanceof HTMLInputElement) {
+        if (target.getAttribute('aria-labelledby') !== 'scenario-price-label') return
+      } else if (target instanceof HTMLButtonElement) {
+        if (!target.classList.contains('scenario-apply-pnl-btn--inline')) return
+      } else {
+        return
+      }
+
+      e.preventDefault()
+      const price = useStepper
+        ? inputs.scenarioPrice
+        : (inputRef.current?.readDraft() ?? inputs.scenarioPrice)
+      if (price == null) return
+      onChange({ applyScenarioToMark: price })
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [scenarioModeActive, onChange, inputs.scenarioPrice, useStepper])
 
   function resolveScenarioPrice(): number | undefined {
     if (useStepper) return inputs.scenarioPrice
@@ -216,9 +275,14 @@ function ScenarioPriceField({
   }
 
   function handleScenarioEnter() {
+    if (scenarioModeActive) return
     const price = resolveScenarioPrice()
     if (price == null) return
-    confirmScenario(price)
+    commitScenario(price)
+  }
+
+  function handleScenarioPriceChange(v: number | undefined) {
+    onChange({ scenarioPrice: v })
   }
 
   const applyPnlDisabled = useStepper && inputs.scenarioPrice == null
@@ -230,9 +294,17 @@ function ScenarioPriceField({
       disabled={applyPnlDisabled}
       tabIndex={scenarioModeActive ? 0 : -1}
       aria-hidden={!scenarioModeActive}
+      aria-label={applyPnlLabel}
+      title={applyPnlLabel}
       onClick={() => applyScenarioToMark()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          applyScenarioToMark()
+        }
+      }}
     >
-      {applyPnlLabel}
+      {applyPnlShortLabel}
     </button>
   )
 
@@ -252,7 +324,7 @@ function ScenarioPriceField({
           aria-hidden={!scenarioModeActive}
           onClick={clearScenario}
         >
-          del
+          esc
         </button>
       </span>
     </span>
@@ -263,11 +335,7 @@ function ScenarioPriceField({
       label={commitLabel}
       disabled={!scenarioModeActive && inputs.scenarioPrice == null}
       onClick={() => {
-        if (scenarioModeActive) {
-          handleScenarioEnter()
-          return
-        }
-        if (inputs.scenarioPrice != null) confirmScenario(inputs.scenarioPrice)
+        if (inputs.scenarioPrice != null) commitScenario(inputs.scenarioPrice)
         else inputRef.current?.commit()
       }}
     />
@@ -281,6 +349,7 @@ function ScenarioPriceField({
           className={`input-commit-row${scenarioModeActive ? ' input-commit-row--no-commit' : ''}`}
         >
           <NumberStepper
+            ref={inputRef}
             value={inputs.scenarioPrice}
             step={tickSize}
             allowNegative={false}
@@ -288,9 +357,8 @@ function ScenarioPriceField({
             stepUpLabel={stepUpLabel}
             stepDownLabel={stepDownLabel}
             ariaLabelledBy="scenario-price-label"
-            onEnterKey={handleScenarioEnter}
-            onDeleteKey={scenarioModeActive ? clearScenario : undefined}
-            onChange={(v) => onChange({ scenarioPrice: v })}
+            onEnterKey={scenarioModeActive ? undefined : handleScenarioEnter}
+            onChange={handleScenarioPriceChange}
           />
           <span className="input-commit-btn-slot">
             <span
@@ -324,14 +392,17 @@ function ScenarioPriceField({
           placeholder={field.placeholder || undefined}
           aria-labelledby="scenario-price-label"
           className={scenarioModeActive ? undefined : 'input-commit-row__input'}
-          deferChangeUntilBlur
-          forceCommit
-          onEnterKey={handleScenarioEnter}
-          onDeleteKey={scenarioModeActive ? clearScenario : undefined}
-          onCommit={(v) => {
-            if (v != null) confirmScenario(v)
-          }}
-          onChange={() => {}}
+          deferChangeUntilBlur={!scenarioModeActive}
+          forceCommit={!scenarioModeActive}
+          onEnterKey={scenarioModeActive ? undefined : handleScenarioEnter}
+          onCommit={
+            scenarioModeActive
+              ? undefined
+              : (v) => {
+                  if (v != null) confirmScenario(v)
+                }
+          }
+          onChange={scenarioModeActive ? handleScenarioPriceChange : () => {}}
         />
         <span className="input-commit-btn-slot">
           <span
@@ -355,6 +426,7 @@ function ScenarioPriceField({
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
+  const scenarioModeActive = isScenarioModeActive(inputs)
 
   return (
     <section className="panel input-panel">
@@ -420,6 +492,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             field={f.currentPrice}
             stepUpLabel={t.stepUp}
             stepDownLabel={t.stepDown}
+            disabled={scenarioModeActive}
           />
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
           <ScenarioPriceField
@@ -432,6 +505,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             commitLabel={t.scenarioPriceCommit}
             clearLabel={t.scenarioPriceClear}
             applyPnlLabel={t.scenarioApplyPnl}
+            applyPnlShortLabel={t.scenarioApplyPnlShort}
           />
           {numField(
             f.tickSize,

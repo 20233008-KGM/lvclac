@@ -5,6 +5,7 @@ import {
   applyTickMove,
   calcPnlDelta,
   isScenarioModeActive,
+  resolveEvaluationInputs,
   resolveMarginEquity,
 } from './mtmLink'
 import { calculateEvaluate } from './leverage'
@@ -81,7 +82,14 @@ describe('applyInputPatch', () => {
     const after = calculateEvaluate(next)
     expect(after.margins).not.toBeNull()
     expect(after.liquidationPrice).not.toBeNull()
+    expect(after.liquidationPrice).toBe(before.liquidationPrice)
+    expect(after.toleranceRate).not.toBe(before.toleranceRate)
     expect(after.margins!.availableMargin).not.toBe(before.margins!.availableMargin)
+    expect(after.margins!.maintenanceExcess).not.toBe(before.margins!.maintenanceExcess)
+    expect(after.leverageRatio).not.toBe(before.leverageRatio)
+    expect(after.maxBuyable).not.toBe(before.maxBuyable)
+    expect(resolveEvaluationInputs(next).currentPrice).toBe(345)
+    expect(next.currentPrice).toBe(350)
   })
 
   it('시나리오 연속 확정 — 이전 확정가 기준 증분', () => {
@@ -92,17 +100,34 @@ describe('applyInputPatch', () => {
     expect(twice.scenarioPrice).toBe(355)
   })
 
-  it('clearScenario — 스냅샷 복원', () => {
+  it('clearScenario — 스냅샷 복원, 시나리오 가격 유지', () => {
     const committed = applyInputPatch(base, { commitScenarioPrice: 345 })
     const cleared = applyInputPatch(committed, { clearScenario: true })
     expect(isScenarioModeActive(cleared)).toBe(false)
     expect(cleared.accountEval).toBe(10_000_000)
-    expect(cleared.scenarioPrice).toBeUndefined()
+    expect(cleared.scenarioPrice).toBe(345)
   })
 
   it('시나리오 draft만 — 모드 미진입', () => {
     const draft = applyInputPatch(base, { scenarioPrice: 360 })
     expect(isScenarioModeActive(draft)).toBe(false)
+    expect(draft.accountEval).toBe(base.accountEval)
+  })
+
+  it('시나리오 모드 — currentPrice 변경 차단', () => {
+    const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const blocked = applyInputPatch(preview, { currentPrice: 400 })
+    expect(blocked.currentPrice).toBe(350)
+    expect(blocked.accountEval).toBe(preview.accountEval)
+  })
+
+  it('시나리오 모드 — scenarioPrice onChange로 손익 증분', () => {
+    const preview = applyInputPatch(base, { commitScenarioPrice: 345 })
+    const adjusted = applyInputPatch(preview, { scenarioPrice: 355 })
+    expect(adjusted.accountEval).toBe(10_000_010)
+    expect(adjusted.currentPrice).toBe(350)
+    expect(adjusted.scenarioPrice).toBe(355)
+    expect(isScenarioModeActive(adjusted)).toBe(true)
   })
 
   it('손익 반영 — 현재가 롤링·모드 종료', () => {

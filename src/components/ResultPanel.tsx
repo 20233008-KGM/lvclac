@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { calculateEvaluate, calculateOrder, checkOrderExceedsMaxBuyable } from '../calc/leverage'
+import { resolveEvaluationInputs } from '../calc/mtmLink'
 import { calcMargins, inputsReadyForEvaluate } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
@@ -7,6 +8,7 @@ import { FORMULAS_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { LegalEmphasis } from './ServiceDisclaimer'
+import { NumberInput } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
 import {
   formatLeverageValue,
@@ -199,6 +201,93 @@ function EvaluateResults({ result }: { result: EvaluateResult }) {
   )
 }
 
+function OrderInputs({
+  inputs,
+  onChange,
+  orderBlocked,
+  contractsField,
+  priceField,
+  useCurrentPriceLabel,
+  orderBlockedLabel,
+  stepUpLabel,
+  stepDownLabel,
+}: {
+  inputs: CalculatorInputs
+  onChange: (patch: Partial<CalculatorInputs>) => void
+  orderBlocked: boolean
+  contractsField: { label: string; placeholder?: string }
+  priceField: { label: string; placeholder?: string }
+  useCurrentPriceLabel: string
+  orderBlockedLabel: string
+  stepUpLabel: string
+  stepDownLabel: string
+}) {
+  const tickSize = inputs.tickSize
+  const useStepper = tickSize != null && tickSize > 0
+  const currentPrice = inputs.currentPrice
+  const canUseCurrentPrice = currentPrice != null
+
+  return (
+    <div className="result-order-fields">
+      <label className="field result-order-field">
+        <span className="field-label-row" id="order-contracts-label">
+          {contractsField.label}
+        </span>
+        <NumberStepper
+          value={inputs.orderContracts}
+          allowNegative
+          step={1}
+          placeholder={contractsField.placeholder || undefined}
+          stepUpLabel={stepUpLabel}
+          stepDownLabel={stepDownLabel}
+          ariaLabelledBy="order-contracts-label"
+          onChange={(v) => onChange({ orderContracts: v })}
+        />
+      </label>
+      <label className="field result-order-field">
+        <span className="field-label-row" id="order-price-label">
+          {priceField.label}
+        </span>
+        {useStepper ? (
+          <NumberStepper
+            value={inputs.orderPrice}
+            step={tickSize}
+            allowNegative={false}
+            placeholder={priceField.placeholder || undefined}
+            stepUpLabel={stepUpLabel}
+            stepDownLabel={stepDownLabel}
+            ariaLabelledBy="order-price-label"
+            onChange={(v) => onChange({ orderPrice: v })}
+          />
+        ) : (
+          <NumberInput
+            value={inputs.orderPrice}
+            allowDecimal={false}
+            placeholder={priceField.placeholder || undefined}
+            aria-labelledby="order-price-label"
+            onChange={(v) => onChange({ orderPrice: v })}
+          />
+        )}
+      </label>
+      <button
+        type="button"
+        className="order-use-current-btn result-order-fields__mark-btn"
+        disabled={!canUseCurrentPrice}
+        onClick={() => {
+          if (currentPrice != null) onChange({ orderPrice: currentPrice })
+        }}
+      >
+        {useCurrentPriceLabel}
+      </button>
+      {orderBlocked && (
+        <span className="order-blocked-badge result-order-fields__badge" role="status">
+          {orderBlockedLabel}
+        </span>
+      )}
+    </div>
+  )
+}
+
 function OrderResults({
   result,
   orderBlocked,
@@ -293,7 +382,7 @@ function OrderResults({
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
   const navigate = useNavigate()
-  const { orderContracts, positionSide } = inputs
+  const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
 
   const evaluateResult = useMemo(
@@ -302,17 +391,18 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   )
   const orderResult = useMemo(
     () => calculateOrder(inputs),
-    [inputs, positionSide, orderContracts],
+    [inputs, positionSide, orderContracts, orderPrice],
   )
 
   const orderBlocked = useMemo(() => {
-    if (!inputsReadyForEvaluate(inputs)) return false
-    const marginResult = calcMargins(inputs, inputs.contracts)
+    const evalInputs = resolveEvaluationInputs(inputs)
+    if (!inputsReadyForEvaluate(evalInputs)) return false
+    const marginResult = calcMargins(evalInputs, evalInputs.contracts)
     if (!marginResult) return false
     return (
       checkOrderExceedsMaxBuyable(
         orderContracts,
-        inputs.accountEval!,
+        evalInputs.accountEval!,
         marginResult.margins,
         positionSide,
       ) !== null
@@ -343,30 +433,19 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
 
       <section className="panel result-panel result-panel--order">
         <h2>{t.modes.order}</h2>
-        <div className="field result-order-input">
-          <span className="field-label-row" id="order-contracts-label">
-            {f.orderContracts.label}
-          </span>
-          <div className="result-order-input__row">
-            <NumberStepper
-              value={orderContracts}
-              allowNegative
-              step={1}
-              placeholder={f.orderContracts.placeholder || undefined}
-              stepUpLabel={t.stepUp}
-              stepDownLabel={t.stepDown}
-              ariaLabelledBy="order-contracts-label"
-              onChange={(v) => onChange({ orderContracts: v })}
-            />
-            {orderBlocked && (
-              <span className="order-blocked-badge" role="status">
-                {t.orderBlocked}
-              </span>
-            )}
-          </div>
-        </div>
+        <OrderInputs
+          inputs={inputs}
+          onChange={onChange}
+          orderBlocked={orderBlocked}
+          contractsField={f.orderContracts}
+          priceField={f.orderPrice}
+          useCurrentPriceLabel={t.useCurrentPrice}
+          orderBlockedLabel={t.orderBlocked}
+          stepUpLabel={t.stepUp}
+          stepDownLabel={t.stepDown}
+        />
         <OrderResults
-          key={`${positionSide}-${orderContracts ?? 'empty'}`}
+          key={`${positionSide}-${orderContracts ?? 'empty'}-${orderPrice ?? 'mark'}`}
           result={orderResult}
           orderBlocked={orderBlocked}
         />

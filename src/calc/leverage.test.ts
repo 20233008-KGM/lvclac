@@ -253,4 +253,38 @@ describe('calculateOrder', () => {
     expect(result.orderMessage).toBe('order_exceeds_position')
     expect(result.afterMargins).toBeNull()
   })
+
+  it('주문가가 현재가와 같으면 기존 시뮬과 동일', () => {
+    const atMark = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: 1,
+    })
+    const explicit = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: 1,
+      orderPrice: sampleInputs.currentPrice,
+    })
+    expect(explicit.afterLiquidation).toBe(atMark.afterLiquidation)
+    expect(explicit.afterMargins?.availableMargin).toBe(atMark.afterMargins?.availableMargin)
+  })
+
+  it('롱 — 저가 매수 시 주문 후 가용증거금·청산 여유 개선', () => {
+    const atMark = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: 1,
+    })
+    const belowMark = calculateOrder({
+      ...sampleInputs,
+      mode: 'order',
+      orderContracts: 1,
+      orderPrice: 340,
+    })
+    expect(belowMark.afterMargins!.availableMargin).toBeGreaterThan(
+      atMark.afterMargins!.availableMargin,
+    )
+    expect(belowMark.afterTolerance!).toBeGreaterThan(atMark.afterTolerance!)
+  })
 })

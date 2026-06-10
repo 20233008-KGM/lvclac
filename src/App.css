@@ -263,9 +263,15 @@ input:focus:not(:focus-visible) {
   color: var(--scenario-text);
 }
 
-.calc-viewport--scenario .field input:hover:not(:focus),
-.calc-viewport--scenario .number-stepper__input input:hover:not(:focus) {
+.calc-viewport--scenario .field > input:hover:not(:focus) {
   border-color: color-mix(in srgb, var(--scenario-accent) 45%, var(--scenario-border));
+}
+
+/* 스테퍼·복합 입력은 컨테이너 전체를 감싸는 hover 링 — 입력에만 테두리가 생겨 버튼을 못 감싸던 문제 해결 */
+.calc-viewport--scenario .number-stepper:hover:not(:focus-within),
+.calc-viewport--scenario .input-commit-row:hover:not(:focus-within) {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--scenario-accent) 45%, var(--scenario-border));
+  z-index: 2;
 }
 
 .calc-viewport--scenario .field > input:focus {
@@ -942,15 +948,17 @@ input:focus:not(:focus-visible) {
   transform: translateY(-0.5px);
 }
 
+/* ↵ → ✓ 로 형상이 바뀐 「손익 반영」 버튼: 주변 스테퍼 버튼과 섞이되,
+   옅은 액센트 틴트 + 액센트 글리프로 「특별한 동작」임을 은근히 알림 */
 .calc-viewport--scenario .input-commit-btn--apply-pnl {
-  border-color: color-mix(in srgb, var(--scenario-accent) 70%, var(--scenario-border));
-  background: color-mix(in srgb, var(--scenario-accent) 22%, var(--scenario-surface-2));
+  border-color: color-mix(in srgb, var(--scenario-accent) 35%, var(--scenario-border));
+  background: color-mix(in srgb, var(--scenario-accent) 9%, var(--scenario-surface-2));
   color: var(--scenario-accent-strong);
 }
 
 .calc-viewport--scenario .input-commit-btn--apply-pnl:hover:not(:disabled) {
   border-color: var(--scenario-accent);
-  background: color-mix(in srgb, var(--scenario-accent) 45%, var(--scenario-surface-2));
+  background: color-mix(in srgb, var(--scenario-accent) 28%, var(--scenario-surface-2));
   color: #fff;
 }
 

@@ -64,7 +64,7 @@ export function applyScenarioCommit(
   const referencePrice = prev.scenarioAppliedPrice ?? currentPrice
   const snapshot: ScenarioRevertSnapshot =
     prev.scenarioRevertSnapshot ?? {
-      accountEval: prev.accountEval,
+      accountEval,
       mtmPriceAnchor: prev.mtmPriceAnchor,
       evalSnapshotSide: prev.evalSnapshotSide,
     }

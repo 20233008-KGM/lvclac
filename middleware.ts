@@ -6,11 +6,8 @@ export const config = {
 
 export default function middleware(request: Request) {
   const country = request.headers.get('x-vercel-ip-country') ?? ''
-  const response = next()
-  response.cookies.set('leverage_geo_country', country, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 30,
-    sameSite: 'lax',
-  })
-  return response
+  if (!country) return next()
+
+  const cookie = `leverage_geo_country=${encodeURIComponent(country)}; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`
+  return next({ headers: { 'Set-Cookie': cookie } })
 }

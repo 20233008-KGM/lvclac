@@ -22,6 +22,12 @@ export interface CalculatorInputs {
   orderContracts?: number
   /** accountEval 입력 시점의 포지션 — 탭 전환 MTM 보정용 */
   evalSnapshotSide?: PositionSide
+  /** 단일 종목(몰빵) — 현재가 변경 시 계좌 평가금액을 포지션 델타로 연동 */
+  singleInstrument?: boolean
+  /** MTM 연동 기준 현재가 */
+  mtmAnchorPrice?: number
+  /** MTM 연동 기준 계좌 평가금액 */
+  mtmAnchorEquity?: number
 }
 
 export interface MarginAmounts {

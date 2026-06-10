@@ -48,6 +48,7 @@ export interface Messages {
   leverageUnit: string
   modes: { evaluate: string; order: string }
   sections: { instrument: string; margin: string; account: string }
+  singleInstrument: { label: string; hint: string }
   draftSave: {
     label: string
     hint: string

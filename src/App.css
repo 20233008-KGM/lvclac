@@ -483,6 +483,33 @@ input:focus:not(:focus-visible) {
   border: none;
 }
 
+.input-option-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: calc(-1 * var(--space-xs)) 0 var(--space-xs);
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.input-option-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.input-option-toggle__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.4;
+}
+
 .draft-save {
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);

@@ -3,6 +3,7 @@ import type { FieldCopy } from '../i18n/types'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import { NumberInput } from './NumberInput'
+import { NumberStepper } from './NumberStepper'
 import { SaveDraftToggle } from './SaveDraftToggle'
 
 interface InputPanelProps {
@@ -21,17 +22,19 @@ function Field({
   optionalText,
   tooltip,
   tooltipLabel,
+  labelId,
   children,
 }: {
   label: string
   optionalText?: string
   tooltip?: string
   tooltipLabel?: string
+  labelId?: string
   children: React.ReactNode
 }) {
   return (
     <label className="field">
-      <span className="field-label-row">
+      <span className="field-label-row" id={labelId}>
         <span className="field-label-text">
           {label}
           {optionalText && <em className="optional"> {optionalText}</em>}
@@ -124,7 +127,36 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               }
             />
           </Field>
-          {numField(f.contracts, 'contracts', inputs, onChange)}
+          <label className="input-option-toggle">
+            <input
+              type="checkbox"
+              checked={inputs.singleInstrument ?? false}
+              onChange={(e) => onChange({ singleInstrument: e.target.checked })}
+            />
+            <span className="input-option-toggle__label">
+              {t.singleInstrument.label}
+              <FieldLabelTooltip text={t.singleInstrument.hint} label={t.fieldTooltipLabel} />
+            </span>
+          </label>
+          <Field
+            label={f.contracts.label}
+            labelId="contracts-label"
+            tooltip={f.contracts.hint}
+            tooltipLabel={t.fieldTooltipLabel}
+          >
+            <NumberStepper
+              value={inputs.contracts}
+              step={1}
+              allowNegative={false}
+              placeholder={f.contracts.placeholder || undefined}
+              stepUpLabel={t.stepUp}
+              stepDownLabel={t.stepDown}
+              ariaLabelledBy="contracts-label"
+              onChange={(v) =>
+                onChange({ contracts: v === undefined ? v : Math.max(0, v) })
+              }
+            />
+          </Field>
           {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional)}
         </div>
 

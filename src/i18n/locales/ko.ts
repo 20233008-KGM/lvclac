@@ -27,6 +27,10 @@ export const ko: Messages = {
   contractsUnit: '계약',
   modes: { evaluate: '평가', order: '주문' },
   sections: { instrument: '종목 스펙', margin: '증거금', account: '계좌' },
+  singleInstrument: {
+    label: '단일 종목 투자',
+    hint: '켜면 현재가만 바꿔도 계좌 평가금액이 보유 포지션 손익(델타)만큼 함께 변합니다.',
+  },
   draftSave: {
     label: '이 기기에 입력값 저장',
     hint: '활성화 시 입력값이 이 브라우저에만 저장되어 다음 방문 시 불러옵니다. 서버로 전송되지 않습니다. 비활성화 시 저장된 값이 삭제됩니다.',

@@ -28,6 +28,10 @@ export const en: Messages = {
   contractsUnit: 'contracts',
   modes: { evaluate: 'Evaluate', order: 'Order' },
   sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
+  singleInstrument: {
+    label: 'Single-instrument account',
+    hint: 'When on, changing mark price updates account equity by open P&L (delta).',
+  },
   draftSave: {
     label: 'Save inputs on this device',
     hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values.',

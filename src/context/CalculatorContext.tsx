@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useDebouncedSave } from '../hooks/useDebouncedSave'
+import { applyInputPatch } from '../calc/mtmLink'
 import { defaultInputs, type CalculatorInputs } from '../types'
 import { normalizeStoredRate } from '../utils/inputFormat'
 
@@ -92,7 +93,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [inputs, setInputs] = useState(() => getInitialInputs(readSaveEnabled()))
 
   const updateInputs = useCallback((patch: Partial<CalculatorInputs>) => {
-    setInputs((prev) => ({ ...prev, ...patch }))
+    setInputs((prev) => applyInputPatch(prev, patch))
   }, [])
 
   const setSaveEnabled = useCallback((enabled: boolean) => {

@@ -220,10 +220,11 @@ export function applyInputPatch(
     return prev
   }
 
-  const sanitizedPatch =
-    scenarioLocked && inputPatch.currentPrice !== undefined
-      ? (({ currentPrice: _currentPrice, ...rest }) => rest)(inputPatch)
-      : inputPatch
+  const sanitizedPatch = scenarioLocked
+    ? inputPatch.scenarioPrice !== undefined
+      ? { scenarioPrice: inputPatch.scenarioPrice }
+      : {}
+    : inputPatch
 
   if (tickCurrentPrice != null) {
     const direction = tickCurrentPrice === 1 ? 1 : -1

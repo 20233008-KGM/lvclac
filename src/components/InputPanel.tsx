@@ -68,6 +68,7 @@ function numField(
   inputProps?: Partial<{
     deferChangeUntilBlur: boolean
     onCommit: (value: number | undefined) => void
+    disabled: boolean
   }>,
 ) {
   const value = inputs[key] as number | undefined
@@ -88,6 +89,7 @@ function numField(
         isRate={isRate}
         optional={optional}
         placeholder={field.placeholder || undefined}
+        disabled={inputProps?.disabled}
         deferChangeUntilBlur={inputProps?.deferChangeUntilBlur}
         onCommit={inputProps?.onCommit}
         onChange={(v) => onChange({ [key]: v })}
@@ -314,19 +316,21 @@ function ScenarioPriceField({
       label={commitLabel}
       disabled={!scenarioModeActive && inputs.scenarioPrice == null}
       onClick={() => {
-        if (inputs.scenarioPrice != null) commitScenario(inputs.scenarioPrice)
-        else inputRef.current?.commit()
+        const price = resolveScenarioPrice()
+        if (price != null) handleScenarioEnter()
       }}
     />
   )
+
+  const commitRowClassName = scenarioModeActive
+    ? 'input-commit-row input-commit-row--apply'
+    : 'input-commit-row input-commit-row--enter'
 
   if (useStepper) {
     return (
       <div className="field">
         {labelRow}
-        <div
-          className={`input-commit-row${scenarioModeActive ? ' input-commit-row--no-commit' : ''}`}
-        >
+        <div className={commitRowClassName}>
           <NumberStepper
             ref={inputRef}
             value={inputs.scenarioPrice}
@@ -361,24 +365,21 @@ function ScenarioPriceField({
   return (
     <div className="field">
       {labelRow}
-      <div
-        className={`input-commit-row${scenarioModeActive ? ' input-commit-row--no-commit' : ''}`}
-      >
+      <div className={commitRowClassName}>
         <NumberInput
           ref={inputRef}
           value={inputs.scenarioPrice}
           allowDecimal={false}
           placeholder={field.placeholder || undefined}
           aria-labelledby="scenario-price-label"
-          className={scenarioModeActive ? undefined : 'input-commit-row__input'}
+          className="input-commit-row__input"
           deferChangeUntilBlur={!scenarioModeActive}
-          forceCommit={!scenarioModeActive}
           onEnterKey={handleScenarioEnter}
           onCommit={
             scenarioModeActive
               ? undefined
               : (v) => {
-                  if (v != null) commitScenario(v)
+                  if (v != null) handleScenarioPriceChange(v)
                 }
           }
           onChange={scenarioModeActive ? handleScenarioPriceChange : () => {}}
@@ -421,6 +422,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
                 key={side}
                 type="button"
                 className={`side-btn ${inputs.positionSide === side ? 'active' : ''}`}
+                disabled={scenarioModeActive}
                 onClick={() => onChange({ positionSide: side })}
               >
                 {side === 'long' ? t.long : t.short}
@@ -448,7 +450,9 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               }
             />
           </Field>
-          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional)}
+          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
           <Field label={f.contracts.label} labelId="contracts-label">
             <NumberStepper
               value={inputs.contracts}
@@ -458,6 +462,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               stepUpLabel={t.stepUp}
               stepDownLabel={t.stepDown}
               ariaLabelledBy="contracts-label"
+              disabled={scenarioModeActive}
               onChange={(v) =>
                 onChange({ contracts: v === undefined ? v : Math.max(0, v) })
               }
@@ -475,7 +480,9 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             stepDownLabel={t.stepDown}
             disabled={scenarioModeActive}
           />
-          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional)}
+          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
           <ScenarioPriceField
             inputs={inputs}
             onChange={onChange}
@@ -497,15 +504,24 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             t.optional,
             true,
             t.fieldTooltipLabel,
+            { disabled: scenarioModeActive },
           )}
         </div>
 
         <div className="field-section">
           <SectionTitle>{t.sections.margin}</SectionTitle>
-          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange)}
-          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, true, t.optional)}
-          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange)}
-          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, true, t.optional)}
+          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, true, t.optional, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, true, t.optional, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
         </div>
       </div>
 

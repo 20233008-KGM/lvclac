@@ -518,6 +518,9 @@ input:focus:not(:focus-visible) {
 }
 
 .input-panel .field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-sm);
   min-width: 0;
 }
@@ -629,7 +632,17 @@ input:focus:not(:focus-visible) {
   transform: translateX(-50%) translateY(0);
 }
 
+.input-panel .field > input,
+.input-panel .field > .number-stepper,
+.input-panel .field > .input-commit-row {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .input-panel .field input {
+  width: 100%;
+  box-sizing: border-box;
   min-height: 40px;
   margin: 0;
   padding: 0 var(--space-md);
@@ -650,32 +663,70 @@ input:focus:not(:focus-visible) {
 
 .calc-viewport--scenario .field input:disabled,
 .calc-viewport--scenario .number-stepper__input input:disabled {
-  background: color-mix(in srgb, var(--scenario-surface-2) 70%, var(--scenario-bg));
+  opacity: 1;
+  background: var(--scenario-surface-2);
   border-color: var(--scenario-border);
-  color: var(--scenario-text-muted);
+  color: var(--scenario-text);
+  cursor: not-allowed;
+}
+
+.calc-viewport--scenario .side-btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .input-panel .number-stepper {
+  --stepper-btn-width: 1.375rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width);
+  align-items: stretch;
   width: 100%;
-  max-width: 10.5rem;
+  max-width: 100%;
   min-width: 0;
 }
 
 .input-panel .number-stepper__input {
-  flex: 1 1 auto;
+  grid-column: 1;
   min-width: 0;
+  flex: unset;
+}
+
+.input-panel .number-stepper__controls {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .input-panel .number-stepper__input input {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
   padding: 0 var(--space-sm);
 }
 
-.input-panel .input-commit-row .number-stepper {
-  flex: 0 1 10.5rem;
-  width: auto;
-  max-width: 10.5rem;
+.input-panel .input-commit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.input-panel .input-commit-row--enter {
+  grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width, 1.375rem);
+}
+
+.input-panel .input-commit-row--apply {
+  grid-template-columns: minmax(0, 1fr) var(--input-commit-apply-width, 2.75rem);
+}
+
+.input-panel .input-commit-row > .number-stepper,
+.input-panel .input-commit-row > .input-commit-row__input {
+  grid-column: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .field-label-row--with-action {
@@ -702,10 +753,23 @@ input:focus:not(:focus-visible) {
 
 .input-commit-btn-slot {
   position: relative;
-  flex-shrink: 0;
+  grid-column: 2;
   display: flex;
   align-items: stretch;
+  justify-self: stretch;
   min-height: 40px;
+}
+
+.input-commit-row--enter .input-commit-btn-slot {
+  width: var(--stepper-btn-width, 1.375rem);
+  min-width: var(--stepper-btn-width, 1.375rem);
+  max-width: var(--stepper-btn-width, 1.375rem);
+}
+
+.input-commit-row--apply .input-commit-btn-slot {
+  width: var(--input-commit-apply-width, 2.75rem);
+  min-width: var(--input-commit-apply-width, 2.75rem);
+  max-width: var(--input-commit-apply-width, 2.75rem);
 }
 
 .input-commit-btn-slot__layer {
@@ -723,20 +787,32 @@ input:focus:not(:focus-visible) {
 .input-commit-btn-slot__layer:not(.input-commit-btn-slot__layer--hidden) {
   display: flex;
   align-items: stretch;
+  width: 100%;
+}
+
+.input-commit-btn-slot .scenario-apply-pnl-btn--inline {
+  width: 100%;
+  min-width: 0;
 }
 
 .scenario-apply-pnl-btn--inline {
-  width: auto;
-  min-width: 2.35rem;
+  width: 100%;
   max-width: none;
   min-height: 40px;
   margin-top: 0;
-  padding: 0 5px;
+  padding: 0 6px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
   white-space: nowrap;
+}
+
+.input-commit-row .input-commit-btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .calc-viewport--scenario .scenario-apply-pnl-btn--inline {
@@ -1197,10 +1273,21 @@ input:focus:not(:focus-visible) {
 }
 
 .input-commit-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch;
-  gap: var(--space-xs);
+  gap: 0;
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.input-commit-row--enter {
+  grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width, 1.375rem);
+}
+
+.input-commit-row--apply {
+  grid-template-columns: minmax(0, 1fr) var(--input-commit-apply-width, 2.75rem);
 }
 
 .input-commit-row--no-commit .input-commit-row__input {
@@ -1210,7 +1297,7 @@ input:focus:not(:focus-visible) {
 }
 
 .input-commit-row__input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   min-height: 40px;
   border-top-right-radius: 0;
@@ -1259,25 +1346,45 @@ input:focus:not(:focus-visible) {
   cursor: not-allowed;
 }
 
-.input-commit-row .number-stepper__input input {
-  border-top-right-radius: var(--radius-sm);
-  border-bottom-right-radius: var(--radius-sm);
-  border-right: 1px solid var(--color-border-subtle);
+.input-commit-row > .number-stepper,
+.input-commit-row > .input-commit-row__input {
+  grid-column: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.input-commit-row > .input-commit-btn-slot {
+  grid-column: 2;
+}
+
+.input-commit-row .number-stepper__btn:first-child {
+  border-top-right-radius: 0;
+}
+
+.input-commit-row .number-stepper__btn:last-child {
+  border-bottom-right-radius: 0;
 }
 
 .number-stepper {
   --stepper-btn-width: 1.375rem;
   display: flex;
   align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .number-stepper__input {
-  flex: 0 0 auto;
+  flex: 1 1 0%;
+  min-width: 0;
 }
 
 .number-stepper__input input {
-  width: 5.5rem;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
+  box-sizing: border-box;
   min-height: 40px;
   padding: 0 var(--space-sm);
   font-size: var(--font-size-base);

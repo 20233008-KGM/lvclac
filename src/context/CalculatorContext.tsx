@@ -51,9 +51,9 @@ function readSaveEnabled(): boolean {
     const flag = localStorage.getItem(SAVE_ENABLED_KEY)
     if (flag === '0') return false
     if (flag === '1') return true
-    return true
+    return false
   } catch {
-    return true
+    return false
   }
 }
 

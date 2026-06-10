@@ -113,31 +113,33 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
       <div className="input-sections">
         <div className="field-section">
           <SectionTitle>{t.sections.account}</SectionTitle>
-          <Field
-            label={f.accountEquity.label}
-            tooltip={f.accountEquity.hint}
-            tooltipLabel={t.fieldTooltipLabel}
-          >
-            <NumberInput
-              value={inputs.accountEval}
-              allowDecimal={false}
-              placeholder={f.accountEquity.placeholder || undefined}
-              onChange={(v) =>
-                onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
-              }
-            />
-          </Field>
-          <label className="input-option-toggle">
-            <input
-              type="checkbox"
-              checked={inputs.singleInstrument ?? false}
-              onChange={(e) => onChange({ singleInstrument: e.target.checked })}
-            />
-            <span className="input-option-toggle__label">
-              {t.singleInstrument.label}
-              <FieldLabelTooltip text={t.singleInstrument.hint} label={t.fieldTooltipLabel} />
-            </span>
-          </label>
+          <div className="account-equity-group">
+            <Field
+              label={f.accountEquity.label}
+              tooltip={f.accountEquity.hint}
+              tooltipLabel={t.fieldTooltipLabel}
+            >
+              <NumberInput
+                value={inputs.accountEval}
+                allowDecimal={false}
+                placeholder={f.accountEquity.placeholder || undefined}
+                onChange={(v) =>
+                  onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
+                }
+              />
+            </Field>
+            <label className="input-option-toggle">
+              <input
+                type="checkbox"
+                checked={inputs.singleInstrument ?? false}
+                onChange={(e) => onChange({ singleInstrument: e.target.checked })}
+              />
+              <span className="input-option-toggle__label">
+                {t.singleInstrument.label}
+                <FieldLabelTooltip text={t.singleInstrument.hint} label={t.fieldTooltipLabel} />
+              </span>
+            </label>
+          </div>
           <Field
             label={f.contracts.label}
             labelId="contracts-label"

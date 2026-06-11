@@ -27,6 +27,14 @@ export interface Messages {
   htmlLang: string
   siteTitle: string
   siteDescription: string
+  siteTitleTooltip: {
+    ariaLabel: string
+    overviewTitle: string
+    overviewBody: string
+    usageTitle: string
+    usageBody: string
+    footnote: string
+  }
   appIntro: string
   loading: string
   login: string
@@ -55,6 +63,7 @@ export interface Messages {
   stepDown: string
   resizeColumns: string
   resetLayout: string
+  inputMaxDigitsWarning: string
   contractsUnit: string
   leverageUnit: string
   modes: { evaluate: string; order: string }

@@ -16,7 +16,6 @@ import {
   formatNumber,
   formatToleranceDelta,
   formatTolerancePercent,
-  hasPrecisionRisk,
 } from '../utils/format'
 
 interface ResultPanelProps {
@@ -51,18 +50,20 @@ function ResultRow({
   value,
   sub,
   danger,
+  valueTitle,
 }: {
   label: string
   value: string
   sub?: string | null
   danger?: boolean
+  valueTitle?: string
 }) {
   return (
     <div className={`result-row ${danger ? 'danger' : ''}`}>
       <div className="result-row-main">
         <span className="result-row-label">{label}</span>
         <span className="result-row-value">
-          <FitText>{value}</FitText>
+          <FitText title={valueTitle}>{value}</FitText>
         </span>
       </div>
       {sub && <span className="result-row-sub">{sub}</span>}
@@ -74,8 +75,20 @@ function ResultRowPair({
   left,
   right,
 }: {
-  left: { label: string; value: string; sub?: string | null; danger?: boolean }
-  right: { label: string; value: string; sub?: string | null; danger?: boolean }
+  left: {
+    label: string
+    value: string
+    sub?: string | null
+    danger?: boolean
+    valueTitle?: string
+  }
+  right: {
+    label: string
+    value: string
+    sub?: string | null
+    danger?: boolean
+    valueTitle?: string
+  }
 }) {
   return (
     <div className="result-row-pair">
@@ -84,12 +97,14 @@ function ResultRowPair({
         value={left.value}
         sub={left.sub}
         danger={left.danger}
+        valueTitle={left.valueTitle}
       />
       <ResultRow
         label={right.label}
         value={right.value}
         sub={right.sub}
         danger={right.danger}
+        valueTitle={right.valueTitle}
       />
     </div>
   )
@@ -211,10 +226,12 @@ function EvaluateResults({
           left={{
             label: r.perContractEntrusted,
             value: formatNumber(result.margins?.perContractEntrusted ?? null),
+            valueTitle: r.perContractEntrustedTitle,
           }}
           right={{
             label: r.perContractMaintenance,
             value: formatNumber(result.margins?.perContractMaintenance ?? null),
+            valueTitle: r.perContractMaintenanceTitle,
           }}
         />
         <ResultRowPair
@@ -436,11 +453,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     [inputs, positionSide, orderContracts, orderPrice],
   )
 
-  const precisionRisk = useMemo(
-    () => hasPrecisionRisk(inputs, evaluateResult, orderResult),
-    [inputs, evaluateResult, orderResult],
-  )
-
   const orderBlocked = useMemo(() => {
     const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
     if (!inputsReadyForOrderSim(evalInputs)) return false
@@ -458,11 +470,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
 
   return (
     <div className="result-column">
-      {precisionRisk && (
-        <p className="result-precision-warning" role="alert">
-          {t.results.precisionWarning}
-        </p>
-      )}
       <section className="panel result-panel">
         <div className="result-panel__head">
           <h2>{t.result}</h2>

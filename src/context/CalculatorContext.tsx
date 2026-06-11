@@ -9,6 +9,7 @@ import { useDebouncedSave } from '../hooks/useDebouncedSave'
 import { applyInputPatch, type CalculatorInputPatch } from '../calc/mtmLink'
 import { defaultInputs, type CalculatorInputs } from '../types'
 import { normalizeStoredRate } from '../utils/inputFormat'
+import { sanitizeDraftInputs } from '../utils/sanitizeDraftInputs'
 
 const DRAFT_KEY = 'leverage_calculator_draft'
 const SAVE_ENABLED_KEY = 'leverage_save_enabled'
@@ -36,7 +37,7 @@ function mergeInputs(prefs: Partial<CalculatorInputs>): CalculatorInputs {
     prefs.entrustedMargin != null
       ? 'total'
       : 'rate')
-  return {
+  return sanitizeDraftInputs({
     ...defaultInputs,
     ...prefs,
     mode: prefs.mode ?? 'evaluate',
@@ -52,7 +53,7 @@ function mergeInputs(prefs: Partial<CalculatorInputs>): CalculatorInputs {
     orderContracts:
       prefs.orderContracts ??
       (typeof legacy.additionalContracts === 'number' ? legacy.additionalContracts : undefined),
-  }
+  })
 }
 
 function readSaveEnabled(): boolean {

@@ -432,10 +432,7 @@ function MarginSection({
   return (
     <div className="field-section">
       <div className="field-section-head">
-        <span className="field-section-title-row">
-          <SectionTitle>{t.sections.margin}</SectionTitle>
-          <FieldLabelTooltip text={modeTooltip} label={m.label} />
-        </span>
+        <SectionTitle>{t.sections.margin}</SectionTitle>
         <div className="margin-mode-toggle" role="group" aria-label={m.label}>
           {MARGIN_MODES.map((value) => (
             <button
@@ -450,6 +447,7 @@ function MarginSection({
             </button>
           ))}
         </div>
+        <FieldLabelTooltip text={modeTooltip} label={m.label} />
       </div>
 
       {mode === 'rate' && (
@@ -484,6 +482,10 @@ function MarginSection({
           })}
         </>
       )}
+
+      <div className="field-section-footer">
+        <SaveDraftToggle />
+      </div>
     </div>
   )
 }
@@ -498,9 +500,9 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
     <section className="panel input-panel">
       <h2>{t.input}</h2>
 
-      <div className="input-controls">
-        <div className="field">
-          <span className="field-label-row">{t.position}</span>
+      <div className="input-sections">
+        <div className="field-section field-section--position">
+          <SectionTitle>{t.position}</SectionTitle>
           <div className="side-toggle">
             {(['long', 'short'] as const).map((side) => (
               <button
@@ -515,9 +517,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             ))}
           </div>
         </div>
-      </div>
 
-      <div className="input-sections">
         <div className="field-section field-section--account">
           <SectionTitle>{t.sections.account}</SectionTitle>
           <Field
@@ -594,8 +594,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
 
         <MarginSection inputs={inputs} onChange={onChange} />
       </div>
-
-      <SaveDraftToggle />
     </section>
   )
 }

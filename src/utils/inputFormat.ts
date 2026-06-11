@@ -1,11 +1,46 @@
-import { roundTo, trimTrailingZeros } from './format'
+import { exceedsSafePrecision, roundTo, trimTrailingZeros } from './format'
 
 /**
  * 정수부 최대 자릿수. 1000조(10^15)는 16자리이며,
  * JS의 안전 정수 한계(Number.MAX_SAFE_INTEGER ≈ 9×10^15)도 16자리라
  * 이를 넘기면 정밀도가 깨진다. 따라서 16자리에서 입력을 막는다.
  */
-const MAX_INTEGER_DIGITS = 16
+export const MAX_INTEGER_DIGITS = 16
+
+/** 포맷된/원시 문자열에서 정수부 숫자 자릿수 */
+export function countIntegerDigits(
+  text: string,
+  allowDecimal = false,
+  allowNegative = false,
+): number {
+  const stripped = text.replace(/,/g, '')
+  if (stripped === '' || stripped === '-') return 0
+  const negative = allowNegative && stripped.startsWith('-')
+  const unsigned = negative ? stripped.slice(1) : stripped
+  const intPart = allowDecimal ? unsigned.split('.')[0] ?? '' : unsigned.replace(/\D/g, '')
+  return intPart.replace(/\D/g, '').length
+}
+
+/** 정수부가 16자리 상한에 도달했는지 */
+export function isAtIntegerDigitLimit(
+  formatted: string,
+  allowDecimal = false,
+  allowNegative = false,
+): boolean {
+  return countIntegerDigits(formatted, allowDecimal, allowNegative) >= MAX_INTEGER_DIGITS
+}
+
+/** 포맷 과정에서 정수부가 잘렸는지 (17자리 이상 입력 시도) */
+export function wasIntegerDigitTruncated(
+  raw: string,
+  formatted: string,
+  allowDecimal = false,
+  allowNegative = false,
+): boolean {
+  const rawDigits = countIntegerDigits(raw, allowDecimal, allowNegative)
+  const formattedDigits = countIntegerDigits(formatted, allowDecimal, allowNegative)
+  return rawDigits > formattedDigits || rawDigits > MAX_INTEGER_DIGITS
+}
 
 /**
  * 숫자 문자열에 천 단위 콤마를 넣는다.
@@ -88,6 +123,28 @@ export function formatRateForInput(value: number | undefined | null): string {
   const rounded = roundTo(value, 3)
   const raw = trimTrailingZeros(rounded.toFixed(3))
   return formatRawRateInput(raw)
+}
+
+/** 16자리 상한 초과 입력 시도 또는 safe integer 초과 값일 때 필드 힌트 표시 */
+export function shouldShowDigitLimitHint(
+  isRate: boolean,
+  truncatedAttempt: boolean,
+  value: number | undefined,
+): boolean {
+  if (isRate) return false
+  if (truncatedAttempt) return true
+  return exceedsSafePrecision(value)
+}
+
+/** 16자리 정수 상한 도달 시 입력 테두리 강조 (힌트와 분리) */
+export function shouldShowDigitLimitBorder(
+  isRate: boolean,
+  text: string,
+  allowDecimal = false,
+  allowNegative = false,
+): boolean {
+  if (isRate) return false
+  return isAtIntegerDigitLimit(text, allowDecimal, allowNegative)
 }
 
 /** 포커스 해제 시 저장값 정규화 */

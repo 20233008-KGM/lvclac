@@ -1,4 +1,12 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
+import { useLayout } from '../context/LayoutContext'
+import { useLanguage } from '../i18n'
 import {
   formatNumberForInput,
   formatRateForInput,
@@ -6,6 +14,9 @@ import {
   formatRawRateInput,
   normalizeInputValue,
   parseFormattedInput,
+  shouldShowDigitLimitBorder,
+  shouldShowDigitLimitHint,
+  wasIntegerDigitTruncated,
 } from '../utils/inputFormat'
 
 export interface NumberInputHandle {
@@ -58,6 +69,8 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   },
   ref,
 ) {
+  const { t } = useLanguage()
+  const { layoutMode } = useLayout()
   const skipBlurCommitRef = useRef(false)
   const inputElRef = useRef<HTMLInputElement>(null)
   const formatValue = isRate
@@ -70,14 +83,14 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
 
   const [text, setText] = useState(() => formatValue(value))
   const [focused, setFocused] = useState(false)
+  const [truncatedAttempt, setTruncatedAttempt] = useState(false)
 
   useEffect(() => {
     if (!focused) {
       setText(formatValue(value))
+      setTruncatedAttempt(false)
       return
     }
-    // 포커스 중에도 외부에서 값이 바뀌면(undo 등) 표시 텍스트를 재동기화한다.
-    // 타이핑으로 인한 변경은 draft===value 이므로 클로버되지 않는다.
     if (readDraftFromText() !== value) {
       setText(formatValue(value))
     }
@@ -88,6 +101,10 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     if (parsed === '') return undefined
     return normalizeInputValue(parsed, { isRate, allowDecimal })
   }
+
+  const hintValue = focused ? readDraftFromText() : value
+  const showHint = shouldShowDigitLimitHint(isRate, truncatedAttempt, hintValue)
+  const atBorder = shouldShowDigitLimitBorder(isRate, text, allowDecimal, allowNegative)
 
   function commitFromText(): boolean {
     const normalized = readDraftFromText()
@@ -106,6 +123,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     }
     setText(formatValue(normalized))
     setFocused(false)
+    setTruncatedAttempt(false)
     return shouldCommit
   }
 
@@ -115,71 +133,95 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     focus: () => inputElRef.current?.focus(),
   }))
 
+  const inputClass = [
+    className ?? '',
+    layoutMode === 'manual' ? 'numeric-field--ellipsis' : '',
+    atBorder ? 'numeric-field__input--at-limit' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <input
-      ref={inputElRef}
-      type="text"
-      inputMode={allowDecimal || isRate ? 'decimal' : 'numeric'}
-      placeholder={placeholder}
-      aria-labelledby={ariaLabelledBy}
-      className={className}
-      disabled={disabled}
-      value={text}
-      onFocus={() => setFocused(true)}
-      onBlur={() => {
-        if (skipBlurCommitRef.current) {
-          skipBlurCommitRef.current = false
-          setFocused(false)
-          return
-        }
-        if (!deferChangeUntilBlur) {
-          setFocused(false)
-          const parsed = parseFormattedInput(text)
-          if (parsed === '') {
-            setText(formatValue(value))
+    <div className={`numeric-field${atBorder ? ' numeric-field--at-limit' : ''}`}>
+      <input
+        ref={inputElRef}
+        type="text"
+        inputMode={allowDecimal || isRate ? 'decimal' : 'numeric'}
+        placeholder={placeholder}
+        aria-labelledby={ariaLabelledBy}
+        className={inputClass || undefined}
+        disabled={disabled}
+        value={text}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          if (skipBlurCommitRef.current) {
+            skipBlurCommitRef.current = false
+            setFocused(false)
+            setTruncatedAttempt(false)
             return
           }
-          const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
-          if (normalized !== value) onChange(normalized)
-          setText(formatValue(normalized))
-          return
-        }
-        commitFromText()
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Delete' && onDeleteKey) {
-          e.preventDefault()
-          onDeleteKey()
-          return
-        }
-        if (e.key === 'Enter' && onEnterKey) {
-          e.preventDefault()
-          e.stopPropagation()
-          skipBlurCommitRef.current = true
-          onEnterKey()
-          e.currentTarget.blur()
-          return
-        }
-        if (e.key === 'Enter' && deferChangeUntilBlur) {
-          e.preventDefault()
-          skipBlurCommitRef.current = true
+          if (!deferChangeUntilBlur) {
+            setFocused(false)
+            setTruncatedAttempt(false)
+            const parsed = parseFormattedInput(text)
+            if (parsed === '') {
+              setText(formatValue(value))
+              return
+            }
+            const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
+            if (normalized !== value) onChange(normalized)
+            setText(formatValue(normalized))
+            return
+          }
           commitFromText()
-          e.currentTarget.blur()
-        }
-      }}
-      onChange={(e) => {
-        const formatted = formatRaw(e.target.value)
-        setText(formatted)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Delete' && onDeleteKey) {
+            e.preventDefault()
+            onDeleteKey()
+            return
+          }
+          if (e.key === 'Enter' && onEnterKey) {
+            e.preventDefault()
+            e.stopPropagation()
+            skipBlurCommitRef.current = true
+            onEnterKey()
+            e.currentTarget.blur()
+            return
+          }
+          if (e.key === 'Enter' && deferChangeUntilBlur) {
+            e.preventDefault()
+            skipBlurCommitRef.current = true
+            commitFromText()
+            e.currentTarget.blur()
+          }
+        }}
+        onChange={(e) => {
+          const raw = e.target.value
+          const formatted = formatRaw(raw)
+          setText(formatted)
+          if (
+            !isRate &&
+            wasIntegerDigitTruncated(raw, formatted, allowDecimal, allowNegative)
+          ) {
+            setTruncatedAttempt(true)
+          }
 
-        if (deferChangeUntilBlur) return
+          if (deferChangeUntilBlur) return
 
-        const parsed = parseFormattedInput(formatted)
-        if (parsed === '') {
-          onChange(undefined)
-          return
-        }
-        onChange(normalizeInputValue(parsed, { isRate, allowDecimal }))
-      }}
-    />
+          const parsed = parseFormattedInput(formatted)
+          if (parsed === '') {
+            onChange(undefined)
+            return
+          }
+          onChange(normalizeInputValue(parsed, { isRate, allowDecimal }))
+        }}
+      />
+      {showHint && (
+        <span className="field-hint field-hint--limit" role="status" aria-live="polite">
+          {t.inputMaxDigitsWarning}
+        </span>
+      )}
+    </div>
   )
 })

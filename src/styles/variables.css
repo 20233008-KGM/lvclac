@@ -43,6 +43,8 @@
   --font-size-lg: 17px;
   --font-size-xl: 20px;
   --font-size-label: 13px;
+  /** 입력·결과 등 숫자 표시 공통 크기 — 최초 진입 시 영역 간 일관성 */
+  --font-size-number: var(--font-size-base);
   --font-mono: 'JetBrains Mono', 'D2Coding', 'Consolas', monospace;
 
   --touch-min: 44px;

@@ -124,13 +124,13 @@ export function SaveDraftToggle() {
   return (
     <>
       <div className="draft-save">
-        <label className="draft-save-toggle draft-save-tooltip-anchor">
+        <label className="input-option-toggle draft-save-tooltip-anchor">
           <input
             type="checkbox"
             checked={saveEnabled}
             onChange={(e) => handleChange(e.target.checked)}
           />
-          <span>{t.draftSave.label}</span>
+          <span className="input-option-toggle__label">{t.draftSave.label}</span>
           <span className="draft-save-tooltip" role="tooltip">
             {t.draftSave.hint}
           </span>

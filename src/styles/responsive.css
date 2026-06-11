@@ -25,7 +25,6 @@
     margin-bottom: 0;
     padding: var(--space-sm) var(--space-md);
     flex-wrap: nowrap;
-    position: static;
   }
 
   .app-intro {
@@ -110,7 +109,6 @@
 
   .result-panel .result-row-value,
   .result-panel .result-sheet tbody td {
-    font-size: var(--font-size-base);
     max-width: none;
   }
 
@@ -133,12 +131,6 @@
 
   .page-ads .ad-slot--banner.ad-slot--live {
     min-height: 28px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .app-header {
-    flex-wrap: nowrap;
   }
 }
 

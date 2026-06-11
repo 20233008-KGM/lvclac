@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  exceedsSafePrecision,
   formatContractsCount,
   formatLeverage,
   formatNumber,
   formatPercent,
   formatToleranceDelta,
   formatTolerancePercent,
+  hasPrecisionRisk,
   roundTo,
+  SAFE_PRECISION_MAX,
 } from './format'
 
 describe('roundTo', () => {
@@ -90,5 +93,39 @@ describe('formatToleranceDelta', () => {
   it('0은 부호 없음', () => {
     expect(formatToleranceDelta(0, 'long')).toBe('0')
     expect(formatToleranceDelta(0, 'short')).toBe('0')
+  })
+})
+
+describe('precision risk detection', () => {
+  it('exceedsSafePrecision — MAX_SAFE_INTEGER 초과', () => {
+    expect(exceedsSafePrecision(SAFE_PRECISION_MAX)).toBe(false)
+    expect(exceedsSafePrecision(SAFE_PRECISION_MAX + 1)).toBe(true)
+    expect(exceedsSafePrecision(null)).toBe(false)
+    expect(exceedsSafePrecision(undefined)).toBe(false)
+  })
+
+  it('hasPrecisionRisk — 입력 객체의 큰 숫자 탐지', () => {
+    expect(hasPrecisionRisk({ accountEval: 1_000_000 })).toBe(false)
+    expect(hasPrecisionRisk({ accountEval: SAFE_PRECISION_MAX + 1 })).toBe(true)
+  })
+
+  it('hasPrecisionRisk — 중첩 결과 객체 탐지', () => {
+    expect(
+      hasPrecisionRisk(
+        {},
+        {
+          positionSide: 'long',
+          liquidationPrice: SAFE_PRECISION_MAX + 1,
+          liquidationMessage: null,
+          toleranceRate: null,
+          toleranceDelta: null,
+          isAtRisk: false,
+          margins: null,
+          maxBuyable: null,
+          maxBuyableMessage: null,
+          leverageRatio: null,
+        },
+      ),
+    ).toBe(true)
   })
 })

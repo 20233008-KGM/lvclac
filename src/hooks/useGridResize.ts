@@ -7,39 +7,50 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from 'react'
+import type { LayoutMode } from '../context/LayoutContext'
+import {
+  canShowAutoWidenScan,
+  markAutoWidenScanShown,
+  markResizerManual,
+} from './layoutScanPrefs'
+import {
+  clamp,
+  computeExpandLayout,
+  DESKTOP_MIN,
+  GRID_HANDLE_WIDTH,
+  hasCustomGaps,
+  isLayoutCustom,
+  measureMinCalculatorMid,
+  MIN_CALC_MID_FALLBACK,
+  MIN_EDGE_X,
+  sideVars,
+  type Geometry,
+  type GridLayout,
+} from '../utils/gridLayoutUtils'
 
 export type GridResizeHandle = 'left' | 'center' | 'right'
 
-interface GridLayout {
-  /** 계산기 왼쪽 가장자리의 뷰포트 좌측 끝 기준 거리(px). null = 기본(미커스텀) */
-  leftX: number | null
-  /** 계산기 오른쪽 가장자리의 뷰포트 우측 끝 기준 거리(px). null = 기본 */
-  rightX: number | null
-  /** 입력:결과 두 컬럼 분할 비율 (0~1, 왼쪽 컬럼 몫) */
-  split: number
+export interface OverflowMeasure {
+  inputOverflow: number
+  resultOverflow: number
+  hasOverflow: boolean
 }
 
-/** 측정된 기본 레이아웃 기하(사이드 광고가 보이는 데스크톱 기준) */
-interface Geometry {
-  adW: number
-  outerL: number
-  innerL: number
-  outerR: number
-  innerR: number
-  leftX0: number
-  rightX0: number
+export interface ExpandResult {
+  changed: boolean
+  widened: boolean
 }
 
 const STORAGE_KEY = 'calc-grid-layout-v3'
-/** 리사이저/풀확장이 의미 있는 최소 뷰포트 폭(사이드 광고 존재 구간) */
-const DESKTOP_MIN = 1024
 
-const DEFAULT_LAYOUT: GridLayout = { leftX: null, rightX: null, split: 0.5 }
+/** calc-grid--scan CSS 애니메이션 길이와 맞춤 */
+const GRID_SCAN_MS = 2800
+/** 리셋 버튼: 스캔 동기(2.8s) + 밝기 유지(2.2s) + 페이드(2.2s) */
+const RESET_BTN_HOLD_MS = 2200
+const RESET_BTN_FADE_MS = 2200
+const RESET_BTN_GLOW_MS = GRID_SCAN_MS + RESET_BTN_HOLD_MS + RESET_BTN_FADE_MS
 
-function clamp(value: number, min: number, max: number): number {
-  if (max < min) return min
-  return Math.min(max, Math.max(min, value))
-}
+const DEFAULT_LAYOUT: GridLayout = { leftX: null, rightX: null, split: 0.5, manual: false }
 
 function viewportWidth(): number {
   return typeof document === 'undefined' ? 0 : document.documentElement.clientWidth
@@ -54,14 +65,15 @@ function loadLayout(): GridLayout {
     const split = Number.isFinite(parsed.split) ? clamp(parsed.split as number, 0.1, 0.9) : 0.5
     const num = (v: unknown) =>
       typeof v === 'number' && Number.isFinite(v) ? Math.max(0, v) : null
-    return { leftX: num(parsed.leftX), rightX: num(parsed.rightX), split }
+    return {
+      leftX: num(parsed.leftX),
+      rightX: num(parsed.rightX),
+      split,
+      manual: parsed.manual === true,
+    }
   } catch {
     return DEFAULT_LAYOUT
   }
-}
-
-function hasCustomGaps(layout: GridLayout): boolean {
-  return layout.leftX !== null || layout.rightX !== null
 }
 
 /** 기본 상태(커스텀 미적용)에서 계산기·사이드 광고의 실제 위치를 측정 */
@@ -86,32 +98,45 @@ function measureGeometry(container: HTMLElement | null): Geometry | null {
   }
 }
 
-/** 한쪽 가장자리 거리 x → 광고 바깥 여백(outer)·계산기와 광고 사이 간격(inner) */
-function sideVars(x: number, adW: number, outer0: number): { outer: number; inner: number } {
-  const inner = Math.max(0, x - adW - outer0)
-  const outer = clamp(x - adW, 0, outer0)
-  return { outer, inner }
+function setAdColumnA11y(hidden: { left: boolean; right: boolean }) {
+  const adL = document.querySelector('.ad-column-left')
+  const adR = document.querySelector('.ad-column-right')
+  for (const [el, isHidden] of [
+    [adL, hidden.left],
+    [adR, hidden.right],
+  ] as const) {
+    if (!el) continue
+    if (isHidden) el.setAttribute('aria-hidden', 'true')
+    else el.removeAttribute('aria-hidden')
+  }
 }
 
 export function useGridResize(persist: boolean) {
   const containerRef = useRef<HTMLElement | null>(null)
   const geometryRef = useRef<Geometry | null>(null)
+  const layoutRef = useRef<GridLayout>(DEFAULT_LAYOUT)
   const [layout, setLayout] = useState<GridLayout>(() => (persist ? loadLayout() : DEFAULT_LAYOUT))
   const [geoVersion, setGeoVersion] = useState(0)
   const [activeHandle, setActiveHandle] = useState<GridResizeHandle | null>(null)
+  const [gridScanning, setGridScanning] = useState(false)
+  const [scanGeneration, setScanGeneration] = useState(0)
+  const [resetBtnGlowing, setResetBtnGlowing] = useState(false)
+  const [resetBtnGlowGeneration, setResetBtnGlowGeneration] = useState(0)
   const dragRef = useRef<GridResizeHandle | null>(null)
 
+  layoutRef.current = layout
+
   const hasGaps = hasCustomGaps(layout)
-  const isCustom = hasGaps || layout.split !== 0.5
+  const isCustom = isLayoutCustom(layout)
+  const layoutMode: LayoutMode = layout.manual ? 'manual' : 'auto'
 
   const refreshGeometry = useCallback(() => {
     geometryRef.current = measureGeometry(containerRef.current)
     setGeoVersion((v) => v + 1)
   }, [])
 
-  // 새로고침 복원: 저장된 커스텀이 있으면 기본 상태에서 기하를 측정해 적용
   useLayoutEffect(() => {
-    if (hasCustomGaps(layout) && !geometryRef.current) {
+    if ((hasCustomGaps(layout) || layout.manual) && !geometryRef.current) {
       geometryRef.current = measureGeometry(containerRef.current)
       setGeoVersion((v) => v + 1)
     }
@@ -125,37 +150,52 @@ export function useGridResize(persist: boolean) {
       '--calc-inner-left',
       '--calc-outer-right',
       '--calc-inner-right',
-      '--calc-ad-w',
+      '--calc-ad-w-left',
+      '--calc-ad-w-right',
     ]) {
       root.style.removeProperty(prop)
     }
     delete root.dataset.calcResize
+    delete root.dataset.calcAdLeftHidden
+    delete root.dataset.calcAdRightHidden
+    setAdColumnA11y({ left: false, right: false })
   }, [])
 
-  // 루트(html)에 push 그리드용 CSS 변수 + 데이터 속성 적용
-  useEffect(() => {
+  useLayoutEffect(() => {
     const geo = geometryRef.current
     if (!hasGaps || !geo) {
       clearRoot()
       return
     }
-    const leftX = clamp(layout.leftX ?? geo.leftX0, geo.adW, geo.leftX0)
-    const rightX = clamp(layout.rightX ?? geo.rightX0, geo.adW, geo.rightX0)
-    const left = sideVars(leftX, geo.adW, geo.outerL)
-    const right = sideVars(rightX, geo.adW, geo.outerR)
+    const W = viewportWidth()
+    const container = containerRef.current
+    const minMid = container ? measureMinCalculatorMid(container) : MIN_CALC_MID_FALLBACK
+    const leftRaw = layout.leftX ?? geo.leftX0
+    const rightRaw = layout.rightX ?? geo.rightX0
+    const maxLeftX = W - rightRaw - minMid
+    const maxRightX = W - leftRaw - minMid
+    const leftX = clamp(leftRaw, MIN_EDGE_X, maxLeftX)
+    const rightX = clamp(rightRaw, MIN_EDGE_X, maxRightX)
+    const edgeOpts = layout.manual ? { edgeFloor: 0 as const } : undefined
+    const left = sideVars(leftX, geo.adW, geo.outerL, edgeOpts)
+    const right = sideVars(rightX, geo.adW, geo.outerR, edgeOpts)
     const root = document.documentElement
-    root.style.setProperty('--calc-ad-w', `${geo.adW}px`)
+    root.style.setProperty('--calc-ad-w-left', `${left.adW}px`)
+    root.style.setProperty('--calc-ad-w-right', `${right.adW}px`)
     root.style.setProperty('--calc-outer-left', `${left.outer}px`)
     root.style.setProperty('--calc-inner-left', `${left.inner}px`)
     root.style.setProperty('--calc-outer-right', `${right.outer}px`)
     root.style.setProperty('--calc-inner-right', `${right.inner}px`)
     root.dataset.calcResize = 'custom'
-  }, [hasGaps, layout.leftX, layout.rightX, geoVersion, clearRoot])
+    if (left.hidden) root.dataset.calcAdLeftHidden = ''
+    else delete root.dataset.calcAdLeftHidden
+    if (right.hidden) root.dataset.calcAdRightHidden = ''
+    else delete root.dataset.calcAdRightHidden
+    setAdColumnA11y({ left: left.hidden, right: right.hidden })
+  }, [hasGaps, layout.leftX, layout.rightX, layout.manual, geoVersion, clearRoot])
 
-  // 언마운트 시 정리
   useEffect(() => clearRoot, [clearRoot])
 
-  // 저장 토글 연동
   useEffect(() => {
     try {
       if (persist) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
@@ -165,27 +205,94 @@ export function useGridResize(persist: boolean) {
     }
   }, [persist, layout])
 
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const resetGlowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const triggerResizerScan = useCallback(() => {
+    if (viewportWidth() < DESKTOP_MIN) return
+    if (!canShowAutoWidenScan(layoutRef.current.manual)) return
+
+    markAutoWidenScanShown()
+
+    if (scanTimerRef.current) window.clearTimeout(scanTimerRef.current)
+    if (resetGlowTimerRef.current) window.clearTimeout(resetGlowTimerRef.current)
+    setGridScanning(false)
+    setResetBtnGlowing(false)
+
+    requestAnimationFrame(() => {
+      setScanGeneration((g) => g + 1)
+      setResetBtnGlowGeneration((g) => g + 1)
+      setGridScanning(true)
+      setResetBtnGlowing(true)
+
+      scanTimerRef.current = window.setTimeout(() => {
+        setGridScanning(false)
+        scanTimerRef.current = null
+      }, GRID_SCAN_MS)
+
+      resetGlowTimerRef.current = window.setTimeout(() => {
+        setResetBtnGlowing(false)
+        resetGlowTimerRef.current = null
+      }, RESET_BTN_GLOW_MS)
+    })
+  }, [])
+
+  const expandToFit = useCallback((measure: OverflowMeasure): ExpandResult => {
+    if (layoutRef.current.manual || viewportWidth() < DESKTOP_MIN) {
+      return { changed: false, widened: false }
+    }
+
+    if (!geometryRef.current) {
+      geometryRef.current = measureGeometry(containerRef.current)
+      if (geometryRef.current) setGeoVersion((v) => v + 1)
+    }
+
+    const geo = geometryRef.current
+    if (!geo) return { changed: false, widened: false }
+
+    const container = containerRef.current
+    const midWidth = container
+      ? Math.max(0, container.clientWidth - GRID_HANDLE_WIDTH * 3)
+      : 0
+    const step = computeExpandLayout(
+      layoutRef.current,
+      geo,
+      measure.inputOverflow,
+      measure.resultOverflow,
+      midWidth,
+    )
+    if (!step.changed) return { changed: false, widened: false }
+
+    layoutRef.current = step.layout
+    setLayout(step.layout)
+    return { changed: true, widened: step.widened }
+  }, [])
+
   const applyDrag = useCallback((handle: GridResizeHandle, clientX: number) => {
     const geo = geometryRef.current
     if (!geo) return
     const W = viewportWidth()
+    const container = containerRef.current
+    const minMid = container ? measureMinCalculatorMid(container) : MIN_CALC_MID_FALLBACK
 
     setLayout((prev) => {
       const leftX = prev.leftX ?? geo.leftX0
       const rightX = prev.rightX ?? geo.rightX0
+      const manual = true
 
       if (handle === 'left') {
-        return { ...prev, leftX: clamp(clientX, geo.adW, geo.leftX0), rightX }
+        const maxLeftX = W - rightX - minMid
+        return { ...prev, manual, leftX: clamp(clientX, MIN_EDGE_X, maxLeftX), rightX }
       }
       if (handle === 'right') {
-        return { ...prev, leftX, rightX: clamp(W - clientX, geo.adW, geo.rightX0) }
+        const maxRightX = W - leftX - minMid
+        return { ...prev, manual, leftX, rightX: clamp(W - clientX, MIN_EDGE_X, maxRightX) }
       }
-      // center: split만 변경 (가운데만 움직이면 풀확장 트리거 안 함)
       const mid = W - leftX - rightX
-      if (mid <= 0) return prev
+      if (mid <= 0) return { ...prev, manual }
       const minSplit = clamp(240 / mid, 0.1, 0.5)
       const split = clamp((clientX - leftX) / mid, minSplit, 1 - minSplit)
-      return { ...prev, split }
+      return { ...prev, manual, split }
     })
   }, [])
 
@@ -217,6 +324,7 @@ export function useGridResize(persist: boolean) {
         setGeoVersion((v) => v + 1)
       }
       e.preventDefault()
+      markResizerManual()
       dragRef.current = handle
       setActiveHandle(handle)
       document.body.style.cursor = 'col-resize'
@@ -229,17 +337,23 @@ export function useGridResize(persist: boolean) {
 
   const reset = useCallback(() => {
     geometryRef.current = null
-    setLayout({ leftX: null, rightX: null, split: 0.5 })
+    if (scanTimerRef.current) window.clearTimeout(scanTimerRef.current)
+    if (resetGlowTimerRef.current) window.clearTimeout(resetGlowTimerRef.current)
+    scanTimerRef.current = null
+    resetGlowTimerRef.current = null
+    setGridScanning(false)
+    setResetBtnGlowing(false)
+    setLayout({ ...DEFAULT_LAYOUT })
   }, [])
 
-  // 뷰포트 리사이즈 시 기본으로 복귀(기하 무효화) — 드물고, 어긋남 방지
   useEffect(() => {
     const onResize = () => {
-      if (hasCustomGaps(layout) || layout.split !== 0.5) reset()
+      geometryRef.current = measureGeometry(containerRef.current)
+      setGeoVersion((v) => v + 1)
     }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
-  }, [layout, reset])
+  }, [])
 
   const gridStyle = {
     '--calc-left-col': `${layout.split}fr`,
@@ -252,13 +366,31 @@ export function useGridResize(persist: boolean) {
       role: 'separator' as const,
       'aria-orientation': 'vertical' as const,
       tabIndex: -1,
-      className: `calc-grid__resizer calc-grid__resizer--${handle}${
-        activeHandle === handle ? ' calc-grid__resizer--active' : ''
-      }`,
+      className: [
+        'calc-grid__resizer',
+        `calc-grid__resizer--${handle}`,
+        activeHandle === handle ? 'calc-grid__resizer--active' : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
       onPointerDown: startDrag(handle),
     }),
     [activeHandle, startDrag],
   )
 
-  return { containerRef, gridStyle, getHandleProps, isCustom, reset, refreshGeometry }
+  return {
+    containerRef,
+    gridStyle,
+    gridScanning,
+    scanGeneration,
+    resetBtnGlowing,
+    resetBtnGlowGeneration,
+    getHandleProps,
+    isCustom,
+    layoutMode,
+    reset,
+    refreshGeometry,
+    expandToFit,
+    triggerResizerScan,
+  }
 }

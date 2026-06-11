@@ -4,9 +4,19 @@ import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
 export const ko: Messages = {
   lang: 'ko',
   htmlLang: 'ko',
-  siteTitle: '선물 청산가 계산기',
+  siteTitle: '선물 계산기',
   siteDescription:
     '선물·레버리지 포지션의 청산가와 증거금 여유를 즉시 계산하는 무료 도구. 계좌 평가금액과 증거금만 입력하면 청산가·마진콜 시점을 확인합니다.',
+  siteTitleTooltip: {
+    ariaLabel: '서비스 소개',
+    overviewTitle: '서비스 개요',
+    overviewBody:
+      ' 선물·레버리지 포지션의 청산가와 증거금 여유를 실시간으로 산출하는 무료 계산 도구입니다.',
+    usageTitle: '활용 방법',
+    usageBody:
+      ' 증권사 HTS에 표시된 계좌 평가금·증거금률을 입력해 청산가를 확인하거나, 주문 전 계약 수·가격을 조정해 체결 후 계좌 상태를 미리 볼 수 있습니다.',
+    footnote: '동시에 여러 종목을 보유한 경우와 교차 증거금 방식은 반영되지 않습니다.',
+  },
   appIntro:
     '한 종목 포지션의 청산가와 증거금 여유를 즉시 계산합니다. 가격을 바꿔가며 모든 상황을 시뮬레이션해 보세요.',
   loading: '불러오는 중...',
@@ -22,7 +32,7 @@ export const ko: Messages = {
       ' 계좌 평가금액과 유지·개시 증거금률을 입력한 뒤, 아래 「주문」 섹션에서 주문 계약수·주문 가격을 조정하면 체결 직후 계좌 상태를 미리 볼 수 있습니다.',
     experiencedTitle: '이미 선물거래를 하시나요?',
     experiencedBody:
-      ' 계좌, 종목 스펙, 증거금 필드를 입력하면 청산 여유(버퍼)와 레버리지를 편하게 확인할 수 있습니다.',
+      ' 계좌, 종목 스펙, 증거금 필드를 입력하면 청산 여유(버퍼)와 레버리지를 편하게 확인할 수 있습니다. 데스크톱에서는 계산기 좌·우·가운데 경계를 드래그해 영역 너비를 조절할 수 있습니다.',
     footnote: '이 계산기는 한 종목만 보유한 경우를 기준으로 계산합니다.',
   },
   optional: '(선택)',
@@ -38,6 +48,7 @@ export const ko: Messages = {
   stepDown: '1 감소',
   resizeColumns: '영역 너비 조절',
   resetLayout: '기본 너비로 되돌리기',
+  inputMaxDigitsWarning: '정수는 최대 16자리까지만 입력됩니다.',
   contractsUnit: '계약',
   modes: { evaluate: '평가', order: '주문' },
   sections: { instrument: '종목 스펙', margin: '증거금', account: '계좌' },
@@ -155,22 +166,24 @@ export const ko: Messages = {
     sheetBefore: '주문 전',
     sheetAfter: '주문 후',
     precisionWarning:
-      '주의: 입력 또는 계산값이 약 9,007조(2^53, 16번째 정수 자리)를 초과했습니다. 이 지점부터 정수 끝자리 정확도가 떨어지며, 결과는 약 15~16개 유효숫자까지만 신뢰할 수 있습니다.',
+      '주의: 계산 과정에서 표현 한계를 넘는 값이 감지되었습니다. 결과의 정수 끝자리는 부정확할 수 있습니다.',
     liquidationPrice: '청산가격',
     maxBuyableLong: '추가 매수 한도',
     maxBuyableShort: '추가 매도 한도',
     leverage: '레버리지',
     leverageRatio: '레버리지',
     leverageSub: '약정가치 ÷ 계좌 평가금액',
-    maintenanceMargin: '유지증거금',
+    maintenanceMargin: '총 유지증거금',
     contractNotional: '약정가치',
-    entrustedMargin: '위탁증거금 (개시)',
+    entrustedMargin: '총 위탁증거금',
     availableMargin: '가용증거금',
     availableMarginSub: '계좌 평가금액 − 위탁증거금',
     maintenanceExcess: '유지증거금 여유',
     maintenanceExcessSub: '계좌 평가금액 − 유지증거금',
-    perContractEntrusted: '1계약당 위탁증거금',
-    perContractMaintenance: '1계약당 유지증거금',
+    perContractEntrusted: '개시금/계약',
+    perContractEntrustedTitle: '1계약당 개시·위탁증거금',
+    perContractMaintenance: '유지금/계약',
+    perContractMaintenanceTitle: '1계약당 유지증거금',
     toleranceLong: '청산 여유',
     toleranceShort: '청산 여유',
     tolerancePercent: '청산 여유 (%)',
@@ -205,7 +218,7 @@ export const ko: Messages = {
     at_risk: '청산 위험',
   },
   auth: {
-    title: '선물 청산가 계산기',
+    title: '선물 계산기',
     modalTitle: '로그인',
     subtitle: '로그인하면 입력값이 자동으로 저장됩니다.',
     tabLogin: '로그인',
@@ -224,7 +237,7 @@ export const ko: Messages = {
     contentNoticeLabel: '투자 위험 및 계산 한계 안내',
     modalTitle: '서비스 이용 안내',
     modalIntro:
-      '선물 청산가 계산기를 이용하기 전에 아래 내용을 확인해 주세요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있습니다.',
+      '선물 계산기를 이용하기 전에 아래 내용을 확인해 주세요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있습니다.',
     sections: [
       {
         title: '정보 제공 목적',
@@ -255,7 +268,7 @@ export const ko: Messages = {
     back: '돌아가기',
     termsEffectiveDate: '시행일: 2025년 6월 11일',
     termsIntro:
-      '본 약관은 Farfield Software(「회사」)가 제공하는 선물 청산가 계산기(「서비스」) 이용과 관련하여 회사와 이용자 간 권리·의무 및 책임 사항을 규정합니다.',
+      '본 약관은 Farfield Software(「회사」)가 제공하는 선물 계산기(「서비스」) 이용과 관련하여 회사와 이용자 간 권리·의무 및 책임 사항을 규정합니다.',
     termsArticles: [
       {
         title: '제1조 (목적)',
@@ -292,7 +305,7 @@ export const ko: Messages = {
     ],
     privacyEffectiveDate: '시행일: 2025년 6월 11일',
     privacyIntro:
-      'Farfield Software(「회사」)는 선물 청산가 계산기 서비스 이용 과정에서 처리되는 정보에 대해 아래와 같이 개인정보를 처리합니다.',
+      'Farfield Software(「회사」)는 선물 계산기 서비스 이용 과정에서 처리되는 정보에 대해 아래와 같이 개인정보를 처리합니다.',
     privacyArticles: [
       {
         title: '1. 수집하는 정보',
@@ -324,7 +337,7 @@ export const ko: Messages = {
     backToCalculator: '← 계산기로 돌아가기',
     title: '수식 정의',
     description:
-      '선물 청산가 계산기가 사용하는 수식입니다. 브로커·거래소 규정과 다를 수 있으므로 참고용으로만 활용하세요.',
+      '선물 계산기가 사용하는 수식입니다. 브로커·거래소 규정과 다를 수 있으므로 참고용으로만 활용하세요.',
     disclaimer:
       '직접 입력한 유지·위탁증거금이 있으면 비율 산출값보다 우선합니다. 청산 시점·반올림은 증권사마다 다를 수 있습니다.',
     symbolTitle: '용어',
@@ -507,7 +520,7 @@ export const ko: Messages = {
       {
         title: '제품',
         links: [
-          { label: '선물 청산가 계산기', href: '/' },
+          { label: '선물 계산기', href: '/' },
           { label: 'Pro', soon: true },
           { label: '업데이트 노트', soon: true },
         ],

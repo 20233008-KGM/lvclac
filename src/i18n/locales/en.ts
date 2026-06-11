@@ -5,9 +5,19 @@ import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
 export const en: Messages = {
   lang: 'en',
   htmlLang: 'en',
-  siteTitle: 'Futures Liquidation Calculator',
+  siteTitle: 'Futures Calculator',
   siteDescription:
     'Free liquidation price and margin cushion calculator for futures and leveraged positions. Enter equity and margin rates from your broker.',
+  siteTitleTooltip: {
+    ariaLabel: 'About this tool',
+    overviewTitle: 'Overview',
+    overviewBody:
+      ' Free calculator for liquidation price and margin headroom on futures and leveraged positions.',
+    usageTitle: 'How to use',
+    usageBody:
+      ' Enter equity and margin rates from your broker to check liquidation risk, or adjust order size and price to preview your account after a fill.',
+    footnote: 'Does not account for multiple open positions or cross-margin accounts.',
+  },
   appIntro:
     'Instantly estimate liquidation price and margin headroom for a single-instrument position. Vary the price to simulate any scenario.',
   loading: 'Loading...',
@@ -23,7 +33,7 @@ export const en: Messages = {
       ' Enter account equity plus maintenance and initial margin rates, then adjust order size and price in the Order section below to preview your account right after a fill.',
     experiencedTitle: 'Already trading?',
     experiencedBody:
-      ' Fill in Account, Instrument, and Margin to check liquidation buffer and leverage at a glance.',
+      ' Fill in Account, Instrument, and Margin to check liquidation buffer and leverage at a glance. On desktop, drag the left, center, or right edge of the calculator to resize columns.',
     footnote: 'Assumes one open instrument per account.',
   },
   optional: '(optional)',
@@ -39,6 +49,7 @@ export const en: Messages = {
   stepDown: 'Decrease by 1',
   resizeColumns: 'Resize columns',
   resetLayout: 'Reset width',
+  inputMaxDigitsWarning: 'Integers are limited to 16 digits.',
   contractsUnit: 'contracts',
   modes: { evaluate: 'Evaluate', order: 'Order' },
   sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
@@ -156,7 +167,7 @@ export const en: Messages = {
     sheetBefore: 'Before',
     sheetAfter: 'After',
     precisionWarning:
-      'Caution: an input or computed value exceeds ~9.0×10^15 (2^53, the 16th integer digit). Beyond this point the trailing integer digits lose accuracy; trust only the first ~15-16 significant figures.',
+      'Caution: a computed value exceeded safe integer precision. Trailing digits in the results may be inaccurate.',
     liquidationPrice: 'Liq. price',
     maxBuyableLong: 'Addl. buy limit',
     maxBuyableShort: 'Addl. sell limit',
@@ -170,8 +181,10 @@ export const en: Messages = {
     availableMarginSub: 'Equity − init. margin',
     maintenanceExcess: 'Maint. cushion',
     maintenanceExcessSub: 'Equity − maint. margin',
-    perContractEntrusted: 'Init. margin / contract',
-    perContractMaintenance: 'Maint. margin / contract',
+    perContractEntrusted: 'Init./ctr',
+    perContractEntrustedTitle: 'Initial margin per contract',
+    perContractMaintenance: 'Maint./ctr',
+    perContractMaintenanceTitle: 'Maintenance margin per contract',
     toleranceLong: 'Liq. buffer',
     toleranceShort: 'Liq. buffer',
     tolerancePercent: 'Liq. buffer (%)',
@@ -206,7 +219,7 @@ export const en: Messages = {
     at_risk: 'Liquidation risk',
   },
   auth: {
-    title: 'Futures Liquidation Calculator',
+    title: 'Futures Calculator',
     modalTitle: 'Log in',
     subtitle: 'Sign in to save your calculator inputs automatically.',
     tabLogin: 'Log in',
@@ -258,7 +271,7 @@ export const en: Messages = {
     back: 'Back',
     termsEffectiveDate: 'Effective: June 11, 2025',
     termsIntro:
-      'These terms govern use of the Futures Liquidation Calculator (“Service”) provided by Farfield Software (“Company”) and set out the rights and obligations between the Company and users.',
+      'These terms govern use of the Futures Calculator (“Service”) provided by Farfield Software (“Company”) and set out the rights and obligations between the Company and users.',
     termsArticles: [
       {
         title: 'Article 1 (Purpose)',
@@ -295,7 +308,7 @@ export const en: Messages = {
     ],
     privacyEffectiveDate: 'Effective: June 11, 2025',
     privacyIntro:
-      'Farfield Software (“Company”) processes information as described below in connection with the Futures Liquidation Calculator.',
+      'Farfield Software (“Company”) processes information as described below in connection with the Futures Calculator.',
     privacyArticles: [
       {
         title: '1. Information collected',
@@ -474,7 +487,7 @@ export const en: Messages = {
       {
         title: 'Product',
         links: [
-          { label: 'Futures Liquidation Calculator', href: '/' },
+          { label: 'Futures Calculator', href: '/' },
           { label: 'Pro', soon: true },
           { label: 'Changelog', soon: true },
         ],

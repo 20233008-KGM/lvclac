@@ -383,6 +383,8 @@ function ScenarioPriceField({
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="scenario-price-label"
           inlineSlot={commitBtnSlot}
+          enableDragScrub
+          scrubSeedValue={inputs.currentPrice}
           onEnterKey={handleScenarioEnter}
           onChange={handleScenarioPriceChange}
         />
@@ -406,6 +408,82 @@ function ScenarioPriceField({
         />
         {commitBtnSlot}
       </div>
+    </div>
+  )
+}
+
+const MARGIN_MODES = ['rate', 'perContract', 'total'] as const
+
+function MarginSection({
+  inputs,
+  onChange,
+}: {
+  inputs: CalculatorInputs
+  onChange: (patch: CalculatorInputPatch) => void
+}) {
+  const { t } = useLanguage()
+  const f = t.fields
+  const m = t.marginMode
+  const scenarioModeActive = isScenarioModeActive(inputs)
+  const mode = inputs.marginInputMode ?? 'rate'
+
+  const modeTooltip = `${m.rate} — ${m.rateHint}\n${m.perContract} — ${m.perContractHint}\n${m.total} — ${m.totalHint}`
+
+  return (
+    <div className="field-section">
+      <div className="field-section-head">
+        <span className="field-section-title-row">
+          <SectionTitle>{t.sections.margin}</SectionTitle>
+          <FieldLabelTooltip text={modeTooltip} label={m.label} />
+        </span>
+        <div className="margin-mode-toggle" role="group" aria-label={m.label}>
+          {MARGIN_MODES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`margin-mode-btn ${mode === value ? 'active' : ''}`}
+              aria-pressed={mode === value}
+              disabled={scenarioModeActive}
+              onClick={() => onChange({ marginInputMode: value })}
+            >
+              {m[value]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mode === 'rate' && (
+        <>
+          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+        </>
+      )}
+
+      {mode === 'perContract' && (
+        <>
+          {numField(f.maintenanceMarginPerContract, 'maintenanceMarginPerContract', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+          {numField(f.entrustedMarginPerContract, 'entrustedMarginPerContract', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+        </>
+      )}
+
+      {mode === 'total' && (
+        <>
+          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, false, undefined, false, undefined, {
+            disabled: scenarioModeActive,
+          })}
+        </>
+      )}
     </div>
   )
 }
@@ -514,21 +592,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           )}
         </div>
 
-        <div className="field-section">
-          <SectionTitle>{t.sections.margin}</SectionTitle>
-          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, false, undefined, {
-            disabled: scenarioModeActive,
-          })}
-          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, true, t.optional, false, undefined, {
-            disabled: scenarioModeActive,
-          })}
-          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, false, undefined, {
-            disabled: scenarioModeActive,
-          })}
-          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, true, t.optional, false, undefined, {
-            disabled: scenarioModeActive,
-          })}
-        </div>
+        <MarginSection inputs={inputs} onChange={onChange} />
       </div>
 
       <SaveDraftToggle />

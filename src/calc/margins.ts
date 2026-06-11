@@ -4,6 +4,7 @@ import type {
   EntrustedMarginSource,
   MaintenanceMarginSource,
   MarginAmounts,
+  MarginInputMode,
 } from '../types'
 import {
   calcIndexNotionalWon,
@@ -33,11 +34,48 @@ export function calcRateBasedNotional(
   return price * contracts * (multiplier ?? 1)
 }
 
+/**
+ * 유지증거금 입력 방식 — 명시 모드 우선, 미설정 시 구버전 추론(직접 총액 있으면 total).
+ * 전역 토글이 둘 다 같은 모드를 지정하므로 보통 유지·개시가 일치하나,
+ * 구버전 입력(직접 한쪽만)을 위해 필드별로 추론한다.
+ */
+export function maintenanceMarginMode(inputs: CalculatorInputs): MarginInputMode {
+  return inputs.marginInputMode ?? (hasDirectMaintenance(inputs) ? 'total' : 'rate')
+}
+
+export function entrustedMarginMode(inputs: CalculatorInputs): MarginInputMode {
+  return inputs.marginInputMode ?? (hasDirectEntrusted(inputs) ? 'total' : 'rate')
+}
+
+/** perContract 모드: 유지증거금이 가격과 무관한 고정금액 → 청산식 분기 신호 */
+export function isMaintenanceFixed(inputs: CalculatorInputs): boolean {
+  return maintenanceMarginMode(inputs) === 'perContract'
+}
+
+function hasMaintenanceSpec(inputs: CalculatorInputs): boolean {
+  switch (maintenanceMarginMode(inputs)) {
+    case 'perContract':
+      return (inputs.maintenanceMarginPerContract ?? 0) > 0
+    case 'total':
+      return hasDirectMaintenance(inputs)
+    default:
+      return inputs.maintenanceMarginRate != null
+  }
+}
+
+function hasEntrustedSpec(inputs: CalculatorInputs): boolean {
+  switch (entrustedMarginMode(inputs)) {
+    case 'perContract':
+      return (inputs.entrustedMarginPerContract ?? 0) > 0
+    case 'total':
+      return hasDirectEntrusted(inputs)
+    default:
+      return inputs.entrustedMarginRate != null
+  }
+}
+
 export function hasMarginSpec(inputs: CalculatorInputs): boolean {
-  const hasMaintenance =
-    hasDirectMaintenance(inputs) || inputs.maintenanceMarginRate != null
-  const hasEntrusted = hasDirectEntrusted(inputs) || inputs.entrustedMarginRate != null
-  return hasMaintenance && hasEntrusted
+  return hasMaintenanceSpec(inputs) && hasEntrustedSpec(inputs)
 }
 
 export function canUseRateBasedNotional(inputs: CalculatorInputs): boolean {
@@ -124,6 +162,11 @@ export function inputsReadyForEvaluate(inputs: CalculatorInputs): boolean {
     return inputs.currentPrice != null
   }
 
+  // 고정 유지증거금(perContract/total)은 약정금액 없이 현재가+계약수만으로 청산 가능
+  if (maintenanceMarginMode(inputs) !== 'rate') {
+    return inputs.currentPrice != null
+  }
+
   return canUseRateBasedNotional(inputs)
 }
 
@@ -147,25 +190,31 @@ export function resolveMaintenanceMargin(
   inputs: CalculatorInputs,
   contracts: number,
 ): { amount: number; source: MaintenanceMarginSource } {
-  if (hasDirectMaintenance(inputs)) {
-    return {
-      amount: scaleDirectMargin(
-        inputs.maintenanceMargin!,
-        inputs.contracts ?? 0,
-        contracts,
-      ),
-      source: 'direct',
+  switch (maintenanceMarginMode(inputs)) {
+    case 'perContract':
+      return {
+        amount: (inputs.maintenanceMarginPerContract ?? 0) * contracts,
+        source: 'direct',
+      }
+    case 'total':
+      return {
+        amount: scaleDirectMargin(
+          inputs.maintenanceMargin ?? 0,
+          inputs.contracts ?? 0,
+          contracts,
+        ),
+        source: 'direct',
+      }
+    default: {
+      if (contracts === 0) {
+        return { amount: 0, source: 'rate' }
+      }
+      const notional = calcPositionNotional(inputs, contracts)
+      return {
+        amount: calcMarginFromNotional(notional, inputs.maintenanceMarginRate ?? 0),
+        source: 'rate',
+      }
     }
-  }
-
-  if (contracts === 0) {
-    return { amount: 0, source: 'rate' }
-  }
-
-  const notional = calcPositionNotional(inputs, contracts)
-  return {
-    amount: calcMarginFromNotional(notional, inputs.maintenanceMarginRate ?? 0),
-    source: 'rate',
   }
 }
 
@@ -173,25 +222,31 @@ export function resolveEntrustedMargin(
   inputs: CalculatorInputs,
   contracts: number,
 ): { amount: number; source: EntrustedMarginSource } {
-  if (hasDirectEntrusted(inputs)) {
-    return {
-      amount: scaleDirectMargin(
-        inputs.entrustedMargin!,
-        inputs.contracts ?? 0,
-        contracts,
-      ),
-      source: 'direct',
+  switch (entrustedMarginMode(inputs)) {
+    case 'perContract':
+      return {
+        amount: (inputs.entrustedMarginPerContract ?? 0) * contracts,
+        source: 'direct',
+      }
+    case 'total':
+      return {
+        amount: scaleDirectMargin(
+          inputs.entrustedMargin ?? 0,
+          inputs.contracts ?? 0,
+          contracts,
+        ),
+        source: 'direct',
+      }
+    default: {
+      if (contracts === 0) {
+        return { amount: 0, source: 'rate' }
+      }
+      const notional = calcPositionNotional(inputs, contracts)
+      return {
+        amount: calcMarginFromNotional(notional, inputs.entrustedMarginRate ?? 0),
+        source: 'rate',
+      }
     }
-  }
-
-  if (contracts === 0) {
-    return { amount: 0, source: 'rate' }
-  }
-
-  const notional = calcPositionNotional(inputs, contracts)
-  return {
-    amount: calcMarginFromNotional(notional, inputs.entrustedMarginRate ?? 0),
-    source: 'rate',
   }
 }
 
@@ -206,8 +261,8 @@ export function calcMargins(
   const marginReady =
     pointValue != null ||
     canUseRateBasedNotional(inputs) ||
-    hasDirectMaintenance(inputs) ||
-    hasDirectEntrusted(inputs)
+    hasMaintenanceSpec(inputs) ||
+    hasEntrustedSpec(inputs)
   if (!marginReady) return null
 
   const contractNotional = calcPositionNotional(inputs, heldContracts)
@@ -242,16 +297,35 @@ export function calcMargins(
 }
 
 export function validateMarginRates(inputs: CalculatorInputs): CalcMessageCode | null {
-  if (hasDirectMaintenance(inputs) && hasDirectEntrusted(inputs)) {
-    if (inputs.maintenanceMargin! > inputs.entrustedMargin!) {
+  const maintenanceMode = maintenanceMarginMode(inputs)
+  const entrustedMode = entrustedMarginMode(inputs)
+
+  // 유지·개시 입력 방식이 같을 때만 직접 비교 (혼용 시 명목 산식이 달라 비교 불가)
+  if (maintenanceMode !== entrustedMode) return null
+
+  if (maintenanceMode === 'perContract') {
+    if (
+      inputs.maintenanceMarginPerContract != null &&
+      inputs.entrustedMarginPerContract != null &&
+      inputs.maintenanceMarginPerContract > inputs.entrustedMarginPerContract
+    ) {
+      return 'maintenance_rate_exceeds_entrusted'
+    }
+    return null
+  }
+
+  if (maintenanceMode === 'total') {
+    if (
+      inputs.maintenanceMargin != null &&
+      inputs.entrustedMargin != null &&
+      inputs.maintenanceMargin > inputs.entrustedMargin
+    ) {
       return 'maintenance_rate_exceeds_entrusted'
     }
     return null
   }
 
   if (
-    !hasDirectMaintenance(inputs) &&
-    !hasDirectEntrusted(inputs) &&
     inputs.maintenanceMarginRate != null &&
     inputs.entrustedMarginRate != null &&
     inputs.maintenanceMarginRate > inputs.entrustedMarginRate

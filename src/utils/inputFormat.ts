@@ -1,5 +1,23 @@
 import { roundTo, trimTrailingZeros } from './format'
 
+/**
+ * 정수부 최대 자릿수. 1000조(10^15)는 16자리이며,
+ * JS의 안전 정수 한계(Number.MAX_SAFE_INTEGER ≈ 9×10^15)도 16자리라
+ * 이를 넘기면 정밀도가 깨진다. 따라서 16자리에서 입력을 막는다.
+ */
+const MAX_INTEGER_DIGITS = 16
+
+/**
+ * 숫자 문자열에 천 단위 콤마를 넣는다.
+ * Number() 변환을 거치지 않아 16자리(안전 정수 초과 구간)에서도
+ * 자릿수가 반올림으로 뭉개지지 않는다. 선행 0은 제거(마지막 자리는 유지).
+ */
+function groupThousands(digits: string): string {
+  if (digits === '') return ''
+  const trimmed = digits.replace(/^0+(?=\d)/, '')
+  return trimmed.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
 function sanitizeDecimalDigits(raw: string): string {
   let s = raw.replace(/,/g, '').replace(/[^\d.]/g, '')
   const dotIndex = s.indexOf('.')
@@ -20,18 +38,18 @@ export function formatRawNumericInput(
   const unsigned = negative ? stripped.slice(1) : stripped
 
   if (!allowDecimal) {
-    const digits = unsigned.replace(/\D/g, '')
+    const digits = unsigned.replace(/\D/g, '').slice(0, MAX_INTEGER_DIGITS)
     if (digits === '') return negative ? '-' : ''
-    const formatted = Number(digits).toLocaleString('ko-KR')
+    const formatted = groupThousands(digits)
     return negative ? `-${formatted}` : formatted
   }
 
   const s = sanitizeDecimalDigits(unsigned)
   const hasTrailingDot = s.endsWith('.')
-  const [intPart = '', decPart = ''] = s.split('.')
+  const [rawIntPart = '', decPart = ''] = s.split('.')
+  const intPart = rawIntPart.slice(0, MAX_INTEGER_DIGITS)
 
-  const formattedInt =
-    intPart === '' ? (hasTrailingDot ? '' : '') : Number(intPart).toLocaleString('ko-KR')
+  const formattedInt = groupThousands(intPart)
 
   if (hasTrailingDot || s.includes('.')) {
     if (hasTrailingDot && decPart === '') return `${formattedInt}.`

@@ -12,13 +12,15 @@ import { isFormulasPath } from './config/routes'
 import { isScenarioModeActive } from './calc/mtmLink'
 import { useCalculator } from './context/CalculatorContext'
 import { usePathname } from './hooks/usePathname'
+import { useGridResize } from './hooks/useGridResize'
 import { useLanguage } from './i18n'
 import './App.css'
 
 function CalculatorApp() {
   const { t } = useLanguage()
-  const { inputs, updateInputs } = useCalculator()
+  const { inputs, updateInputs, saveEnabled } = useCalculator()
   const scenarioMode = isScenarioModeActive(inputs)
+  const { containerRef, gridStyle, getHandleProps, isCustom, reset } = useGridResize(saveEnabled)
 
   return (
     <PageShell>
@@ -32,13 +34,27 @@ function CalculatorApp() {
             <p className="app-intro">{t.appIntro}</p>
           </div>
           <div className="header-right">
+            {isCustom && (
+              <button
+                type="button"
+                className="layout-reset-btn"
+                onClick={reset}
+                aria-label={t.resetLayout}
+                title={t.resetLayout}
+              >
+                <span aria-hidden="true">⤢</span>
+              </button>
+            )}
             <HowToUseButton />
             <LanguageToggle variant="header" />
           </div>
         </header>
-        <main className="calc-grid">
+        <main className="calc-grid" ref={containerRef} style={gridStyle}>
+          <div {...getHandleProps('left')} aria-label={t.resizeColumns} />
           <InputPanel inputs={inputs} onChange={updateInputs} />
+          <div {...getHandleProps('center')} aria-label={t.resizeColumns} />
           <ResultPanel inputs={inputs} onChange={updateInputs} />
+          <div {...getHandleProps('right')} aria-label={t.resizeColumns} />
         </main>
         <ContentRiskNotice />
       </div>

@@ -53,6 +53,8 @@ export interface Messages {
   orderBlocked: string
   stepUp: string
   stepDown: string
+  resizeColumns: string
+  resetLayout: string
   contractsUnit: string
   leverageUnit: string
   modes: { evaluate: string; order: string }
@@ -75,12 +77,25 @@ export interface Messages {
     clearedModalTitle: string
     confirm: string
   }
+  marginMode: {
+    /** 토글 그룹 접근성 라벨 */
+    label: string
+    rate: string
+    perContract: string
+    total: string
+    /** 모드별 설명 (툴팁/보조 안내용) */
+    rateHint: string
+    perContractHint: string
+    totalHint: string
+  }
   fields: {
     accountEquity: FieldCopy
     maintenanceMarginRate: FieldCopy
     maintenanceMargin: FieldCopy
+    maintenanceMarginPerContract: FieldCopy
     entrustedMarginRate: FieldCopy
     entrustedMargin: FieldCopy
+    entrustedMarginPerContract: FieldCopy
     contracts: FieldCopy
     contractAmount: FieldCopy
     currentPrice: FieldCopy
@@ -110,8 +125,12 @@ export interface Messages {
     termsTitle: string
     privacyTitle: string
     back: string
-    termsBody: string[]
-    privacyBody: string[]
+    termsEffectiveDate: string
+    termsIntro: string
+    termsArticles: { title: string; body: string }[]
+    privacyEffectiveDate: string
+    privacyIntro: string
+    privacyArticles: { title: string; body: string }[]
   }
   footer: {
     navAriaLabel: string

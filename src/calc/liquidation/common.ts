@@ -1,6 +1,6 @@
 import type { CalculatorInputs } from '../../types'
 import { effectiveAccountEval } from '../accountEval'
-import { hasDirectMaintenance } from '../margins'
+import { isMaintenanceFixed, maintenanceMarginMode } from '../margins'
 
 /** 청산가 계산 입력 — E0, C0, Q, M(C0) */
 export interface LiquidationParams {
@@ -12,6 +12,11 @@ export interface LiquidationParams {
   totalQuantity: number
   /** 현재가 C0에서의 유지증거금 M(C0) = C0 × Q × R (또는 직접 입력) */
   maintenanceAtCurrent: number
+  /**
+   * 유지증거금이 가격에 비례하지 않고 고정인지 여부 (해외 계약당 고정금액).
+   * true면 M(P) = M(C0) 상수, false(기본)면 M(P) = M(C0) × P/C0.
+   */
+  maintenanceFixed?: boolean
 }
 
 /** Q = N × M — N=보유계약수, M=계약승수(미입력·1 포함) */
@@ -34,18 +39,23 @@ export function resolveMaintenanceAtCurrent(
   const currentPrice = inputs.currentPrice
   if (currentPrice == null || currentPrice <= 0) return null
 
-  if (hasDirectMaintenance(inputs)) {
-    const base = inputs.maintenanceMargin!
-    const baseContracts = inputs.contracts ?? 0
-    if (baseContracts > 0 && contracts !== baseContracts) {
-      return base * (contracts / baseContracts)
+  switch (maintenanceMarginMode(inputs)) {
+    case 'perContract':
+      return (inputs.maintenanceMarginPerContract ?? 0) * contracts
+    case 'total': {
+      const base = inputs.maintenanceMargin ?? 0
+      const baseContracts = inputs.contracts ?? 0
+      if (baseContracts > 0 && contracts !== baseContracts) {
+        return base * (contracts / baseContracts)
+      }
+      return base
     }
-    return base
+    default: {
+      const rate = inputs.maintenanceMarginRate
+      if (rate == null) return null
+      return currentPrice * totalQuantity * rate
+    }
   }
-
-  const rate = inputs.maintenanceMarginRate
-  if (rate == null) return null
-  return currentPrice * totalQuantity * rate
 }
 
 export function buildLiquidationParams(
@@ -72,6 +82,7 @@ export function buildLiquidationParams(
     currentPrice,
     totalQuantity,
     maintenanceAtCurrent,
+    maintenanceFixed: isMaintenanceFixed(inputs),
   }
 }
 
@@ -99,12 +110,14 @@ export function calcToleranceDelta(
     : liquidationPrice - currentPrice
 }
 
-/** 가격 P에서의 유지증거금 — M(P) = M(C0) × P/C0 */
+/** 가격 P에서의 유지증거금 — 비례: M(C0) × P/C0, 고정: M(C0) 상수 */
 export function maintenanceAtPrice(
   maintenanceAtCurrent: number,
   price: number,
   currentPrice: number,
+  maintenanceFixed = false,
 ): number {
+  if (maintenanceFixed) return maintenanceAtCurrent
   return maintenanceAtCurrent * (price / currentPrice)
 }
 

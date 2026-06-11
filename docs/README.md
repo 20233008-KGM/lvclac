@@ -5,6 +5,7 @@
 | 문서 | 내용 |
 |------|------|
 | [calculator-fields.md](./calculator-fields.md) | 입력 필드·증거금·청산가 |
+| [test-cases.md](./test-cases.md) | 롱/숏 × 증거금 3입력 × 전체기능 케이스 매트릭스 |
 | [scenario-test-report.md](./scenario-test-report.md) | 시나리오 검증 보고서 |
 
 ## 운영·연동

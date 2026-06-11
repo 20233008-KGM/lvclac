@@ -29,10 +29,18 @@ function mergeInputs(prefs: Partial<CalculatorInputs>): CalculatorInputs {
     maintenanceMargin?: number
   }
   const positionSide = prefs.positionSide ?? 'long'
+  // 모드 미저장(구버전) 마이그레이션: 직접 총액이 있으면 total, 아니면 rate
+  const marginInputMode =
+    prefs.marginInputMode ??
+    ((prefs.maintenanceMargin ?? legacy.maintenanceMargin) != null ||
+    prefs.entrustedMargin != null
+      ? 'total'
+      : 'rate')
   return {
     ...defaultInputs,
     ...prefs,
     mode: prefs.mode ?? 'evaluate',
+    marginInputMode,
     positionSide,
     evalSnapshotSide: prefs.evalSnapshotSide ?? positionSide,
     maintenanceMarginRate: normalizeStoredRate(prefs.maintenanceMarginRate),

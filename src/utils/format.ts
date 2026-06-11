@@ -1,3 +1,31 @@
+/**
+ * IEEE 754 배정밀도(double)가 정수를 정확히 표현하는 한계.
+ * 이 값(2^53 - 1)을 넘으면 끝자리 정수 정확도가 떨어진다.
+ */
+export const SAFE_PRECISION_MAX = Number.MAX_SAFE_INTEGER
+
+/** 값이 안전 정수 한계를 넘어 정밀도 손실 위험이 있는지 */
+export function exceedsSafePrecision(value: number | null | undefined): boolean {
+  return value != null && Number.isFinite(value) && Math.abs(value) > SAFE_PRECISION_MAX
+}
+
+/** 입력/결과 객체들을 순회해 정밀도 손실 위험 값이 하나라도 있는지 검사 */
+export function hasPrecisionRisk(...sources: unknown[]): boolean {
+  const stack = [...sources]
+  while (stack.length > 0) {
+    const cur = stack.pop()
+    if (cur == null) continue
+    if (typeof cur === 'number') {
+      if (exceedsSafePrecision(cur)) return true
+      continue
+    }
+    if (typeof cur === 'object') {
+      for (const v of Object.values(cur as Record<string, unknown>)) stack.push(v)
+    }
+  }
+  return false
+}
+
 /** 지정 소수 자릿수로 반올림 */
 export function roundTo(value: number, decimals: number): number {
   if (decimals <= 0) return Math.round(value)

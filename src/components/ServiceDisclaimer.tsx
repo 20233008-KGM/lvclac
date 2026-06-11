@@ -121,8 +121,7 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
       {!isFooter && <DisclaimerShowAgainLink />}
       {view && (
         <LegalOverlay
-          title={view === 'terms' ? t.legal.termsTitle : t.legal.privacyTitle}
-          paragraphs={view === 'terms' ? t.legal.termsBody : t.legal.privacyBody}
+          kind={view}
           backLabel={t.legal.back}
           onClose={() => setView(null)}
         />
@@ -258,17 +257,29 @@ function DisclaimerModalContent({
 }
 
 function LegalOverlay({
-  title,
-  paragraphs,
+  kind,
   backLabel,
   onClose,
 }: {
-  title: string
-  paragraphs: string[]
+  kind: Exclude<LegalView, null>
   backLabel: string
   onClose: () => void
 }) {
   const { t } = useLanguage()
+  const isTerms = kind === 'terms'
+  const title = isTerms ? t.legal.termsTitle : t.legal.privacyTitle
+  const effectiveDate = isTerms ? t.legal.termsEffectiveDate : t.legal.privacyEffectiveDate
+  const intro = isTerms ? t.legal.termsIntro : t.legal.privacyIntro
+  const articles = isTerms ? t.legal.termsArticles : t.legal.privacyArticles
+  const titleId = `legal-${kind}-title`
+
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
 
   return (
     <div
@@ -278,19 +289,34 @@ function LegalOverlay({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="disclaimer-modal disclaimer-modal--wide" role="dialog" aria-modal="true">
-        <h2 className="disclaimer-modal-title">{title}</h2>
-        <p className="legal-body-warning">
-          <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
-        </p>
-        <div className="legal-body">
-          {paragraphs.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
+      <div
+        className="disclaimer-modal disclaimer-modal--wide disclaimer-modal--legal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <div className="legal-document-scroll">
+          <header className="legal-document-header">
+            <h2 id={titleId} className="legal-document-title">
+              {title}
+            </h2>
+            <p className="legal-document-meta">{effectiveDate}</p>
+          </header>
+          <p className="legal-document-intro">{intro}</p>
+          <div className="legal-articles">
+            {articles.map((article) => (
+              <section key={article.title} className="legal-article">
+                <h3 className="legal-article__title">{article.title}</h3>
+                <p className="legal-article__body">{article.body}</p>
+              </section>
+            ))}
+          </div>
         </div>
-        <button type="button" className="btn btn-ghost" onClick={onClose}>
-          {backLabel}
-        </button>
+        <footer className="legal-document-foot">
+          <button type="button" className="btn btn-ghost legal-document-back" onClick={onClose}>
+            {backLabel}
+          </button>
+        </footer>
       </div>
     </div>
   )

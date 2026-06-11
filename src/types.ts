@@ -5,15 +5,29 @@ export type CalculatorMode = 'evaluate' | 'order'
 export type MaintenanceMarginSource = 'direct' | 'rate'
 export type EntrustedMarginSource = 'direct' | 'rate'
 
+/**
+ * 증거금 입력 방식 — 셋 중 하나만 선택.
+ * - rate: 약정가치 × 증거금률 (국내식, 가격에 비례)
+ * - perContract: 1계약당 고정금액 (해외식, 총액 = 입력값 × 계약수, 가격에 비례하지 않음)
+ * - total: HTS 표시 총 증거금 직접 입력 (계약수에 비례 조정, 가격에 비례)
+ */
+export type MarginInputMode = 'rate' | 'perContract' | 'total'
+
 export interface CalculatorInputs {
   mode: CalculatorMode
+  /** 증거금 입력 방식 — 미설정 시 비율(rate)로 간주 */
+  marginInputMode?: MarginInputMode
   accountEval?: number
   maintenanceMarginRate?: number
-  /** 증권사 앱에서 직접 가져온 유지증거금 — 입력 시 비율 산출값보다 우선 */
+  /** 증권사 앱에서 직접 가져온 유지증거금 총액 (total 모드) */
   maintenanceMargin?: number
+  /** 1계약당 고정 유지증거금 (perContract 모드) */
+  maintenanceMarginPerContract?: number
   entrustedMarginRate?: number
-  /** 증권사 앱에서 직접 가져온 개시·위탁증거금 — 입력 시 비율 산출값보다 우선 */
+  /** 증권사 앱에서 직접 가져온 개시·위탁증거금 총액 (total 모드) */
   entrustedMargin?: number
+  /** 1계약당 고정 개시·위탁증거금 (perContract 모드) */
+  entrustedMarginPerContract?: number
   contracts?: number
   contractAmount?: number
   currentPrice?: number
@@ -113,6 +127,20 @@ export const directMarginSampleInputs: CalculatorInputs = {
   entrustedMargin: 12_000,
   contracts: 2,
   contractAmount: 250_000,
+  contractMultiplier: 1,
+  currentPrice: 5_000,
+  positionSide: 'long',
+  orderContracts: 1,
+}
+
+/** 계약당 고정 증거금 테스트용 (해외선물 가정) — 유지/개시는 가격과 무관한 고정금액 */
+export const perContractMarginSampleInputs: CalculatorInputs = {
+  mode: 'evaluate',
+  marginInputMode: 'perContract',
+  accountEval: 50_000,
+  maintenanceMarginPerContract: 1_000,
+  entrustedMarginPerContract: 6_000,
+  contracts: 2,
   contractMultiplier: 1,
   currentPrice: 5_000,
   positionSide: 'long',

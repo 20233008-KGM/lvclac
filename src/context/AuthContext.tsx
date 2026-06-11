@@ -34,10 +34,17 @@ function mergeInputs(prefs: Partial<CalculatorInputs>): CalculatorInputs {
     maintenanceMargin?: number
   }
   const positionSide = prefs.positionSide ?? 'long'
+  const marginInputMode =
+    prefs.marginInputMode ??
+    ((prefs.maintenanceMargin ?? legacy.maintenanceMargin) != null ||
+    prefs.entrustedMargin != null
+      ? 'total'
+      : 'rate')
   return {
     ...defaultInputs,
     ...prefs,
     mode: prefs.mode ?? 'evaluate',
+    marginInputMode,
     positionSide,
     maintenanceMarginRate: normalizeStoredRate(prefs.maintenanceMarginRate),
     maintenanceMargin: prefs.maintenanceMargin ?? legacy.maintenanceMargin,

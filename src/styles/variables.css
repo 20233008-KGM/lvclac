@@ -60,4 +60,9 @@
   --ad-sidebar-short-height: 250px;
 
   --transition-fast: 120ms ease;
+
+  /* 시나리오 가격 스크럽 — 얇은 세로 ↕ (미니멀) */
+  --cursor-scrub-vertical: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cg fill='none' stroke='%23e8eaed' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3 V13'/%3E%3Cpath d='M5.5 5 L8 2.5 L10.5 5'/%3E%3Cpath d='M5.5 11 L8 13.5 L10.5 11'/%3E%3C/g%3E%3C/svg%3E")
+    8 8,
+    ns-resize;
 }

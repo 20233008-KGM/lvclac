@@ -8,6 +8,7 @@ import { FORMULAS_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { LegalEmphasis } from './ServiceDisclaimer'
+import { FitText, FitTextGroup } from './FitText'
 import { NumberInput } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
 import {
@@ -15,6 +16,7 @@ import {
   formatNumber,
   formatToleranceDelta,
   formatTolerancePercent,
+  hasPrecisionRisk,
 } from '../utils/format'
 
 interface ResultPanelProps {
@@ -36,7 +38,9 @@ function ResultHero({
   return (
     <div className={`result-hero-card ${danger ? 'danger' : ''}`}>
       <span className="result-hero-label">{label}</span>
-      <span className="result-hero-value">{value}</span>
+      <span className="result-hero-value">
+        <FitText>{value}</FitText>
+      </span>
       {sub && <span className="result-hero-sub">{sub}</span>}
     </div>
   )
@@ -57,7 +61,9 @@ function ResultRow({
     <div className={`result-row ${danger ? 'danger' : ''}`}>
       <div className="result-row-main">
         <span className="result-row-label">{label}</span>
-        <span className="result-row-value">{value}</span>
+        <span className="result-row-value">
+          <FitText>{value}</FitText>
+        </span>
       </div>
       {sub && <span className="result-row-sub">{sub}</span>}
     </div>
@@ -123,8 +129,12 @@ function ResultSheet({
         {rows.map((row) => (
           <tr key={row.index}>
             <th scope="row">{row.index}</th>
-            <td className={row.dangerBefore ? 'danger' : undefined}>{row.before}</td>
-            <td className={row.dangerAfter ? 'danger' : undefined}>{row.after}</td>
+            <td className={row.dangerBefore ? 'danger' : undefined}>
+              <FitText>{row.before}</FitText>
+            </td>
+            <td className={row.dangerAfter ? 'danger' : undefined}>
+              <FitText>{row.after}</FitText>
+            </td>
           </tr>
         ))}
       </tbody>
@@ -148,6 +158,7 @@ function EvaluateResults({
 
   return (
     <>
+      <FitTextGroup>
       <div className="result-hero">
         <ResultHero
           label={r.liquidationPrice}
@@ -170,6 +181,8 @@ function EvaluateResults({
           danger={result.isAtRisk}
         />
       </div>
+      </FitTextGroup>
+      <FitTextGroup>
       <div className="result-table">
         <ResultRowPair
           left={{
@@ -225,6 +238,7 @@ function EvaluateResults({
           }}
         />
       </div>
+      </FitTextGroup>
     </>
   )
 }
@@ -388,19 +402,21 @@ function OrderResults({
   ]
 
   return (
-    <ResultSheet
-      indexHeader={
-        orderBlocked ? (
-          <span className="order-blocked-badge" role="status">
-            {t.orderBlocked}
-          </span>
-        ) : null
-      }
-      indexHeaderClassName={orderBlocked ? 'result-sheet__index-header--blocked' : undefined}
-      beforeHeader={r.sheetBefore}
-      afterHeader={r.sheetAfter}
-      rows={sheetRows}
-    />
+    <FitTextGroup>
+      <ResultSheet
+        indexHeader={
+          orderBlocked ? (
+            <span className="order-blocked-badge" role="status">
+              {t.orderBlocked}
+            </span>
+          ) : null
+        }
+        indexHeaderClassName={orderBlocked ? 'result-sheet__index-header--blocked' : undefined}
+        beforeHeader={r.sheetBefore}
+        afterHeader={r.sheetAfter}
+        rows={sheetRows}
+      />
+    </FitTextGroup>
   )
 }
 
@@ -420,6 +436,11 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     [inputs, positionSide, orderContracts, orderPrice],
   )
 
+  const precisionRisk = useMemo(
+    () => hasPrecisionRisk(inputs, evaluateResult, orderResult),
+    [inputs, evaluateResult, orderResult],
+  )
+
   const orderBlocked = useMemo(() => {
     const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
     if (!inputsReadyForOrderSim(evalInputs)) return false
@@ -437,6 +458,11 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
 
   return (
     <div className="result-column">
+      {precisionRisk && (
+        <p className="result-precision-warning" role="alert">
+          {t.results.precisionWarning}
+        </p>
+      )}
       <section className="panel result-panel">
         <div className="result-panel__head">
           <h2>{t.result}</h2>

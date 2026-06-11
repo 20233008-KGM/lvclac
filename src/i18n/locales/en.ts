@@ -37,6 +37,8 @@ export const en: Messages = {
   orderBlocked: 'Order blocked',
   stepUp: 'Increase by 1',
   stepDown: 'Decrease by 1',
+  resizeColumns: 'Resize columns',
+  resetLayout: 'Reset width',
   contractsUnit: 'contracts',
   modes: { evaluate: 'Evaluate', order: 'Order' },
   sections: { instrument: 'Instrument', margin: 'Margin', account: 'Account' },
@@ -61,6 +63,16 @@ export const en: Messages = {
     clearedModalTitle: 'Save disabled',
     confirm: 'OK',
   },
+  marginMode: {
+    label: 'Margin input method',
+    rate: 'Rate',
+    perContract: 'Per',
+    total: 'Total',
+    rateHint: 'Enter margin as a ratio of notional (domestic futures).',
+    perContractHint:
+      'Enter a fixed margin per contract. Total = per-contract × contracts (overseas futures).',
+    totalHint: 'Enter the total margin shown in your broker app as-is.',
+  },
   fields: {
     accountEquity: {
       label: 'Account equity',
@@ -73,19 +85,29 @@ export const en: Messages = {
       placeholder: 'e.g. 0.25',
     },
     maintenanceMargin: {
-      label: 'Maintenance margin (direct)',
-      hint: 'Broker-displayed amount overrides rate-based estimate',
+      label: 'Maintenance margin (total)',
+      hint: 'Total maintenance margin from your broker. Scaled by contracts',
       placeholder: '500,000',
+    },
+    maintenanceMarginPerContract: {
+      label: 'Maintenance margin (per contract)',
+      hint: 'Fixed maintenance margin per contract; constant across price (overseas)',
+      placeholder: '1,000',
     },
     entrustedMarginRate: {
       label: 'Initial margin rate',
-      hint: 'Ratio of notional for initial margin. For fixed broker amounts, use direct input',
+      hint: 'Ratio of notional for initial margin. For fixed amounts, use per-contract or total',
       placeholder: 'e.g. 0.35',
     },
     entrustedMargin: {
-      label: 'Initial margin (direct)',
-      hint: 'Broker-displayed amount overrides rate-based estimate',
+      label: 'Initial margin (total)',
+      hint: 'Total initial margin from your broker. Scaled by contracts',
       placeholder: '12,000',
+    },
+    entrustedMarginPerContract: {
+      label: 'Initial margin (per contract)',
+      hint: 'Fixed initial margin per contract (overseas)',
+      placeholder: '6,000',
     },
     contracts: {
       label: 'Open contracts',
@@ -133,6 +155,8 @@ export const en: Messages = {
     sheetIndex: 'Metric',
     sheetBefore: 'Before',
     sheetAfter: 'After',
+    precisionWarning:
+      'Caution: an input or computed value exceeds ~9.0×10^15 (2^53, the 16th integer digit). Beyond this point the trailing integer digits lose accuracy; trust only the first ~15-16 significant figures.',
     liquidationPrice: 'Liq. price',
     maxBuyableLong: 'Addl. buy limit',
     maxBuyableShort: 'Addl. sell limit',
@@ -232,22 +256,71 @@ export const en: Messages = {
     termsTitle: 'Terms of use',
     privacyTitle: 'Privacy policy',
     back: 'Back',
-    termsBody: [
-      '1. Scope: These terms govern use of the Futures Liquidation Calculator ("Service") operated by Farfield Software ("we", "us").',
-      '2. Nature: The Service is a free web calculator. We do not provide brokerage or investment advisory services.',
-      '3. User duty: Enter values matching your trading environment and use results for reference only.',
-      '4. Input storage: Calculator inputs are saved in your browser localStorage only when you turn on “Save inputs on this device.” They are not sent to a server; turning it off deletes saved values.',
-      '5. Advertising: We may show third-party ads (e.g. Google AdSense) subject to their policies and cookies.',
-      '6. Limitation of liability: We are not liable for losses due to outages, third-party changes, or differences from broker rules except where required by law.',
-      '7. Changes: Terms may be updated on the site; continued use constitutes acceptance.',
+    termsEffectiveDate: 'Effective: June 11, 2025',
+    termsIntro:
+      'These terms govern use of the Futures Liquidation Calculator (“Service”) provided by Farfield Software (“Company”) and set out the rights and obligations between the Company and users.',
+    termsArticles: [
+      {
+        title: 'Article 1 (Purpose)',
+        body: 'These terms define the conditions, procedures, and rights and obligations of the Company and users in connection with the Service.',
+      },
+      {
+        title: 'Article 2 (Nature of the Service)',
+        body: 'The Service is a free web calculator that estimates liquidation prices, margin requirements, and related figures for futures and leveraged positions. The Company does not conduct brokerage, investment advisory, or agency services and does not provide investment recommendations.',
+      },
+      {
+        title: 'Article 3 (User obligations)',
+        body: 'Users must enter values that match their trading environment and use results for reference only. Users bear full responsibility for all investment decisions and their outcomes.',
+      },
+      {
+        title: 'Article 4 (Stored inputs)',
+        body: 'Calculator inputs and certain display settings (such as panel widths) are stored in the browser on your device only when you enable the save feature. This information is not sent to our servers; disabling the feature deletes stored values on that device.',
+      },
+      {
+        title: 'Article 5 (Advertising)',
+        body: 'The Company may display third-party advertising (e.g. Google AdSense) to operate the Service. When ads are shown, the policies and cookies of those providers may apply.',
+      },
+      {
+        title: 'Article 6 (Limitation of liability)',
+        body: 'Except in cases of willful misconduct or gross negligence, the Company is not liable for damages arising from force majeure, system failures, changes to third-party services, or differences between our formulas and broker or exchange rules.',
+      },
+      {
+        title: 'Article 7 (Numeric precision)',
+        body: 'The Service computes using standard IEEE 754 double-precision floating point. Values beyond 16 integer digits or above 2⁵³ (about 9×10¹⁵) may lose trailing-digit accuracy. Inputs are limited to 16 integer digits; treat displayed results as reliable to about 15–16 significant figures. Formula definitions are available on the “Formulas” page.',
+      },
+      {
+        title: 'Article 8 (Changes)',
+        body: 'The Company may amend these terms when necessary and will post updates on the Service. Continued use after changes constitutes acceptance of the revised terms.',
+      },
     ],
-    privacyBody: [
-      '1. Data: calculator inputs (device localStorage when save is enabled); with GA4/AdSense — cookies and usage logs',
-      '2. Purpose: save/restore inputs, improve service, analytics and ads',
-      '3. Storage: when enabled, inputs stay on your device only; not transmitted to our servers. Disabling removes them.',
-      '4. Third parties: Google Analytics / AdSense when enabled',
-      '5. Your rights: turn off the save toggle or clear browser data to remove saved inputs.',
-      '6. Contact: Farfield Software — see footer for contact details',
+    privacyEffectiveDate: 'Effective: June 11, 2025',
+    privacyIntro:
+      'Farfield Software (“Company”) processes information as described below in connection with the Futures Liquidation Calculator.',
+    privacyArticles: [
+      {
+        title: '1. Information collected',
+        body: 'Calculator inputs and display settings (such as panel widths) are stored in your browser only when you enable saving. When Google Analytics or AdSense is configured, cookies and access logs may be collected automatically.',
+      },
+      {
+        title: '2. Purposes',
+        body: 'Saving and restoring inputs, improving the Service, usage analytics, and serving and measuring advertising.',
+      },
+      {
+        title: '3. Retention and processing',
+        body: 'When saving is enabled, inputs remain on your device and are not transmitted to Company servers. Disabling the feature deletes stored values on that device.',
+      },
+      {
+        title: '4. Third parties',
+        body: 'When analytics or advertising services such as Google Analytics or AdSense are used, information may be sent to those providers under their policies.',
+      },
+      {
+        title: '5. Your rights',
+        body: 'You may remove stored inputs by turning off the save feature or clearing browser data.',
+      },
+      {
+        title: '6. Contact',
+        body: 'For privacy inquiries, use the contact details shown in the site footer.',
+      },
     ],
   },
   formulas: {
@@ -311,8 +384,14 @@ export const en: Messages = {
             description: 'Or direct HTS maintenance (scaled by contracts).',
           },
           {
-            name: 'Maintenance at price P',
+            name: 'Maintenance at price P (rate / total)',
             expression: 'M(P) = M(C₀) × P / C₀',
+          },
+          {
+            name: 'Fixed margin per contract (overseas)',
+            expression: 'Maintenance = per-contract amount × N (constant, price-independent)',
+            description:
+              'Overseas fixed per-contract margin does not move with price, so M(P) is a constant rather than proportional to P.',
           },
         ],
       },
@@ -327,6 +406,11 @@ export const en: Messages = {
             expression: 'P = (C₀×Q − E₀) / (Q×(1 − R))',
             description: 'Equivalent when M(C₀)=C₀×Q×R.',
           },
+          {
+            name: 'Fixed per-contract margin (long)',
+            expression: 'P = C₀ + (Mfix − E₀) / Q',
+            description: 'With fixed maintenance the price-proportional term drops out.',
+          },
         ],
       },
       {
@@ -338,6 +422,10 @@ export const en: Messages = {
           {
             name: 'Summary (rate form)',
             expression: 'P = (E₀ + C₀×Q) / (Q×(1 + R))',
+          },
+          {
+            name: 'Fixed per-contract margin (short)',
+            expression: 'P = C₀ + (E₀ − Mfix) / Q',
           },
         ],
         notes: [

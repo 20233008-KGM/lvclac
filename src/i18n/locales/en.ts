@@ -32,7 +32,7 @@ export const en: Messages = {
     beginnerTab: 'New here',
     experiencedTab: 'Daily use',
     beginnerBody:
-      '# New to futures?\nEnter account equity and margin rates, then adjust order size and price in Order to preview your account after a fill. When only the mark changed, update equity with Scenario price.\n\n────────\n\n[Warning]\n\nPrefer a calm market for first setup. Snapshot equity and mark from one screen. Assumes one open instrument per account.',
+      '# New to futures?\nEnter account equity and margin rates, then adjust order size and price in Order to preview your account after a fill. When only the mark changed, update equity with Scenario price.\n\n────────\n\n[Warning]\n\nPrefer a calm market for first setup.\nOr snapshot equity and mark from one screen.\nAssumes one open instrument per account.',
     experiencedBody:
       '# Already trading?\nSet up account, instrument, and margin once.\nEach morning, enter the mark in Scenario price and press Enter twice to roll P&L into equity.\n\n────────\n\n[Tip]\n\n💡 Turn on “Save inputs on this device” to keep your baseline.',
     guideLink: 'Read full guide',

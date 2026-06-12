@@ -130,6 +130,17 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     return shouldCommit
   }
 
+  function clearEntireValue() {
+    setText('')
+    setTruncatedAttempt(false)
+    if (deferChangeUntilBlur) {
+      const handler = onCommit ?? onChange
+      handler(undefined)
+      return
+    }
+    onChange(undefined)
+  }
+
   useImperativeHandle(ref, () => ({
     commit: commitFromText,
     readDraft: readDraftFromText,
@@ -180,9 +191,16 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
             commitFromText()
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Delete' && onDeleteKey) {
-              e.preventDefault()
-              onDeleteKey()
+            if (e.key === 'Delete') {
+              if (onDeleteKey) {
+                e.preventDefault()
+                onDeleteKey()
+                return
+              }
+              if (text !== '' || value !== undefined) {
+                e.preventDefault()
+                clearEntireValue()
+              }
               return
             }
             if (e.key === 'Enter' && onEnterKey) {

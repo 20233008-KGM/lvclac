@@ -181,6 +181,14 @@ export interface Messages {
     sections: { title: string; paragraphs: string[]; items?: string[] }[]
     footnote: string
   }
+  about: {
+    company: string
+    title: string
+    tagline: string
+    lead: string
+    sections: { title: string; paragraphs: string[] }[]
+    backToHome: string
+  }
   boards: {
     portalCompany: string
     storageNotice: string
@@ -194,6 +202,15 @@ export interface Messages {
     postBodyPlaceholder: string
     postAuthor: string
     postAuthorPlaceholder: string
+    postContact: string
+    postContactPlaceholder: string
+    postAttachments: string
+    postAttachmentsHint: string
+    addAttachment: string
+    removeAttachment: string
+    attachmentInvalidType: string
+    attachmentTooLarge: string
+    attachmentTooMany: string
     submit: string
     anonymous: string
     items: Record<

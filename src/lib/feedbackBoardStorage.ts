@@ -1,10 +1,18 @@
 import type { BoardId } from '../config/boards'
 
+export interface BoardPostAttachment {
+  name: string
+  dataUrl: string
+  mimeType: string
+}
+
 export interface BoardPost {
   id: string
   title: string
   body: string
   author: string
+  contact: string
+  attachments?: BoardPostAttachment[]
   createdAt: string
 }
 
@@ -49,16 +57,34 @@ function readPosts(boardId: BoardId): BoardPost[] {
   }
 }
 
+function isBoardPostAttachment(value: unknown): value is BoardPostAttachment {
+  if (!value || typeof value !== 'object') return false
+  const attachment = value as Record<string, unknown>
+  return (
+    typeof attachment.name === 'string' &&
+    typeof attachment.dataUrl === 'string' &&
+    typeof attachment.mimeType === 'string'
+  )
+}
+
 function isBoardPost(value: unknown): value is BoardPost {
   if (!value || typeof value !== 'object') return false
   const post = value as Record<string, unknown>
-  return (
-    typeof post.id === 'string' &&
-    typeof post.title === 'string' &&
-    typeof post.body === 'string' &&
-    typeof post.author === 'string' &&
-    typeof post.createdAt === 'string'
-  )
+  if (
+    typeof post.id !== 'string' ||
+    typeof post.title !== 'string' ||
+    typeof post.body !== 'string' ||
+    typeof post.author !== 'string' ||
+    typeof post.createdAt !== 'string'
+  ) {
+    return false
+  }
+  if (post.contact !== undefined && typeof post.contact !== 'string') return false
+  if (post.attachments !== undefined) {
+    if (!Array.isArray(post.attachments)) return false
+    if (!post.attachments.every(isBoardPostAttachment)) return false
+  }
+  return true
 }
 
 function writePosts(boardId: BoardId, posts: BoardPost[]): void {
@@ -78,14 +104,20 @@ export function listBoardPosts(boardId: BoardId): BoardPost[] {
 
 export function addBoardPost(
   boardId: BoardId,
-  input: Pick<BoardPost, 'title' | 'body' | 'author'>,
+  input: Pick<BoardPost, 'title' | 'body' | 'author' | 'contact'> & {
+    attachments?: BoardPostAttachment[]
+  },
 ): BoardPost {
   const post: BoardPost = {
     id: crypto.randomUUID(),
     title: input.title.trim(),
     body: input.body.trim(),
     author: input.author.trim(),
+    contact: input.contact.trim(),
     createdAt: new Date().toISOString(),
+  }
+  if (input.attachments && input.attachments.length > 0) {
+    post.attachments = input.attachments
   }
   const posts = readPosts(boardId)
   writePosts(boardId, [post, ...posts])

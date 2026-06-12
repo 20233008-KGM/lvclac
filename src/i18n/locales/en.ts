@@ -423,6 +423,36 @@ export const en: Messages = {
     footnote:
       'Assumes one instrument and one position. Multiple symbols, cross margin, and fees are not modeled; figures may differ from your broker HTS.',
   },
+  about: {
+    company: 'Farfield Software',
+    title: 'About us',
+    tagline: 'The best experience—for a few',
+    lead:
+      'Farfield Software builds software that a smaller group of people use for a long time—not tools everyone tries once.',
+    sections: [
+      {
+        title: 'What we do',
+        paragraphs: [
+          'We design and ship productivity tools for real workflows. Accuracy and responsiveness matter more than long feature lists.',
+        ],
+      },
+      {
+        title: 'How we work',
+        paragraphs: [
+          'We do not build for everyone. We focus on a small audience and tailor the experience deeply for them.',
+          'We care more that existing users get better than that more people sign up. Before adding features, we make what exists more precise and faster.',
+        ],
+      },
+      {
+        title: 'What’s next',
+        paragraphs: [
+          'We are a small team building software that fits the people who need it.',
+          'Dev requests, bug reports, and suggestions are always welcome.',
+        ],
+      },
+    ],
+    backToHome: '← Calculator',
+  },
   formulas: {
     backToCalculator: '← Back to calculator',
     title: 'Formula reference',
@@ -582,7 +612,7 @@ export const en: Messages = {
       {
         title: 'Company',
         links: [
-          { label: 'Farfield Software', soon: true },
+          { label: 'Farfield Software', href: '/about' },
           { label: 'Contact', href: `mailto:${CONTACT_EMAIL}` },
           { label: 'Support', href: SUPPORT_URL },
           { label: 'Careers', soon: true },
@@ -621,6 +651,15 @@ export const en: Messages = {
     postBodyPlaceholder: 'Steps to reproduce, expected behavior, context, etc.',
     postAuthor: 'Name',
     postAuthorPlaceholder: 'Display name (optional)',
+    postContact: 'Contact',
+    postContactPlaceholder: 'Email, phone, messenger ID, etc.',
+    postAttachments: 'Screenshots',
+    postAttachmentsHint: 'PNG, JPG, WebP, GIF · up to 3 files, 1 MB each',
+    addAttachment: 'Add image',
+    removeAttachment: 'Remove',
+    attachmentInvalidType: 'Only PNG, JPG, WebP, and GIF images are allowed.',
+    attachmentTooLarge: 'Each image must be 1 MB or smaller.',
+    attachmentTooMany: 'You can attach up to 3 screenshots.',
     submit: 'Submit',
     anonymous: 'Anonymous',
     items: {

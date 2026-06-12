@@ -419,6 +419,36 @@ export const ko: Messages = {
     footnote:
       '이 계산기는 한 종목·단일 포지션만 가정합니다. 여러 종목 동시 보유·교차 증거금·수수료는 반영되지 않으며, 브로커 HTS와 수치가 다를 수 있습니다.',
   },
+  about: {
+    company: 'Farfield Software',
+    title: '회사 소개',
+    tagline: '소수에게, 최고의 사용 경험을',
+    lead:
+      'Farfield Software는 많은 사람이 잠깐 쓰는 소프트웨어보다,\n적은 사람이 오래 쓰는 소프트웨어를 만듭니다.',
+    sections: [
+      {
+        title: '우리가 하는 일',
+        paragraphs: [
+          '실제 업무 흐름에 맞는 생산성 도구를 설계하고 개발합니다. 화려한 기능 나열보다, 정확함과 응답성을 우선합니다.',
+        ],
+      },
+      {
+        title: '우리의 태도',
+        paragraphs: [
+          '우리는 모든 사람을 위한 제품을 만들지 않습니다. 소수의 사용자에게 깊이 맞춘 경험을 제공하는 것이 우리의 방향입니다.',
+          '사용자가 늘어나는 것보다, 이미 쓰는 사람이 더 편해지는 것에 집중합니다. 기능을 더 넣기 전에, 있는 것을 더 정확하고 더 빠르게 만드는 데 시간을 씁니다.',
+        ],
+      },
+      {
+        title: '앞으로',
+        paragraphs: [
+          'Farfield Software는 작은 팀으로, 필요한 사람에게 꼭 맞는 소프트웨어를 만들어 갑니다.',
+          '개발 의뢰·버그 제보·개선 제안은 언제든 환영합니다.',
+        ],
+      },
+    ],
+    backToHome: '← 계산기로',
+  },
   formulas: {
     backToCalculator: '← 계산기로 돌아가기',
     title: '수식 정의',
@@ -614,7 +644,7 @@ export const ko: Messages = {
       {
         title: '회사',
         links: [
-          { label: 'Farfield Software', soon: true },
+          { label: 'Farfield Software', href: '/about' },
           { label: '문의', href: `mailto:${CONTACT_EMAIL}` },
           { label: '후원', href: SUPPORT_URL },
           { label: '채용', soon: true },
@@ -653,6 +683,15 @@ export const ko: Messages = {
     postBodyPlaceholder: '상세 내용, 재현 방법, 기대 동작 등을 적어 주세요',
     postAuthor: '작성자',
     postAuthorPlaceholder: '닉네임 (미입력 시 익명)',
+    postContact: '연락처',
+    postContactPlaceholder: '이메일, 전화번호, 카카오톡 ID 등',
+    postAttachments: '스크린샷 첨부',
+    postAttachmentsHint: 'PNG, JPG, WebP, GIF · 최대 3장, 장당 1MB',
+    addAttachment: '이미지 추가',
+    removeAttachment: '삭제',
+    attachmentInvalidType: 'PNG, JPG, WebP, GIF 이미지만 첨부할 수 있습니다.',
+    attachmentTooLarge: '이미지는 장당 1MB 이하만 첨부할 수 있습니다.',
+    attachmentTooMany: '스크린샷은 최대 3장까지 첨부할 수 있습니다.',
     submit: '등록',
     anonymous: '익명',
     items: {

@@ -9,7 +9,7 @@ import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { LanguageToggle } from './components/LanguageToggle'
 import { SiteFooter } from './components/SiteFooter'
 import { parseBoardPath } from './config/boards'
-import { isFormulasPath, isGuidePath } from './config/routes'
+import { isAboutPath, isFormulasPath, isGuidePath } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
 import { useCalculator } from './context/CalculatorContext'
@@ -28,6 +28,9 @@ const FormulasPage = lazy(() =>
 )
 const GuidePage = lazy(() =>
   import('./components/GuidePage').then((mod) => ({ default: mod.GuidePage })),
+)
+const AboutPage = lazy(() =>
+  import('./components/AboutPage').then((mod) => ({ default: mod.AboutPage })),
 )
 
 function CalculatorApp() {
@@ -157,6 +160,15 @@ function AppRouter() {
     return (
       <Suspense fallback={null}>
         <GuidePage />
+      </Suspense>
+    )
+  }
+  if (isAboutPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <AboutPage />
+        </div>
       </Suspense>
     )
   }

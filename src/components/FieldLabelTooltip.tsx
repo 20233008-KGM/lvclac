@@ -6,9 +6,17 @@ interface FieldLabelTooltipProps {
   text: string
   label: string
   highlight?: boolean
+  guideHref?: string
+  guideLinkLabel?: string
 }
 
-export function FieldLabelTooltip({ text, label, highlight = false }: FieldLabelTooltipProps) {
+export function FieldLabelTooltip({
+  text,
+  label,
+  highlight = false,
+  guideHref,
+  guideLinkLabel,
+}: FieldLabelTooltipProps) {
   const id = useId()
   const { anchorRef, anchorHandlers, focusWithinHandlers, renderTooltip } = useFloatingTooltip({
     placement: 'top',
@@ -32,7 +40,11 @@ export function FieldLabelTooltip({ text, label, highlight = false }: FieldLabel
       >
         ?
       </button>
-      {renderTooltip('field-label-tooltip', <TooltipBody text={text} />, { id })}
+      {renderTooltip(
+        'field-label-tooltip',
+        <TooltipBody text={text} guideHref={guideHref} guideLinkLabel={guideLinkLabel} />,
+        { id },
+      )}
     </span>
   )
 }

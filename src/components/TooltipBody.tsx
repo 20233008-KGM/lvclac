@@ -1,13 +1,43 @@
+import { Fragment } from 'react'
+
 interface TooltipBodyProps {
   text: string
+  guideHref?: string
+  guideLinkLabel?: string
 }
 
 type TooltipBlock =
+  | { type: 'title'; text: string }
   | { type: 'sentence'; text: string }
   | { type: 'line'; text: string }
+  | { type: 'bullet'; text: string }
   | { type: 'divider' }
-  | { type: 'label'; text: string }
+  | { type: 'label'; text: string; variant: LabelVariant }
   | { type: 'shortcut'; key: string; action: string }
+
+type LabelVariant = 'default' | 'keys' | 'tip' | 'warning'
+
+const SECTION_ICON: Record<string, string> = {
+  단축키: '⌨️ ',
+  Shortcuts: '⌨️ ',
+  추천: '✨ ',
+  '효율적인 사용 팁': '✨ ',
+  Tip: '✨ ',
+  참고: 'ℹ️ ',
+  Note: 'ℹ️ ',
+  주의: '⚠️ ',
+  주의사항: '⚠️ ',
+  Warning: '⚠️ ',
+  '일상 갱신': '📅 ',
+  '최초 입력': '📝 ',
+}
+
+function labelVariant(text: string): LabelVariant {
+  if (text.includes('단축키') || text.includes('Shortcut')) return 'keys'
+  if (text.includes('주의') || text.includes('Warning')) return 'warning'
+  if (text.includes('추천') || text.includes('효율') || text.includes('Tip')) return 'tip'
+  return 'default'
+}
 
 function isDividerLine(line: string): boolean {
   const trimmed = line.trim()
@@ -40,13 +70,24 @@ function parseParagraph(paragraph: string): TooltipBlock[] {
     .split('\n')
     .filter((line) => line.length > 0)
     .map((line) => {
+      if (line.startsWith('# ')) {
+        return { type: 'title' as const, text: line.slice(2).trim() }
+      }
+
       if (isDividerLine(line)) return { type: 'divider' as const }
 
       const label = parseSectionLabel(line)
-      if (label) return { type: 'label' as const, text: label }
+      if (label) {
+        return { type: 'label' as const, text: label, variant: labelVariant(label) }
+      }
 
       const shortcut = parseShortcut(line)
       if (shortcut) return { type: 'shortcut' as const, ...shortcut }
+
+      const trimmed = line.trim()
+      if (trimmed.startsWith('- ')) {
+        return { type: 'bullet' as const, text: trimmed.slice(2) }
+      }
 
       return isListOrLabelLine(line)
         ? { type: 'line' as const, text: line }
@@ -54,8 +95,27 @@ function parseParagraph(paragraph: string): TooltipBlock[] {
     })
 }
 
+function ShortcutKeys({ keyText }: { keyText: string }) {
+  const noteMatch = keyText.match(/^(.+?)(\s*\([^)]+\))$/)
+  const base = noteMatch ? noteMatch[1].trim() : keyText
+  const note = noteMatch ? noteMatch[2].trim() : null
+  const parts = base.split(/\s*\+\s*/)
+
+  return (
+    <span className="tooltip-body__shortcut-keys">
+      {parts.map((part, index) => (
+        <Fragment key={`${part}-${index}`}>
+          {index > 0 && <span className="tooltip-body__shortcut-plus">+</span>}
+          <kbd className="tooltip-body__kbd">{part}</kbd>
+        </Fragment>
+      ))}
+      {note && <span className="tooltip-body__shortcut-note">{note}</span>}
+    </span>
+  )
+}
+
 /** 툴팁 본문 — 고정 너비, `\n` 의미 단위 줄바꿈, `\n\n` 문단 구분 */
-export function TooltipBody({ text }: TooltipBodyProps) {
+export function TooltipBody({ text, guideHref, guideLinkLabel }: TooltipBodyProps) {
   const paragraphs = text.trim().split(/\n\n+/)
 
   return (
@@ -64,6 +124,12 @@ export function TooltipBody({ text }: TooltipBodyProps) {
         <span key={`paragraph-${paragraphIndex}`} className="tooltip-body__paragraph">
           {parseParagraph(paragraph).map((block, blockIndex) => {
             switch (block.type) {
+              case 'title':
+                return (
+                  <span key={`title-${blockIndex}`} className="tooltip-body__title">
+                    {block.text}
+                  </span>
+                )
               case 'divider':
                 return (
                   <span
@@ -74,15 +140,28 @@ export function TooltipBody({ text }: TooltipBodyProps) {
                 )
               case 'label':
                 return (
-                  <span key={`label-${blockIndex}`} className="tooltip-body__label">
+                  <span
+                    key={`label-${blockIndex}`}
+                    className={`tooltip-body__label tooltip-body__label--${block.variant}`}
+                  >
+                    {SECTION_ICON[block.text] ?? ''}
                     {block.text}
                   </span>
                 )
               case 'shortcut':
                 return (
                   <span key={`shortcut-${blockIndex}`} className="tooltip-body__shortcut">
-                    <span className="tooltip-body__shortcut-key">{block.key}</span>
+                    <ShortcutKeys keyText={block.key} />
                     <span className="tooltip-body__shortcut-action">{block.action}</span>
+                  </span>
+                )
+              case 'bullet':
+                return (
+                  <span key={`bullet-${blockIndex}`} className="tooltip-body__bullet">
+                    <span className="tooltip-body__bullet-mark" aria-hidden>
+                      ·
+                    </span>
+                    <span className="tooltip-body__bullet-text">{block.text}</span>
                   </span>
                 )
               case 'line':
@@ -101,6 +180,11 @@ export function TooltipBody({ text }: TooltipBodyProps) {
           })}
         </span>
       ))}
+      {guideHref && guideLinkLabel && (
+        <a className="tooltip-body__guide-link" href={guideHref}>
+          {guideLinkLabel}
+        </a>
+      )}
     </span>
   )
 }

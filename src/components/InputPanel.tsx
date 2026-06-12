@@ -8,6 +8,7 @@ import {
   resolveEvaluationInputs,
   type CalculatorInputPatch,
 } from '../calc/mtmLink'
+import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
@@ -40,6 +41,8 @@ function Field({
   optionalText,
   tooltip,
   tooltipLabel,
+  tooltipGuideHref,
+  tooltipGuideLinkLabel,
   labelId,
   children,
 }: {
@@ -47,6 +50,8 @@ function Field({
   optionalText?: string
   tooltip?: string
   tooltipLabel?: string
+  tooltipGuideHref?: string
+  tooltipGuideLinkLabel?: string
   labelId?: string
   children: React.ReactNode
 }) {
@@ -56,7 +61,14 @@ function Field({
         <span className="field-label-text">
           {label}
           {optionalText && <em className="optional"> {optionalText}</em>}
-          {tooltip && tooltipLabel && <FieldLabelTooltip text={tooltip} label={tooltipLabel} />}
+          {tooltip && tooltipLabel && (
+            <FieldLabelTooltip
+              text={tooltip}
+              label={tooltipLabel}
+              guideHref={tooltipGuideHref}
+              guideLinkLabel={tooltipGuideLinkLabel}
+            />
+          )}
         </span>
       </span>
       {children}
@@ -169,6 +181,7 @@ function ScenarioPriceField({
   stepUpLabel,
   stepDownLabel,
   tooltipLabel,
+  tooltipGuideLink,
   commitLabel,
   clearLabel,
   applyPnlLabel,
@@ -179,6 +192,7 @@ function ScenarioPriceField({
   stepUpLabel: string
   stepDownLabel: string
   tooltipLabel: string
+  tooltipGuideLink: string
   commitLabel: string
   clearLabel: string
   applyPnlLabel: string
@@ -280,7 +294,13 @@ function ScenarioPriceField({
     <span className="field-label-row field-label-row--with-action" id="scenario-price-label">
       <span className="field-label-text">
         {field.label}
-        <FieldLabelTooltip text={field.hint} label={tooltipLabel} highlight={scenarioModeActive} />
+        <FieldLabelTooltip
+          text={field.hint}
+          label={tooltipLabel}
+          highlight={scenarioModeActive}
+          guideHref={GUIDE_PATH}
+          guideLinkLabel={tooltipGuideLink}
+        />
       </span>
       <span className="field-label-action-slot">
         <button
@@ -478,6 +498,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             label={f.accountEquity.label}
             tooltip={f.accountEquity.hint}
             tooltipLabel={t.fieldTooltipLabel}
+            tooltipGuideHref={GUIDE_PATH}
+            tooltipGuideLinkLabel={t.tooltipGuideLink}
           >
             <NumberInput
               value={previewInputs.accountEval}
@@ -529,6 +551,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             stepUpLabel={t.stepUp}
             stepDownLabel={t.stepDown}
             tooltipLabel={t.fieldTooltipLabel}
+            tooltipGuideLink={t.tooltipGuideLink}
             commitLabel={t.scenarioPriceCommit}
             clearLabel={t.scenarioPriceClear}
             applyPnlLabel={t.scenarioApplyPnl}

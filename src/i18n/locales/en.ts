@@ -39,6 +39,7 @@ export const en: Messages = {
   },
   optional: '(optional)',
   fieldTooltipLabel: 'Field definition',
+  tooltipGuideLink: 'Learn more ↗',
   input: 'Inputs',
   result: 'Results',
   long: 'Long',
@@ -66,7 +67,7 @@ export const en: Messages = {
   orderScenarioFieldContracts: 'Order size',
   orderScenarioFieldPrice: 'Order price',
   orderScenarioHint:
-    'Enter both order size and price, then press ↵ to simulate.\n\n· ↵ — reflect order in results (preview)\n· ✓ — apply to account and held contracts (not a second order)\n· Esc — cancel simulation\n· Ctrl+Z — undo apply and return to preview',
+    '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply',
   clearAllInputs: 'Clear all',
   clearAllInputsHint: 'Press Delete to clear only the focused input field.',
   clearAllInputsHintLabel: 'Clear shortcut help',
@@ -103,7 +104,7 @@ export const en: Messages = {
   fields: {
     accountEquity: {
       label: 'Account equity',
-      hint: 'Cash balance plus unrealized P&L. Matches Account equity in your broker app.\n\nDaily updates: when size and margin are unchanged, roll equity with Scenario price.\n\nFirst-time setup: enter the value from the same HTS screen and moment as the mark. In fast markets, figures can drift slightly between fields—prefer a calm period or a single-screen snapshot.',
+      hint: '# Account equity\nCash balance plus unrealized P&L.\nMatches Account equity in your broker app.\n\nFor daily updates, use Scenario price.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
@@ -148,12 +149,12 @@ export const en: Messages = {
     },
     currentPrice: {
       label: 'Mark price',
-      hint: 'Reference mark.\n\n※ Changing this alone does not update equity—use Scenario price to roll unrealized P&L.\n\nFirst-time setup: use the mark from the same HTS screen and moment as equity. In volatile markets, enter from a snapshot or when the market is calmer.',
+      hint: '# Mark price\nReference mark.\n\n※ Changing this alone does not update equity.\nUse Scenario price to roll unrealized P&L.',
       placeholder: '35,000',
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: 'Preview account state at a new price, or roll equity forward each day without retyping.\n\nShortcuts\n· Enter (↵) — scenario preview\n· Enter (↵) — apply P&L (updates mark and equity)\n· Esc — exit and restore\n· Ctrl+Z — undo apply\n\n💡 With tick size set: the empty field shows the current mark as a hint, and ▲▼ steppers fill the price from that mark in one click.\n\n💡 Daily: broker mark → Enter → Enter (contracts and margin unchanged)\n\n※ First setup: equity and mark from one HTS screen snapshot are most accurate.',
+      hint: '# Scenario price simulation\nPreview account state at a new price,\nor roll equity forward each day.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply P&L\nEsc → Exit\nCtrl+Z → Undo apply',
       placeholder: 'Target price',
     },
     tickSize: {
@@ -173,7 +174,7 @@ export const en: Messages = {
     },
     orderPrice: {
       label: 'Order price',
-      hint: 'Assumed fill price\nfor the simulated order.\n\n────────\n\n[Tip]\n\n💡 With tick size set:\nthe empty field shows the current mark,\nand ▲▼ steppers fill the price\nfrom that mark in one click.\n\n────────\n\n[Note]\n\nIf left blank,\nit defaults to the current mark.',
+      hint: '# Order price\nAssumed fill price for the simulated order.\n\nWith tick size set, the empty field shows the current mark\nand ▲▼ steppers fill from that mark.\n\nIf left blank, defaults to the current mark.',
       placeholder: 'Order price',
     },
   },

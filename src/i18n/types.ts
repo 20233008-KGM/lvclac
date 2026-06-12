@@ -53,6 +53,7 @@ export interface Messages {
   }
   optional: string
   fieldTooltipLabel: string
+  tooltipGuideLink: string
   input: string
   result: string
   long: string

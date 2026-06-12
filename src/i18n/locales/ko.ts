@@ -39,6 +39,7 @@ export const ko: Messages = {
   },
   optional: '(선택)',
   fieldTooltipLabel: '용어 설명',
+  tooltipGuideLink: '자세히 보기 ↗',
   input: '입력',
   result: '결과',
   long: '롱',
@@ -66,7 +67,7 @@ export const ko: Messages = {
   orderScenarioFieldContracts: '주문 계약수',
   orderScenarioFieldPrice: '주문 가격',
   orderScenarioHint:
-    '계약수·주문 가격을 입력한 뒤\n시뮬레이션합니다.\n\n────────\n\n[단축키]\n\nEnter → 미리보기\nEnter → 계좌에 확정\nEsc → 취소\nCtrl+Z → 확정 취소\n\n────────\n\n[참고]\n\n✓ 확정은 재주문이 아니라\n보유 계약수·평가금 갱신입니다.',
+    '# 주문 시뮬레이션\n계약수·주문 가격으로\n체결 직후 상태를 미리 봅니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 계좌에 확정\nEsc → 취소\nCtrl+Z → 확정 취소',
   clearAllInputs: '비우기',
   clearAllInputsHint:
     '모든 입력값을\n한 번에 비웁니다.\n\n────────\n\n[단축키]\n\nDelete → 포커스된 칸만 초기화',
@@ -103,7 +104,7 @@ export const ko: Messages = {
   fields: {
     accountEquity: {
       label: '계좌 평가금액',
-      hint: '예탁금에\n미결제 손익을 더한 금액입니다.\n\nHTS·MTS의\n「계좌 평가금액」과 같습니다.\n\n────────\n\n[일상 갱신]\n\n포지션·증거금이 그대로면\n시나리오 가격으로\n시세만 반영하면 됩니다.\n\n────────\n\n[주의]\n\n최초에는\n평가금과 현재가를\n한 세트로 맞춰야 합니다.\n\n시세가 급변하면\n입력 중 가격이\n약간 달라질 수 있습니다.\n\n변동성이 낮을 때 입력하거나,\n계좌평가금·현재가는\n같은 화면에서 확인하세요.',
+      hint: '# 계좌 평가금액\n예탁금 + 미결제 손익.\nHTS·MTS 「계좌 평가금액」과 같습니다.\n\n일상 갱신은\n시나리오 가격을 사용하세요.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
@@ -148,12 +149,12 @@ export const ko: Messages = {
     },
     currentPrice: {
       label: '현재가',
-      hint: '기준 시세입니다.\n\n────────\n\n[주의]\n\n※ 여기만 바꾸면\n평가금은 변하지 않습니다.\n\n손익 반영은\n시나리오 가격을 사용하세요.\n\n────────\n\n[최초 입력]\n\n평가금과 같은 순간의\n시세를 넣으세요.\n\nHTS는 한 화면에서,\nMTS는 잔고·시세 화면을\n빠르게 오가거나\n스냅샷 기준으로 넣으세요.\n\n변동성이 클 때는\n시세가 잔잔할 때\n입력하는 것을 권장합니다.',
+      hint: '# 현재가\n기준 시세입니다.\n\n※ 여기만 바꾸면 평가금은 변하지 않습니다.\n손익 반영은 시나리오 가격을 사용하세요.',
       placeholder: '35,000',
     },
     scenarioPrice: {
       label: '시나리오 가격',
-      hint: '가격이 바뀌었을 때\n계좌 상태를 미리 보거나,\n\n매일 시세만 반영하여\n평가금을 갱신합니다.\n\n────────\n\n[단축키]\n\nEnter → 미리보기\nEnter → 손익 반영\nEsc → 종료\nCtrl+Z → 반영 취소\n\n────────\n\n[추천]\n\n💡 틱 사이즈 입력 시\n빈 칸에는 현재가가 표시되고,\n▲▼ 스테퍼를 누르면\n현재가 기준으로 가격이\n바로 입력됩니다.\n\n💡 매일 아침\n시세만 입력한 뒤\n\nEnter → Enter\n\n(계약수·증거금은 그대로)\n\n────────\n\n[주의]\n\n최초에는\n평가금과 현재가를\n한 세트로 맞춰야 합니다.\n\n시세가 급변하면\n입력 중 가격이\n약간 달라질 수 있습니다.\n\n변동성이 낮을 때 입력하거나,\n계좌평가금·현재가는\n같은 화면에서 확인하세요.',
+      hint: '# 시나리오 가격 시뮬레이션\n가격 변화에 따른 계좌 상태를 미리 보거나,\n매일 시세만 반영해 평가금을 갱신합니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 손익 반영\nEsc → 종료\nCtrl+Z → 반영 취소',
       placeholder: '변동 가격',
     },
     tickSize: {
@@ -173,7 +174,7 @@ export const ko: Messages = {
     },
     orderPrice: {
       label: '주문 가격',
-      hint: '체결을 가정하는\n주문 가격입니다.\n\n────────\n\n[추천]\n\n💡 틱 사이즈 입력 시\n빈 칸에는 현재가가 표시되고,\n▲▼ 스테퍼를 누르면\n현재가 기준으로 가격이\n바로 입력됩니다.\n\n────────\n\n[참고]\n\n미입력 시\n현재가와 동일하게\n계산합니다.',
+      hint: '# 주문 가격\n체결을 가정하는 주문 가격입니다.\n\n틱 사이즈 입력 시\n빈 칸에 현재가가 표시되고,\n▲▼ 스테퍼로 바로 입력할 수 있습니다.\n\n미입력 시 현재가와 동일하게 계산합니다.',
       placeholder: '주문 가격',
     },
   },

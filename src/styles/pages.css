@@ -750,6 +750,7 @@ html[data-zone='about'] body {
   --about-text-lead: #b8b2a8;
   --about-text-dim: #7a756c;
   --about-hero-gap: var(--space-sm);
+  --about-header-divider-pad: 2px;
   --about-meta-headline-gap: var(--space-sm);
   --about-company-font-size: 11px;
   --about-company-line-height: 1.4;
@@ -870,7 +871,8 @@ html[data-zone='about'] body {
 }
 
 .about-header__lead {
-  margin: var(--space-md) 0 calc(var(--about-hero-gap) - 0.5lh + 0.5em);
+  margin: var(--space-md) 0
+    calc(var(--about-hero-gap) - 0.5lh + 0.5em + var(--about-header-divider-pad));
   max-width: 34rem;
   font-size: 14px;
   font-weight: 400;
@@ -887,7 +889,7 @@ html[data-zone='about'] body {
   flex-direction: column;
   gap: var(--space-lg);
   flex: 1;
-  padding-top: var(--about-hero-gap);
+  padding-top: calc(var(--about-hero-gap) + var(--about-header-divider-pad));
 }
 
 .about-sections {

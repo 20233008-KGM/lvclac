@@ -378,7 +378,7 @@ function MarginSection({
   const scenarioModeActive = isPreviewModeActive(inputs)
   const mode = inputs.marginInputMode ?? 'rate'
 
-  const modeTooltip = `${m.rate} — ${m.rateHint}\n${m.perContract} — ${m.perContractHint}\n${m.total} — ${m.totalHint}`
+  const modeTooltip = `[${m.rate}]\n${m.rateHint}\n\n────────\n\n[${m.perContract}]\n${m.perContractHint}\n\n────────\n\n[${m.total}]\n${m.totalHint}`
 
   return (
     <div className="field-section">

@@ -11,6 +11,10 @@ export const AD_MIN_VISIBLE = 64
 export const MIN_EDGE_X = 0
 /** measureMinCalculatorMid 실패 시 fallback */
 export const MIN_CALC_MID_FALLBACK = 80
+/** 결과 행 값 열 — …·짧은 숫자가 보일 최소 폭 */
+export const RESULT_VALUE_MIN = 56
+/** 컬럼 측정 실패 시 fallback */
+export const MIN_COLUMN_FALLBACK = 120
 
 export interface GridLayout {
   leftX: number | null
@@ -92,30 +96,244 @@ function horizontalPadding(el: HTMLElement): number {
   return parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
 }
 
-/** calc-grid 중간 영역(입력+결과+핸들) 최소 px — DOM chrome 기준 */
+/** 줄바꿈 없이 라벨이 차지하는 실제 폭 */
+export function measureNoWrapContentWidth(el: HTMLElement): number {
+  if (typeof document === 'undefined') return 0
+
+  const doc = el.ownerDocument
+  const clone = el.cloneNode(true) as HTMLElement
+  clone.style.position = 'absolute'
+  clone.style.visibility = 'hidden'
+  clone.style.pointerEvents = 'none'
+  clone.style.whiteSpace = 'nowrap'
+  clone.style.width = 'max-content'
+  clone.style.maxWidth = 'none'
+  clone.style.minWidth = 'max-content'
+  clone.style.overflow = 'visible'
+  doc.body.appendChild(clone)
+  const width = Math.ceil(clone.getBoundingClientRect().width)
+  doc.body.removeChild(clone)
+  return width
+}
+
+function isVisible(el: HTMLElement): boolean {
+  const style = getComputedStyle(el)
+  return style.display !== 'none' && style.visibility !== 'hidden'
+}
+
+function measureFieldLabelWidth(field: HTMLElement): number {
+  const label = field.querySelector<HTMLElement>('.field-label-row')
+  if (!label || !isVisible(label)) return 0
+  return measureNoWrapContentWidth(label)
+}
+
+function measureInputControlMin(field: HTMLElement): number {
+  const controls = field.querySelector<HTMLElement>('.number-stepper__controls')
+  if (controls && isVisible(controls)) {
+    return Math.ceil(controls.getBoundingClientRect().width)
+  }
+  return 0
+}
+
+function measureFieldColumnMin(field: HTMLElement): number {
+  return Math.max(measureFieldLabelWidth(field), measureInputControlMin(field))
+}
+
+function gridGapPx(el: HTMLElement): number {
+  const gap = parseFloat(getComputedStyle(el).columnGap)
+  return Number.isFinite(gap) ? gap : 16
+}
+
+/** 2열 그리드 — 열별 최대 min 합 + 열 사이 gap */
+export function sumGridColumnMins(columnMins: number[], gap: number): number {
+  const occupied = columnMins.filter((w) => w > 0)
+  if (occupied.length === 0) return 0
+  return occupied.reduce((sum, w) => sum + w, 0) + gap * (occupied.length - 1)
+}
+
+export function measureFieldGridMin(section: HTMLElement, columnCount: number): number {
+  const fields = [...section.querySelectorAll<HTMLElement>(':scope > .field')].filter(isVisible)
+  if (fields.length === 0) return 0
+
+  const gap = gridGapPx(section)
+  let sectionMin = 0
+
+  for (let row = 0; row < fields.length; row += columnCount) {
+    const rowFields = fields.slice(row, row + columnCount)
+    const colMins = rowFields.map((field) => measureFieldColumnMin(field))
+    sectionMin = Math.max(sectionMin, sumGridColumnMins(colMins, gap))
+  }
+
+  return sectionMin
+}
+
+function measureFullWidthRowMin(section: HTMLElement): number {
+  let max = 0
+  const selectors = [
+    ':scope > .field-section-title',
+    ':scope > .field-section-head',
+    ':scope > .field-section-footer',
+    ':scope > .side-toggle',
+    ':scope > .mode-toggle',
+  ]
+  for (const selector of selectors) {
+    section.querySelectorAll<HTMLElement>(selector).forEach((el) => {
+      if (!isVisible(el)) return
+      max = Math.max(max, measureNoWrapContentWidth(el))
+    })
+  }
+  return max
+}
+
+function measureInputSectionMin(section: HTMLElement): number {
+  const fullRow = measureFullWidthRowMin(section)
+  const gridCols = section.classList.contains('field-section--position') ? 0 : 2
+  const gridMin = gridCols > 0 ? measureFieldGridMin(section, gridCols) : 0
+  return Math.max(fullRow, gridMin)
+}
+
+/** 입력 패널 — 섹션별 2열 라벨 min 합 + 패널 좌우 패딩 */
+export function measureMinInputColumn(container: HTMLElement): number {
+  const inputPanel = container.querySelector<HTMLElement>('.input-panel')
+  if (!inputPanel) return MIN_COLUMN_FALLBACK
+
+  let sectionMax = 0
+  inputPanel.querySelectorAll<HTMLElement>('.field-section').forEach((section) => {
+    sectionMax = Math.max(sectionMax, measureInputSectionMin(section))
+  })
+
+  return Math.ceil(horizontalPadding(inputPanel) + sectionMax)
+}
+
+function measureResultRowMainMin(main: HTMLElement): number {
+  const label = main.querySelector<HTMLElement>('.result-row-label')
+  const labelW = label && isVisible(label) ? measureNoWrapContentWidth(label) : 0
+  return labelW + gridGapPx(main) + RESULT_VALUE_MIN
+}
+
+function measureResultOrderFieldsMin(fields: HTMLElement): number {
+  let total = 0
+  let count = 0
+  fields.querySelectorAll<HTMLElement>('.result-order-field').forEach((field) => {
+    if (field.classList.contains('result-order-field--commit')) {
+      total += Math.ceil(field.getBoundingClientRect().width) || 22
+      return
+    }
+    const label = field.querySelector<HTMLElement>('.field-label-row')
+    const labelW = label && isVisible(label) ? measureNoWrapContentWidth(label) : 0
+    const control = field.querySelector<HTMLElement>('.number-stepper__controls')
+    const controlW =
+      control && isVisible(control) ? Math.ceil(control.getBoundingClientRect().width) : 0
+    total += Math.max(labelW, controlW, RESULT_VALUE_MIN)
+    count += 1
+  })
+
+  const gap = parseFloat(getComputedStyle(fields).gap) || 8
+  if (count > 1) total += gap * (count - 1)
+  return total
+}
+
+function measureResultSheetMin(table: HTMLElement): number {
+  const headers = [...table.querySelectorAll<HTMLElement>('thead th')].filter(isVisible)
+  if (headers.length === 0) return 0
+  const headerSum = headers.reduce((sum, th) => sum + measureNoWrapContentWidth(th), 0)
+  const row = table.querySelector<HTMLElement>('tbody tr')
+  const rowPad = row ? horizontalPadding(row) : 32
+  return rowPad + headerSum
+}
+
+/** 결과 패널 — 2열·페어·주문 필드 등 레이아웃별 라벨 min 합 + 패널 패딩 */
+export function measureMinResultColumn(container: HTMLElement): number {
+  const resultCol = container.querySelector<HTMLElement>('.result-column')
+  if (!resultCol) return MIN_COLUMN_FALLBACK
+
+  const panel = resultCol.querySelector<HTMLElement>('.result-panel')
+  const panelPad = horizontalPadding(panel ?? resultCol)
+
+  let contentMin = 0
+
+  resultCol.querySelectorAll<HTMLElement>('.result-hero-label').forEach((label) => {
+    if (!isVisible(label)) return
+    contentMin = Math.max(contentMin, measureNoWrapContentWidth(label))
+  })
+
+  resultCol.querySelectorAll<HTMLElement>('.result-row-pair').forEach((pair) => {
+    let pairMin = 0
+    pair.querySelectorAll<HTMLElement>('.result-row-main').forEach((main) => {
+      pairMin += measureResultRowMainMin(main)
+    })
+    pairMin += gridGapPx(pair)
+    const row = pair.querySelector<HTMLElement>('.result-row')
+    const rowPad = row ? horizontalPadding(row) : 0
+    contentMin = Math.max(contentMin, rowPad + pairMin)
+  })
+
+  resultCol.querySelectorAll<HTMLElement>('.result-row').forEach((row) => {
+    if (row.closest('.result-row-pair')) return
+    const main = row.querySelector<HTMLElement>('.result-row-main')
+    if (!main) return
+    contentMin = Math.max(contentMin, horizontalPadding(row) + measureResultRowMainMin(main))
+  })
+
+  resultCol.querySelectorAll<HTMLElement>('.result-order-fields').forEach((fields) => {
+    contentMin = Math.max(contentMin, measureResultOrderFieldsMin(fields))
+  })
+
+  resultCol.querySelectorAll<HTMLElement>('.result-sheet').forEach((table) => {
+    contentMin = Math.max(contentMin, measureResultSheetMin(table))
+  })
+
+  return Math.ceil(panelPad + contentMin)
+}
+
+export function measureMinColumnWidths(container: HTMLElement): {
+  inputMin: number
+  resultMin: number
+} {
+  return {
+    inputMin: measureMinInputColumn(container),
+    resultMin: measureMinResultColumn(container),
+  }
+}
+
+/** 중앙 리사이저 split 허용 범위 — 좌·우 라벨 최소 폭 기준 */
+export function computeSplitBounds(
+  mid: number,
+  inputMin: number,
+  resultMin: number,
+): { minSplit: number; maxSplit: number } {
+  if (mid <= 0) return { minSplit: 0.5, maxSplit: 0.5 }
+
+  let minSplit = clamp(inputMin / mid, 0.1, 0.9)
+  let maxSplit = clamp(1 - resultMin / mid, 0.1, 0.9)
+
+  if (minSplit > maxSplit) {
+    const balanced = clamp((inputMin + mid - resultMin) / (2 * mid), 0.1, 0.9)
+    minSplit = balanced
+    maxSplit = balanced
+  }
+
+  return { minSplit, maxSplit }
+}
+
+/** mid·열 최소 폭 기준으로 split 보정 — 좌·우 핸들 드래그 후에도 열별 min 유지 */
+export function clampSplitForColumnMins(
+  split: number,
+  mid: number,
+  inputMin: number,
+  resultMin: number,
+): number {
+  const { minSplit, maxSplit } = computeSplitBounds(mid, inputMin, resultMin)
+  return clamp(split, minSplit, maxSplit)
+}
+
+/** calc-grid 중간 영역(입력+결과+핸들) 최소 px — 라벨 nowrap 기준 */
 export function measureMinCalculatorMid(container: HTMLElement): number {
   const handleW =
     parseFloat(getComputedStyle(container).getPropertyValue('--calc-handle-w')) || 10
   const handleTotal = handleW * 3
-
-  let inputMin = 0
-  const inputPanel = container.querySelector<HTMLElement>('.input-panel')
-  if (inputPanel) {
-    const controls = inputPanel.querySelector<HTMLElement>('.number-stepper__controls')
-    const controlsW = controls?.getBoundingClientRect().width ?? 0
-    inputMin = horizontalPadding(inputPanel) + controlsW + 8
-  }
-
-  let resultMin = 0
-  const resultCol = container.querySelector<HTMLElement>('.result-column')
-  if (resultCol) {
-    const fontSize = parseFloat(getComputedStyle(resultCol).fontSize) || 14
-    resultMin = horizontalPadding(resultCol) + fontSize * 1.5
-  }
-
-  const leftColMin = Math.max(inputMin, 32)
-  const rightColMin = Math.max(resultMin, 32)
-  return Math.ceil(handleTotal + leftColMin + rightColMin)
+  const { inputMin, resultMin } = measureMinColumnWidths(container)
+  return Math.ceil(handleTotal + inputMin + resultMin)
 }
 
 /** 한쪽 가장자리 거리 x → outer/inner gap, 광고 열 폭, 숨김 여부 */

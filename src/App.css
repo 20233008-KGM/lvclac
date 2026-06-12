@@ -1376,7 +1376,7 @@ input:focus:not(:focus-visible) {
 
 .input-panel .field-section {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(min-content, 1fr));
   gap: var(--space-md);
 }
 
@@ -1390,7 +1390,7 @@ input:focus:not(:focus-visible) {
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-sm);
-  min-width: 0;
+  min-width: min-content;
 }
 
 .input-panel .field-section-title {
@@ -1404,6 +1404,7 @@ input:focus:not(:focus-visible) {
   text-transform: uppercase;
   color: var(--color-text);
   line-height: 1.3;
+  white-space: nowrap;
 }
 
 /* ?뱀뀡 ?쒕ぉ ??紐⑤뱶 ?좉? ???꾩?留??) 醫뚯륫 ?뺣젹 (利앷굅湲??뱀뀡) */
@@ -1413,7 +1414,7 @@ input:focus:not(:focus-visible) {
   align-items: center;
   justify-content: flex-start;
   gap: var(--space-sm);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .input-panel .field-section-head .field-section-title {
@@ -1473,8 +1474,20 @@ input:focus:not(:focus-visible) {
   font-weight: 500;
   color: var(--color-text-muted);
   line-height: 1.35;
+  white-space: nowrap;
   word-break: keep-all;
   overflow-wrap: normal;
+}
+
+.field-label-row,
+.field-label-text,
+.field-section-title,
+.field-section-head {
+  white-space: nowrap;
+}
+
+.field-label-row {
+  min-width: max-content;
 }
 
 .field-label-text {
@@ -2603,7 +2616,7 @@ input:focus:not(:focus-visible) {
 
 .result-order-field__label {
   margin: 0;
-  min-width: 0;
+  min-width: max-content;
 }
 
 .result-order-field__control {
@@ -3105,11 +3118,14 @@ body.scrub-drag-active * {
   font-size: 12px;
   font-weight: 500;
   color: var(--color-text-muted);
+  white-space: nowrap;
   word-break: keep-all;
   overflow-wrap: normal;
 }
 
 .result-hero-value {
+  display: block;
+  width: 100%;
   min-width: 0;
   overflow: hidden;
   font-family: var(--font-mono);
@@ -3125,8 +3141,10 @@ body.scrub-drag-active * {
 
 .fit-text {
   display: block;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 .fit-text--auto {
@@ -3139,70 +3157,28 @@ body.scrub-drag-active * {
 }
 
 .fit-text--ellipsis {
-  display: flex;
-  align-items: baseline;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.fit-text__clip {
-  flex: 1 1 auto;
-  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-}
-
-.fit-text--ellipsis.is-overflowing .fit-text__clip {
-  text-overflow: clip;
-  text-align: left;
-}
-
-.fit-text__indicator {
-  flex: 0 0 auto;
-  font-family: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  font-variant-numeric: inherit;
-  line-height: inherit;
-  color: inherit;
+  text-overflow: ellipsis;
 }
 
 .result-row-value .fit-text--ellipsis,
 .result-hero-value .fit-text--ellipsis,
 .result-sheet tbody td .fit-text--ellipsis {
-  justify-content: flex-end;
+  text-align: right;
 }
 
-/* 잘릴 때 왼쪽(부호·앞자리)과 … 유지 — scale 축소·뷰포트 클립 대응 */
+/* 잘릴 때 앞자리·부호 유지 — …는 텍스트 흐름 안에서 브라우저가 그림 */
 .result-row-value .fit-text--ellipsis.is-overflowing,
 .result-hero-value .fit-text--ellipsis.is-overflowing,
 .result-sheet tbody td .fit-text--ellipsis.is-overflowing {
-  justify-content: flex-start;
+  text-align: left;
 }
 
 .numeric-field-clip {
-  position: relative;
   display: block;
   width: 100%;
   min-width: 0;
-}
-
-.numeric-field-clip.is-overflowing .numeric-field--ellipsis {
-  text-overflow: clip;
-}
-
-.numeric-field-clip__indicator {
-  position: absolute;
-  top: 50%;
-  right: var(--space-md);
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-family: var(--font-mono);
-  font-size: inherit;
-  font-weight: inherit;
-  color: var(--color-text-muted);
-  line-height: 1;
 }
 
 /* 紐⑤컮?셋룻깭釉붾┸: ???レ옄 ???꾩껜 異뺤냼 */
@@ -3258,6 +3234,7 @@ body.scrub-drag-active * {
   color: var(--color-text-muted);
   text-align: left;
   line-height: 1.35;
+  white-space: nowrap;
 }
 
 .result-sheet thead th:last-child {
@@ -3281,6 +3258,11 @@ body.scrub-drag-active * {
   border-right: 1px solid var(--color-border-subtle);
   line-height: 1.4;
   vertical-align: middle;
+}
+
+.result-sheet tbody td {
+  overflow: hidden;
+  max-width: 0;
 }
 
 .result-sheet tbody td:last-child {
@@ -3336,7 +3318,7 @@ body.scrub-drag-active * {
 
 .result-row-main {
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(min-content, auto) minmax(0, 1fr);
   align-items: baseline;
   column-gap: var(--space-sm);
   min-width: 0;
@@ -3344,7 +3326,7 @@ body.scrub-drag-active * {
 
 .result-row-pair {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(min-content, 1fr));
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -3357,15 +3339,18 @@ body.scrub-drag-active * {
 }
 
 .result-row-label {
-  min-width: 0;
+  min-width: max-content;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   line-height: 1.4;
+  white-space: nowrap;
   word-break: keep-all;
   overflow-wrap: normal;
 }
 
 .result-row-value {
+  display: block;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   overflow: hidden;

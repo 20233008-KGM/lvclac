@@ -120,12 +120,14 @@ describe('applyInputPatch', () => {
     expect(resolveEvaluationInputs(twice).currentPrice).toBe(355)
   })
 
-  it('clearScenario — 스냅샷 복원, 시나리오 가격 초기화', () => {
+  it('clearScenario — 스냅샷 복원, 시나리오 가격 입력값 유지', () => {
     const committed = applyInputPatch(base, { commitScenarioPrice: 345 })
-    const cleared = applyInputPatch(committed, { clearScenario: true })
+    const adjusted = applyInputPatch(committed, { scenarioPrice: 355 })
+    const cleared = applyInputPatch(adjusted, { clearScenario: true })
     expect(isScenarioModeActive(cleared)).toBe(false)
     expect(cleared.accountEval).toBe(10_000_000)
-    expect(cleared.scenarioPrice).toBeUndefined()
+    expect(cleared.currentPrice).toBe(350)
+    expect(cleared.scenarioPrice).toBe(355)
   })
 
   it('시나리오 draft만 — 모드 미진입', () => {

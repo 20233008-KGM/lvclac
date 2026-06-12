@@ -157,7 +157,7 @@ export const en: Messages = {
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: '# Scenario price simulation\nPreview account state at a new price, or roll equity forward each day.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply P&L\nEsc → Exit\nCtrl+Z → Undo apply',
+      hint: '# Scenario price simulation\nPreview account state at a new price, or roll equity forward each day.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply P&L\nEsc → Exit\nCtrl+Z → Undo apply\n\n────────\n\n[Tip]\n\nWith the mark set, the empty field is ready with that value.\n▲▼ fills the price immediately.\nYou can also type the number directly.',
       placeholder: 'Target price',
     },
     tickSize: {
@@ -177,7 +177,7 @@ export const en: Messages = {
     },
     orderPrice: {
       label: 'Order price',
-      hint: '# Order price\nAssumed fill price for the simulated order.\n\n────────\n\n[Note]\n\nIf left blank, defaults to the current mark.\n\n────────\n\n[Tip]\n\nWith tick size set, the empty field shows the mark and ▲▼ steppers fill from it.',
+      hint: '# Order price\nAssumed fill price for the simulated order.\n\n────────\n\n[Note]\n\nIf left blank, defaults to the current mark.\n\n────────\n\n[Tip]\n\nWith the mark set, the empty field is ready with that value.\n▲▼ fills the price immediately.\nYou can also type the number directly.',
       placeholder: 'Order price',
     },
   },

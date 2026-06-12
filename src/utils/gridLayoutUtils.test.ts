@@ -4,9 +4,12 @@ import {
   EXPAND_SPLIT_STEP,
   MAX_EXPAND_STEPS,
   MIN_CALC_MID_FALLBACK,
+  clampSplitForColumnMins,
   computeExpandLayout,
   computeExpandStep,
+  computeSplitBounds,
   isLayoutCustom,
+  sumGridColumnMins,
   scaleGeometry,
   scaleGridLayout,
   sideVars,
@@ -133,6 +136,37 @@ describe('gridLayoutUtils', () => {
 
   it('MIN_CALC_MID_FALLBACK — measureMinCalculatorMid 실패 시 사용', () => {
     expect(MIN_CALC_MID_FALLBACK).toBeGreaterThanOrEqual(80)
+  })
+
+  it('computeSplitBounds — 좌·우 라벨 최소 폭으로 split 범위 제한', () => {
+    const { minSplit, maxSplit } = computeSplitBounds(800, 240, 200)
+    expect(minSplit).toBeCloseTo(0.3, 5)
+    expect(maxSplit).toBeCloseTo(0.75, 5)
+    expect(minSplit).toBeLessThanOrEqual(maxSplit)
+  })
+
+  it('computeSplitBounds — mid가 좁으면 균형 split', () => {
+    const { minSplit, maxSplit } = computeSplitBounds(300, 200, 200)
+    expect(minSplit).toBe(maxSplit)
+  })
+
+  it('clampSplitForColumnMins — 좁은 mid에서 입력 열 min 미만 split 보정', () => {
+    const mid = 600
+    const inputMin = 350
+    const resultMin = 240
+    expect(clampSplitForColumnMins(0.5, mid, inputMin, resultMin)).toBeCloseTo(
+      inputMin / mid,
+      5,
+    )
+    expect(clampSplitForColumnMins(0.9, mid, inputMin, resultMin)).toBeCloseTo(
+      1 - resultMin / mid,
+      5,
+    )
+  })
+
+  it('sumGridColumnMins — 2열 라벨 min 합 + gap', () => {
+    expect(sumGridColumnMins([120, 180], 16)).toBe(316)
+    expect(sumGridColumnMins([120, 0], 16)).toBe(120)
   })
 
   it('computeExpandStep — gap 소진 후 광고 축소', () => {

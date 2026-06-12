@@ -20,10 +20,9 @@ function measureOverflow(container: HTMLElement): OverflowMeasure {
       if (over > 0) inputOverflow = Math.max(inputOverflow, over)
     })
 
-  container.querySelectorAll('.fit-text').forEach((outer) => {
-    const inner = outer.querySelector('.fit-text__clip, .fit-text__inner')
-    if (!inner) return
-    const over = inner.scrollWidth - outer.clientWidth
+  container.querySelectorAll('.fit-text').forEach((el) => {
+    if (!(el instanceof HTMLElement)) return
+    const over = el.scrollWidth - el.clientWidth
     if (over > 0) resultOverflow = Math.max(resultOverflow, over)
   })
 

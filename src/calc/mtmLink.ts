@@ -262,8 +262,8 @@ export function revertScenarioState(prev: CalculatorInputs): Partial<CalculatorI
       scenarioRevertSnapshot: undefined,
     }
   }
+  // Esc — 계좌·현재가 스냅샷만 복원하고 시나리오 가격 입력값은 필드에 유지 (주문 시나리오와 동일)
   return {
-    scenarioPrice: undefined,
     scenarioAppliedPrice: undefined,
     scenarioRevertSnapshot: undefined,
     accountEval: snap.accountEval,

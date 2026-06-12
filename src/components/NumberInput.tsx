@@ -107,7 +107,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   const showHint = shouldShowDigitLimitHint(isRate, truncatedAttempt, hintValue)
   const atBorder = shouldShowDigitLimitBorder(isRate, text, allowDecimal, allowNegative)
   const overflowing = useOverflowEllipsis(inputElRef, true, [text, layoutMode, fitScale])
-  const ellipsisActive = layoutMode === 'manual' || overflowing
+  const ellipsisActive = !focused && (layoutMode === 'manual' || overflowing)
 
   function commitFromText(): boolean {
     const normalized = readDraftFromText()
@@ -167,6 +167,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
           className={inputClass || undefined}
           disabled={disabled}
           value={text}
+          title={overflowing && !focused ? text : undefined}
           onFocus={() => setFocused(true)}
           onBlur={() => {
             if (skipBlurCommitRef.current) {
@@ -245,11 +246,6 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
           </span>
         )}
       </div>
-      {overflowing && (
-        <span className="numeric-field-clip__indicator" aria-hidden="true">
-          …
-        </span>
-      )}
     </div>
   )
 })

@@ -1,49 +1,39 @@
 import { useLayoutEffect, useState, type RefObject } from 'react'
 
-const OVERFLOW_EPSILON = 1
+/** 서브픽셀·tabular-nums — … 켜기 전 여유 */
+const OVERFLOW_ON_MARGIN = 4
 
-/** transform: scale 등 레이아웃·시각 폭 비율 */
-function getLayoutScale(el: HTMLElement): number {
-  const rect = el.getBoundingClientRect()
-  if (el.clientWidth > 0) return rect.width / el.clientWidth
-  if (el.clientHeight > 0) return rect.height / el.clientHeight
-  return 1
+function measureTextWidth(scrollWidth: number): number {
+  return Math.ceil(scrollWidth)
 }
 
-function findClipRoot(el: HTMLElement): HTMLElement | null {
-  return el.closest('.calc-viewport')
+function measureBoxWidth(clientWidth: number): number {
+  return Math.floor(clientWidth)
 }
 
-/** scrollWidth·뷰포트 클립·scale 축소로 잘린 경우 포함 */
-export function isContentOverflowing(el: HTMLElement): boolean {
-  if (el.scrollWidth > el.clientWidth + OVERFLOW_EPSILON) return true
+/**
+ * ellipsis가 그려지는 요소 자체의 scrollWidth vs clientWidth.
+ * wasOverflowing이면 잘림이 남는 한 … 유지(최소 축소 시 신호).
+ */
+export function isScrollOverflowing(
+  scrollWidth: number,
+  clientWidth: number,
+  wasOverflowing: boolean,
+): boolean {
+  const textW = measureTextWidth(scrollWidth)
+  const boxW = measureBoxWidth(clientWidth)
 
-  const scale = getLayoutScale(el)
-  const visualContentW = el.scrollWidth * scale
-  const elRect = el.getBoundingClientRect()
+  if (boxW <= 0) return wasOverflowing
 
-  if (visualContentW > elRect.width + OVERFLOW_EPSILON) return true
-
-  const clipRoot = findClipRoot(el)
-  if (!clipRoot) return false
-
-  const rootRect = clipRoot.getBoundingClientRect()
-  const visibleW =
-    Math.min(elRect.right, rootRect.right) - Math.max(elRect.left, rootRect.left)
-
-  if (visibleW < elRect.width - OVERFLOW_EPSILON && visualContentW > visibleW + OVERFLOW_EPSILON) {
-    return true
+  if (wasOverflowing) {
+    return textW > boxW
   }
 
-  if (
-    (elRect.right > rootRect.right + OVERFLOW_EPSILON ||
-      elRect.left < rootRect.left - OVERFLOW_EPSILON) &&
-    visualContentW > Math.max(visibleW, 0) + OVERFLOW_EPSILON
-  ) {
-    return true
-  }
+  return textW > boxW + OVERFLOW_ON_MARGIN
+}
 
-  return false
+export function isContentOverflowing(el: HTMLElement, wasOverflowing = false): boolean {
+  return isScrollOverflowing(el.scrollWidth, el.clientWidth, wasOverflowing)
 }
 
 /** scrollWidth > clientWidth — 잘린 텍스트에 … 표시용 */
@@ -64,18 +54,33 @@ export function useOverflowEllipsis(
     if (!el) return
 
     const check = () => {
-      setOverflowing(isContentOverflowing(el))
+      setOverflowing((prev) => {
+        const next = isContentOverflowing(el, prev)
+        return prev === next ? prev : next
+      })
     }
 
     check()
-    const ro = new ResizeObserver(() => requestAnimationFrame(check))
+    let raf = 0
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        raf = requestAnimationFrame(check)
+      })
+    })
     ro.observe(el)
-    const parent = el.parentElement
-    if (parent) ro.observe(parent)
-    const clipRoot = findClipRoot(el)
-    if (clipRoot && clipRoot !== parent) ro.observe(clipRoot)
+    let ancestor: HTMLElement | null = el.parentElement
+    let depth = 0
+    while (ancestor && depth < 4) {
+      ro.observe(ancestor)
+      ancestor = ancestor.parentElement
+      depth += 1
+    }
 
-    return () => ro.disconnect()
+    return () => {
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+    }
   }, [ref, enabled, ...deps])
 
   return overflowing

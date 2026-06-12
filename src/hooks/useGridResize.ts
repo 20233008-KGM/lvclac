@@ -17,20 +17,30 @@ import {
 } from './layoutScanPrefs'
 import {
   clamp,
+  clampSplitForColumnMins,
   computeExpandLayout,
+  computeSplitBounds,
   DESKTOP_MIN,
   GRID_HANDLE_WIDTH,
   hasCustomGaps,
   isLayoutCustom,
   measureMinCalculatorMid,
+  measureMinColumnWidths,
   MIN_CALC_MID_FALLBACK,
   MIN_EDGE_X,
   scaleGeometry,
   scaleGridLayout,
   sideVars,
   type Geometry,
+  MIN_COLUMN_FALLBACK,
   type GridLayout,
 } from '../utils/gridLayoutUtils'
+
+interface ColumnMinsCache {
+  inputMin: number
+  resultMin: number
+  minMid: number
+}
 
 export type GridResizeHandle = 'left' | 'center' | 'right'
 
@@ -55,6 +65,17 @@ const RESET_BTN_FADE_MS = 2200
 const RESET_BTN_GLOW_MS = GRID_SCAN_MS + RESET_BTN_HOLD_MS + RESET_BTN_FADE_MS
 
 const DEFAULT_LAYOUT: GridLayout = { leftX: null, rightX: null, split: 0.5, manual: false }
+
+/** 기본 비율이지만 사용자가 리사이저/⟲를 만진 상태 — 자동 확장 끔 */
+function createResetLayout(): GridLayout {
+  return { ...DEFAULT_LAYOUT, manual: true }
+}
+
+function initLayout(persist: boolean): GridLayout {
+  const loaded = persist ? loadLayout() : DEFAULT_LAYOUT
+  if (loaded.manual) markResizerManual()
+  return loaded
+}
 
 function viewportWidth(): number {
   return typeof document === 'undefined' ? 0 : document.documentElement.clientWidth
@@ -119,7 +140,7 @@ export function useGridResize(persist: boolean) {
   const containerRef = useRef<HTMLElement | null>(null)
   const geometryRef = useRef<Geometry | null>(null)
   const layoutRef = useRef<GridLayout>(DEFAULT_LAYOUT)
-  const [layout, setLayout] = useState<GridLayout>(() => (persist ? loadLayout() : DEFAULT_LAYOUT))
+  const [layout, setLayout] = useState<GridLayout>(() => initLayout(persist))
   const [geoVersion, setGeoVersion] = useState(0)
   const [activeHandle, setActiveHandle] = useState<GridResizeHandle | null>(null)
   const [gridScanning, setGridScanning] = useState(false)
@@ -128,9 +149,24 @@ export function useGridResize(persist: boolean) {
   const [resetBtnGlowGeneration, setResetBtnGlowGeneration] = useState(0)
   const [layoutVersion, setLayoutVersion] = useState(0)
   const dragRef = useRef<GridResizeHandle | null>(null)
+  const columnMinsRef = useRef<ColumnMinsCache | null>(null)
   const lastViewportWRef = useRef(viewportWidth())
 
   layoutRef.current = layout
+
+  const refreshColumnMins = useCallback(() => {
+    const container = containerRef.current
+    if (!container) {
+      columnMinsRef.current = null
+      return
+    }
+    const { inputMin, resultMin } = measureMinColumnWidths(container)
+    columnMinsRef.current = {
+      inputMin,
+      resultMin,
+      minMid: Math.ceil(GRID_HANDLE_WIDTH * 3 + inputMin + resultMin),
+    }
+  }, [])
 
   const hasGaps = hasCustomGaps(layout)
   const isCustom = isLayoutCustom(layout)
@@ -175,7 +211,9 @@ export function useGridResize(persist: boolean) {
     }
     const W = viewportWidth()
     const container = containerRef.current
-    const minMid = container ? measureMinCalculatorMid(container) : MIN_CALC_MID_FALLBACK
+    const minMid =
+      columnMinsRef.current?.minMid ??
+      (container ? measureMinCalculatorMid(container) : MIN_CALC_MID_FALLBACK)
     const leftRaw = layout.leftX ?? geo.leftX0
     const rightRaw = layout.rightX ?? geo.rightX0
     const maxLeftX = W - rightRaw - minMid
@@ -278,12 +316,36 @@ export function useGridResize(persist: boolean) {
     return { changed: true, widened: step.widened }
   }, [])
 
+  useLayoutEffect(() => {
+    if (viewportWidth() < DESKTOP_MIN) return
+    if (dragRef.current) return
+
+    refreshColumnMins()
+    const geo = geometryRef.current
+    const cols = columnMinsRef.current
+    if (!geo || !cols) return
+
+    const current = layoutRef.current
+    const W = viewportWidth()
+    const leftX = current.leftX ?? geo.leftX0
+    const rightX = current.rightX ?? geo.rightX0
+    const mid = W - leftX - rightX
+    if (mid <= 0) return
+
+    const split = clampSplitForColumnMins(current.split, mid, cols.inputMin, cols.resultMin)
+    if (split !== current.split) {
+      setLayout((prev) => ({ ...prev, split }))
+    }
+  }, [geoVersion, layoutVersion, refreshColumnMins])
+
   const applyDrag = useCallback((handle: GridResizeHandle, clientX: number) => {
     const geo = geometryRef.current
     if (!geo) return
     const W = viewportWidth()
-    const container = containerRef.current
-    const minMid = container ? measureMinCalculatorMid(container) : MIN_CALC_MID_FALLBACK
+    const cols = columnMinsRef.current
+    const minMid = cols?.minMid ?? MIN_CALC_MID_FALLBACK
+    const inputMin = cols?.inputMin ?? MIN_COLUMN_FALLBACK
+    const resultMin = cols?.resultMin ?? MIN_COLUMN_FALLBACK
 
     setLayout((prev) => {
       const leftX = prev.leftX ?? geo.leftX0
@@ -292,16 +354,22 @@ export function useGridResize(persist: boolean) {
 
       if (handle === 'left') {
         const maxLeftX = W - rightX - minMid
-        return { ...prev, manual, leftX: clamp(clientX, MIN_EDGE_X, maxLeftX), rightX }
+        const nextLeftX = clamp(clientX, MIN_EDGE_X, maxLeftX)
+        const mid = W - nextLeftX - rightX
+        const split = clampSplitForColumnMins(prev.split, mid, inputMin, resultMin)
+        return { ...prev, manual, leftX: nextLeftX, rightX, split }
       }
       if (handle === 'right') {
         const maxRightX = W - leftX - minMid
-        return { ...prev, manual, leftX, rightX: clamp(W - clientX, MIN_EDGE_X, maxRightX) }
+        const nextRightX = clamp(W - clientX, MIN_EDGE_X, maxRightX)
+        const mid = W - leftX - nextRightX
+        const split = clampSplitForColumnMins(prev.split, mid, inputMin, resultMin)
+        return { ...prev, manual, leftX, rightX: nextRightX, split }
       }
       const mid = W - leftX - rightX
       if (mid <= 0) return { ...prev, manual }
-      const minSplit = clamp(240 / mid, 0.1, 0.5)
-      const split = clamp((clientX - leftX) / mid, minSplit, 1 - minSplit)
+      const { minSplit, maxSplit } = computeSplitBounds(mid, inputMin, resultMin)
+      const split = clamp((clientX - leftX) / mid, minSplit, maxSplit)
       return { ...prev, manual, split }
     })
   }, [])
@@ -310,13 +378,32 @@ export function useGridResize(persist: boolean) {
   const onPointerUp = useRef<() => void>(() => {})
 
   const endDrag = useCallback(() => {
+    const wasDragging = dragRef.current !== null
     dragRef.current = null
     setActiveHandle(null)
     document.body.style.removeProperty('cursor')
     document.body.style.removeProperty('user-select')
     window.removeEventListener('pointermove', onPointerMove.current)
     window.removeEventListener('pointerup', onPointerUp.current)
-  }, [])
+
+    if (!wasDragging) return
+    refreshColumnMins()
+    const geo = geometryRef.current
+    const cols = columnMinsRef.current
+    if (!geo || !cols) return
+
+    const current = layoutRef.current
+    const W = viewportWidth()
+    const leftX = current.leftX ?? geo.leftX0
+    const rightX = current.rightX ?? geo.rightX0
+    const mid = W - leftX - rightX
+    if (mid <= 0) return
+
+    const split = clampSplitForColumnMins(current.split, mid, cols.inputMin, cols.resultMin)
+    if (split !== current.split) {
+      setLayout((prev) => ({ ...prev, split }))
+    }
+  }, [refreshColumnMins])
 
   onPointerMove.current = (e: globalThis.PointerEvent) => {
     if (!dragRef.current) return
@@ -335,6 +422,7 @@ export function useGridResize(persist: boolean) {
       }
       e.preventDefault()
       markResizerManual()
+      refreshColumnMins()
       dragRef.current = handle
       setActiveHandle(handle)
       document.body.style.cursor = 'col-resize'
@@ -342,7 +430,7 @@ export function useGridResize(persist: boolean) {
       window.addEventListener('pointermove', onPointerMove.current)
       window.addEventListener('pointerup', onPointerUp.current)
     },
-    [],
+    [refreshColumnMins],
   )
 
   const reset = useCallback(() => {
@@ -354,7 +442,7 @@ export function useGridResize(persist: boolean) {
     resetGlowTimerRef.current = null
     setGridScanning(false)
     setResetBtnGlowing(false)
-    setLayout({ ...DEFAULT_LAYOUT })
+    setLayout(createResetLayout())
     setLayoutVersion((v) => v + 1)
   }, [])
 

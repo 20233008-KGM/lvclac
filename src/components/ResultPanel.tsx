@@ -9,7 +9,7 @@ import {
 import { calcMargins, inputsReadyForOrderSim, withReferencePrice } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
-import { FORMULAS_PATH } from '../config/routes'
+import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
@@ -296,9 +296,12 @@ function OrderInputs({
   priceField,
   scenarioContractsLabel,
   scenarioPriceLabel,
+  useCurrentPriceShort,
+  useCurrentPriceTitle,
   stepUpLabel,
   stepDownLabel,
   tooltipLabel,
+  tooltipGuideLink,
   commitLabel,
   clearLabel,
   applyLabel,
@@ -310,9 +313,12 @@ function OrderInputs({
   priceField: { label: string; hint: string; placeholder?: string }
   scenarioContractsLabel: string
   scenarioPriceLabel: string
+  useCurrentPriceShort: string
+  useCurrentPriceTitle: string
   stepUpLabel: string
   stepDownLabel: string
   tooltipLabel: string
+  tooltipGuideLink: string
   commitLabel: string
   clearLabel: string
   applyLabel: string
@@ -322,6 +328,7 @@ function OrderInputs({
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
   const currentPrice = inputs.currentPrice
+  const canUseCurrentPrice = currentPrice != null
   const orderScenarioActive = isOrderScenarioModeActive(inputs)
   const orderPricePlaceholder =
     currentPrice != null
@@ -397,6 +404,23 @@ function OrderInputs({
     />
   )
 
+  function fillOrderPriceWithCurrent() {
+    if (currentPrice != null) onChange({ orderPrice: currentPrice })
+  }
+
+  const markInlineButton = (
+    <button
+      type="button"
+      className="order-mark-inline-btn"
+      aria-label={useCurrentPriceTitle}
+      title={useCurrentPriceTitle}
+      disabled={!canUseCurrentPrice}
+      onClick={fillOrderPriceWithCurrent}
+    >
+      {useCurrentPriceShort}
+    </button>
+  )
+
   return (
     <div
       className={`result-order-fields${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
@@ -434,7 +458,12 @@ function OrderInputs({
           <span className="result-order-field__label field-label-row" id="order-price-label">
             <span className="field-label-text">
               {priceLabel}
-              <FieldLabelTooltip text={priceField.hint} label={tooltipLabel} />
+              <FieldLabelTooltip
+                text={priceField.hint}
+                label={tooltipLabel}
+                guideHref={GUIDE_PATH}
+                guideLinkLabel={tooltipGuideLink}
+              />
             </span>
           </span>
           <div className="result-order-field__control">
@@ -448,6 +477,7 @@ function OrderInputs({
                 stepUpLabel={stepUpLabel}
                 stepDownLabel={stepDownLabel}
                 ariaLabelledBy="order-price-label"
+                trailingSlot={markInlineButton}
                 enableDragScrub
                 dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
                 scrubSeedValue={currentPrice}
@@ -455,15 +485,19 @@ function OrderInputs({
                 onChange={(v) => onChange({ orderPrice: v })}
               />
             ) : (
-              <NumberInput
-                ref={priceInputRef}
-                value={inputs.orderPrice}
-                allowDecimal={false}
-                placeholder={orderPricePlaceholder}
-                aria-labelledby="order-price-label"
-                onEnterKey={handleOrderEnter}
-                onChange={(v) => onChange({ orderPrice: v })}
-              />
+              <div className="result-order-price-row">
+                <NumberInput
+                  ref={priceInputRef}
+                  value={inputs.orderPrice}
+                  allowDecimal={false}
+                  placeholder={orderPricePlaceholder}
+                  aria-labelledby="order-price-label"
+                  className="result-order-price-row__input"
+                  onEnterKey={handleOrderEnter}
+                  onChange={(v) => onChange({ orderPrice: v })}
+                />
+                {markInlineButton}
+              </div>
             )}
           </div>
         </div>
@@ -671,6 +705,8 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
             <FieldLabelTooltip
               text={t.orderScenarioHint}
               label={t.fieldTooltipLabel}
+              guideHref={GUIDE_PATH}
+              guideLinkLabel={t.tooltipGuideLink}
               highlight={orderScenarioActive}
             />
           </h2>
@@ -690,9 +726,12 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           priceField={f.orderPrice}
           scenarioContractsLabel={t.orderScenarioFieldContracts}
           scenarioPriceLabel={t.orderScenarioFieldPrice}
+          useCurrentPriceShort={t.useCurrentPriceShort}
+          useCurrentPriceTitle={t.useCurrentPriceTitle}
           stepUpLabel={t.stepUp}
           stepDownLabel={t.stepDown}
           tooltipLabel={t.fieldTooltipLabel}
+          tooltipGuideLink={t.tooltipGuideLink}
           commitLabel={t.orderScenarioCommit}
           clearLabel={t.orderScenarioClear}
           applyLabel={t.orderScenarioApply}

@@ -2015,6 +2015,13 @@ input:focus:not(:focus-visible) {
   border-right: none;
 }
 
+.number-stepper--with-trailing-slot .order-mark-inline-btn {
+  border-radius: 0;
+  border-left: none;
+  border-right: 1px solid var(--color-border-subtle);
+  box-shadow: inset 1px 0 0 var(--color-border-subtle);
+}
+
 .input-commit-btn-slot__layer {
   display: flex;
   align-items: stretch;
@@ -2560,6 +2567,7 @@ input:focus:not(:focus-visible) {
 }
 
 .result-order-fields {
+  --order-mark-btn-width: var(--stepper-btn-width, 1.375rem);
   --order-commit-col-width: var(--stepper-btn-width, 1.375rem);
   display: flex;
   flex-direction: row;
@@ -2657,14 +2665,123 @@ input:focus:not(:focus-visible) {
   font-size: var(--font-size-number);
 }
 
+.result-order-fields .number-stepper__trailing-slot:has(.order-mark-inline-btn) {
+  width: var(--order-mark-btn-width);
+  min-width: var(--order-mark-btn-width);
+  max-width: var(--order-mark-btn-width);
+}
+
+.order-mark-inline-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  background: var(--color-surface-2);
+  box-shadow: inset 1px 0 0 var(--color-border-subtle);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.order-mark-inline-btn:hover:not(:disabled) {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  box-shadow: inset 1px 0 0 var(--color-border);
+}
+
+.order-mark-inline-btn:focus-visible {
+  box-shadow: inset 1px 0 0 var(--color-primary);
+}
+
+.order-mark-inline-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.result-order-price-row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    var(--order-mark-btn-width, var(--stepper-btn-width, 1.375rem));
+  align-items: stretch;
+  min-width: 0;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast);
+  position: relative;
+  isolation: isolate;
+}
+
+.result-order-price-row:focus-within {
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+  z-index: 2;
+}
+
+.result-order-price-row:focus-within .result-order-price-row__input,
+.result-order-price-row:focus-within .result-order-price-row__input:focus,
+.result-order-price-row:focus-within .result-order-price-row__input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: none;
+}
+
+.result-order-price-row:focus-within .order-mark-inline-btn {
+  border-color: var(--color-primary);
+  box-shadow: inset 1px 0 0 var(--color-primary);
+}
+
+.result-order-price-row .numeric-field {
+  min-width: 0;
+}
+
+.result-order-price-row__input,
+.result-order-price-row .numeric-field__input {
+  min-width: 0;
+  width: 100%;
+  border-radius: 0;
+  border-right: none;
+}
+
+.result-order-price-row .order-mark-inline-btn {
+  border-left: none;
+  border-radius: 0;
+  border-right: 1px solid var(--color-border-subtle);
+}
+
 .result-order-fields .number-stepper {
   display: grid;
   align-items: stretch;
 }
 
-.result-order-field--contracts .number-stepper,
-.result-order-field--price .number-stepper {
+.result-order-field--contracts .number-stepper {
   grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width, 1.375rem);
+}
+
+.result-order-field--price .number-stepper--with-trailing-slot {
+  grid-template-columns:
+    minmax(0, 1fr)
+    var(--stepper-btn-width, 1.375rem)
+    var(--order-mark-btn-width);
 }
 
 .result-order-fields .field-label-row {
@@ -2818,10 +2935,17 @@ input:focus:not(:focus-visible) {
 .number-stepper:focus-within .input-commit-btn,
 .number-stepper:focus-within .input-commit-btn:focus-visible,
 .number-stepper:focus-within .number-stepper__inline-slot .input-commit-btn,
+.number-stepper:focus-within .order-mark-inline-btn,
+.number-stepper:focus-within .order-mark-inline-btn:focus-visible,
 .input-commit-row:focus-within .input-commit-btn,
 .input-commit-row:focus-within .input-commit-btn:focus-visible {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.number-stepper:focus-within:not(.number-stepper--with-trailing-slot) .order-mark-inline-btn,
+.number-stepper:focus-within:not(.number-stepper--with-trailing-slot) .order-mark-inline-btn:focus-visible {
+  box-shadow: inset 1px 0 0 var(--color-primary);
 }
 
 .calc-viewport--scenario .number-stepper:focus-within,
@@ -2914,6 +3038,18 @@ input:focus:not(:focus-visible) {
 .number-stepper--with-trailing-slot .number-stepper__btn:last-child {
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+.number-stepper--with-trailing-slot:focus-within .order-mark-inline-btn,
+.number-stepper--with-trailing-slot:focus-within .order-mark-inline-btn:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: inset 1px 0 0 var(--color-primary);
+}
+
+.calc-viewport--scenario .number-stepper--with-trailing-slot:focus-within .order-mark-inline-btn,
+.calc-viewport--scenario .number-stepper--with-trailing-slot:focus-within .order-mark-inline-btn:focus-visible {
+  border-color: var(--scenario-accent);
+  box-shadow: inset 1px 0 0 var(--scenario-accent);
 }
 
 .number-stepper__btn:hover {

@@ -8,6 +8,12 @@
 | [test-cases.md](./test-cases.md) | 롱/숏 × 증거금 3입력 × 전체기능 케이스 매트릭스 |
 | [scenario-test-report.md](./scenario-test-report.md) | 시나리오 검증 보고서 |
 
+## UI·문서
+
+| 문서 | 내용 |
+|------|------|
+| [ko-tooltip-guide.md](./ko-tooltip-guide.md) | 한국어 툴팁 작성 원칙·마크업·안티패턴 |
+
 ## 운영·연동
 
 | 문서 | 내용 |

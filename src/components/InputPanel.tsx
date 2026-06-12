@@ -128,6 +128,9 @@ function CurrentPriceField({
   field,
   stepUpLabel,
   stepDownLabel,
+  tooltipLabel,
+  tooltipGuideHref,
+  tooltipGuideLinkLabel,
   disabled = false,
 }: {
   inputs: CalculatorInputs
@@ -135,14 +138,25 @@ function CurrentPriceField({
   field: FieldCopy
   stepUpLabel: string
   stepDownLabel: string
+  tooltipLabel: string
+  tooltipGuideHref?: string
+  tooltipGuideLinkLabel?: string
   disabled?: boolean
 }) {
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
+  const fieldProps = {
+    label: field.label,
+    labelId: 'current-price-label',
+    tooltip: field.hint,
+    tooltipLabel,
+    tooltipGuideHref,
+    tooltipGuideLinkLabel,
+  }
 
   if (useStepper) {
     return (
-      <Field label={field.label} labelId="current-price-label">
+      <Field {...fieldProps}>
         <NumberStepper
           value={inputs.currentPrice}
           step={tickSize}
@@ -161,7 +175,7 @@ function CurrentPriceField({
   }
 
   return (
-    <Field label={field.label} labelId="current-price-label">
+    <Field {...fieldProps}>
       <NumberInput
         value={inputs.currentPrice}
         allowDecimal={false}
@@ -398,7 +412,7 @@ function MarginSection({
   const scenarioModeActive = isPreviewModeActive(inputs)
   const mode = inputs.marginInputMode ?? 'rate'
 
-  const modeTooltip = `[${m.rate}]\n${m.rateHint}\n\n────────\n\n[${m.perContract}]\n${m.perContractHint}\n\n────────\n\n[${m.total}]\n${m.totalHint}`
+  const tooltipLabel = t.fieldTooltipLabel
 
   return (
     <div className="field-section">
@@ -418,15 +432,15 @@ function MarginSection({
             </button>
           ))}
         </div>
-        <FieldLabelTooltip text={modeTooltip} label={m.label} />
+        <FieldLabelTooltip text={m.tooltip} label={m.label} />
       </div>
 
       {mode === 'rate' && (
         <>
-          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, false, undefined, {
+          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
           })}
-          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, false, undefined, {
+          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
           })}
         </>
@@ -434,10 +448,10 @@ function MarginSection({
 
       {mode === 'perContract' && (
         <>
-          {numField(f.maintenanceMarginPerContract, 'maintenanceMarginPerContract', inputs, onChange, false, undefined, false, undefined, {
+          {numField(f.maintenanceMarginPerContract, 'maintenanceMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
           })}
-          {numField(f.entrustedMarginPerContract, 'entrustedMarginPerContract', inputs, onChange, false, undefined, false, undefined, {
+          {numField(f.entrustedMarginPerContract, 'entrustedMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
           })}
         </>
@@ -445,10 +459,10 @@ function MarginSection({
 
       {mode === 'total' && (
         <>
-          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, false, undefined, false, undefined, {
+          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
           })}
-          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, false, undefined, false, undefined, {
+          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
           })}
         </>
@@ -511,10 +525,15 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               }
             />
           </Field>
-          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional, false, undefined, {
+          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
           })}
-          <Field label={f.contracts.label} labelId="contracts-label">
+          <Field
+            label={f.contracts.label}
+            labelId="contracts-label"
+            tooltip={f.contracts.hint}
+            tooltipLabel={t.fieldTooltipLabel}
+          >
             <NumberStepper
               value={previewInputs.contracts}
               step={1}
@@ -539,9 +558,12 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             field={f.currentPrice}
             stepUpLabel={t.stepUp}
             stepDownLabel={t.stepDown}
+            tooltipLabel={t.fieldTooltipLabel}
+            tooltipGuideHref={GUIDE_PATH}
+            tooltipGuideLinkLabel={t.tooltipGuideLink}
             disabled={scenarioModeActive}
           />
-          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional, false, undefined, {
+          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
           })}
           <ScenarioPriceField

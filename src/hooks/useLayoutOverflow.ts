@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { DESKTOP_MIN, MIN_FIT_SCALE } from '../utils/gridLayoutUtils'
+import { clearAutoExpandSuppress } from './layoutScanPrefs'
 import type { ExpandResult, OverflowMeasure } from './useGridResize'
 
 const FIT_SCALE_EPSILON = 0.005
@@ -184,6 +185,7 @@ export function useLayoutOverflow({
 
     const isUserInput =
       prevMeasureKeyRef.current !== undefined && prevMeasureKeyRef.current !== measureKey
+    if (isUserInput) clearAutoExpandSuppress()
     prevMeasureKeyRef.current = measureKey
 
     const timer = window.setTimeout(() => {

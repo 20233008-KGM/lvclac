@@ -12,11 +12,12 @@ export const en: Messages = {
     ariaLabel: 'About this tool',
     overviewTitle: 'Overview',
     overviewBody:
-      ' Free calculator for liquidation price and margin headroom on futures and leveraged positions.',
+      'Free calculator for liquidation price and margin headroom on futures and leveraged positions.',
     usageTitle: 'How to use',
     usageBody:
-      ' Enter equity and margin rates from your broker to check liquidation risk, or adjust order size and price to preview your account after a fill. Roll equity forward each morning with Scenario price: Enter → Enter.',
-    footnote: 'Does not account for multiple open positions or cross-margin accounts.',
+      'Enter equity and margin rates from your broker to check liquidation risk, or adjust order size and price to preview your account after a fill.\nEach morning, enter the mark in Scenario price and press Enter twice to roll equity forward.',
+    footnote:
+      '[Note]\n\nDoes not account for multiple open positions or cross-margin accounts.',
   },
   appIntro:
     'Instantly estimate liquidation price and margin headroom for a single-instrument position. Each day, enter the new mark in Scenario price and press Enter twice to roll unrealized P&L into equity. For first-time setup, a single HTS screen snapshot is most accurate.',
@@ -68,14 +69,15 @@ export const en: Messages = {
   orderScenarioHint:
     '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply',
   clearAllInputs: 'Clear all',
-  clearAllInputsHint: 'Press Delete to clear only the focused input field.',
+  clearAllInputsHint:
+    '# Clear all inputs\nThe Clear all button resets every field at once.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
   clearAllInputsHintLabel: 'Clear shortcut help',
   clearAllInputsModalTitle: 'Clear all inputs',
   clearAllInputsModalBody: 'This will clear all entered values. Continue?',
   clearAllInputsConfirm: 'Clear',
   draftSave: {
     label: 'Save inputs on this device',
-    hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values. Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
+    hint: '# Save inputs on this device\nWhen on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server; turning off deletes saved values.\n\n────────\n\n[Tip]\n\n💡 Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
     cleared: 'Saved data has been removed.',
     enableModalTitle: 'Save inputs on this device',
     enableModalBody: [
@@ -95,85 +97,87 @@ export const en: Messages = {
     rate: 'Rate',
     perContract: 'Per',
     total: 'Total',
-    rateHint: 'Enter margin as a ratio of notional (domestic futures).',
+    rateHint: 'Margin as a ratio of notional (domestic futures).',
     perContractHint:
-      'Enter a fixed margin per contract. Total = per-contract × contracts (overseas futures).',
+      'Fixed margin per contract (overseas futures). Total = per-contract × contracts.',
     totalHint: 'Enter the total margin shown in your broker app as-is.',
+    tooltip:
+      '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nMargin as a ratio of notional (domestic futures).\n\n────────\n\n[Per contract]\n\nFixed margin per contract. Total = per-contract × contracts (overseas).\n\n────────\n\n[Total]\n\nEnter the total margin shown in your broker app as-is.',
   },
   fields: {
     accountEquity: {
       label: 'Account equity',
-      hint: '# Account equity\nCash balance plus unrealized P&L.\nMatches Account equity in your broker app.\n\nFor daily updates, use Scenario price.',
+      hint: '# Account equity\nCash balance plus unrealized P&L. Matches Account equity in your broker app.\n\n────────\n\n[Note]\n\nFor daily updates, use Scenario price.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
       label: 'Maintenance margin rate',
-      hint: 'Ratio of notional (e.g. 0.247 = 24.7%)',
+      hint: '# Maintenance margin rate\nRatio of notional (e.g. 0.247 = 24.7%)',
       placeholder: 'e.g. 0.25',
     },
     maintenanceMargin: {
       label: 'Maintenance margin (total)',
-      hint: 'Total maintenance margin from your broker. Scaled by contracts',
+      hint: '# Maintenance margin (total)\nTotal maintenance margin from your broker.\n\nScaled automatically by contracts.',
       placeholder: '500,000',
     },
     maintenanceMarginPerContract: {
       label: 'Maintenance margin (per contract)',
-      hint: 'Fixed maintenance margin per contract; constant across price (overseas)',
+      hint: '# Maintenance margin (per contract)\nFixed maintenance margin per contract; constant across price (overseas).',
       placeholder: '1,000',
     },
     entrustedMarginRate: {
       label: 'Initial margin rate',
-      hint: 'Ratio of notional for initial margin. For fixed amounts, use per-contract or total',
+      hint: '# Initial margin rate\nRatio of notional for initial margin.\n\nFor fixed amounts, use per-contract or total.',
       placeholder: 'e.g. 0.35',
     },
     entrustedMargin: {
       label: 'Initial margin (total)',
-      hint: 'Total initial margin from your broker. Scaled by contracts',
+      hint: '# Initial margin (total)\nTotal initial margin from your broker.\n\nScaled automatically by contracts.',
       placeholder: '12,000',
     },
     entrustedMarginPerContract: {
       label: 'Initial margin (per contract)',
-      hint: 'Fixed initial margin per contract (overseas)',
+      hint: '# Initial margin (per contract)\nFixed initial margin per contract (overseas).',
       placeholder: '6,000',
     },
     contracts: {
       label: 'Open contracts',
-      hint: 'Current position size',
+      hint: '# Open contracts\nCurrent position size in contracts.',
       placeholder: '2',
     },
     contractAmount: {
       label: 'Notional per contract',
-      hint: 'Broker-displayed per-contract notional',
+      hint: '# Notional per contract\nBroker-displayed notional per contract.',
       placeholder: '250,000',
     },
     currentPrice: {
       label: 'Mark price',
-      hint: '# Mark price\nReference mark.\n\n※ Changing this alone does not update equity.\nUse Scenario price to roll unrealized P&L.',
+      hint: '# Mark price\nReference mark.\n\n────────\n\n[Note]\n\nChanging this alone does not update equity. Use Scenario price to roll unrealized P&L.',
       placeholder: '35,000',
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: '# Scenario price simulation\nPreview account state at a new price,\nor roll equity forward each day.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply P&L\nEsc → Exit\nCtrl+Z → Undo apply',
+      hint: '# Scenario price simulation\nPreview account state at a new price, or roll equity forward each day.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply P&L\nEsc → Exit\nCtrl+Z → Undo apply',
       placeholder: 'Target price',
     },
     tickSize: {
       label: 'Tick size',
-      hint: 'Enables steppers on mark and scenario prices.',
+      hint: '# Tick size\nEnables ▲▼ steppers on mark and scenario prices.',
       placeholder: '1',
     },
     contractMultiplier: {
       label: 'Contract multiplier',
-      hint: 'Size factor for notional calc. Defaults to 1 if blank',
+      hint: '# Contract multiplier\nSize factor for notional calc.\n\nDefaults to 1 if blank.',
       placeholder: '1',
     },
     orderContracts: {
       label: 'Order size (contracts)',
-      hint: 'Additional contracts to simulate at fill. + expands the position, − reduces it.',
+      hint: '# Order size (contracts)\nAdditional contracts to simulate at fill.\n\n+ expands the position, − reduces it.',
       placeholder: '+/-0',
     },
     orderPrice: {
       label: 'Order price',
-      hint: '# Order price\nAssumed fill price for the simulated order.\n\nWith tick size set, the empty field shows the current mark\nand ▲▼ steppers fill from that mark.\n\nIf left blank, defaults to the current mark.',
+      hint: '# Order price\nAssumed fill price for the simulated order.\n\n────────\n\n[Note]\n\nIf left blank, defaults to the current mark.\n\n────────\n\n[Tip]\n\nWith tick size set, the empty field shows the mark and ▲▼ steppers fill from it.',
       placeholder: 'Order price',
     },
   },

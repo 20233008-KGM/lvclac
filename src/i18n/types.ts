@@ -82,6 +82,11 @@ export interface Messages {
   orderScenarioFieldContracts: string
   orderScenarioFieldPrice: string
   orderScenarioHint: string
+  useCurrentPrice: string
+  /** 주문가 inline 현재가 버튼 표시 (1글자) */
+  useCurrentPriceShort: string
+  /** 주문가 inline 현재가 버튼 aria/title */
+  useCurrentPriceTitle: string
   clearAllInputs: string
   clearAllInputsHint: string
   clearAllInputsHintLabel: string
@@ -110,6 +115,8 @@ export interface Messages {
     rateHint: string
     perContractHint: string
     totalHint: string
+    /** 증거금 입력 방식 토글 ? 툴팁 본문 */
+    tooltip: string
   }
   fields: {
     accountEquity: FieldCopy

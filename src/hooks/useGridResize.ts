@@ -11,7 +11,9 @@ import type { LayoutMode } from '../context/LayoutContext'
 import {
   canShowAutoWidenScan,
   markAutoWidenScanShown,
+  markLayoutReset,
   markResizerManual,
+  shouldSuppressAutoExpand,
 } from './layoutScanPrefs'
 import {
   clamp,
@@ -239,7 +241,11 @@ export function useGridResize(persist: boolean) {
   }, [])
 
   const expandToFit = useCallback((measure: OverflowMeasure): ExpandResult => {
-    if (layoutRef.current.manual || viewportWidth() < DESKTOP_MIN) {
+    if (
+      shouldSuppressAutoExpand() ||
+      layoutRef.current.manual ||
+      viewportWidth() < DESKTOP_MIN
+    ) {
       return { changed: false, widened: false }
     }
 
@@ -337,6 +343,7 @@ export function useGridResize(persist: boolean) {
   )
 
   const reset = useCallback(() => {
+    markLayoutReset()
     geometryRef.current = null
     if (scanTimerRef.current) window.clearTimeout(scanTimerRef.current)
     if (resetGlowTimerRef.current) window.clearTimeout(resetGlowTimerRef.current)

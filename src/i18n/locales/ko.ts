@@ -10,13 +10,11 @@ export const ko: Messages = {
   siteTitleTooltip: {
     ariaLabel: '서비스 소개',
     overviewTitle: '서비스 개요',
-    overviewBody:
-      '선물·레버리지 포지션의\n청산가와 증거금 여유를\n실시간으로 계산하는\n무료 도구입니다.',
+    overviewBody: '선물·레버리지 포지션의 청산가와 증거금 여유를 즉시 계산하는 무료 도구입니다.',
     usageTitle: '활용 방법',
     usageBody:
-      'HTS·MTS의 평가금·증거금률로\n청산가를 확인하거나,\n\n주문 계약수·가격으로\n체결 직후 상태를\n미리 볼 수 있습니다.\n\n매일은 시나리오 가격에\n시세만 넣고\n\nEnter → Enter\n\n로 평가금을 갱신할 수 있습니다.',
-    footnote:
-      '여러 종목 동시 보유와\n교차 증거금 방식은\n반영되지 않습니다.',
+      'HTS·MTS 평가금·증거금률로 청산가를 확인하거나, 주문에서 계약수·가격으로 체결 직후 상태를 미리 볼 수 있습니다.\n매일은 시나리오 가격에 시세만 넣고 Enter를 두 번 누르면 평가금을 갱신할 수 있습니다.',
+    footnote: '[참고]\n\n여러 종목 동시 보유와 교차 증거금 방식은 반영되지 않습니다.',
   },
   appIntro:
     '한 종목 포지션의 청산가와 증거금 여유를 즉시 계산합니다.\n매일 시세만 시나리오 가격에 넣고 Enter 두 번이면 평가금액까지 손익이 반영됩니다.',
@@ -66,17 +64,17 @@ export const ko: Messages = {
   orderScenarioFieldContracts: '주문 계약수',
   orderScenarioFieldPrice: '주문 가격',
   orderScenarioHint:
-    '# 주문 시뮬레이션\n계약수·주문 가격으로\n체결 직후 상태를 미리 봅니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 계좌에 확정\nEsc → 취소\nCtrl+Z → 확정 취소',
+    '# 주문 시뮬레이션\n계약수·주문 가격으로 체결 직후 상태를 미리 봅니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 계좌에 확정\nEsc → 취소\nCtrl+Z → 확정 취소',
   clearAllInputs: '비우기',
   clearAllInputsHint:
-    '모든 입력값을\n한 번에 비웁니다.\n\n────────\n\n[단축키]\n\nDelete → 포커스된 칸만 초기화',
+    '# 입력값 비우기\n「비우기」로 모든 입력을 한 번에 초기화합니다.\n\n────────\n\n[단축키]\n\nDelete → 포커스된 칸만 초기화',
   clearAllInputsHintLabel: '비우기 단축키 안내',
   clearAllInputsModalTitle: '입력값 초기화',
   clearAllInputsModalBody: '모든 입력값을 비웁니다. 계속하시겠습니까?',
   clearAllInputsConfirm: '비우기',
   draftSave: {
     label: '이 기기에 입력값 저장',
-    hint: '켜면 입력값이\n이 브라우저에만 저장되고,\n다음 방문 시 불러옵니다.\n\n서버로 전송되지 않습니다.\n끄면 저장된 값이 삭제됩니다.\n\n────────\n\n[추천]\n\n💡 어제 맞춰 둔\n계약수·증거금을 유지한 채,\n다음 날 시나리오 가격으로\n시세만 반영하기 좋습니다.',
+    hint: '# 이 기기에 입력값 저장\n켜면 이 브라우저에만 저장되고 다음 방문 시 불러옵니다. 서버로 전송되지 않으며, 끄면 저장된 값이 삭제됩니다.\n\n────────\n\n[추천]\n\n💡 어제 맞춰 둔 계약수·증거금을 유지한 채, 다음 날 시나리오 가격으로 시세만 반영하기 좋습니다.',
     cleared: '저장된 데이터가 삭제되었습니다.',
     enableModalTitle: '입력값 저장 안내',
     enableModalBody: [
@@ -96,84 +94,86 @@ export const ko: Messages = {
     rate: '비율',
     perContract: '계약당',
     total: '총액',
-    rateHint: '국내 선물\n약정가치 대비 비율',
-    perContractHint: '해외 선물\n1계약당 고정 금액\n\n총액 = 계약당 × 계약수',
-    totalHint: 'HTS·MTS에 표시된\n총 증거금을 그대로 입력',
+    rateHint: '국내 선물 약정가치 대비 비율입니다.',
+    perContractHint: '해외 선물 1계약당 고정 금액입니다. 총액 = 계약당 × 계약수',
+    totalHint: 'HTS·MTS에 표시된 총 증거금을 그대로 입력합니다.',
+    tooltip:
+      '# 증거금 입력 방식\n비율·계약당·총액 중 종목에 맞는 방식을 선택하세요.\n\n────────\n\n[비율]\n\n국내 선물 약정가치 대비 비율입니다.\n\n────────\n\n[계약당]\n\n해외 선물 1계약당 고정 금액입니다. 총액 = 계약당 × 계약수\n\n────────\n\n[총액]\n\nHTS·MTS에 표시된 총 증거금을 그대로 입력합니다.',
   },
   fields: {
     accountEquity: {
       label: '계좌 평가금액',
-      hint: '# 계좌 평가금액\n예탁금 + 미결제 손익.\nHTS·MTS 「계좌 평가금액」과 같습니다.\n\n일상 갱신은\n시나리오 가격을 사용하세요.',
+      hint: '# 계좌 평가금액\n예탁금 + 미결제 손익. HTS·MTS 「계좌 평가금액」과 같습니다.\n\n────────\n\n[참고]\n\n일상 갱신은 시나리오 가격을 사용하세요.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
       label: '유지증거금률',
-      hint: '약정가치 대비 비율\n\n예: 0.247 = 24.7%',
+      hint: '# 유지증거금률\n약정가치 대비 비율입니다.\n\n예: 0.247 = 24.7%',
       placeholder: 'ex) 0.25',
     },
     maintenanceMargin: {
       label: '유지증거금 (총액)',
-      hint: 'HTS에 표시된\n총 유지증거금\n\n계약수에 비례 조정',
+      hint: '# 유지증거금 (총액)\nHTS에 표시된 총 유지증거금입니다.\n\n계약수에 비례해 자동 조정됩니다.',
       placeholder: '500,000',
     },
     maintenanceMarginPerContract: {
       label: '유지증거금 (계약당)',
-      hint: '1계약당 고정\n유지증거금\n\n가격이 변해도 고정\n(해외 선물)',
+      hint: '# 유지증거금 (계약당)\n1계약당 고정 유지증거금입니다. 가격이 변해도 고정됩니다. (해외 선물)',
       placeholder: '1,000',
     },
     entrustedMarginRate: {
       label: '개시증거금률 (위탁)',
-      hint: '약정가치 대비 비율\n\n고정 금액은\n계약당·총액 입력 사용',
+      hint: '# 개시증거금률 (위탁)\n약정가치 대비 비율입니다.\n\n고정 금액은 계약당·총액 입력을 사용하세요.',
       placeholder: 'ex) 0.35',
     },
     entrustedMargin: {
       label: '위탁증거금 (총액)',
-      hint: 'HTS에 표시된\n총 개시·위탁증거금\n\n계약수에 비례 조정',
+      hint: '# 위탁증거금 (총액)\nHTS에 표시된 총 개시·위탁증거금입니다.\n\n계약수에 비례해 자동 조정됩니다.',
       placeholder: '12,000',
     },
     entrustedMarginPerContract: {
       label: '개시증거금 (계약당)',
-      hint: '1계약당 고정\n개시·위탁증거금\n(해외 선물)',
+      hint: '# 개시증거금 (계약당)\n1계약당 고정 개시·위탁증거금입니다. (해외 선물)',
       placeholder: '6,000',
     },
     contracts: {
       label: '보유 계약수',
-      hint: '현재 포지션\n계약 수',
+      hint: '# 보유 계약수\n현재 포지션의 계약 수입니다.',
       placeholder: '2',
     },
     contractAmount: {
       label: '약정금액 (1계약)',
-      hint: 'HTS·MTS 종목별\n1계약 약정금액',
+      hint: '# 약정금액 (1계약)\nHTS·MTS 종목별 1계약 약정금액입니다.',
       placeholder: '250,000',
     },
     currentPrice: {
       label: '현재가',
-      hint: '# 현재가\n기준 시세입니다.\n\n※ 여기만 바꾸면 평가금은 변하지 않습니다.\n손익 반영은 시나리오 가격을 사용하세요.',
+      hint: '# 현재가\n기준 시세입니다.\n\n────────\n\n[참고]\n\n여기만 바꾸면 평가금은 변하지 않습니다. 손익 반영은 시나리오 가격을 사용하세요.',
       placeholder: '35,000',
     },
     scenarioPrice: {
       label: '시나리오 가격',
-      hint: '# 시나리오 가격 시뮬레이션\n가격 변화에 따른 계좌 상태를 미리 보거나,\n매일 시세만 반영해 평가금을 갱신합니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 손익 반영\nEsc → 종료\nCtrl+Z → 반영 취소',
+      hint: '# 시나리오 가격 시뮬레이션\n가격 변화에 따른 계좌 상태를 미리 보거나, 매일 시세만 반영해 평가금을 갱신합니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 손익 반영\nEsc → 종료\nCtrl+Z → 반영 취소',
       placeholder: '변동 가격',
     },
     tickSize: {
       label: '틱 사이즈',
-      hint: '입력 시\n현재가·시나리오 가격에\n스테퍼가 나타납니다.',
+      hint: '# 틱 사이즈\n입력하면 현재가·시나리오 가격에 ▲▼ 스테퍼가 나타납니다.',
       placeholder: '1',
     },
     contractMultiplier: {
       label: '계약 승수',
-      hint: '약정금액 산출용 배율\n\n미입력 시 1로 간주',
+      hint: '# 계약 승수\n약정금액 산출용 배율입니다.\n\n미입력 시 1로 간주합니다.',
       placeholder: '1',
     },
     orderContracts: {
       label: '추가 주문 계약수',
-      hint: '체결을 가정하는\n추가 계약 수\n\n+ 확장, − 축소',
+      hint: '# 추가 주문 계약수\n체결을 가정하는 추가 계약 수입니다.\n\n+ 확장, − 축소',
       placeholder: '+/-0',
     },
     orderPrice: {
       label: '주문 가격',
-      hint: '# 주문 가격\n체결을 가정하는 주문 가격입니다.\n\n틱 사이즈 입력 시\n빈 칸에 현재가가 표시되고,\n▲▼ 스테퍼로 바로 입력할 수 있습니다.\n\n미입력 시 현재가와 동일하게 계산합니다.',
+      hint: '# 주문 가격\n체결을 가정하는 주문 가격입니다.\n\n────────\n\n[참고]\n\n미입력 시 현재가와 동일하게 계산합니다.\n\n────────\n\n[추천]\n\n틱 사이즈 입력 시 빈 칸에 현재가가 표시되고 ▲▼ 스테퍼로 바로 입력할 수 있습니다.',
       placeholder: '주문 가격',
     },
   },

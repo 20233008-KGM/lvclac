@@ -49,6 +49,7 @@ function CalculatorApp() {
     getHandleProps,
     isCustom,
     layoutMode,
+    layoutVersion,
     reset,
     refreshGeometry,
     expandToFit,
@@ -65,6 +66,7 @@ function CalculatorApp() {
     onAutoExpand: triggerResizerScan,
     refreshGeometry,
     measureKey,
+    layoutVersion,
   })
 
   const precisionRisk = usePrecisionRisk(inputs)

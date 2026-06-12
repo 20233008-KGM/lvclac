@@ -20,6 +20,7 @@ export function ClearAllInputsButton({ disabled = false }: ClearAllInputsButtonP
   return (
     <>
       <div className="input-panel__clear-actions">
+        <FieldLabelTooltip text={t.clearAllInputsHint} label={t.clearAllInputsHintLabel} />
         <button
           type="button"
           className="input-panel__clear-btn"
@@ -28,7 +29,6 @@ export function ClearAllInputsButton({ disabled = false }: ClearAllInputsButtonP
         >
           {t.clearAllInputs}
         </button>
-        <FieldLabelTooltip text={t.clearAllInputsHint} label={t.clearAllInputsHintLabel} />
       </div>
 
       {confirmOpen && (

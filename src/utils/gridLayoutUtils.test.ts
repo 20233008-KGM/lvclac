@@ -7,6 +7,8 @@ import {
   computeExpandLayout,
   computeExpandStep,
   isLayoutCustom,
+  scaleGeometry,
+  scaleGridLayout,
   sideVars,
   type Geometry,
   type GridLayout,
@@ -140,5 +142,20 @@ describe('gridLayoutUtils', () => {
     expect(step.widened).toBe(true)
     expect(step.layout.leftX).toBeLessThan(geo.adW)
     expect(step.layout.rightX).toBeLessThan(geo.adW)
+  })
+
+  it('scaleGeometry — 줌 비율에 맞춰 좌표만 보정하고 adW는 유지', () => {
+    const scaled = scaleGeometry(geo, 0.8)
+    expect(scaled.adW).toBe(geo.adW)
+    expect(scaled.leftX0).toBeCloseTo(geo.leftX0 * 0.8, 3)
+    expect(scaled.outerL).toBeCloseTo(geo.outerL * 0.8, 3)
+  })
+
+  it('scaleGridLayout — 커스텀 gap 좌표를 뷰포트 비율로 보정', () => {
+    const custom: GridLayout = { leftX: 200, rightX: 180, split: 0.55, manual: false }
+    const scaled = scaleGridLayout(custom, 1.25)
+    expect(scaled.leftX).toBeCloseTo(250, 3)
+    expect(scaled.rightX).toBeCloseTo(225, 3)
+    expect(scaled.split).toBe(0.55)
   })
 })

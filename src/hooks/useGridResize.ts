@@ -25,6 +25,8 @@ import {
   measureMinCalculatorMid,
   MIN_CALC_MID_FALLBACK,
   MIN_EDGE_X,
+  scaleGeometry,
+  scaleGridLayout,
   sideVars,
   type Geometry,
   type GridLayout,
@@ -126,6 +128,7 @@ export function useGridResize(persist: boolean) {
   const [resetBtnGlowGeneration, setResetBtnGlowGeneration] = useState(0)
   const [layoutVersion, setLayoutVersion] = useState(0)
   const dragRef = useRef<GridResizeHandle | null>(null)
+  const lastViewportWRef = useRef(viewportWidth())
 
   layoutRef.current = layout
 
@@ -357,6 +360,24 @@ export function useGridResize(persist: boolean) {
 
   useEffect(() => {
     const onResize = () => {
+      const W = viewportWidth()
+      const prevW = lastViewportWRef.current
+      lastViewportWRef.current = W
+      if (prevW <= 0 || W === prevW) return
+
+      const ratio = W / prevW
+      const layout = layoutRef.current
+
+      if (hasCustomGaps(layout)) {
+        // 커스텀 레이아웃 적용 중 DOM 측정은 기준 geometry를 오염시킴 — 비율 보정만 수행
+        setLayout((prev) => scaleGridLayout(prev, ratio))
+        if (geometryRef.current) {
+          geometryRef.current = scaleGeometry(geometryRef.current, ratio)
+        }
+        setGeoVersion((v) => v + 1)
+        return
+      }
+
       geometryRef.current = measureGeometry(containerRef.current)
       setGeoVersion((v) => v + 1)
     }

@@ -152,10 +152,7 @@ export function useLayoutOverflow({
         return
       }
 
-      // 데스크톱 자동 확장·스캔은 measureKey(사용자 입력) 경로만 — RO가 먼저 확장하면 스캔이 누락됨
-      if (fromResize) return
-
-      runDesktopExpand(false)
+      runDesktopExpand(fromResize)
     }
 
     const ro = new ResizeObserver(() => {

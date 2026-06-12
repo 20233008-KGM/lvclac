@@ -34,6 +34,33 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
+/** 브라우저 줌·창 크기 변경 시 기본 레이아웃 기준 geometry를 비율로 보정 */
+export function scaleGeometry(geo: Geometry, ratio: number): Geometry {
+  if (ratio === 1) return geo
+  const scale = (n: number) => Math.round(n * ratio * 1000) / 1000
+  return {
+    adW: geo.adW,
+    outerL: scale(geo.outerL),
+    innerL: scale(geo.innerL),
+    outerR: scale(geo.outerR),
+    innerR: scale(geo.innerR),
+    leftX0: scale(geo.leftX0),
+    rightX0: scale(geo.rightX0),
+  }
+}
+
+/** 커스텀 gap 좌표를 뷰포트 폭 변화에 맞춰 보정 */
+export function scaleGridLayout(layout: GridLayout, ratio: number): GridLayout {
+  if (ratio === 1) return layout
+  const scale = (n: number | null) =>
+    n === null ? null : Math.round(n * ratio * 1000) / 1000
+  return {
+    ...layout,
+    leftX: scale(layout.leftX),
+    rightX: scale(layout.rightX),
+  }
+}
+
 export function hasCustomGaps(layout: GridLayout): boolean {
   return layout.leftX !== null || layout.rightX !== null
 }

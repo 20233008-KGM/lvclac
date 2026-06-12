@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useCalculator } from '../context/CalculatorContext'
 import { useLanguage } from '../i18n'
+import { FieldLabelTooltip } from './FieldLabelTooltip'
 
 interface ClearAllInputsButtonProps {
   disabled?: boolean
@@ -18,14 +19,17 @@ export function ClearAllInputsButton({ disabled = false }: ClearAllInputsButtonP
 
   return (
     <>
-      <button
-        type="button"
-        className="input-panel__clear-btn"
-        disabled={disabled}
-        onClick={() => setConfirmOpen(true)}
-      >
-        {t.clearAllInputs}
-      </button>
+      <div className="input-panel__clear-actions">
+        <button
+          type="button"
+          className="input-panel__clear-btn"
+          disabled={disabled}
+          onClick={() => setConfirmOpen(true)}
+        >
+          {t.clearAllInputs}
+        </button>
+        <FieldLabelTooltip text={t.clearAllInputsHint} label={t.clearAllInputsHintLabel} />
+      </div>
 
       {confirmOpen && (
         <div

@@ -1,6 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type ReactNode, type RefObject } from 'react'
 import { useCalculator } from '../context/CalculatorContext'
+import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
+import { TooltipBody } from './TooltipBody'
 
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 
@@ -115,6 +117,8 @@ export function SaveDraftToggle() {
 
   const dismissCleared = () => setModal(null)
 
+  const { anchorRef, anchorHandlers, renderTooltip } = useFloatingTooltip({ placement: 'top' })
+
   const showGuideAgain = () => {
     setSkipEnableModal(false)
     setSkipActive(false)
@@ -124,16 +128,18 @@ export function SaveDraftToggle() {
   return (
     <>
       <div className="draft-save">
-        <label className="input-option-toggle draft-save-tooltip-anchor">
+        <label
+          ref={anchorRef as RefObject<HTMLLabelElement>}
+          className="input-option-toggle draft-save-tooltip-anchor"
+          {...anchorHandlers}
+        >
           <input
             type="checkbox"
             checked={saveEnabled}
             onChange={(e) => handleChange(e.target.checked)}
           />
           <span className="input-option-toggle__label">{t.draftSave.label}</span>
-          <span className="draft-save-tooltip" role="tooltip">
-            {t.draftSave.hint}
-          </span>
+          {renderTooltip('draft-save-tooltip', <TooltipBody text={t.draftSave.hint} />)}
         </label>
         {skipActive && (
           <button type="button" className="link-btn draft-save-show-guide" onClick={showGuideAgain}>

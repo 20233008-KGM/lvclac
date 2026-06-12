@@ -2,6 +2,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
   type MouseEvent,
@@ -78,10 +79,21 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 ) {
   const valueRef = useRef(value)
   const onChangeRef = useRef(onChange)
+  const inputHandleRef = useRef<NumberInputHandle>(null)
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pointerSessionRef = useRef<PointerSession | null>(null)
   const [scrubbingDelta, setScrubbingDelta] = useState<number | null>(null)
+
+  useImperativeHandle(ref, () => ({
+    commit: () => inputHandleRef.current?.commit() ?? false,
+    readDraft: () => inputHandleRef.current?.readDraft(),
+    focus: () => inputHandleRef.current?.focus(),
+  }))
+
+  const focusInput = useCallback(() => {
+    inputHandleRef.current?.focus()
+  }, [])
 
   useEffect(() => {
     valueRef.current = value
@@ -250,6 +262,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       onPointerDown: (e: PointerEvent<HTMLButtonElement>) => {
         if (disabled) return
         e.preventDefault()
+        focusInput()
         e.currentTarget.setPointerCapture(e.pointerId)
         startHold(delta)
       },
@@ -271,6 +284,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       onPointerDown: (e: PointerEvent<HTMLButtonElement>) => {
         if (disabled) return
         e.preventDefault()
+        focusInput()
         e.currentTarget.setPointerCapture(e.pointerId)
 
         pointerSessionRef.current = {
@@ -313,7 +327,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     >
       <div className="number-stepper__input">
         <NumberInput
-          ref={ref}
+          ref={inputHandleRef}
           value={value}
           allowDecimal={false}
           allowNegative={allowNegative}

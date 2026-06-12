@@ -7,7 +7,7 @@ export const en: Messages = {
   htmlLang: 'en',
   siteTitle: 'Futures Calculator',
   siteDescription:
-    'Free liquidation price and margin cushion calculator for futures and leveraged positions. Enter equity and margin rates from your broker.',
+    'Free liquidation price and margin cushion calculator for futures and leveraged positions. Roll equity forward each day with Scenario price—no need to retype everything.',
   siteTitleTooltip: {
     ariaLabel: 'About this tool',
     overviewTitle: 'Overview',
@@ -15,11 +15,11 @@ export const en: Messages = {
       ' Free calculator for liquidation price and margin headroom on futures and leveraged positions.',
     usageTitle: 'How to use',
     usageBody:
-      ' Enter equity and margin rates from your broker to check liquidation risk, or adjust order size and price to preview your account after a fill.',
+      ' Enter equity and margin rates from your broker to check liquidation risk, or adjust order size and price to preview your account after a fill. Roll equity forward each morning with Scenario price: Enter → Enter.',
     footnote: 'Does not account for multiple open positions or cross-margin accounts.',
   },
   appIntro:
-    'Instantly estimate liquidation price and margin headroom for a single-instrument position. Vary the price to simulate any scenario.',
+    'Instantly estimate liquidation price and margin headroom for a single-instrument position. Each day, enter the new mark in Scenario price and press Enter twice to roll unrealized P&L into equity. For first-time setup, a single HTS screen snapshot is most accurate.',
   loading: 'Loading...',
   login: 'Log in',
   logout: 'Log out',
@@ -30,10 +30,10 @@ export const en: Messages = {
     ariaLabel: 'How to use this calculator',
     beginnerTitle: 'New to futures?',
     beginnerBody:
-      ' Enter account equity plus maintenance and initial margin rates, then adjust order size and price in the Order section below to preview your account right after a fill.',
+      ' Enter account equity plus maintenance and initial margin rates, then adjust order size and price in the Order section below to preview your account right after a fill. When only the mark changed, Scenario price can update equity without retyping everything. On first setup, copy equity and mark from one HTS screen; in volatile markets, use a snapshot.',
     experiencedTitle: 'Already trading?',
     experiencedBody:
-      ' Fill in Account, Instrument, and Margin to check liquidation buffer and leverage at a glance. On desktop, drag the left, center, or right edge of the calculator to resize columns.',
+      ' Set up account, instrument, and margin once. Each morning, enter today’s mark in Scenario price and press Enter → Enter to roll P&L into equity—no need to retype equity. Turn on “Save inputs on this device” to keep your baseline. For first setup, use a quiet market or a single HTS screen snapshot.',
     footnote: 'Assumes one open instrument per account.',
     guideLink: 'Read full guide',
   },
@@ -68,12 +68,14 @@ export const en: Messages = {
   orderScenarioHint:
     'Enter both order size and price, then press ↵ to simulate.\n\n· ↵ — reflect order in results (preview)\n· ✓ — apply to account and held contracts (not a second order)\n· Esc — cancel simulation\n· Ctrl+Z — undo apply and return to preview',
   clearAllInputs: 'Clear all',
+  clearAllInputsHint: 'Press Delete to clear only the focused input field.',
+  clearAllInputsHintLabel: 'Clear shortcut help',
   clearAllInputsModalTitle: 'Clear all inputs',
   clearAllInputsModalBody: 'This will clear all entered values. Continue?',
   clearAllInputsConfirm: 'Clear',
   draftSave: {
     label: 'Save inputs on this device',
-    hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values.',
+    hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values. Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
     cleared: 'Saved data has been removed.',
     enableModalTitle: 'Save inputs on this device',
     enableModalBody: [
@@ -101,7 +103,7 @@ export const en: Messages = {
   fields: {
     accountEquity: {
       label: 'Account equity',
-      hint: 'Your cash balance plus unrealized P&L on open positions. Matches the Account equity shown in your broker app.',
+      hint: 'Cash balance plus unrealized P&L. Matches Account equity in your broker app.\n\nDaily updates: when size and margin are unchanged, roll equity with Scenario price.\n\nFirst-time setup: enter the value from the same HTS screen and moment as the mark. In fast markets, figures can drift slightly between fields—prefer a calm period or a single-screen snapshot.',
       placeholder: '10,000,000',
     },
     maintenanceMarginRate: {
@@ -146,12 +148,12 @@ export const en: Messages = {
     },
     currentPrice: {
       label: 'Mark price',
-      hint: 'Current reference price',
+      hint: 'Reference mark.\n\n※ Changing this alone does not update equity—use Scenario price to roll unrealized P&L.\n\nFirst-time setup: use the mark from the same HTS screen and moment as equity. In volatile markets, enter from a snapshot or when the market is calmer.',
       placeholder: '35,000',
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: 'Calculates how your account equity changes when the price moves.\n\n· First Enter (↵) → enter scenario mode\n· Enter again → apply P&L at the scenario price\n· Esc → exit scenario mode',
+      hint: 'Preview account state at a new price, or roll equity forward each day without retyping.\n\nShortcuts\n· Enter (↵) — scenario preview\n· Enter (↵) — apply P&L (updates mark and equity)\n· Esc — exit and restore\n· Ctrl+Z — undo apply\n\n💡 Daily: broker mark → Enter → Enter (contracts and margin unchanged)\n\n※ First setup: equity and mark from one HTS screen snapshot are most accurate.',
       placeholder: 'Target price',
     },
     tickSize: {
@@ -355,7 +357,7 @@ export const en: Messages = {
   guide: {
     title: 'User guide',
     description:
-      'How to fill inputs, use order and scenario preview, and keyboard shortcuts.\nEnter numbers exactly as shown in your broker app.',
+      'How to fill inputs, use order and scenario preview, a daily mark-to-market routine, and keyboard shortcuts.\nEnter numbers exactly as shown in your broker app.',
     sections: [
       {
         title: 'Getting started',
@@ -363,15 +365,17 @@ export const en: Messages = {
           'Enter account equity, margin, and mark price in the left input panel.',
           'The right results panel shows liquidation price, margin buffer, and leverage.',
           'Do not add currency symbols (₩, $). Use one consistent unit per account, matching your broker display.',
+          'Copy equity and mark from the same broker screen in quick succession. In fast markets, equity can shift between fields and cause a small mismatch. For first-time setup, prefer a quiet period or enter from a single-screen snapshot.',
         ],
       },
       {
         title: 'Recommended input order',
         paragraphs: ['Fill fields in this order for the smoothest workflow:'],
         items: [
-          'Account — equity and open contracts',
-          'Instrument — mark price; optional notional, multiplier, tick size',
+          'Instrument — mark first, then equity immediately (same HTS screen / snapshot)',
+          'Account — open contracts',
           'Margin — pick the mode that matches your HTS (rate, per-contract, or total), then enter maintenance and initial margin',
+          'Instrument (optional) — notional, multiplier, tick size',
         ],
       },
       {
@@ -394,9 +398,23 @@ export const en: Messages = {
         ],
       },
       {
+        title: 'Daily mark-to-market',
+        paragraphs: [
+          'Set contracts, margin, and instrument specs once, and turn on “Save inputs on this device.”',
+          'Each morning, enter today’s broker mark in Scenario price and press Enter → Enter. Mark and account equity update with rolled P&L.',
+          'After the first Enter, compare results with your broker. If they match, press Enter again to confirm. If not, press Esc or Ctrl+Z to undo.',
+          'This routine assumes your initial equity and mark are already aligned. On first setup, use a quiet market or a single HTS screen snapshot for both numbers.',
+        ],
+        items: [
+          'Position size and instrument unchanged',
+          'No deposits, withdrawals, fees, or realized P&L',
+          'Only price movement (e.g. overnight gap) needs rolling',
+        ],
+      },
+      {
         title: 'Scenario price',
         paragraphs: [
-          'Enter a scenario price in the input panel and press Enter to preview results at that price while keeping stored mark and equity unchanged.',
+          'The core tool for the daily routine above. Enter a scenario price and press Enter to preview results at that price while keeping stored mark and equity unchanged.',
           'When tick size is set, use ▲▼ or drag the field vertically to step by ticks.',
         ],
         items: [
@@ -417,6 +435,7 @@ export const en: Messages = {
         paragraphs: [
           'With “Save inputs” on, values stay in this browser only and are not sent to a server.',
           'Turning it off deletes saved values.',
+          'Pairs well with “Daily mark-to-market”: keep yesterday’s contracts and margin, then roll only the mark via Scenario price.',
         ],
       },
     ],

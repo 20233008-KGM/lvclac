@@ -88,6 +88,8 @@ export interface Messages {
   /** 주문가 inline 현재가 버튼 aria/title */
   useCurrentPriceTitle: string
   clearAllInputs: string
+  clearAllInputsHint: string
+  clearAllInputsHintLabel: string
   clearAllInputsModalTitle: string
   clearAllInputsModalBody: string
   clearAllInputsConfirm: string

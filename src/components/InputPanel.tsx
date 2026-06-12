@@ -22,6 +22,7 @@ import {
 } from './numberStepperScrub'
 import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { SaveDraftToggle } from './SaveDraftToggle'
+import { formatNumberForInput } from '../utils/inputFormat'
 
 interface InputPanelProps {
   inputs: CalculatorInputs
@@ -262,6 +263,11 @@ function ScenarioPriceField({
 
   const applyPnlDisabled = useStepper && inputs.scenarioPrice == null
 
+  const scenarioPlaceholder =
+    inputs.currentPrice != null
+      ? formatNumberForInput(inputs.currentPrice)
+      : field.placeholder || undefined
+
   const applyPnlButton = (
     <ScenarioPriceApplyButton
       label={applyPnlLabel}
@@ -320,7 +326,7 @@ function ScenarioPriceField({
           value={inputs.scenarioPrice}
           step={tickSize}
           allowNegative={false}
-          placeholder={field.placeholder || undefined}
+          placeholder={scenarioPlaceholder}
           stepUpLabel={stepUpLabel}
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="scenario-price-label"
@@ -344,7 +350,7 @@ function ScenarioPriceField({
           ref={inputRef}
           value={inputs.scenarioPrice}
           allowDecimal={false}
-          placeholder={field.placeholder || undefined}
+          placeholder={scenarioPlaceholder}
           aria-labelledby="scenario-price-label"
           className="input-commit-row__input"
           onEnterKey={handleScenarioEnter}

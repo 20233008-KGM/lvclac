@@ -449,8 +449,7 @@ input:focus:not(:focus-visible) {
   top: calc(100% + 8px);
   left: 0;
   z-index: 30;
-  width: max-content;
-  max-width: min(360px, 88vw);
+  width: min(320px, 88vw);
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius);
@@ -461,6 +460,7 @@ input:focus:not(:focus-visible) {
   line-height: 1.55;
   color: var(--color-text-muted);
   text-align: left;
+  white-space: normal;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -506,8 +506,8 @@ input:focus:not(:focus-visible) {
   color: var(--color-text-dim);
 }
 
-.site-title-tooltip-anchor:hover .site-title-tooltip,
-.site-title-tooltip-anchor:focus-within .site-title-tooltip {
+.site-title-tooltip-anchor:hover .site-title-tooltip:not(.floating-tooltip-layer),
+.site-title-tooltip-anchor:focus-within .site-title-tooltip:not(.floating-tooltip-layer) {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -810,8 +810,7 @@ input:focus:not(:focus-visible) {
   right: 0;
   left: auto;
   z-index: 30;
-  width: max-content;
-  max-width: min(360px, 88vw);
+  width: min(320px, 88vw);
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius);
@@ -822,6 +821,7 @@ input:focus:not(:focus-visible) {
   line-height: 1.55;
   color: var(--color-text-muted);
   text-align: left;
+  white-space: normal;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -909,8 +909,8 @@ input:focus:not(:focus-visible) {
   background: var(--color-surface);
 }
 
-.header-how-tooltip-anchor:hover .header-how-tooltip,
-.header-how-tooltip-anchor:focus-within .header-how-tooltip {
+.header-how-tooltip-anchor:hover .header-how-tooltip:not(.floating-tooltip-layer),
+.header-how-tooltip-anchor:focus-within .header-how-tooltip:not(.floating-tooltip-layer) {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -1280,7 +1280,7 @@ input:focus:not(:focus-visible) {
 .input-panel__head {
   position: relative;
   margin-bottom: var(--space-sm);
-  padding-right: 7.5rem;
+  padding-right: 8.5rem;
   padding-bottom: var(--space-xs);
   border-bottom: 1px solid var(--color-border-subtle);
 }
@@ -1291,10 +1291,16 @@ input:focus:not(:focus-visible) {
   border-bottom: none;
 }
 
-.input-panel__clear-btn {
+.input-panel__clear-actions {
   position: absolute;
   top: 0;
   right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-panel__clear-btn {
   display: inline-flex;
   align-items: center;
   min-height: calc(var(--font-size-sm) * 1.25);
@@ -1488,8 +1494,7 @@ input:focus:not(:focus-visible) {
   bottom: calc(100% + 8px);
   left: 50%;
   z-index: 20;
-  width: max-content;
-  max-width: min(340px, 82vw);
+  width: min(300px, 82vw);
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
@@ -1500,7 +1505,7 @@ input:focus:not(:focus-visible) {
   line-height: 1.5;
   color: var(--color-text-muted);
   text-align: left;
-  white-space: pre-line;
+  white-space: normal;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -1521,11 +1526,115 @@ input:focus:not(:focus-visible) {
   border-top-color: var(--color-border-subtle);
 }
 
-.field-label-tooltip-anchor:hover .field-label-tooltip,
-.field-label-tooltip-anchor:focus-within .field-label-tooltip {
+.field-label-tooltip-anchor:hover .field-label-tooltip:not(.floating-tooltip-layer),
+.field-label-tooltip-anchor:focus-within .field-label-tooltip:not(.floating-tooltip-layer) {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
+}
+
+/* 툴팁 본문 — 고정 너비·문단 단위 줄바꿈으로 오른쪽 끝 정돈 */
+.tooltip-body {
+  display: block;
+  white-space: normal;
+}
+
+.tooltip-body__paragraph {
+  display: block;
+}
+
+.tooltip-body__paragraph + .tooltip-body__paragraph {
+  margin-top: 0.58em;
+}
+
+.tooltip-body__sentence {
+  display: block;
+  margin: 0;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+  hanging-punctuation: allow-end;
+}
+
+.tooltip-body__line {
+  display: block;
+  margin: 0;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.tooltip-body__sentence + .tooltip-body__sentence,
+.tooltip-body__sentence + .tooltip-body__line,
+.tooltip-body__line + .tooltip-body__sentence,
+.tooltip-body__line + .tooltip-body__line {
+  margin-top: 0.38em;
+}
+
+/* Portal tooltips — escape overflow:hidden ancestors (calc-grid, panels) */
+.floating-tooltip-layer {
+  opacity: 0;
+  visibility: visible;
+  white-space: normal;
+  pointer-events: none;
+  bottom: auto;
+  right: auto;
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+
+.floating-tooltip-layer--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.floating-tooltip-layer.field-label-tooltip,
+.floating-tooltip-layer.draft-save-tooltip {
+  transform: translateX(-50%) translateY(4px);
+}
+
+.floating-tooltip-layer.site-title-tooltip,
+.floating-tooltip-layer.header-how-tooltip {
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.floating-tooltip-layer--below.field-label-tooltip,
+.floating-tooltip-layer--below.draft-save-tooltip {
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.floating-tooltip-layer--below.site-title-tooltip,
+.floating-tooltip-layer--below.header-how-tooltip {
+  transform: translateX(-50%) translateY(4px);
+}
+
+.floating-tooltip-layer--active.field-label-tooltip,
+.floating-tooltip-layer--active.draft-save-tooltip,
+.floating-tooltip-layer--active.site-title-tooltip,
+.floating-tooltip-layer--active.header-how-tooltip {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 화살표 — 트리거(?) 중심에 맞춤 (JS가 --floating-tooltip-arrow-left 설정) */
+.floating-tooltip-layer.field-label-tooltip::after,
+.floating-tooltip-layer.site-title-tooltip::after,
+.floating-tooltip-layer.header-how-tooltip::after,
+.floating-tooltip-layer.draft-save-tooltip::after {
+  left: var(--floating-tooltip-arrow-left, 50%);
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.floating-tooltip-layer--below.field-label-tooltip::after,
+.floating-tooltip-layer--below.draft-save-tooltip::after,
+.floating-tooltip-layer--below.site-title-tooltip::after,
+.floating-tooltip-layer--below.header-how-tooltip::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--color-border-subtle);
 }
 
 .input-panel .field > input,
@@ -1884,8 +1993,7 @@ input:focus:not(:focus-visible) {
   bottom: calc(100% + 10px);
   left: 50%;
   z-index: 20;
-  width: max-content;
-  max-width: min(280px, 70vw);
+  width: min(280px, 70vw);
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
@@ -1917,8 +2025,8 @@ input:focus:not(:focus-visible) {
   border-top-color: var(--color-border-subtle);
 }
 
-.draft-save-tooltip-anchor:hover .draft-save-tooltip,
-.draft-save-tooltip-anchor:focus-within .draft-save-tooltip {
+.draft-save-tooltip-anchor:hover .draft-save-tooltip:not(.floating-tooltip-layer),
+.draft-save-tooltip-anchor:focus-within .draft-save-tooltip:not(.floating-tooltip-layer) {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);

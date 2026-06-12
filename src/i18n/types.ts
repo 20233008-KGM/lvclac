@@ -44,11 +44,10 @@ export interface Messages {
   howToUse: {
     button: string
     ariaLabel: string
-    beginnerTitle: string
+    beginnerTab: string
+    experiencedTab: string
     beginnerBody: string
-    experiencedTitle: string
     experiencedBody: string
-    footnote: string
     guideLink: string
   }
   optional: string

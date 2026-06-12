@@ -28,13 +28,12 @@ export const en: Messages = {
   howToUse: {
     button: 'How?',
     ariaLabel: 'How to use this calculator',
-    beginnerTitle: 'New to futures?',
+    beginnerTab: 'New here',
+    experiencedTab: 'Daily use',
     beginnerBody:
-      ' Enter account equity plus maintenance and initial margin rates, then adjust order size and price in the Order section below to preview your account right after a fill. When only the mark changed, Scenario price can update equity without retyping everything. On first setup, copy equity and mark from one HTS screen; in volatile markets, use a snapshot.',
-    experiencedTitle: 'Already trading?',
+      '# New to futures?\nEnter account equity and margin rates, then adjust order size and price in Order to preview your account after a fill. When only the mark changed, update equity with Scenario price.\n\n────────\n\n[Warning]\n\nPrefer a calm market for first setup. Snapshot equity and mark from one screen. Assumes one open instrument per account.',
     experiencedBody:
-      ' Set up account, instrument, and margin once. Each morning, enter today’s mark in Scenario price and press Enter → Enter to roll P&L into equity—no need to retype equity. Turn on “Save inputs on this device” to keep your baseline. For first setup, use a quiet market or a single HTS screen snapshot.',
-    footnote: 'Assumes one open instrument per account.',
+      '# Already trading?\nSet up account, instrument, and margin once. Each morning, enter the mark in Scenario price and press Enter (1st) → Enter (2nd) to roll P&L into equity.\n\n────────\n\n[Tip]\n\n💡 Turn on “Save inputs on this device” to keep your baseline.',
     guideLink: 'Read full guide',
   },
   optional: '(optional)',

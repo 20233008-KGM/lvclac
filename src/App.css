@@ -810,15 +810,19 @@ input:focus:not(:focus-visible) {
   right: 0;
   left: auto;
   z-index: 30;
-  width: min(320px, 88vw);
+  width: min(340px, 88vw);
+  max-height: 80vh;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius);
   background: var(--color-surface);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  font-size: var(--font-size-sm);
+  font-size: 13px;
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 1.5;
+  letter-spacing: -0.03em;
   color: var(--color-text-muted);
   text-align: left;
   white-space: normal;
@@ -830,6 +834,11 @@ input:focus:not(:focus-visible) {
     opacity 0.15s ease,
     transform 0.15s ease,
     visibility 0.15s;
+}
+
+.header-how-tooltip .tooltip-body {
+  line-height: 1.5;
+  letter-spacing: -0.03em;
 }
 
 /* 踰꾪듉?뷀댋???ъ씠 鍮?怨듦컙 ??留덉슦?ㅺ? ?딄린吏 ?딅룄濡?hover 釉뚮┸吏 */
@@ -854,35 +863,57 @@ input:focus:not(:focus-visible) {
   pointer-events: none;
 }
 
-.header-how-tooltip__section {
+.header-how-tooltip__tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.header-how-tooltip__tab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.header-how-tooltip__tab:hover {
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.header-how-tooltip__tab--active {
+  color: var(--color-text);
+  border-color: var(--color-primary-muted);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-primary-muted);
+}
+
+.header-how-tooltip__tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.header-how-tooltip__panel {
   margin: 0;
 }
 
-.header-how-tooltip__section + .header-how-tooltip__section {
-  margin-top: var(--space-sm);
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.header-how-tooltip__section strong {
-  display: block;
-  margin-bottom: 0.2em;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.header-how-tooltip__footnote {
-  margin: var(--space-sm) 0 0;
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--color-border-subtle);
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--color-text-dim);
-}
-
 .header-how-tooltip__link-row {
-  margin: var(--space-sm) 0 0;
-  padding-top: var(--space-sm);
+  margin: 8px 0 0;
+  padding-top: 8px;
   border-top: 1px solid var(--color-border-subtle);
   text-align: left;
 }

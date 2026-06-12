@@ -16,6 +16,7 @@ export function useNavigate() {
   return useCallback((path: string) => {
     if (path === window.location.pathname) return
     window.history.pushState(null, '', path)
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     window.dispatchEvent(new PopStateEvent('popstate'))
   }, [])
 }

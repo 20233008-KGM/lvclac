@@ -1,4 +1,3 @@
-// Launch: unused — auth deferred
 import {
   createLocalStorageAuthRepository,
   createLocalStoragePreferencesRepository,

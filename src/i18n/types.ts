@@ -49,6 +49,7 @@ export interface Messages {
     experiencedTitle: string
     experiencedBody: string
     footnote: string
+    guideLink: string
   }
   optional: string
   fieldTooltipLabel: string
@@ -73,7 +74,23 @@ export interface Messages {
   scenarioApplyPnl: string
   /** 손익 반영 버튼 표시용 짧은 라벨 */
   scenarioApplyPnlShort: string
+  orderScenarioCommit: string
+  orderScenarioClear: string
+  orderScenarioApply: string
+  orderScenarioSectionTitle: string
+  orderScenarioChip: string
+  orderScenarioFieldContracts: string
+  orderScenarioFieldPrice: string
+  orderScenarioHint: string
   useCurrentPrice: string
+  /** 주문가 inline 현재가 버튼 표시 (1글자) */
+  useCurrentPriceShort: string
+  /** 주문가 inline 현재가 버튼 aria/title */
+  useCurrentPriceTitle: string
+  clearAllInputs: string
+  clearAllInputsModalTitle: string
+  clearAllInputsModalBody: string
+  clearAllInputsConfirm: string
   draftSave: {
     label: string
     hint: string
@@ -158,11 +175,19 @@ export interface Messages {
     symbols: { symbol: string; meaning: string }[]
     sections: FormulaSection[]
   }
+  guide: {
+    title: string
+    description: string
+    sections: { title: string; paragraphs: string[]; items?: string[] }[]
+    footnote: string
+  }
   boards: {
-    backToCalculator: string
+    portalCompany: string
     storageNotice: string
     writePost: string
     postList: string
+    localPostListDesc: string
+    submitSuccess: string
     postTitle: string
     postTitlePlaceholder: string
     postBody: string
@@ -170,7 +195,6 @@ export interface Messages {
     postAuthor: string
     postAuthorPlaceholder: string
     submit: string
-    empty: string
     anonymous: string
     items: Record<
       BoardId,

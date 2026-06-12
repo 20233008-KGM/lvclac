@@ -1,4 +1,4 @@
-import type { CalculatorInputs } from '../types'
+import type { CalculatorInputs, OrderScenarioBaseline } from '../types'
 
 function cleanOptionalNumber(value: number | undefined): number | undefined {
   if (value == null) return value
@@ -10,6 +10,49 @@ function cleanSnapshot(snapshot: CalculatorInputs['scenarioRevertSnapshot']) {
   const accountEval = cleanOptionalNumber(snapshot.accountEval)
   if (accountEval === undefined) return undefined
   return { ...snapshot, accountEval }
+}
+
+function cleanOrderRevertSnapshot(snapshot: CalculatorInputs['orderScenarioRevertSnapshot']) {
+  if (!snapshot) return snapshot
+  const accountEval = cleanOptionalNumber(snapshot.accountEval)
+  if (accountEval === undefined) return undefined
+  return {
+    ...snapshot,
+    accountEval,
+    contracts: cleanOptionalNumber(snapshot.contracts),
+  }
+}
+
+function cleanOrderBaseline(baseline: OrderScenarioBaseline | undefined) {
+  if (!baseline) return baseline
+  return baseline
+}
+
+function cleanOrderApplyUndoSnapshot(snapshot: CalculatorInputs['orderApplyUndoSnapshot']) {
+  if (!snapshot) return snapshot
+  const accountEval = cleanOptionalNumber(snapshot.accountEval)
+  const orderContracts = cleanOptionalNumber(snapshot.orderContracts)
+  const orderPrice = cleanOptionalNumber(snapshot.orderPrice)
+  const orderScenarioRevertSnapshot = cleanOrderRevertSnapshot(snapshot.orderScenarioRevertSnapshot)
+  const orderScenarioBeforeBaseline = cleanOrderBaseline(snapshot.orderScenarioBeforeBaseline)
+  if (
+    accountEval === undefined ||
+    orderContracts === undefined ||
+    orderPrice === undefined ||
+    !orderScenarioRevertSnapshot ||
+    !orderScenarioBeforeBaseline
+  ) {
+    return undefined
+  }
+  return {
+    ...snapshot,
+    accountEval,
+    contracts: cleanOptionalNumber(snapshot.contracts),
+    orderContracts,
+    orderPrice,
+    orderScenarioRevertSnapshot,
+    orderScenarioBeforeBaseline,
+  }
 }
 
 function cleanApplyUndoSnapshot(snapshot: CalculatorInputs['scenarioApplyUndoSnapshot']) {
@@ -62,5 +105,8 @@ export function sanitizeDraftInputs(inputs: CalculatorInputs): CalculatorInputs 
     tickSize: cleanOptionalNumber(inputs.tickSize),
     scenarioRevertSnapshot: cleanSnapshot(inputs.scenarioRevertSnapshot),
     scenarioApplyUndoSnapshot: cleanApplyUndoSnapshot(inputs.scenarioApplyUndoSnapshot),
+    orderScenarioRevertSnapshot: cleanOrderRevertSnapshot(inputs.orderScenarioRevertSnapshot),
+    orderScenarioBeforeBaseline: cleanOrderBaseline(inputs.orderScenarioBeforeBaseline),
+    orderApplyUndoSnapshot: cleanOrderApplyUndoSnapshot(inputs.orderApplyUndoSnapshot),
   }
 }

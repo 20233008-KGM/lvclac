@@ -34,6 +34,7 @@ export const ko: Messages = {
     experiencedBody:
       ' 계좌, 종목 스펙, 증거금 필드를 입력하면 청산 여유(버퍼)와 레버리지를 편하게 확인할 수 있습니다. 데스크톱에서는 계산기 좌·우·가운데 경계를 드래그해 영역 너비를 조절할 수 있습니다.',
     footnote: '이 계산기는 한 종목만 보유한 경우를 기준으로 계산합니다.',
+    guideLink: '자세한 사용법 보기',
   },
   optional: '(선택)',
   fieldTooltipLabel: '용어 설명',
@@ -56,6 +57,19 @@ export const ko: Messages = {
   scenarioPriceClear: 'Esc — 시나리오 모드 종료 및 적용 전 상태 복원',
   scenarioApplyPnl: '손익 반영',
   scenarioApplyPnlShort: '반영',
+  orderScenarioCommit: 'Enter로 주문 시나리오 진입',
+  orderScenarioClear: 'Esc — 주문 시나리오 종료 및 복원',
+  orderScenarioApply: '계좌에 확정',
+  orderScenarioSectionTitle: '주문',
+  orderScenarioChip: '{contracts}계약 · {price} · 반영 중',
+  orderScenarioFieldContracts: '주문 계약수',
+  orderScenarioFieldPrice: '주문 가격',
+  orderScenarioHint:
+    '계약수·주문 가격을 모두 입력한 뒤 ↵으로 시뮬레이션합니다.\n\n· ↵ — 결과·평가에 주문 반영 (미리보기)\n· ✓ — 계좌·보유계약수에 확정 (재주문 아님)\n· Esc — 시뮬레이션 취소\n· Ctrl+Z — 확정 취소 후 미리보기 복귀',
+  clearAllInputs: '비우기',
+  clearAllInputsModalTitle: '입력값 초기화',
+  clearAllInputsModalBody: '모든 입력값을 비웁니다. 계속하시겠습니까?',
+  clearAllInputsConfirm: '비우기',
   draftSave: {
     label: '이 기기에 입력값 저장',
     hint: '활성화 시 입력값이 이 브라우저에만 저장되어 다음 방문 시 불러옵니다. 서버로 전송되지 않습니다. 비활성화 시 저장된 값이 삭제됩니다.',
@@ -151,16 +165,18 @@ export const ko: Messages = {
     },
     orderContracts: {
       label: '추가 주문 계약수',
-      hint: '매수·매도 추가 수량',
+      hint: '체결을 가정할 추가 주문 계약 수입니다. +는 포지션 확장, −는 포지션 축소.',
       placeholder: '+/-0',
     },
     orderPrice: {
       label: '주문 가격',
-      hint: '체결 가정 가격. 미입력 시 현재가와 동일',
+      hint: '체결을 가정하는 주문 가격입니다.',
       placeholder: '주문 가격',
     },
   },
   useCurrentPrice: '현재가',
+  useCurrentPriceShort: '현',
+  useCurrentPriceTitle: '현재가로 채우기',
   results: {
     sheetIndex: '지표',
     sheetBefore: '주문 전',
@@ -205,8 +221,7 @@ export const ko: Messages = {
     contracts_zero: '계약 수를 입력해 주세요.',
     multiplier_zero: '계약승수는 0이 될 수 없습니다.',
     order_contracts_zero: '주문 계약 수를 입력해 주세요.',
-    maintenance_exceeds_equity:
-      '유지증거금이 계좌 평가금액 이상입니다. 이미 청산 위험 구간입니다.',
+    maintenance_exceeds_equity: '청산 위험',
     maintenance_rate_exceeds_entrusted: '유지증거금률이 개시증거금률보다 큽니다.',
     no_available_margin: '가용 증거금이 없습니다. (계좌 평가금액 − 위탁증거금)',
     cannot_calc_per_contract_entrusted: '1계약당 위탁증거금을 계산할 수 없습니다.',
@@ -332,6 +347,77 @@ export const ko: Messages = {
         body: '개인정보 처리와 관련한 문의는 서비스 하단 footer에 표시된 연락처로 요청하실 수 있습니다.',
       },
     ],
+  },
+  guide: {
+    title: '사용법',
+    description:
+      '선물 계산기의 입력 순서, 주문·시나리오 기능, 단축키를 정리했습니다.\nHTS에 표시된 숫자를 그대로 넣어 사용하세요.',
+    sections: [
+      {
+        title: '시작하기',
+        paragraphs: [
+          '증권사 HTS에 보이는 계좌 평가금액·증거금·현재가를 왼쪽 입력 패널에 넣으세요.',
+          '오른쪽 결과 패널에서 청산가, 증거금 여유, 레버리지를 바로 확인할 수 있습니다.',
+          '통화 기호(₩, $)는 넣지 않습니다. 한 계좌에서 같은 단위로 표시되는 숫자끼리만 입력하면 됩니다.',
+        ],
+      },
+      {
+        title: '입력 순서',
+        paragraphs: ['아래 순서대로 채우면 계산이 가장 수월합니다.'],
+        items: [
+          '계좌 — 계좌 평가금액, 보유 계약수',
+          '종목 스펙 — 현재가, (선택) 약정금액·계약승수·틱 크기',
+          '증거금 — HTS 표시 방식에 맞는 모드(비율·계약당 고정·총액) 선택 후 유지·개시 증거금 입력',
+        ],
+      },
+      {
+        title: '증거금 입력 모드',
+        paragraphs: [
+          '국내 선물은 보통 비율 모드, 해외 선물은 계약당 고정 모드가 맞는 경우가 많습니다.',
+          'HTS에 총액만 보이면 총액 모드를 사용하세요.',
+          '비율과 직접 금액을 동시에 넣으면 직접 입력값이 우선합니다.',
+        ],
+      },
+      {
+        title: '주문 시뮬레이션',
+        paragraphs: [
+          '결과 패널 하단 「주문」에서 주문 계약수·주문 가격을 조정하면, 체결 직후 청산가·증거금·레버리지 변화를 미리 볼 수 있습니다.',
+        ],
+        items: [
+          'Enter(↵) — 주문 미리보기 진입',
+          'Enter(↵) — 다시 누르면 체결 반영(계약수·평가금액 갱신)',
+          'Esc — 미리보기 취소',
+        ],
+      },
+      {
+        title: '시나리오 가격',
+        paragraphs: [
+          '입력 패널의 시나리오 가격에 원하는 가격을 넣고 Enter하면, 현재가·계좌평가금액은 그대로 두고 결과만 해당 가격 기준으로 미리봅니다.',
+          '틱 크기가 설정된 종목은 ▲▼ 버튼이나 입력란을 위아래로 드래그해 틱 단위로 조정할 수 있습니다.',
+        ],
+        items: [
+          'Enter — 손익을 현재가·평가금액에 반영',
+          'Esc 또는 Delete — 모드 종료 및 입력값 지우기',
+          'Ctrl+Z — 손익 반영 취소',
+        ],
+      },
+      {
+        title: '화면 비율이 불편하신가요?',
+        paragraphs: [
+          '입력·결과 영역 너비가 맞지 않거나 숫자가 잘려 보이면, 패널 사이 경계(리사이저)를 드래그해 조절할 수 있습니다.',
+          '데스크톱(넓은 화면)에서만 표시됩니다. 기본 너비로 되돌리려면 헤더의 ⟲ 버튼을 누르세요.',
+        ],
+      },
+      {
+        title: '입력값 저장',
+        paragraphs: [
+          '「입력값 저장」을 켜면 이 브라우저에만 입력이 보관됩니다. 서버로 전송되지 않습니다.',
+          '끄면 저장된 값이 삭제됩니다.',
+        ],
+      },
+    ],
+    footnote:
+      '이 계산기는 한 종목·단일 포지션만 가정합니다. 여러 종목 동시 보유·교차 증거금·수수료는 반영되지 않으며, 브로커 HTS와 수치가 다를 수 있습니다.',
   },
   formulas: {
     backToCalculator: '← 계산기로 돌아가기',
@@ -537,7 +623,7 @@ export const ko: Messages = {
       {
         title: '리소스',
         links: [
-          { label: '이용 가이드', soon: true },
+          { label: '이용 가이드', href: '/guide' },
           { label: 'API 문서', soon: true },
           { label: '상태 페이지', soon: true },
         ],
@@ -553,11 +639,14 @@ export const ko: Messages = {
     ],
   },
   boards: {
-    backToCalculator: '← 계산기로 돌아가기',
+    portalCompany: 'Farfield Software',
     storageNotice:
-      '각 게시판은 용도별로 분리되어 있습니다. 현재는 이 기기 브라우저에만 글이 저장되며, 서버 연동 후 다른 이용자와 공유됩니다.',
+      '제출한 내용은 Farfield Software로 전달되기 전, 이 기기·브라우저에만 임시 저장됩니다. 다른 이용자의 글은 보이지 않습니다.',
     writePost: '글쓰기',
-    postList: '게시글',
+    postList: '이 기기에 저장된 글',
+    localPostListDesc:
+      '공개 게시판이 아닙니다. 이 브라우저에서 남긴 글만 아래에서 확인할 수 있습니다.',
+    submitSuccess: '등록되었습니다. 이 기기에 저장되었습니다.',
     postTitle: '제목',
     postTitlePlaceholder: '요청·버그·개선 내용을 한 줄로 적어 주세요',
     postBody: '내용',
@@ -565,7 +654,6 @@ export const ko: Messages = {
     postAuthor: '작성자',
     postAuthorPlaceholder: '닉네임 (미입력 시 익명)',
     submit: '등록',
-    empty: '아직 등록된 글이 없습니다. 첫 글을 남겨 주세요.',
     anonymous: '익명',
     items: {
       'dev-request': {

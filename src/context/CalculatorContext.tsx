@@ -17,6 +17,7 @@ const SAVE_ENABLED_KEY = 'leverage_save_enabled'
 interface CalculatorContextValue {
   inputs: CalculatorInputs
   updateInputs: (patch: CalculatorInputPatch) => void
+  resetInputs: () => void
   saveEnabled: boolean
   setSaveEnabled: (enabled: boolean) => void
 }
@@ -105,6 +106,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setInputs((prev) => applyInputPatch(prev, patch))
   }, [])
 
+  const resetInputs = useCallback(() => {
+    setInputs({ ...defaultInputs })
+  }, [])
+
   const setSaveEnabled = useCallback((enabled: boolean) => {
     setSaveEnabledState(enabled)
     try {
@@ -132,7 +137,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   useDebouncedSave(inputs, persistDraft)
 
   return (
-    <CalculatorContext.Provider value={{ inputs, updateInputs, saveEnabled, setSaveEnabled }}>
+    <CalculatorContext.Provider
+      value={{ inputs, updateInputs, resetInputs, saveEnabled, setSaveEnabled }}
+    >
       {children}
     </CalculatorContext.Provider>
   )

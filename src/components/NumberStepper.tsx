@@ -17,8 +17,9 @@ import {
   type PointerMode,
 } from './numberStepperPointer'
 import {
-  applyScrubMultiplier,
-  DEFAULT_FINGER_PX,
+  applyScrubTicks,
+  consumeScrubPx,
+  DEFAULT_SCRUB_PX_PER_TICK,
   snapToStep,
 } from './numberStepperScrub'
 
@@ -36,9 +37,12 @@ interface NumberStepperProps {
   disabled?: boolean
   /** 입력과 스테퍼 사이에 끼우는 버튼 등 (시나리오 가격 ↵/반영) */
   inlineSlot?: ReactNode
-  /** 세로 드래그 배율 스크럽 (시나리오 가격 전용) */
+  /** 스테퍼 오른쪽에 붙는 버튼 등 (주문가 현재가) */
+  trailingSlot?: ReactNode
+  /** 세로 드래그 틱 선형 스크럽 */
   enableDragScrub?: boolean
-  dragScrubFingerPx?: number
+  /** 드래그 pxPerTick — 값이 작을수록 빠름 (기본 6px당 1틱) */
+  dragScrubPxPerTick?: number
   /** value 미설정 시 스크럽 시작 기준가 */
   scrubSeedValue?: number
 }
@@ -48,6 +52,7 @@ interface PointerSession {
   startY: number
   lastClientY: number
   delta: number
+  scrubAccumPx: number
 }
 
 export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(function NumberStepper(
@@ -64,8 +69,9 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     onDeleteKey,
     disabled = false,
     inlineSlot,
+    trailingSlot,
     enableDragScrub = false,
-    dragScrubFingerPx = DEFAULT_FINGER_PX,
+    dragScrubPxPerTick = DEFAULT_SCRUB_PX_PER_TICK,
     scrubSeedValue,
   },
   ref,
@@ -163,13 +169,21 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       const deltaPx = session.lastClientY - clientY
       if (deltaPx === 0) return
 
-      const current = valueRef.current ?? scrubBaseValue()
-      const next = applyScrubMultiplier(current, deltaPx, dragScrubFingerPx, minValue ?? 0)
+      const { nextAccumPx, tickDelta } = consumeScrubPx(
+        session.scrubAccumPx,
+        deltaPx,
+        dragScrubPxPerTick,
+      )
+      session.scrubAccumPx = nextAccumPx
       session.lastClientY = clientY
+      if (tickDelta === 0) return
+
+      const current = valueRef.current ?? scrubBaseValue()
+      const next = applyScrubTicks(current, tickDelta, step, minValue)
       valueRef.current = next
       onChangeRef.current(next)
     },
-    [dragScrubFingerPx, minValue, scrubBaseValue],
+    [dragScrubPxPerTick, minValue, scrubBaseValue, step],
   )
 
   const enterScrubMode = useCallback(
@@ -180,6 +194,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       stopHold()
       session.mode = 'scrub'
       session.lastClientY = clientY
+      session.scrubAccumPx = 0
       setScrubbingDelta(session.delta)
 
       const seed = scrubBaseValue()
@@ -263,6 +278,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           startY: e.clientY,
           lastClientY: e.clientY,
           delta,
+          scrubAccumPx: 0,
         }
         scheduleHoldRepeat(delta)
       },
@@ -293,7 +309,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 
   return (
     <div
-      className={`number-stepper${inlineSlot ? ' number-stepper--with-inline-slot' : ''}${enableDragScrub ? ' number-stepper--drag-scrub' : ''}${isScrubActive ? ' number-stepper--scrub-active' : ''}`}
+      className={`number-stepper${inlineSlot ? ' number-stepper--with-inline-slot' : ''}${trailingSlot ? ' number-stepper--with-trailing-slot' : ''}${enableDragScrub ? ' number-stepper--drag-scrub' : ''}${isScrubActive ? ' number-stepper--scrub-active' : ''}`}
     >
       <div className="number-stepper__input">
         <NumberInput
@@ -316,6 +332,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
         <button {...buttonProps(step, stepUpLabel)}>▲</button>
         <button {...buttonProps(-step, stepDownLabel)}>▼</button>
       </div>
+      {trailingSlot && <div className="number-stepper__trailing-slot">{trailingSlot}</div>}
     </div>
   )
 })

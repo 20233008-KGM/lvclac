@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react'
 import { useLayout } from '../context/LayoutContext'
+import { useOverflowEllipsis } from '../hooks/useOverflowEllipsis'
 import { useLanguage } from '../i18n'
 import {
   formatNumberForInput,
@@ -70,7 +71,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   ref,
 ) {
   const { t } = useLanguage()
-  const { layoutMode } = useLayout()
+  const { layoutMode, fitScale } = useLayout()
   const skipBlurCommitRef = useRef(false)
   const inputElRef = useRef<HTMLInputElement>(null)
   const formatValue = isRate
@@ -105,6 +106,8 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   const hintValue = focused ? readDraftFromText() : value
   const showHint = shouldShowDigitLimitHint(isRate, truncatedAttempt, hintValue)
   const atBorder = shouldShowDigitLimitBorder(isRate, text, allowDecimal, allowNegative)
+  const overflowing = useOverflowEllipsis(inputElRef, true, [text, layoutMode, fitScale])
+  const ellipsisActive = layoutMode === 'manual' || overflowing
 
   function commitFromText(): boolean {
     const normalized = readDraftFromText()
@@ -135,91 +138,98 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
 
   const inputClass = [
     className ?? '',
-    layoutMode === 'manual' ? 'numeric-field--ellipsis' : '',
+    ellipsisActive ? 'numeric-field--ellipsis' : '',
     atBorder ? 'numeric-field__input--at-limit' : '',
   ]
     .filter(Boolean)
     .join(' ')
 
   return (
-    <div className={`numeric-field${atBorder ? ' numeric-field--at-limit' : ''}`}>
-      <input
-        ref={inputElRef}
-        type="text"
-        inputMode={allowDecimal || isRate ? 'decimal' : 'numeric'}
-        placeholder={placeholder}
-        aria-labelledby={ariaLabelledBy}
-        className={inputClass || undefined}
-        disabled={disabled}
-        value={text}
-        onFocus={() => setFocused(true)}
-        onBlur={() => {
-          if (skipBlurCommitRef.current) {
-            skipBlurCommitRef.current = false
-            setFocused(false)
-            setTruncatedAttempt(false)
-            return
-          }
-          if (!deferChangeUntilBlur) {
-            setFocused(false)
-            setTruncatedAttempt(false)
-            const parsed = parseFormattedInput(text)
-            if (parsed === '') {
-              setText(formatValue(value))
+    <div className={`numeric-field-clip${overflowing ? ' is-overflowing' : ''}`}>
+      <div className={`numeric-field${atBorder ? ' numeric-field--at-limit' : ''}`}>
+        <input
+          ref={inputElRef}
+          type="text"
+          inputMode={allowDecimal || isRate ? 'decimal' : 'numeric'}
+          placeholder={placeholder}
+          aria-labelledby={ariaLabelledBy}
+          className={inputClass || undefined}
+          disabled={disabled}
+          value={text}
+          onFocus={() => setFocused(true)}
+          onBlur={() => {
+            if (skipBlurCommitRef.current) {
+              skipBlurCommitRef.current = false
+              setFocused(false)
+              setTruncatedAttempt(false)
               return
             }
-            const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
-            if (normalized !== value) onChange(normalized)
-            setText(formatValue(normalized))
-            return
-          }
-          commitFromText()
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Delete' && onDeleteKey) {
-            e.preventDefault()
-            onDeleteKey()
-            return
-          }
-          if (e.key === 'Enter' && onEnterKey) {
-            e.preventDefault()
-            e.stopPropagation()
-            skipBlurCommitRef.current = true
-            onEnterKey()
-            e.currentTarget.blur()
-            return
-          }
-          if (e.key === 'Enter' && deferChangeUntilBlur) {
-            e.preventDefault()
-            skipBlurCommitRef.current = true
+            if (!deferChangeUntilBlur) {
+              setFocused(false)
+              setTruncatedAttempt(false)
+              const parsed = parseFormattedInput(text)
+              if (parsed === '') {
+                setText(formatValue(value))
+                return
+              }
+              const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
+              if (normalized !== value) onChange(normalized)
+              setText(formatValue(normalized))
+              return
+            }
             commitFromText()
-            e.currentTarget.blur()
-          }
-        }}
-        onChange={(e) => {
-          const raw = e.target.value
-          const formatted = formatRaw(raw)
-          setText(formatted)
-          if (
-            !isRate &&
-            wasIntegerDigitTruncated(raw, formatted, allowDecimal, allowNegative)
-          ) {
-            setTruncatedAttempt(true)
-          }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Delete' && onDeleteKey) {
+              e.preventDefault()
+              onDeleteKey()
+              return
+            }
+            if (e.key === 'Enter' && onEnterKey) {
+              e.preventDefault()
+              e.stopPropagation()
+              skipBlurCommitRef.current = true
+              onEnterKey()
+              e.currentTarget.blur()
+              return
+            }
+            if (e.key === 'Enter' && deferChangeUntilBlur) {
+              e.preventDefault()
+              skipBlurCommitRef.current = true
+              commitFromText()
+              e.currentTarget.blur()
+            }
+          }}
+          onChange={(e) => {
+            const raw = e.target.value
+            const formatted = formatRaw(raw)
+            setText(formatted)
+            if (
+              !isRate &&
+              wasIntegerDigitTruncated(raw, formatted, allowDecimal, allowNegative)
+            ) {
+              setTruncatedAttempt(true)
+            }
 
-          if (deferChangeUntilBlur) return
+            if (deferChangeUntilBlur) return
 
-          const parsed = parseFormattedInput(formatted)
-          if (parsed === '') {
-            onChange(undefined)
-            return
-          }
-          onChange(normalizeInputValue(parsed, { isRate, allowDecimal }))
-        }}
-      />
-      {showHint && (
-        <span className="field-hint field-hint--limit" role="status" aria-live="polite">
-          {t.inputMaxDigitsWarning}
+            const parsed = parseFormattedInput(formatted)
+            if (parsed === '') {
+              onChange(undefined)
+              return
+            }
+            onChange(normalizeInputValue(parsed, { isRate, allowDecimal }))
+          }}
+        />
+        {showHint && (
+          <span className="field-hint field-hint--limit" role="status" aria-live="polite">
+            {t.inputMaxDigitsWarning}
+          </span>
+        )}
+      </div>
+      {overflowing && (
+        <span className="numeric-field-clip__indicator" aria-hidden="true">
+          …
         </span>
       )}
     </div>

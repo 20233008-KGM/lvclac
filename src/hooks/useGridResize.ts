@@ -122,6 +122,7 @@ export function useGridResize(persist: boolean) {
   const [scanGeneration, setScanGeneration] = useState(0)
   const [resetBtnGlowing, setResetBtnGlowing] = useState(false)
   const [resetBtnGlowGeneration, setResetBtnGlowGeneration] = useState(0)
+  const [layoutVersion, setLayoutVersion] = useState(0)
   const dragRef = useRef<GridResizeHandle | null>(null)
 
   layoutRef.current = layout
@@ -344,6 +345,7 @@ export function useGridResize(persist: boolean) {
     setGridScanning(false)
     setResetBtnGlowing(false)
     setLayout({ ...DEFAULT_LAYOUT })
+    setLayoutVersion((v) => v + 1)
   }, [])
 
   useEffect(() => {
@@ -388,6 +390,7 @@ export function useGridResize(persist: boolean) {
     getHandleProps,
     isCustom,
     layoutMode,
+    layoutVersion,
     reset,
     refreshGeometry,
     expandToFit,

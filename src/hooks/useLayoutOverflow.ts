@@ -20,7 +20,7 @@ function measureOverflow(container: HTMLElement): OverflowMeasure {
     })
 
   container.querySelectorAll('.fit-text').forEach((outer) => {
-    const inner = outer.querySelector('.fit-text__inner')
+    const inner = outer.querySelector('.fit-text__clip, .fit-text__inner')
     if (!inner) return
     const over = inner.scrollWidth - outer.clientWidth
     if (over > 0) resultOverflow = Math.max(resultOverflow, over)
@@ -33,15 +33,13 @@ function measureOverflow(container: HTMLElement): OverflowMeasure {
   }
 }
 
-/** scale 보정 width 영향 없이 자연 콘텐츠 폭 기준 */
-function measureFitScale(fitRoot: HTMLElement, viewportWidth: number): number {
-  let contentWidth = 0
-  for (const child of fitRoot.children) {
-    if (child instanceof HTMLElement) {
-      contentWidth = Math.max(contentWidth, child.scrollWidth)
-    }
-  }
-  if (contentWidth <= 0) contentWidth = fitRoot.scrollWidth
+/** scale 보정 width 영향 없이 자연 콘텐츠 폭 기준 (calc-scale-root 내 calc-grid만 측정) */
+function measureFitScale(scaleRoot: HTMLElement, viewportWidth: number): number {
+  const grid = scaleRoot.querySelector('.calc-grid')
+  const contentWidth =
+    grid instanceof HTMLElement && grid.scrollWidth > 0
+      ? grid.scrollWidth
+      : scaleRoot.scrollWidth
   if (contentWidth <= 0 || viewportWidth <= 0) return 1
   const scale = Math.max(MIN_FIT_SCALE, Math.min(1, viewportWidth / contentWidth))
   return Math.round(scale * 1000) / 1000
@@ -65,6 +63,8 @@ interface UseLayoutOverflowOptions {
   refreshGeometry?: () => void
   /** inputs 변경 시 재측정 트리거 */
   measureKey?: string
+  /** 리사이저 초기화 등 레이아웃 리셋 시 재측정 트리거 */
+  layoutVersion?: number
 }
 
 export function useLayoutOverflow({
@@ -75,6 +75,7 @@ export function useLayoutOverflow({
   onAutoExpand,
   refreshGeometry,
   measureKey,
+  layoutVersion = 0,
 }: UseLayoutOverflowOptions) {
   const [fitScale, setFitScale] = useState(1)
   const fitScaleRef = useRef(1)
@@ -167,11 +168,15 @@ export function useLayoutOverflow({
       ro.observe(fitRoot)
     }
 
+    if (layoutMode === 'auto' && document.documentElement.clientWidth >= DESKTOP_MIN) {
+      scheduleScanAfterPaint(() => runDesktopExpand(false))
+    }
+
     return () => {
       cancelAnimationFrame(roRaf)
       ro.disconnect()
     }
-  }, [containerRef, fitRootRef, layoutMode])
+  }, [containerRef, fitRootRef, layoutMode, layoutVersion])
 
   useLayoutEffect(() => {
     const container = containerRef.current
@@ -217,7 +222,7 @@ export function useLayoutOverflow({
     }, EXPAND_DEBOUNCE_MS)
 
     return () => window.clearTimeout(timer)
-  }, [containerRef, layoutMode, measureKey])
+  }, [containerRef, layoutMode, measureKey, layoutVersion])
 
   return { fitScale }
 }

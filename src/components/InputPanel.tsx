@@ -3,14 +3,24 @@ import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import {
   hasScenarioApplyUndo,
+  isPreviewModeActive,
   isScenarioModeActive,
   resolveEvaluationInputs,
   type CalculatorInputPatch,
 } from '../calc/mtmLink'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
+import {
+  CommitButtonSlot,
+  ScenarioPriceApplyButton,
+  ScenarioPriceCommitButton,
+} from './InputCommitButton'
 import { NumberInput, type NumberInputHandle } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
+import {
+  PRICE_SCRUB_PX_PER_TICK,
+} from './numberStepperScrub'
+import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { SaveDraftToggle } from './SaveDraftToggle'
 
 interface InputPanelProps {
@@ -129,6 +139,8 @@ function CurrentPriceField({
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="current-price-label"
           disabled={disabled}
+          enableDragScrub
+          dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
           onChange={(v) => onChange({ currentPrice: v })}
         />
       </Field>
@@ -146,67 +158,6 @@ function CurrentPriceField({
         onChange={(v) => onChange({ currentPrice: v })}
       />
     </Field>
-  )
-}
-
-function EnterCommitIcon() {
-  return (
-    <span className="input-commit-btn__glyph" aria-hidden>
-      ↵
-    </span>
-  )
-}
-
-function ApplyPnlIcon() {
-  return (
-    <span className="input-commit-btn__glyph input-commit-btn__glyph--pnl" aria-hidden>
-      ✓
-    </span>
-  )
-}
-
-function ScenarioPriceCommitButton({
-  label,
-  disabled,
-  onClick,
-}: {
-  label: string
-  disabled?: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      className="input-commit-btn"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <EnterCommitIcon />
-    </button>
-  )
-}
-
-function ScenarioPriceApplyButton({
-  label,
-  disabled,
-  onClick,
-}: {
-  label: string
-  disabled?: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      className="input-commit-btn input-commit-btn--apply-pnl"
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <ApplyPnlIcon />
-    </button>
   )
 }
 
@@ -353,20 +304,11 @@ function ScenarioPriceField({
   )
 
   const commitBtnSlot = (
-    <span className="input-commit-btn-slot">
-      <span
-        className={scenarioModeActive ? 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden' : 'input-commit-btn-slot__layer'}
-        aria-hidden={scenarioModeActive}
-      >
-        {commitButton}
-      </span>
-      <span
-        className={scenarioModeActive ? 'input-commit-btn-slot__layer' : 'input-commit-btn-slot__layer input-commit-btn-slot__layer--hidden'}
-        aria-hidden={!scenarioModeActive}
-      >
-        {applyPnlButton}
-      </span>
-    </span>
+    <CommitButtonSlot
+      previewActive={scenarioModeActive}
+      commitButton={commitButton}
+      applyButton={applyPnlButton}
+    />
   )
 
   if (useStepper) {
@@ -384,8 +326,10 @@ function ScenarioPriceField({
           ariaLabelledBy="scenario-price-label"
           inlineSlot={commitBtnSlot}
           enableDragScrub
+          dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
           scrubSeedValue={inputs.currentPrice}
           onEnterKey={handleScenarioEnter}
+          onDeleteKey={clearScenario}
           onChange={handleScenarioPriceChange}
         />
       </div>
@@ -404,6 +348,7 @@ function ScenarioPriceField({
           aria-labelledby="scenario-price-label"
           className="input-commit-row__input"
           onEnterKey={handleScenarioEnter}
+          onDeleteKey={clearScenario}
           onChange={handleScenarioPriceChange}
         />
         {commitBtnSlot}
@@ -424,7 +369,7 @@ function MarginSection({
   const { t } = useLanguage()
   const f = t.fields
   const m = t.marginMode
-  const scenarioModeActive = isScenarioModeActive(inputs)
+  const scenarioModeActive = isPreviewModeActive(inputs)
   const mode = inputs.marginInputMode ?? 'rate'
 
   const modeTooltip = `${m.rate} — ${m.rateHint}\n${m.perContract} — ${m.perContractHint}\n${m.total} — ${m.totalHint}`
@@ -493,12 +438,15 @@ function MarginSection({
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
-  const scenarioModeActive = isScenarioModeActive(inputs)
+  const scenarioModeActive = isPreviewModeActive(inputs)
   const previewInputs = scenarioModeActive ? resolveEvaluationInputs(inputs) : inputs
 
   return (
     <section className="panel input-panel">
-      <h2>{t.input}</h2>
+      <div className="input-panel__head">
+        <h2>{t.input}</h2>
+        <ClearAllInputsButton disabled={scenarioModeActive} />
+      </div>
 
       <div className="input-sections">
         <div className="field-section field-section--position">
@@ -540,7 +488,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           })}
           <Field label={f.contracts.label} labelId="contracts-label">
             <NumberStepper
-              value={inputs.contracts}
+              value={previewInputs.contracts}
               step={1}
               allowNegative={false}
               placeholder={f.contracts.placeholder || undefined}

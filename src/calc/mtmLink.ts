@@ -1,4 +1,5 @@
-import type { CalculatorInputs, PositionSide } from '../types'
+import type { CalculatorInputs, OrderScenarioBaseline, PositionSide } from '../types'
+import { buildAfterOrderInputs } from './leverage'
 import { calcTotalQuantity } from './liquidation/common'
 
 export type CalculatorInputPatch = Partial<CalculatorInputs> & {
@@ -14,6 +15,14 @@ export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   applyScenarioToMark?: number
   /** 손익 반영 취소 — 시나리오 미리보기 복원 */
   undoScenarioApply?: true
+  /** 주문 시나리오 Enter — baseline과 함께 미리보기 진입 */
+  commitOrderScenario?: OrderScenarioBaseline
+  /** 주문 시나리오 Esc — 진입 전 상태 복원 */
+  clearOrderScenario?: true
+  /** 주문 시나리오 Enter 2 — 계좌에 주문 반영 */
+  applyOrderScenario?: true
+  /** 주문 반영 취소 — 미리보기 복귀 */
+  undoOrderApply?: true
 }
 
 export interface ScenarioRevertSnapshot {
@@ -62,6 +71,7 @@ export function enterScenarioPreview(
   const accountEval = prev.accountEval
   const currentPrice = prev.currentPrice
   if (accountEval == null || currentPrice == null) return null
+  if (isOrderScenarioModeActive(prev)) return null
 
   return {
     scenarioPrice,
@@ -78,6 +88,73 @@ export function enterScenarioPreview(
 /** 시나리오 가격 Enter 확정 후 — 결과·UI 시나리오 모드 */
 export function isScenarioModeActive(inputs: CalculatorInputs): boolean {
   return inputs.scenarioRevertSnapshot != null
+}
+
+/** 주문 시나리오 미리보기 모드 */
+export function isOrderScenarioModeActive(inputs: CalculatorInputs): boolean {
+  return inputs.orderScenarioRevertSnapshot != null
+}
+
+/** 가격 또는 주문 시나리오 미리보기 */
+export function isPreviewModeActive(inputs: CalculatorInputs): boolean {
+  return isScenarioModeActive(inputs) || isOrderScenarioModeActive(inputs)
+}
+
+function orderInputsFromRevertSnapshot(inputs: CalculatorInputs): CalculatorInputs {
+  const snap = inputs.orderScenarioRevertSnapshot
+  if (!snap) return inputs
+  return {
+    ...inputs,
+    accountEval: snap.accountEval,
+    contracts: snap.contracts,
+    mtmPriceAnchor: snap.mtmPriceAnchor,
+    evalSnapshotSide: snap.evalSnapshotSide,
+  }
+}
+
+/** 주문 시나리오 미리보기용 post-order inputs — 저장 contracts/accountEval은 유지 */
+export function resolveOrderPreviewInputs(inputs: CalculatorInputs): CalculatorInputs {
+  if (!isOrderScenarioModeActive(inputs)) return inputs
+
+  const orderContracts = inputs.orderContracts
+  const orderPrice = inputs.orderPrice
+  if (orderContracts == null || orderPrice == null) return inputs
+
+  const base = orderInputsFromRevertSnapshot(inputs)
+  const heldContracts = base.contracts ?? 0
+  const newContracts = heldContracts > 0 ? heldContracts + orderContracts : orderContracts
+  const afterInputs = buildAfterOrderInputs(
+    { ...base, orderPrice },
+    newContracts,
+    orderContracts,
+  )
+
+  return {
+    ...inputs,
+    contracts: afterInputs.contracts,
+    accountEval: afterInputs.accountEval,
+    evalSnapshotSide: afterInputs.evalSnapshotSide,
+  }
+}
+
+/** 주문 시나리오 진입 — revert 스냅샷 + baseline 저장 */
+export function enterOrderScenarioPreview(
+  prev: CalculatorInputs,
+  baseline: OrderScenarioBaseline,
+): Partial<CalculatorInputs> | null {
+  const accountEval = prev.accountEval
+  if (accountEval == null) return null
+  if (isScenarioModeActive(prev)) return null
+
+  return {
+    orderScenarioRevertSnapshot: {
+      accountEval,
+      contracts: prev.contracts,
+      mtmPriceAnchor: prev.mtmPriceAnchor,
+      evalSnapshotSide: prev.evalSnapshotSide,
+    },
+    orderScenarioBeforeBaseline: baseline,
+  }
 }
 
 /** 시나리오 가격을 현재가로 확정 — 손익 반영 후 시나리오 모드 종료 */
@@ -106,8 +183,41 @@ export function applyScenarioToMarkPrice(
   }
 }
 
+/** 주문 시나리오 → 계좌 반영, 모드 종료 */
+export function applyOrderScenarioToAccount(
+  prev: CalculatorInputs,
+): Partial<CalculatorInputs> | null {
+  const snap = prev.orderScenarioRevertSnapshot
+  const orderContracts = prev.orderContracts
+  const orderPrice = prev.orderPrice
+  if (!snap || orderContracts == null || orderPrice == null) return null
+
+  const base = orderInputsFromRevertSnapshot(prev)
+  const heldContracts = base.contracts ?? 0
+  const newContracts = heldContracts > 0 ? heldContracts + orderContracts : orderContracts
+  const afterInputs = buildAfterOrderInputs(
+    { ...base, orderPrice },
+    newContracts,
+    orderContracts,
+  )
+
+  return {
+    contracts: afterInputs.contracts,
+    accountEval: afterInputs.accountEval,
+    evalSnapshotSide: afterInputs.evalSnapshotSide,
+    orderContracts: undefined,
+    orderPrice: undefined,
+    orderScenarioRevertSnapshot: undefined,
+    orderScenarioBeforeBaseline: undefined,
+  }
+}
+
 export function hasScenarioApplyUndo(inputs: CalculatorInputs): boolean {
   return inputs.scenarioApplyUndoSnapshot != null
+}
+
+export function hasOrderApplyUndo(inputs: CalculatorInputs): boolean {
+  return inputs.orderApplyUndoSnapshot != null
 }
 
 export function revertScenarioApply(prev: CalculatorInputs): Partial<CalculatorInputs> | null {
@@ -126,18 +236,55 @@ export function revertScenarioApply(prev: CalculatorInputs): Partial<CalculatorI
   }
 }
 
+export function revertOrderApply(prev: CalculatorInputs): Partial<CalculatorInputs> | null {
+  const snap = prev.orderApplyUndoSnapshot
+  if (!snap) return null
+
+  return {
+    accountEval: snap.accountEval,
+    contracts: snap.contracts,
+    mtmPriceAnchor: snap.mtmPriceAnchor,
+    evalSnapshotSide: snap.evalSnapshotSide,
+    orderContracts: snap.orderContracts,
+    orderPrice: snap.orderPrice,
+    orderScenarioRevertSnapshot: snap.orderScenarioRevertSnapshot,
+    orderScenarioBeforeBaseline: snap.orderScenarioBeforeBaseline,
+    orderApplyUndoSnapshot: undefined,
+  }
+}
+
 export function revertScenarioState(prev: CalculatorInputs): Partial<CalculatorInputs> {
   const snap = prev.scenarioRevertSnapshot
   if (!snap) {
     return {
+      scenarioPrice: undefined,
       scenarioAppliedPrice: undefined,
       scenarioRevertSnapshot: undefined,
     }
   }
   return {
+    scenarioPrice: undefined,
     scenarioAppliedPrice: undefined,
     scenarioRevertSnapshot: undefined,
     accountEval: snap.accountEval,
+    mtmPriceAnchor: snap.mtmPriceAnchor,
+    evalSnapshotSide: snap.evalSnapshotSide,
+  }
+}
+
+export function revertOrderScenarioState(prev: CalculatorInputs): Partial<CalculatorInputs> {
+  const snap = prev.orderScenarioRevertSnapshot
+  if (!snap) {
+    return {
+      orderScenarioBeforeBaseline: undefined,
+      orderScenarioRevertSnapshot: undefined,
+    }
+  }
+  return {
+    orderScenarioBeforeBaseline: undefined,
+    orderScenarioRevertSnapshot: undefined,
+    accountEval: snap.accountEval,
+    contracts: snap.contracts,
     mtmPriceAnchor: snap.mtmPriceAnchor,
     evalSnapshotSide: snap.evalSnapshotSide,
   }
@@ -164,35 +311,42 @@ export function resolveScenarioPreviewEquity(inputs: CalculatorInputs): number |
 /**
  * 결과·주문 계산용 입력.
  * 시나리오 모드: 시나리오 가격·미실현 손익 반영 평가금액으로 미리보기.
- * 입력란에 저장된 currentPrice·accountEval은 「반영」 전까지 유지된다.
+ * 주문 시나리오: post-order contracts·accountEval 미리보기.
  */
 export function resolveEvaluationInputs(inputs: CalculatorInputs): CalculatorInputs {
-  if (!isScenarioModeActive(inputs)) return inputs
+  let resolved = inputs
 
-  const scenarioMark = inputs.scenarioAppliedPrice ?? inputs.scenarioPrice
-  const currentPrice = inputs.currentPrice
-  if (scenarioMark == null || currentPrice == null) return inputs
-
-  const previewEquity = resolveScenarioPreviewEquity(inputs)
-  if (previewEquity == null) return inputs
-
-  if (scenarioMark === currentPrice && previewEquity === inputs.accountEval) {
-    return inputs
+  if (isScenarioModeActive(resolved)) {
+    const scenarioMark = resolved.scenarioAppliedPrice ?? resolved.scenarioPrice
+    const currentPrice = resolved.currentPrice
+    if (scenarioMark != null && currentPrice != null) {
+      const previewEquity = resolveScenarioPreviewEquity(resolved)
+      if (previewEquity != null) {
+        if (scenarioMark !== currentPrice || previewEquity !== resolved.accountEval) {
+          resolved = {
+            ...resolved,
+            currentPrice: scenarioMark,
+            accountEval: previewEquity,
+          }
+        }
+      }
+    }
   }
 
-  return {
-    ...inputs,
-    currentPrice: scenarioMark,
-    accountEval: previewEquity,
+  if (isOrderScenarioModeActive(resolved)) {
+    resolved = resolveOrderPreviewInputs(resolved)
   }
+
+  return resolved
 }
 
 /**
- * 유지·위탁 증거금 명목 산출용 — 시나리오 모드에서는 진입 시점 입력(실제 현재가) 기준 고정.
- * 약정금액·비율·1계약당 증거금이 시나리오 가격으로 흔들리지 않게 한다.
+ * 유지·위탁 증거금 명목 산출용 — 시나리오 가격 모드에서는 진입 시점 입력(실제 현재가) 기준 고정.
+ * 주문 시나리오 모드에서는 post-order 미리보기 기준.
  */
 export function resolveMarginCalculationInputs(inputs: CalculatorInputs): CalculatorInputs {
-  if (!isScenarioModeActive(inputs)) return inputs
+  if (isScenarioModeActive(inputs) && !isOrderScenarioModeActive(inputs)) return inputs
+  if (isOrderScenarioModeActive(inputs)) return resolveOrderPreviewInputs(inputs)
   return inputs
 }
 
@@ -207,7 +361,23 @@ export function applyTickMove(
   return applyPriceMove(prev, currentPrice + direction * tickSize)
 }
 
-/** 시나리오·가격 입력 패치 보정 */
+function sanitizePatchForScenarioLock(
+  prev: CalculatorInputs,
+  inputPatch: Partial<CalculatorInputs>,
+): Partial<CalculatorInputs> {
+  if (isScenarioModeActive(prev)) {
+    return 'scenarioPrice' in inputPatch ? { scenarioPrice: inputPatch.scenarioPrice } : {}
+  }
+  if (isOrderScenarioModeActive(prev)) {
+    const allowed: Partial<CalculatorInputs> = {}
+    if ('orderContracts' in inputPatch) allowed.orderContracts = inputPatch.orderContracts
+    if ('orderPrice' in inputPatch) allowed.orderPrice = inputPatch.orderPrice
+    return allowed
+  }
+  return inputPatch
+}
+
+/** 시나리오·가격·주문 입력 패치 보정 */
 export function applyInputPatch(
   prev: CalculatorInputs,
   patch: CalculatorInputPatch,
@@ -219,10 +389,20 @@ export function applyInputPatch(
     clearScenario,
     applyScenarioToMark,
     undoScenarioApply,
+    commitOrderScenario,
+    clearOrderScenario,
+    applyOrderScenario,
+    undoOrderApply,
     ...inputPatch
   } = patch
 
-  const scenarioLocked = isScenarioModeActive(prev)
+  const previewLocked = isPreviewModeActive(prev)
+
+  if (undoOrderApply) {
+    const undone = revertOrderApply(prev)
+    if (undone) return { ...prev, ...inputPatch, ...undone }
+    return { ...prev, ...inputPatch }
+  }
 
   if (undoScenarioApply) {
     const undone = revertScenarioApply(prev)
@@ -230,8 +410,33 @@ export function applyInputPatch(
     return { ...prev, ...inputPatch }
   }
 
+  if (applyOrderScenario) {
+    const base = { ...prev, ...sanitizePatchForScenarioLock(prev, inputPatch) }
+    const applied = applyOrderScenarioToAccount(base)
+    if (applied) {
+      const undoSnapshot =
+        isOrderScenarioModeActive(base) &&
+        base.accountEval != null &&
+        base.orderScenarioRevertSnapshot != null &&
+        base.orderScenarioBeforeBaseline != null
+          ? {
+              accountEval: base.accountEval,
+              contracts: base.contracts,
+              mtmPriceAnchor: base.mtmPriceAnchor,
+              evalSnapshotSide: base.evalSnapshotSide,
+              orderContracts: base.orderContracts,
+              orderPrice: base.orderPrice,
+              orderScenarioRevertSnapshot: base.orderScenarioRevertSnapshot,
+              orderScenarioBeforeBaseline: base.orderScenarioBeforeBaseline,
+            }
+          : undefined
+      return { ...base, ...applied, orderApplyUndoSnapshot: undoSnapshot }
+    }
+    return base
+  }
+
   if (applyScenarioToMark != null) {
-    const base = { ...prev, ...inputPatch }
+    const base = { ...prev, ...sanitizePatchForScenarioLock(prev, inputPatch) }
     const rolled = applyScenarioToMarkPrice(base, applyScenarioToMark)
     if (rolled) {
       const undoSnapshot =
@@ -253,29 +458,36 @@ export function applyInputPatch(
     return base
   }
 
+  if (clearOrderScenario) {
+    return { ...prev, ...inputPatch, ...revertOrderScenarioState(prev) }
+  }
+
   if (clearScenario) {
     return { ...prev, ...inputPatch, ...revertScenarioState(prev) }
   }
 
-  if (scenarioLocked && tickCurrentPrice != null) {
+  if (previewLocked && tickCurrentPrice != null) {
     return prev
   }
 
-  if (scenarioLocked && commitCurrentPrice != null) {
+  if (previewLocked && commitCurrentPrice != null) {
     return prev
   }
 
-  const sanitizedPatch = scenarioLocked
-    ? 'scenarioPrice' in inputPatch
-      ? { scenarioPrice: inputPatch.scenarioPrice }
-      : {}
-    : inputPatch
+  const sanitizedPatch = sanitizePatchForScenarioLock(prev, inputPatch)
 
   if (tickCurrentPrice != null) {
     const direction = tickCurrentPrice === 1 ? 1 : -1
     const base = { ...prev, ...sanitizedPatch }
     const moved = applyTickMove(base, direction)
     if (moved) return { ...base, ...moved }
+    return base
+  }
+
+  if (commitOrderScenario != null) {
+    const base = { ...prev, ...sanitizedPatch }
+    const entered = enterOrderScenarioPreview(base, commitOrderScenario)
+    if (entered) return { ...base, ...entered }
     return base
   }
 

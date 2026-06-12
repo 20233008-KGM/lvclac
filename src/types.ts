@@ -63,8 +63,43 @@ export interface CalculatorInputs {
       evalSnapshotSide?: PositionSide
     }
   }
+  /** 주문 시나리오 진입 전 실제 inputs — Esc 시 복원 */
+  orderScenarioRevertSnapshot?: {
+    accountEval: number
+    contracts?: number
+    mtmPriceAnchor?: number
+    evalSnapshotSide?: PositionSide
+  }
+  /** Enter 진입 시점의 after-order 기준선 — 모드 중 before 열 고정값 */
+  orderScenarioBeforeBaseline?: OrderScenarioBaseline
+  /** 주문 반영 직전 스냅샷 — Ctrl+Z */
+  orderApplyUndoSnapshot?: {
+    accountEval: number
+    contracts?: number
+    mtmPriceAnchor?: number
+    evalSnapshotSide?: PositionSide
+    orderContracts?: number
+    orderPrice?: number
+    orderScenarioRevertSnapshot: {
+      accountEval: number
+      contracts?: number
+      mtmPriceAnchor?: number
+      evalSnapshotSide?: PositionSide
+    }
+    orderScenarioBeforeBaseline: OrderScenarioBaseline
+  }
   /** 가격 스테퍼 1틱 크기 */
   tickSize?: number
+}
+
+/** 주문 시나리오 진입 직전 after 열 지표 — 모드 중 before 열에 고정 */
+export interface OrderScenarioBaseline {
+  liquidation: number | null
+  tolerance: number | null
+  toleranceDelta: number | null
+  margins: MarginAmounts | null
+  leverageRatio: number | null
+  isAtRisk: boolean
 }
 
 export interface MarginAmounts {

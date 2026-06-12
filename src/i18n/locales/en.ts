@@ -35,6 +35,7 @@ export const en: Messages = {
     experiencedBody:
       ' Fill in Account, Instrument, and Margin to check liquidation buffer and leverage at a glance. On desktop, drag the left, center, or right edge of the calculator to resize columns.',
     footnote: 'Assumes one open instrument per account.',
+    guideLink: 'Read full guide',
   },
   optional: '(optional)',
   fieldTooltipLabel: 'Field definition',
@@ -57,6 +58,19 @@ export const en: Messages = {
   scenarioPriceClear: 'Esc — exit scenario mode and restore pre-scenario state',
   scenarioApplyPnl: 'Apply P&L',
   scenarioApplyPnlShort: 'Apply',
+  orderScenarioCommit: 'Enter order scenario preview',
+  orderScenarioClear: 'Esc — exit order scenario and restore',
+  orderScenarioApply: 'Apply to account',
+  orderScenarioSectionTitle: 'Order',
+  orderScenarioChip: '{contracts} · {price} · preview',
+  orderScenarioFieldContracts: 'Order size',
+  orderScenarioFieldPrice: 'Order price',
+  orderScenarioHint:
+    'Enter both order size and price, then press ↵ to simulate.\n\n· ↵ — reflect order in results (preview)\n· ✓ — apply to account and held contracts (not a second order)\n· Esc — cancel simulation\n· Ctrl+Z — undo apply and return to preview',
+  clearAllInputs: 'Clear all',
+  clearAllInputsModalTitle: 'Clear all inputs',
+  clearAllInputsModalBody: 'This will clear all entered values. Continue?',
+  clearAllInputsConfirm: 'Clear',
   draftSave: {
     label: 'Save inputs on this device',
     hint: 'When on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Turning off deletes saved values.',
@@ -152,16 +166,18 @@ export const en: Messages = {
     },
     orderContracts: {
       label: 'Order size (contracts)',
-      hint: 'Additional contracts to simulate',
+      hint: 'Additional contracts to simulate at fill. + expands the position, − reduces it.',
       placeholder: '+/-0',
     },
     orderPrice: {
       label: 'Order price',
-      hint: 'Assumed fill price. Defaults to mark price if blank',
+      hint: 'Assumed fill price for the simulated order.',
       placeholder: 'Order price',
     },
   },
   useCurrentPrice: 'Mark',
+  useCurrentPriceShort: 'M',
+  useCurrentPriceTitle: 'Fill with mark price',
   results: {
     sheetIndex: 'Metric',
     sheetBefore: 'Before',
@@ -336,6 +352,77 @@ export const en: Messages = {
       },
     ],
   },
+  guide: {
+    title: 'User guide',
+    description:
+      'How to fill inputs, use order and scenario preview, and keyboard shortcuts.\nEnter numbers exactly as shown in your broker app.',
+    sections: [
+      {
+        title: 'Getting started',
+        paragraphs: [
+          'Enter account equity, margin, and mark price in the left input panel.',
+          'The right results panel shows liquidation price, margin buffer, and leverage.',
+          'Do not add currency symbols (₩, $). Use one consistent unit per account, matching your broker display.',
+        ],
+      },
+      {
+        title: 'Recommended input order',
+        paragraphs: ['Fill fields in this order for the smoothest workflow:'],
+        items: [
+          'Account — equity and open contracts',
+          'Instrument — mark price; optional notional, multiplier, tick size',
+          'Margin — pick the mode that matches your HTS (rate, per-contract, or total), then enter maintenance and initial margin',
+        ],
+      },
+      {
+        title: 'Margin input modes',
+        paragraphs: [
+          'Domestic futures often use rate mode; many international contracts use per-contract fixed margin.',
+          'Use total mode when your HTS shows aggregate margin only.',
+          'If you enter both a rate and a direct amount, the direct amount takes precedence.',
+        ],
+      },
+      {
+        title: 'Order simulation',
+        paragraphs: [
+          'In the Order section at the bottom of the results panel, adjust order size and price to preview liquidation, margin, and leverage right after a fill.',
+        ],
+        items: [
+          'Enter — enter order preview',
+          'Enter again — apply fill (updates contracts and equity)',
+          'Esc — cancel preview',
+        ],
+      },
+      {
+        title: 'Scenario price',
+        paragraphs: [
+          'Enter a scenario price in the input panel and press Enter to preview results at that price while keeping stored mark and equity unchanged.',
+          'When tick size is set, use ▲▼ or drag the field vertically to step by ticks.',
+        ],
+        items: [
+          'Enter — roll P&L into mark and equity',
+          'Esc or Delete — exit and clear the input',
+          'Ctrl+Z — undo P&L roll',
+        ],
+      },
+      {
+        title: 'Is the layout uncomfortable?',
+        paragraphs: [
+          'If column widths feel wrong or numbers look clipped, drag the panel borders (resizers) to adjust.',
+          'Resizers appear on desktop (wide screens) only. Use the ⟲ button in the header to reset widths.',
+        ],
+      },
+      {
+        title: 'Saving inputs',
+        paragraphs: [
+          'With “Save inputs” on, values stay in this browser only and are not sent to a server.',
+          'Turning it off deletes saved values.',
+        ],
+      },
+    ],
+    footnote:
+      'Assumes one instrument and one position. Multiple symbols, cross margin, and fees are not modeled; figures may differ from your broker HTS.',
+  },
   formulas: {
     backToCalculator: '← Back to calculator',
     title: 'Formula reference',
@@ -504,7 +591,7 @@ export const en: Messages = {
       {
         title: 'Resources',
         links: [
-          { label: 'User guide', soon: true },
+          { label: 'User guide', href: '/guide' },
           { label: 'API docs', soon: true },
           { label: 'Status page', soon: true },
         ],
@@ -520,11 +607,14 @@ export const en: Messages = {
     ],
   },
   boards: {
-    backToCalculator: '← Back to calculator',
+    portalCompany: 'Farfield Software',
     storageNotice:
-      'Each board is separate by purpose. Posts are stored in this browser only for now; they will be shared once a server backend is connected.',
+      'Submissions are temporarily saved on this device only until sent to Farfield Software. Other users’ posts are not visible here.',
     writePost: 'New post',
-    postList: 'Posts',
+    postList: 'Saved on this device',
+    localPostListDesc:
+      'This is not a public board. Only submissions from this browser are listed below.',
+    submitSuccess: 'Submitted and saved on this device.',
     postTitle: 'Title',
     postTitlePlaceholder: 'Summarize your request, bug, or idea',
     postBody: 'Details',
@@ -532,7 +622,6 @@ export const en: Messages = {
     postAuthor: 'Name',
     postAuthorPlaceholder: 'Display name (optional)',
     submit: 'Submit',
-    empty: 'No posts yet. Be the first to write one.',
     anonymous: 'Anonymous',
     items: {
       'dev-request': {

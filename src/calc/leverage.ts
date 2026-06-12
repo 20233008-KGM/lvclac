@@ -4,6 +4,7 @@ import type {
   EvaluateResult,
   MarginAmounts,
   OrderResult,
+  OrderScenarioBaseline,
   PositionSide,
 } from '../types'
 import {
@@ -170,7 +171,7 @@ export function calcOrderFillPnl(
   return inputs.positionSide === 'long' ? priceDelta * Q : -priceDelta * Q
 }
 
-function buildAfterOrderInputs(
+export function buildAfterOrderInputs(
   inputs: CalculatorInputs,
   newContracts: number,
   orderContracts: number,
@@ -345,7 +346,33 @@ function emptyOrderResult(
   }
 }
 
+export function captureOrderScenarioBaseline(result: OrderResult): OrderScenarioBaseline {
+  return {
+    liquidation: result.afterLiquidation,
+    tolerance: result.afterTolerance,
+    toleranceDelta: result.afterToleranceDelta,
+    margins: result.afterMargins,
+    leverageRatio: result.afterLeverageRatio,
+    isAtRisk: result.isAtRiskAfter,
+  }
+}
+
+function orderInputsFromRevertSnapshot(inputs: CalculatorInputs): CalculatorInputs {
+  const snap = inputs.orderScenarioRevertSnapshot
+  if (!snap) return inputs
+  return {
+    ...inputs,
+    accountEval: snap.accountEval,
+    contracts: snap.contracts,
+    mtmPriceAnchor: snap.mtmPriceAnchor,
+    evalSnapshotSide: snap.evalSnapshotSide,
+  }
+}
+
 export function calculateOrder(inputs: CalculatorInputs): OrderResult {
+  const orderScenarioActive = inputs.orderScenarioRevertSnapshot != null
+  const baseline = inputs.orderScenarioBeforeBaseline
+
   const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
   const marginInputs = withReferencePrice(resolveMarginCalculationInputs(inputs))
   const rateWarning = validateMarginRates(marginInputs)
@@ -355,9 +382,13 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
     return emptyOrderResult(positionSide, { orderMessage: rateWarning })
   }
 
-  const marginEquity = resolveMarginEquity(evalInputs)
-  const heldContracts = evalInputs.contracts ?? 0
-  const currentPrice = evalInputs.currentPrice!
+  const orderCalcBase = orderScenarioActive
+    ? withReferencePrice(orderInputsFromRevertSnapshot(inputs))
+    : evalInputs
+
+  const marginEquity = resolveMarginEquity(orderCalcBase)
+  const heldContracts = orderCalcBase.contracts ?? 0
+  const currentPrice = orderCalcBase.currentPrice!
 
   const beforeResult = calcMargins(marginInputs, heldContracts)
   if (!beforeResult) {
@@ -368,41 +399,78 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
     })
   }
 
-  const beforeMargins = withEffectiveAvailableMargin(evalInputs, beforeResult.margins)
+  const beforeMargins = withEffectiveAvailableMargin(orderCalcBase, beforeResult.margins)
 
   const orderCapacityMessage = checkOrderExceedsMaxBuyable(
-    evalInputs.orderContracts,
+    orderCalcBase.orderContracts,
     marginEquity,
     beforeMargins,
-    evalInputs.positionSide,
+    orderCalcBase.positionSide,
   )
-
-  const { liquidationPrice: beforeLiquidation, inputError: beforeInputError } =
-    heldContracts > 0
-      ? resolveLiquidation(evalInputs, heldContracts)
-      : { liquidationPrice: null, inputError: null }
 
   const {
     price: afterLiquidation,
     afterMargins: rawAfterMargins,
     afterInputs,
     message: afterOrderMessage,
-  } = calcAfterOrderLiquidation(evalInputs, evalInputs.orderContracts)
+  } = calcAfterOrderLiquidation(orderCalcBase, orderCalcBase.orderContracts)
   const afterMargins = rawAfterMargins
-    ? withEffectiveAvailableMargin(afterInputs ?? evalInputs, rawAfterMargins)
+    ? withEffectiveAvailableMargin(afterInputs ?? orderCalcBase, rawAfterMargins)
     : null
 
-  const beforeTolerance = calcToleranceRate(currentPrice, beforeLiquidation, evalInputs.positionSide)
-  const afterTolerance = calcToleranceRate(currentPrice, afterLiquidation, evalInputs.positionSide)
-  const beforeToleranceDelta = calcToleranceDelta(
-    currentPrice,
-    beforeLiquidation,
-    evalInputs.positionSide,
-  )
+  const afterTolerance = calcToleranceRate(currentPrice, afterLiquidation, orderCalcBase.positionSide)
   const afterToleranceDelta = calcToleranceDelta(
     currentPrice,
     afterLiquidation,
-    evalInputs.positionSide,
+    orderCalcBase.positionSide,
+  )
+  const afterEquity = afterInputs?.accountEval ?? marginEquity
+  const afterLeverageRatio = afterMargins
+    ? calcLeverageRatio(afterMargins.contractNotional, afterEquity)
+    : null
+  const isAtRiskAfter =
+    orderCapacityMessage !== null ||
+    afterOrderMessage === 'maintenance_exceeds_equity' ||
+    (afterTolerance !== null && afterTolerance <= 0)
+
+  if (orderScenarioActive && baseline) {
+    const beforeLiquidation = baseline.liquidation
+    const liquidationDelta =
+      beforeLiquidation !== null && afterLiquidation !== null
+        ? afterLiquidation - beforeLiquidation
+        : null
+
+    return {
+      positionSide,
+      beforeLiquidation,
+      afterLiquidation,
+      beforeTolerance: baseline.tolerance,
+      afterTolerance,
+      beforeToleranceDelta: baseline.toleranceDelta,
+      afterToleranceDelta,
+      beforeMargins: baseline.margins,
+      afterMargins,
+      liquidationDelta,
+      isAtRiskBefore: baseline.isAtRisk,
+      isAtRiskAfter,
+      orderMessage:
+        rateWarning ?? orderCapacityMessage ?? afterOrderMessage,
+      orderCapacityMessage,
+      beforeLeverageRatio: baseline.leverageRatio,
+      afterLeverageRatio,
+    }
+  }
+
+  const { liquidationPrice: beforeLiquidation, inputError: beforeInputError } =
+    heldContracts > 0
+      ? resolveLiquidation(orderCalcBase, heldContracts)
+      : { liquidationPrice: null, inputError: null }
+
+  const beforeTolerance = calcToleranceRate(currentPrice, beforeLiquidation, orderCalcBase.positionSide)
+  const beforeToleranceDelta = calcToleranceDelta(
+    currentPrice,
+    beforeLiquidation,
+    orderCalcBase.positionSide,
   )
 
   const liquidationDelta =
@@ -412,10 +480,6 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
 
   const beforeLeverageRatio = beforeMargins
     ? calcLeverageRatio(beforeMargins.contractNotional, marginEquity)
-    : null
-  const afterEquity = afterInputs?.accountEval ?? marginEquity
-  const afterLeverageRatio = afterMargins
-    ? calcLeverageRatio(afterMargins.contractNotional, afterEquity)
     : null
 
   return {
@@ -432,10 +496,7 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
     isAtRiskBefore:
       beforeInputError !== null ||
       (beforeTolerance !== null && beforeTolerance <= 0),
-    isAtRiskAfter:
-      orderCapacityMessage !== null ||
-      afterOrderMessage === 'maintenance_exceeds_equity' ||
-      (afterTolerance !== null && afterTolerance <= 0),
+    isAtRiskAfter,
     orderMessage:
       rateWarning ?? beforeInputError ?? orderCapacityMessage ?? afterOrderMessage,
     orderCapacityMessage,

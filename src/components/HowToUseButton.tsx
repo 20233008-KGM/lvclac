@@ -1,7 +1,10 @@
+import { GUIDE_PATH } from '../config/routes'
+import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 
 export function HowToUseButton() {
   const { t } = useLanguage()
+  const navigate = useNavigate()
   const h = t.howToUse
 
   return (
@@ -24,6 +27,18 @@ export function HowToUseButton() {
           {h.experiencedBody}
         </p>
         <p className="header-how-tooltip__footnote">{h.footnote}</p>
+        <p className="header-how-tooltip__link-row">
+          <a
+            className="header-how-tooltip__guide-btn"
+            href={GUIDE_PATH}
+            onClick={(event) => {
+              event.preventDefault()
+              navigate(GUIDE_PATH)
+            }}
+          >
+            {h.guideLink}
+          </a>
+        </p>
       </span>
     </span>
   )

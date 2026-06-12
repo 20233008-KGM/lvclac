@@ -4,11 +4,13 @@ import {
   applyPriceMove,
   applyTickMove,
   calcPnlDelta,
+  isOrderScenarioModeActive,
+  isPreviewModeActive,
   isScenarioModeActive,
   resolveEvaluationInputs,
   resolveMarginEquity,
 } from './mtmLink'
-import { calculateEvaluate } from './leverage'
+import { calculateEvaluate, calculateOrder, captureOrderScenarioBaseline } from './leverage'
 import { sampleInputs, type CalculatorInputs } from '../types'
 
 const base: CalculatorInputs = {
@@ -118,12 +120,12 @@ describe('applyInputPatch', () => {
     expect(resolveEvaluationInputs(twice).currentPrice).toBe(355)
   })
 
-  it('clearScenario — 스냅샷 복원, 시나리오 가격 유지', () => {
+  it('clearScenario — 스냅샷 복원, 시나리오 가격 초기화', () => {
     const committed = applyInputPatch(base, { commitScenarioPrice: 345 })
     const cleared = applyInputPatch(committed, { clearScenario: true })
     expect(isScenarioModeActive(cleared)).toBe(false)
     expect(cleared.accountEval).toBe(10_000_000)
-    expect(cleared.scenarioPrice).toBe(345)
+    expect(cleared.scenarioPrice).toBeUndefined()
   })
 
   it('시나리오 draft만 — 모드 미진입', () => {
@@ -186,5 +188,113 @@ describe('applyInputPatch', () => {
     expect(next.currentPrice).toBe(400)
     expect(next.accountEval).toBe(10_000_000)
     expect(resolveMarginEquity(next)).toBe(10_000_000)
+  })
+})
+
+const orderBase: CalculatorInputs = {
+  ...sampleInputs,
+  tickSize: 5,
+  contractAmount: 320_500,
+  currentPrice: 320_500,
+  contracts: 58,
+  contractMultiplier: 10,
+  maintenanceMarginRate: 0.247,
+  entrustedMarginRate: 0.35,
+  accountEval: 73_511_744,
+  orderContracts: 1,
+  orderPrice: 320_000,
+}
+
+describe('주문 시나리오', () => {
+  it('진입 — stored contracts/accountEval 유지, evaluate만 post-order', () => {
+    const before = calculateEvaluate(orderBase)
+    expect(before.liquidationPrice).not.toBeNull()
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const next = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+
+    expect(isOrderScenarioModeActive(next)).toBe(true)
+    expect(next.contracts).toBe(orderBase.contracts)
+    expect(next.accountEval).toBe(orderBase.accountEval)
+    expect(resolveEvaluationInputs(next).contracts).toBe(59)
+    const after = calculateEvaluate(next)
+    expect(after.liquidationPrice).not.toBeNull()
+    expect(after.margins?.maintenanceExcess).not.toBe(before.margins?.maintenanceExcess)
+  })
+
+  it('진입 시 baseline = 진입 직전 after 지표', () => {
+    const draft = calculateOrder(orderBase)
+    const baseline = captureOrderScenarioBaseline(draft)
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const inMode = calculateOrder(preview)
+
+    expect(inMode.beforeLiquidation).toBe(draft.afterLiquidation)
+    expect(inMode.beforeMargins?.maintenanceExcess).toBe(
+      draft.afterMargins?.maintenanceExcess ?? null,
+    )
+  })
+
+  it('모드 중 orderContracts 변경 — after만 갱신, before 고정', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const beforeAdjust = calculateOrder(preview)
+    expect(beforeAdjust.afterMargins).not.toBeNull()
+    const adjusted = applyInputPatch(preview, { orderContracts: 2 })
+    const afterAdjust = calculateOrder(adjusted)
+
+    expect(afterAdjust.beforeLiquidation).toBe(beforeAdjust.beforeLiquidation)
+    expect(afterAdjust.afterMargins?.maintenanceExcess).not.toBe(
+      beforeAdjust.afterMargins?.maintenanceExcess,
+    )
+  })
+
+  it('Esc — 진입 전 복원, 주문 필드 유지', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const cleared = applyInputPatch(preview, { clearOrderScenario: true })
+
+    expect(isOrderScenarioModeActive(cleared)).toBe(false)
+    expect(cleared.accountEval).toBe(orderBase.accountEval)
+    expect(cleared.contracts).toBe(orderBase.contracts)
+    expect(cleared.orderContracts).toBe(1)
+    expect(cleared.orderPrice).toBe(320_000)
+  })
+
+  it('Enter 2 — contracts/equity 반영, 모드 종료', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+
+    expect(isOrderScenarioModeActive(applied)).toBe(false)
+    expect(applied.contracts).toBe(59)
+    expect(applied.accountEval).toBeGreaterThan(orderBase.accountEval!)
+    expect(applied.orderContracts).toBeUndefined()
+    expect(applied.orderPrice).toBeUndefined()
+  })
+
+  it('Ctrl+Z — 확정 취소 후 미리보기 복귀', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+    const undone = applyInputPatch(applied, { undoOrderApply: true })
+
+    expect(isOrderScenarioModeActive(undone)).toBe(true)
+    expect(undone.contracts).toBe(orderBase.contracts)
+    expect(undone.orderContracts).toBe(1)
+    expect(undone.orderApplyUndoSnapshot).toBeUndefined()
+  })
+
+  it('가격 시나리오와 상호 배타', () => {
+    const pricePreview = applyInputPatch(orderBase, { commitScenarioPrice: 345 })
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const blocked = applyInputPatch(pricePreview, { commitOrderScenario: baseline })
+
+    expect(isOrderScenarioModeActive(blocked)).toBe(false)
+    expect(isScenarioModeActive(blocked)).toBe(true)
+  })
+
+  it('isPreviewModeActive — 가격·주문 시나리오', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const orderPreview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    expect(isPreviewModeActive(orderPreview)).toBe(true)
   })
 })

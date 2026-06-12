@@ -1,12 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import type { BoardId } from '../config/boards'
-import { useNavigate } from '../hooks/usePathname'
 import { addBoardPost, listBoardPosts, type BoardPost } from '../lib/feedbackBoardStorage'
 import { useLanguage } from '../i18n'
-import { HowToUseButton } from './HowToUseButton'
-import { LanguageToggle } from './LanguageToggle'
-import { PageShell } from './PageShell'
-import { SiteFooter } from './SiteFooter'
+import { ContactShell } from './ContactShell'
 
 interface FeedbackBoardPageProps {
   boardId: BoardId
@@ -14,12 +10,11 @@ interface FeedbackBoardPageProps {
 
 export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
   const { t, locale } = useLanguage()
-  const navigate = useNavigate()
-  const board = t.boards.items[boardId]
   const [posts, setPosts] = useState<BoardPost[]>(() => listBoardPosts(boardId))
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [author, setAuthor] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -28,31 +23,20 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
     setPosts(listBoardPosts(boardId))
     setTitle('')
     setBody('')
+    setSubmitSuccess(true)
   }
 
   return (
-    <PageShell>
-      <div className="board-page">
-        <header className="board-page__header">
-          <div className="board-page__header-main">
-            <button type="button" className="link-btn board-page__back" onClick={() => navigate('/')}>
-              {t.boards.backToCalculator}
-            </button>
-            <h1 className="board-page__title">{board.title}</h1>
-            <p className="board-page__desc">{board.description}</p>
-          </div>
-          <HowToUseButton />
-          <LanguageToggle variant="header" />
-        </header>
+    <ContactShell boardId={boardId}>
+      <div className="contact-main">
+        <p className="contact-main__notice">{t.boards.storageNotice}</p>
 
-        <p className="board-page__notice">{t.boards.storageNotice}</p>
-
-        <section className="board-panel" aria-labelledby={`board-form-${boardId}`}>
-          <h2 id={`board-form-${boardId}`} className="board-panel__title">
+        <section className="contact-panel" aria-labelledby={`board-form-${boardId}`}>
+          <h3 id={`board-form-${boardId}`} className="contact-panel__title">
             {t.boards.writePost}
-          </h2>
-          <form className="board-form" onSubmit={handleSubmit}>
-            <label className="board-form__field">
+          </h3>
+          <form className="contact-form" onSubmit={handleSubmit}>
+            <label className="contact-form__field">
               <span>{t.boards.postTitle}</span>
               <input
                 type="text"
@@ -63,7 +47,7 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
                 maxLength={120}
               />
             </label>
-            <label className="board-form__field">
+            <label className="contact-form__field">
               <span>{t.boards.postBody}</span>
               <textarea
                 value={body}
@@ -74,7 +58,7 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
                 maxLength={4000}
               />
             </label>
-            <label className="board-form__field">
+            <label className="contact-form__field">
               <span>
                 {t.boards.postAuthor} {t.optional}
               </span>
@@ -86,40 +70,43 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
                 maxLength={40}
               />
             </label>
-            <button type="submit" className="btn btn-primary board-form__submit">
+            <button type="submit" className="contact-form__submit">
               {t.boards.submit}
             </button>
+            {submitSuccess && (
+              <p className="contact-form__success" role="status">
+                {t.boards.submitSuccess}
+              </p>
+            )}
           </form>
         </section>
 
-        <section className="board-panel" aria-labelledby={`board-list-${boardId}`}>
-          <h2 id={`board-list-${boardId}`} className="board-panel__title">
-            {t.boards.postList}
-          </h2>
-          {posts.length === 0 ? (
-            <p className="board-empty">{t.boards.empty}</p>
-          ) : (
-            <ul className="board-list">
+        {posts.length > 0 && (
+          <section className="contact-panel" aria-labelledby={`board-list-${boardId}`}>
+            <h3 id={`board-list-${boardId}`} className="contact-panel__title">
+              {t.boards.postList}
+            </h3>
+            <p className="contact-panel__desc">{t.boards.localPostListDesc}</p>
+            <ul className="contact-list">
               {posts.map((post) => (
-                <li key={post.id} className="board-post">
-                  <div className="board-post__meta">
-                    <span className="board-post__author">
+                <li key={post.id} className="contact-post">
+                  <div className="contact-post__meta">
+                    <span className="contact-post__author">
                       {post.author || t.boards.anonymous}
                     </span>
-                    <time className="board-post__time" dateTime={post.createdAt}>
+                    <time className="contact-post__time" dateTime={post.createdAt}>
                       {formatPostDate(post.createdAt, locale)}
                     </time>
                   </div>
-                  <h3 className="board-post__title">{post.title}</h3>
-                  <p className="board-post__body">{post.body}</p>
+                  <h4 className="contact-post__title">{post.title}</h4>
+                  <p className="contact-post__body">{post.body}</p>
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        )}
       </div>
-      <SiteFooter />
-    </PageShell>
+    </ContactShell>
   )
 }
 

@@ -21,10 +21,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/react')) return 'vendor'
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+            return 'vendor'
+          }
+          if (id.includes('node_modules/@vercel/analytics')) return 'analytics'
+          if (id.includes('/locales/ko')) return 'locale-ko'
+          if (id.includes('/locales/en')) return 'locale-en'
         },
       },
     },
+    cssCodeSplit: true,
+    modulePreload: { polyfill: false },
     sourcemap: false,
   },
 })

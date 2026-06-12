@@ -1,16 +1,31 @@
-import { useMemo } from 'react'
-import { calculateEvaluate, calculateOrder, checkOrderExceedsMaxBuyable } from '../calc/leverage'
-import { resolveEvaluationInputs } from '../calc/mtmLink'
+import { useEffect, useMemo, useRef } from 'react'
+import { calculateEvaluate, calculateOrder, captureOrderScenarioBaseline, checkOrderExceedsMaxBuyable } from '../calc/leverage'
+import {
+  hasOrderApplyUndo,
+  isOrderScenarioModeActive,
+  resolveEvaluationInputs,
+  type CalculatorInputPatch,
+} from '../calc/mtmLink'
 import { calcMargins, inputsReadyForOrderSim, withReferencePrice } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
 import { FORMULAS_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
+import { FieldLabelTooltip } from './FieldLabelTooltip'
+import {
+  CommitButtonSlot,
+  ScenarioPriceApplyButton,
+  ScenarioPriceCommitButton,
+} from './InputCommitButton'
 import { LegalEmphasis } from './ServiceDisclaimer'
 import { FitText, FitTextGroup } from './FitText'
-import { NumberInput } from './NumberInput'
+import { NumberInput, type NumberInputHandle } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
+import {
+  CONTRACTS_SCRUB_PX_PER_TICK,
+  PRICE_SCRUB_PX_PER_TICK,
+} from './numberStepperScrub'
 import {
   formatLeverageValue,
   formatNumber,
@@ -20,7 +35,7 @@ import {
 
 interface ResultPanelProps {
   inputs: CalculatorInputs
-  onChange: (patch: Partial<CalculatorInputs>) => void
+  onChange: (patch: CalculatorInputPatch) => void
 }
 
 function ResultHero({
@@ -260,81 +275,238 @@ function EvaluateResults({
   )
 }
 
+function formatOrderScenarioChip(
+  inputs: CalculatorInputs,
+  template: string,
+): string | null {
+  if (!isOrderScenarioModeActive(inputs)) return null
+  if (inputs.orderContracts == null || inputs.orderPrice == null) return null
+  const sign = inputs.orderContracts > 0 ? '+' : ''
+  return template
+    .replace('{contracts}', `${sign}${inputs.orderContracts}`)
+    .replace('{price}', formatNumber(inputs.orderPrice))
+}
+
 function OrderInputs({
   inputs,
   onChange,
+  orderResult,
   contractsField,
   priceField,
-  useCurrentPriceLabel,
+  scenarioContractsLabel,
+  scenarioPriceLabel,
+  useCurrentPriceShort,
+  useCurrentPriceTitle,
   stepUpLabel,
   stepDownLabel,
+  tooltipLabel,
+  commitLabel,
+  clearLabel,
+  applyLabel,
 }: {
   inputs: CalculatorInputs
-  onChange: (patch: Partial<CalculatorInputs>) => void
-  contractsField: { label: string; placeholder?: string }
-  priceField: { label: string; placeholder?: string }
-  useCurrentPriceLabel: string
+  onChange: (patch: CalculatorInputPatch) => void
+  orderResult: OrderResult
+  contractsField: { label: string; hint: string; placeholder?: string }
+  priceField: { label: string; hint: string; placeholder?: string }
+  scenarioContractsLabel: string
+  scenarioPriceLabel: string
+  useCurrentPriceShort: string
+  useCurrentPriceTitle: string
   stepUpLabel: string
   stepDownLabel: string
+  tooltipLabel: string
+  commitLabel: string
+  clearLabel: string
+  applyLabel: string
 }) {
+  const priceInputRef = useRef<NumberInputHandle>(null)
+  const wasOrderScenarioRef = useRef(false)
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
   const currentPrice = inputs.currentPrice
   const canUseCurrentPrice = currentPrice != null
+  const orderScenarioActive = isOrderScenarioModeActive(inputs)
+  const orderApplyUndoAvailable = hasOrderApplyUndo(inputs)
+
+  const orderReady =
+    inputs.orderContracts != null && inputs.orderPrice != null
+
+  function commitOrderScenario() {
+    const baseline = captureOrderScenarioBaseline(orderResult)
+    onChange({ commitOrderScenario: baseline })
+  }
+
+  function applyOrderScenario() {
+    onChange({ applyOrderScenario: true })
+  }
+
+  function handleOrderEnter() {
+    if (!orderReady) return
+    if (orderScenarioActive) {
+      applyOrderScenario()
+    } else {
+      commitOrderScenario()
+    }
+  }
+
+  useEffect(() => {
+    if (wasOrderScenarioRef.current !== orderScenarioActive && orderScenarioActive) {
+      requestAnimationFrame(() => priceInputRef.current?.focus())
+    }
+    wasOrderScenarioRef.current = orderScenarioActive
+  }, [orderScenarioActive])
+
+  useEffect(() => {
+    if (!orderApplyUndoAvailable) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
+      e.preventDefault()
+      onChange({ undoOrderApply: true })
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [orderApplyUndoAvailable, onChange])
+
+  const contractsLabel = orderScenarioActive ? scenarioContractsLabel : contractsField.label
+  const priceLabel = orderScenarioActive ? scenarioPriceLabel : priceField.label
+
+  const commitButton = (
+    <ScenarioPriceCommitButton
+      label={commitLabel}
+      disabled={!orderReady}
+      onClick={handleOrderEnter}
+    />
+  )
+
+  const applyButton = (
+    <ScenarioPriceApplyButton
+      label={applyLabel}
+      disabled={!orderReady}
+      onClick={applyOrderScenario}
+    />
+  )
+
+  const commitBtnSlot = (
+    <CommitButtonSlot
+      previewActive={orderScenarioActive}
+      commitButton={commitButton}
+      applyButton={applyButton}
+    />
+  )
+
+  function fillOrderPriceWithCurrent() {
+    if (currentPrice != null) onChange({ orderPrice: currentPrice })
+  }
+
+  const markInlineButton = (
+    <button
+      type="button"
+      className="order-mark-inline-btn"
+      aria-label={useCurrentPriceTitle}
+      title={useCurrentPriceTitle}
+      disabled={!canUseCurrentPrice}
+      onClick={fillOrderPriceWithCurrent}
+    >
+      {useCurrentPriceShort}
+    </button>
+  )
 
   return (
-    <div className="result-order-fields">
-      <label className="field result-order-field">
-        <span className="field-label-row" id="order-contracts-label">
-          {contractsField.label}
+    <div
+      className={`result-order-fields${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
+    >
+      <div className="field result-order-field result-order-field--contracts">
+        <span className="result-order-field__label field-label-row" id="order-contracts-label">
+          <span className="field-label-text">
+            {contractsLabel}
+            <FieldLabelTooltip
+              text={contractsField.hint}
+              label={tooltipLabel}
+              highlight={orderScenarioActive}
+            />
+          </span>
         </span>
-        <NumberStepper
-          value={inputs.orderContracts}
-          allowNegative
-          step={1}
-          placeholder={contractsField.placeholder || undefined}
-          stepUpLabel={stepUpLabel}
-          stepDownLabel={stepDownLabel}
-          ariaLabelledBy="order-contracts-label"
-          onChange={(v) => onChange({ orderContracts: v })}
-        />
-      </label>
-      <label className="field result-order-field">
-        <span className="field-label-row" id="order-price-label">
-          {priceField.label}
-        </span>
-        {useStepper ? (
-          <NumberStepper
-            value={inputs.orderPrice}
-            step={tickSize}
-            allowNegative={false}
-            placeholder={priceField.placeholder || undefined}
-            stepUpLabel={stepUpLabel}
-            stepDownLabel={stepDownLabel}
-            ariaLabelledBy="order-price-label"
-            onChange={(v) => onChange({ orderPrice: v })}
-          />
-        ) : (
-          <NumberInput
-            value={inputs.orderPrice}
-            allowDecimal={false}
-            placeholder={priceField.placeholder || undefined}
-            aria-labelledby="order-price-label"
-            onChange={(v) => onChange({ orderPrice: v })}
-          />
-        )}
-      </label>
-      <button
-        type="button"
-        className="order-use-current-btn result-order-fields__mark-btn"
-        disabled={!canUseCurrentPrice}
-        onClick={() => {
-          if (currentPrice != null) onChange({ orderPrice: currentPrice })
-        }}
-      >
-        {useCurrentPriceLabel}
-      </button>
-    </div>
+          <div className="result-order-field__control">
+            <NumberStepper
+              value={inputs.orderContracts}
+              allowNegative
+              step={1}
+              placeholder={contractsField.placeholder || undefined}
+              stepUpLabel={stepUpLabel}
+              stepDownLabel={stepDownLabel}
+              ariaLabelledBy="order-contracts-label"
+              enableDragScrub
+              dragScrubPxPerTick={CONTRACTS_SCRUB_PX_PER_TICK}
+              scrubSeedValue={0}
+              onEnterKey={handleOrderEnter}
+              onChange={(v) => onChange({ orderContracts: v })}
+            />
+          </div>
+        </div>
+
+        <div className="field result-order-field result-order-field--price">
+          <span className="result-order-field__label field-label-row" id="order-price-label">
+            <span className="field-label-text">
+              {priceLabel}
+              <FieldLabelTooltip text={priceField.hint} label={tooltipLabel} />
+            </span>
+          </span>
+          <div className="result-order-field__control">
+            {useStepper ? (
+              <NumberStepper
+                ref={priceInputRef}
+                value={inputs.orderPrice}
+                step={tickSize}
+                allowNegative={false}
+                placeholder={priceField.placeholder || undefined}
+                stepUpLabel={stepUpLabel}
+                stepDownLabel={stepDownLabel}
+                ariaLabelledBy="order-price-label"
+                trailingSlot={markInlineButton}
+                enableDragScrub
+                dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
+                scrubSeedValue={currentPrice}
+                onEnterKey={handleOrderEnter}
+                onChange={(v) => onChange({ orderPrice: v })}
+              />
+            ) : (
+              <div className="result-order-price-row">
+                <NumberInput
+                  ref={priceInputRef}
+                  value={inputs.orderPrice}
+                  allowDecimal={false}
+                  placeholder={priceField.placeholder || undefined}
+                  aria-labelledby="order-price-label"
+                  className="result-order-price-row__input"
+                  onEnterKey={handleOrderEnter}
+                  onChange={(v) => onChange({ orderPrice: v })}
+                />
+                {markInlineButton}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="result-order-field result-order-field--commit">
+          <span className="result-order-commit-label">
+            <button
+              type="button"
+              className={`field-label-del-btn field-label-del-btn--scenario result-order-commit-esc${orderScenarioActive ? '' : ' result-order-commit-esc--hidden'}`}
+              aria-label={clearLabel}
+              title={clearLabel}
+              tabIndex={orderScenarioActive ? 0 : -1}
+              aria-hidden={!orderScenarioActive}
+              onClick={() => onChange({ clearOrderScenario: true })}
+            >
+              esc
+            </button>
+          </span>
+          <div className="result-order-fields__commit-slot">{commitBtnSlot}</div>
+        </div>
+      </div>
   )
 }
 
@@ -468,6 +640,22 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     )
   }, [inputs, orderContracts, positionSide])
 
+  const orderScenarioActive = isOrderScenarioModeActive(inputs)
+  const orderChipText = formatOrderScenarioChip(inputs, t.orderScenarioChip)
+
+  useEffect(() => {
+    if (!orderScenarioActive) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      onChange({ clearOrderScenario: true })
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [orderScenarioActive, onChange])
+
   return (
     <div className="result-column">
       <section className="panel result-panel">
@@ -494,16 +682,44 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         </p>
       </section>
 
-      <section className="panel result-panel result-panel--order">
-        <h2>{t.modes.order}</h2>
+      <section
+        className={`panel result-panel result-panel--order${orderScenarioActive ? ' result-panel--order--preview' : ''}`}
+      >
+        <div className="result-panel--order__head">
+          <h2 className="result-panel--order__title">
+            <span className="result-panel--order__title-text">
+              {orderScenarioActive ? t.orderScenarioSectionTitle : t.modes.order}
+            </span>
+            <FieldLabelTooltip
+              text={t.orderScenarioHint}
+              label={t.fieldTooltipLabel}
+              highlight={orderScenarioActive}
+            />
+          </h2>
+          {orderScenarioActive && orderChipText && (
+            <div className="result-panel--order__head-meta">
+              <span className="order-scenario-chip" role="status">
+                {orderChipText}
+              </span>
+            </div>
+          )}
+        </div>
         <OrderInputs
           inputs={inputs}
           onChange={onChange}
+          orderResult={orderResult}
           contractsField={f.orderContracts}
           priceField={f.orderPrice}
-          useCurrentPriceLabel={t.useCurrentPrice}
+          scenarioContractsLabel={t.orderScenarioFieldContracts}
+          scenarioPriceLabel={t.orderScenarioFieldPrice}
+          useCurrentPriceShort={t.useCurrentPriceShort}
+          useCurrentPriceTitle={t.useCurrentPriceTitle}
           stepUpLabel={t.stepUp}
           stepDownLabel={t.stepDown}
+          tooltipLabel={t.fieldTooltipLabel}
+          commitLabel={t.orderScenarioCommit}
+          clearLabel={t.orderScenarioClear}
+          applyLabel={t.orderScenarioApply}
         />
         <OrderResults
           key={`${positionSide}-${orderContracts ?? 'empty'}-${orderPrice ?? 'mark'}`}

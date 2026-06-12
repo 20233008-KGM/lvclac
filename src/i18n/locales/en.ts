@@ -153,7 +153,7 @@ export const en: Messages = {
     },
     scenarioPrice: {
       label: 'Scenario price',
-      hint: 'Preview account state at a new price, or roll equity forward each day without retyping.\n\nShortcuts\n· Enter (↵) — scenario preview\n· Enter (↵) — apply P&L (updates mark and equity)\n· Esc — exit and restore\n· Ctrl+Z — undo apply\n\n💡 Daily: broker mark → Enter → Enter (contracts and margin unchanged)\n\n※ First setup: equity and mark from one HTS screen snapshot are most accurate.',
+      hint: 'Preview account state at a new price, or roll equity forward each day without retyping.\n\nShortcuts\n· Enter (↵) — scenario preview\n· Enter (↵) — apply P&L (updates mark and equity)\n· Esc — exit and restore\n· Ctrl+Z — undo apply\n\n💡 With tick size set: the empty field shows the current mark as a hint, and ▲▼ steppers fill the price from that mark in one click.\n\n💡 Daily: broker mark → Enter → Enter (contracts and margin unchanged)\n\n※ First setup: equity and mark from one HTS screen snapshot are most accurate.',
       placeholder: 'Target price',
     },
     tickSize: {

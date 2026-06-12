@@ -33,7 +33,7 @@ export const en: Messages = {
     beginnerBody:
       '# New to futures?\nEnter account equity and margin rates, then adjust order size and price in Order to preview your account after a fill. When only the mark changed, update equity with Scenario price.\n\n────────\n\n[Warning]\n\nPrefer a calm market for first setup. Snapshot equity and mark from one screen. Assumes one open instrument per account.',
     experiencedBody:
-      '# Already trading?\nSet up account, instrument, and margin once. Each morning, enter the mark in Scenario price and press Enter (1st) → Enter (2nd) to roll P&L into equity.\n\n────────\n\n[Tip]\n\n💡 Turn on “Save inputs on this device” to keep your baseline.',
+      '# Already trading?\nSet up account, instrument, and margin once.\nEach morning, enter the mark in Scenario price and press Enter twice to roll P&L into equity.\n\n────────\n\n[Tip]\n\n💡 Turn on “Save inputs on this device” to keep your baseline.',
     guideLink: 'Read full guide',
   },
   optional: '(optional)',
@@ -177,6 +177,9 @@ export const en: Messages = {
       placeholder: 'Order price',
     },
   },
+  useCurrentPrice: 'Mark',
+  useCurrentPriceShort: 'M',
+  useCurrentPriceTitle: 'Fill with mark price',
   results: {
     sheetIndex: 'Metric',
     sheetBefore: 'Before',

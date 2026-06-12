@@ -10,10 +10,11 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 
-const GAP = 8
+const GAP = 6
 const VIEWPORT_MARGIN = 8
 const TOOLTIP_Z = 10000
 const FADE_MS = 140
+const HIDE_GRACE_MS = 220
 
 export type FloatingTooltipPlacement = 'top' | 'bottom'
 
@@ -169,15 +170,18 @@ export function useFloatingTooltip({
   }, [clearHideTimer, clearShowFrame, updatePosition])
 
   const hide = useCallback(() => {
-    clearShowFrame()
-    activeRef.current = false
-    setActive(false)
     clearHideTimer()
     hideTimerRef.current = setTimeout(() => {
       hideTimerRef.current = null
-      mountedRef.current = false
-      setMounted(false)
-    }, FADE_MS)
+      clearShowFrame()
+      activeRef.current = false
+      setActive(false)
+      hideTimerRef.current = setTimeout(() => {
+        hideTimerRef.current = null
+        mountedRef.current = false
+        setMounted(false)
+      }, FADE_MS)
+    }, HIDE_GRACE_MS)
   }, [clearHideTimer, clearShowFrame])
 
   const anchorHandlers = {

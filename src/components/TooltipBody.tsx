@@ -50,8 +50,15 @@ function parseSectionLabel(line: string): string | null {
 }
 
 function parseShortcut(line: string): { key: string; action: string } | null {
-  const match = line.trim().match(/^(.+?)\s*→\s*(.+)$/)
-  return match ? { key: match[1].trim(), action: match[2].trim() } : null
+  const trimmed = line.trim()
+  const match = trimmed.match(/^(.+?)\s*→\s*(.+)$/)
+  if (!match) return null
+  const key = match[1].trim()
+  const action = match[2].trim()
+  // 본문 속 "Enter (1회) → Enter (2회) 하면 …" 같은 문장은 단축키 행으로 취급하지 않음
+  if (key.length > 32 || action.length > 32) return null
+  if (/하면|합니다|됩니다|세요|\.|\?|。/.test(action)) return null
+  return { key, action }
 }
 
 function isListOrLabelLine(line: string): boolean {

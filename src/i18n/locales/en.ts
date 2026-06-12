@@ -173,13 +173,10 @@ export const en: Messages = {
     },
     orderPrice: {
       label: 'Order price',
-      hint: 'Assumed fill price for the simulated order.',
+      hint: 'Assumed fill price\nfor the simulated order.\n\n────────\n\n[Tip]\n\n💡 With tick size set:\nthe empty field shows the current mark,\nand ▲▼ steppers fill the price\nfrom that mark in one click.\n\n────────\n\n[Note]\n\nIf left blank,\nit defaults to the current mark.',
       placeholder: 'Order price',
     },
   },
-  useCurrentPrice: 'Mark',
-  useCurrentPriceShort: 'M',
-  useCurrentPriceTitle: 'Fill with mark price',
   results: {
     sheetIndex: 'Metric',
     sheetBefore: 'Before',

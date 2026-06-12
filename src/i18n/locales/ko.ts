@@ -173,13 +173,10 @@ export const ko: Messages = {
     },
     orderPrice: {
       label: '주문 가격',
-      hint: '체결을 가정하는\n주문 가격입니다.',
+      hint: '체결을 가정하는\n주문 가격입니다.\n\n────────\n\n[추천]\n\n💡 틱 사이즈 입력 시\n빈 칸에는 현재가가 표시되고,\n▲▼ 스테퍼를 누르면\n현재가 기준으로 가격이\n바로 입력됩니다.\n\n────────\n\n[참고]\n\n미입력 시\n현재가와 동일하게\n계산합니다.',
       placeholder: '주문 가격',
     },
   },
-  useCurrentPrice: '현재가',
-  useCurrentPriceShort: '현',
-  useCurrentPriceTitle: '현재가로 채우기',
   results: {
     sheetIndex: '지표',
     sheetBefore: '주문 전',

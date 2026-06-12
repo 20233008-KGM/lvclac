@@ -26,6 +26,7 @@ import {
   CONTRACTS_SCRUB_PX_PER_TICK,
   PRICE_SCRUB_PX_PER_TICK,
 } from './numberStepperScrub'
+import { formatNumberForInput } from '../utils/inputFormat'
 import {
   formatLeverageValue,
   formatNumber,
@@ -295,8 +296,6 @@ function OrderInputs({
   priceField,
   scenarioContractsLabel,
   scenarioPriceLabel,
-  useCurrentPriceShort,
-  useCurrentPriceTitle,
   stepUpLabel,
   stepDownLabel,
   tooltipLabel,
@@ -311,8 +310,6 @@ function OrderInputs({
   priceField: { label: string; hint: string; placeholder?: string }
   scenarioContractsLabel: string
   scenarioPriceLabel: string
-  useCurrentPriceShort: string
-  useCurrentPriceTitle: string
   stepUpLabel: string
   stepDownLabel: string
   tooltipLabel: string
@@ -325,8 +322,11 @@ function OrderInputs({
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
   const currentPrice = inputs.currentPrice
-  const canUseCurrentPrice = currentPrice != null
   const orderScenarioActive = isOrderScenarioModeActive(inputs)
+  const orderPricePlaceholder =
+    currentPrice != null
+      ? formatNumberForInput(currentPrice)
+      : priceField.placeholder || undefined
   const orderApplyUndoAvailable = hasOrderApplyUndo(inputs)
 
   const orderReady =
@@ -397,23 +397,6 @@ function OrderInputs({
     />
   )
 
-  function fillOrderPriceWithCurrent() {
-    if (currentPrice != null) onChange({ orderPrice: currentPrice })
-  }
-
-  const markInlineButton = (
-    <button
-      type="button"
-      className="order-mark-inline-btn"
-      aria-label={useCurrentPriceTitle}
-      title={useCurrentPriceTitle}
-      disabled={!canUseCurrentPrice}
-      onClick={fillOrderPriceWithCurrent}
-    >
-      {useCurrentPriceShort}
-    </button>
-  )
-
   return (
     <div
       className={`result-order-fields${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
@@ -461,11 +444,10 @@ function OrderInputs({
                 value={inputs.orderPrice}
                 step={tickSize}
                 allowNegative={false}
-                placeholder={priceField.placeholder || undefined}
+                placeholder={orderPricePlaceholder}
                 stepUpLabel={stepUpLabel}
                 stepDownLabel={stepDownLabel}
                 ariaLabelledBy="order-price-label"
-                trailingSlot={markInlineButton}
                 enableDragScrub
                 dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
                 scrubSeedValue={currentPrice}
@@ -473,19 +455,15 @@ function OrderInputs({
                 onChange={(v) => onChange({ orderPrice: v })}
               />
             ) : (
-              <div className="result-order-price-row">
-                <NumberInput
-                  ref={priceInputRef}
-                  value={inputs.orderPrice}
-                  allowDecimal={false}
-                  placeholder={priceField.placeholder || undefined}
-                  aria-labelledby="order-price-label"
-                  className="result-order-price-row__input"
-                  onEnterKey={handleOrderEnter}
-                  onChange={(v) => onChange({ orderPrice: v })}
-                />
-                {markInlineButton}
-              </div>
+              <NumberInput
+                ref={priceInputRef}
+                value={inputs.orderPrice}
+                allowDecimal={false}
+                placeholder={orderPricePlaceholder}
+                aria-labelledby="order-price-label"
+                onEnterKey={handleOrderEnter}
+                onChange={(v) => onChange({ orderPrice: v })}
+              />
             )}
           </div>
         </div>
@@ -712,8 +690,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           priceField={f.orderPrice}
           scenarioContractsLabel={t.orderScenarioFieldContracts}
           scenarioPriceLabel={t.orderScenarioFieldPrice}
-          useCurrentPriceShort={t.useCurrentPriceShort}
-          useCurrentPriceTitle={t.useCurrentPriceTitle}
           stepUpLabel={t.stepUp}
           stepDownLabel={t.stepDown}
           tooltipLabel={t.fieldTooltipLabel}

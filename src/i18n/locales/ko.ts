@@ -27,7 +27,7 @@ export const ko: Messages = {
     button: '사용법',
     ariaLabel: '사용 방법 안내',
     beginnerTab: '초보자 가이드',
-    experiencedTab: '선물 거래 중',
+    experiencedTab: '트레이더',
     beginnerBody:
       '# 🔰 선물거래가 처음이신가요?\n계좌 평가금액과 증거금률을 입력한 후, 「주문」에서 계약수·가격을 조정해 체결 직후 상태를 미리 시뮬레이션하세요. 시세만 바뀐 날에는 시나리오 가격으로 평가금을 갱신할 수 있습니다.\n\n────────\n\n[주의]\n\n최초 입력은 변동성이 낮을 때 권장합니다.\n또는 계좌평가금·현재가를 한 화면에서 스냅샷하세요.\n한 종목만 보유한 경우를 기준으로 계산합니다.',
     experiencedBody:

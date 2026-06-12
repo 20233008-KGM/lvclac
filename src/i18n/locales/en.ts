@@ -30,7 +30,7 @@ export const en: Messages = {
     button: 'How?',
     ariaLabel: 'How to use this calculator',
     beginnerTab: 'New here',
-    experiencedTab: 'Already trading',
+    experiencedTab: 'Trader',
     beginnerBody:
       '# New to futures?\nEnter account equity and margin rates, then adjust order size and price in Order to preview your account after a fill. When only the mark changed, update equity with Scenario price.\n\n────────\n\n[Warning]\n\nPrefer a calm market for first setup.\nOr snapshot equity and mark from one screen.\nAssumes one open instrument per account.',
     experiencedBody:

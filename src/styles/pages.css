@@ -750,7 +750,26 @@ html[data-zone='about'] body {
   --about-text-lead: #b8b2a8;
   --about-text-dim: #7a756c;
   --about-hero-gap: var(--space-sm);
-  --about-block-gap: var(--space-sm);
+  --about-meta-headline-gap: var(--space-sm);
+  --about-company-font-size: 11px;
+  --about-company-line-height: 1.4;
+  --about-label-font-size: 12px;
+  --about-label-line-height: 1.4;
+  --about-headline-font-size: clamp(1.625rem, 4.5vw, 2.125rem);
+  --about-headline-line-height: 1.25;
+  /* half-leading: font-size × (line-height − 1) / 2 — clamp와 곱 가능한 형태 */
+  --about-company-half-lead-bottom: calc(
+    var(--about-company-font-size) * (var(--about-company-line-height) - 1) / 2
+  );
+  --about-headline-half-lead-top: calc(
+    (var(--about-headline-line-height) - 1) / 2 * var(--about-headline-font-size)
+  );
+  /* 패널(테두리↔테두리) vs 헤더(글자↔글자) 차이 — 눈으로 맞춘 고정 보정 */
+  --about-panel-gap-boost: 3.5mm;
+  --about-panel-gap: calc(
+    var(--about-company-half-lead-bottom) + var(--about-meta-headline-gap) +
+      var(--about-headline-half-lead-top) + var(--about-panel-gap-boost)
+  );
 
   display: flex;
   flex-direction: column;
@@ -818,7 +837,8 @@ html[data-zone='about'] body {
 
 .about-header__company {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--about-company-font-size);
+  line-height: var(--about-company-line-height);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -827,9 +847,9 @@ html[data-zone='about'] body {
 
 .about-header__label {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--about-label-font-size);
+  line-height: var(--about-label-line-height);
   font-weight: 500;
-  line-height: 1.4;
   color: var(--about-text-dim);
 }
 
@@ -840,10 +860,10 @@ html[data-zone='about'] body {
 }
 
 .about-header__headline {
-  margin: var(--about-block-gap) 0 0;
-  font-size: clamp(1.625rem, 4.5vw, 2.125rem);
+  margin: var(--about-meta-headline-gap) 0 0;
+  font-size: var(--about-headline-font-size);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: var(--about-headline-line-height);
   color: var(--about-text);
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -865,9 +885,15 @@ html[data-zone='about'] body {
 .about-main {
   display: flex;
   flex-direction: column;
-  gap: var(--about-block-gap);
+  gap: var(--space-lg);
   flex: 1;
   padding-top: var(--about-hero-gap);
+}
+
+.about-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--about-panel-gap);
 }
 
 .about-panel {

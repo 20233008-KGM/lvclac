@@ -204,7 +204,7 @@
 
 .auth-modal {
   position: relative;
-  width: min(100%, 440px);
+  width: min(100%, 420px);
   max-height: min(92vh, 720px);
   overflow-y: auto;
 }

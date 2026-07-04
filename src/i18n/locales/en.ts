@@ -77,20 +77,41 @@ export const en: Messages = {
   clearAllInputsConfirm: 'Clear',
   draftSave: {
     label: 'Save inputs on this device',
+    cloudLabel: 'Save inputs to cloud',
     hint: '# Save inputs on this device\nWhen on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server; turning off deletes saved values.\n\n────────\n\n[Tip]\n\n💡 Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
+    cloudHint:
+      '# Save inputs to cloud\nWhen signed in and Cloud is selected, inputs are saved to Supabase DB and can be restored on another device. Turning this off deletes only the cloud copy.\n\n────────\n\n[Tip]\n\n💡 Useful when switching between your desktop and laptop.',
+    storageModeLabel: 'Input save location',
+    localMode: 'This device',
+    cloudMode: 'Cloud',
     cleared: 'Saved data has been removed.',
     enableModalTitle: 'Save inputs on this device',
+    cloudEnableModalTitle: 'Cloud input save notice',
     enableModalBody: [
       'When you turn on "Save inputs on this device," values you enter in the calculator (account equity, margin rates, number of contracts, etc.) may be stored in your browser\'s local storage (localStorage) on your device.',
       'This feature is provided for convenience only; we do not transmit or store this information on our servers.',
       'When you turn saving off, stored inputs on that device are deleted.',
       'However, if others use the same device, or if malware, browser extensions, or an insecure environment is present, stored values may be exposed. We do not guarantee the security of your device environment; you should decide whether to store sensitive information.',
     ],
+    cloudEnableModalBody: [
+      'When saving is enabled while signed in, calculator inputs (account equity, margin rates, contracts, etc.) may be stored in Supabase DB as number_sets data for your account.',
+      'Row-level security is configured so only your signed-in account can read, update, or delete its saved inputs.',
+      'Turning saving off deletes only the cloud copy. Device-local saved inputs are managed separately in This device mode.',
+      'Do not save information you consider sensitive. Saved inputs and calculator results do not replace your own trading judgment.',
+    ],
     enableConfirm: 'Agree and save',
     skipModalLabel: "Don't show this again",
     showGuideAgain: 'Show save notice again',
     clearedModalTitle: 'Save disabled',
     confirm: 'OK',
+    statusLoading: 'Loading saved inputs',
+    statusSaving: 'Saving',
+    statusSavedLocal: 'Saved on this device',
+    statusSavedCloud: 'Saved to cloud',
+    statusError: 'Save failed. Please try again shortly.',
+    migrateLocalToCloud: 'Move this device draft to cloud',
+    migrateSuccess: 'Moved this device draft to cloud.',
+    migrateError: 'Could not move the draft. Please try again shortly.',
   },
   marginMode: {
     label: 'Margin input method',
@@ -343,7 +364,7 @@ export const en: Messages = {
       },
       {
         title: 'Article 4 (Stored inputs)',
-        body: 'Calculator inputs and certain display settings (such as panel widths) are stored in the browser on your device only when you enable the save feature. This information is not sent to our servers; disabling the feature deletes stored values on that device.',
+        body: 'Calculator inputs and certain display settings (such as panel widths) are stored only when you enable saving. Signed-out users store inputs in the browser on that device. Signed-in users can choose This device or Cloud storage. If Cloud saving is enabled, inputs may be stored in Supabase DB connected to the user account. Turning saving off deletes inputs in the currently selected storage location.',
       },
       {
         title: 'Article 5 (Advertising)',
@@ -368,7 +389,7 @@ export const en: Messages = {
     privacyArticles: [
       {
         title: '1. Information collected',
-        body: 'Calculator inputs and display settings (such as panel widths) are stored in your browser only when you enable saving. When Google Analytics or AdSense is configured, cookies and access logs may be collected automatically.',
+        body: 'Calculator inputs and display settings (such as panel widths) are stored only when saving is enabled. Signed-out users store inputs in browser storage. Signed-in users can choose This device or Cloud storage; when Cloud is selected, inputs may be stored as number_sets data in Supabase DB. When Google Analytics or AdSense is configured, cookies and access logs may be collected automatically.',
       },
       {
         title: '2. Purposes',
@@ -376,7 +397,7 @@ export const en: Messages = {
       },
       {
         title: '3. Retention and processing',
-        body: 'When saving is enabled, inputs remain on your device and are not transmitted to Company servers. Disabling the feature deletes stored values on that device.',
+        body: 'Inputs are retained only when saving is enabled. This device storage remains on the user’s device; Cloud storage is retained in Supabase DB connected to the user account. Turning saving off deletes inputs in the currently selected storage location.',
       },
       {
         title: '4. Third parties',
@@ -384,7 +405,7 @@ export const en: Messages = {
       },
       {
         title: '5. Your rights',
-        body: 'You may remove stored inputs by turning off the save feature or clearing browser data.',
+        body: 'You may remove stored inputs by turning off saving. Signed-out saved inputs can also be removed by clearing browser data; cloud saved input deletion requests can be sent through the contact channel in the site footer.',
       },
       {
         title: '6. Contact',
@@ -471,8 +492,9 @@ export const en: Messages = {
       {
         title: 'Saving inputs',
         paragraphs: [
-          'With “Save inputs” on, values stay in this browser only and are not sent to a server.',
-          'Turning it off deletes saved values.',
+          'When signed out, “Save inputs” keeps values in this browser only.',
+          'When signed in, choose This device or Cloud before enabling saving.',
+          'Turning it off deletes values in the currently selected storage location.',
           'Pairs well with “Daily mark-to-market”: keep yesterday’s contracts and margin, then roll only the mark via Scenario price.',
         ],
       },

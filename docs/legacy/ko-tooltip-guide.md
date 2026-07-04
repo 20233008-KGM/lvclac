@@ -189,7 +189,7 @@ Ctrl+Z → 반영 취소
 | [`src/components/HowToUseButton.tsx`](../src/components/HowToUseButton.tsx) | 헤더 사용법 탭 툴팁 |
 | [`src/i18n/locales/ko.ts`](../src/i18n/locales/ko.ts) | 한국어 툴팁 문자열 |
 | [`src/i18n/locales/en.ts`](../src/i18n/locales/en.ts) | 영문 대응 |
-| [`docs/test-cases.md`](./test-cases.md) | 시나리오·일상 갱신 시나리오 QA |
+| [`test-cases.md`](./test-cases.md) | 시나리오·일상 갱신 시나리오 QA |
 
 ---
 

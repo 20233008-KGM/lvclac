@@ -95,15 +95,30 @@ export interface Messages {
   clearAllInputsConfirm: string
   draftSave: {
     label: string
+    cloudLabel: string
     hint: string
+    cloudHint: string
+    storageModeLabel: string
+    localMode: string
+    cloudMode: string
     cleared: string
     enableModalTitle: string
+    cloudEnableModalTitle: string
     enableModalBody: string[]
+    cloudEnableModalBody: string[]
     enableConfirm: string
     skipModalLabel: string
     showGuideAgain: string
     clearedModalTitle: string
     confirm: string
+    statusLoading: string
+    statusSaving: string
+    statusSavedLocal: string
+    statusSavedCloud: string
+    statusError: string
+    migrateLocalToCloud: string
+    migrateSuccess: string
+    migrateError: string
   }
   marginMode: {
     /** 토글 그룹 접근성 라벨 */

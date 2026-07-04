@@ -1,4 +1,6 @@
-# 문서 목차
+# 레거시 문서 목차
+
+이 폴더의 문서는 참고용이다. 최신 제품 방향은 `../product-core-design.md`, 런칭 일정은 `../launch-schedule.md`, 부서별 작업 기준은 `../personas/`를 우선한다. 레거시 문서는 현재 코드와 일부 다를 수 있다.
 
 ## 계산·검증
 
@@ -13,6 +15,8 @@
 | 문서 | 내용 |
 |------|------|
 | [ko-tooltip-guide.md](./ko-tooltip-guide.md) | 한국어 툴팁 작성 원칙·마크업·안티패턴 |
+| [../personas/README.md](../personas/README.md) | 회사 부서 페르소나 호출어·역할·공통 기준 |
+| [../personas/user-interface-guide.md](../personas/user-interface-guide.md) | 사용자가 페르소나를 호출하고 업무를 맡기는 방법 |
 
 ## 운영·연동
 

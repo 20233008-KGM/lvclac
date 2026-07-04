@@ -191,6 +191,28 @@ describe('applyInputPatch', () => {
     expect(next.accountEval).toBe(10_000_000)
     expect(resolveMarginEquity(next)).toBe(10_000_000)
   })
+
+  it('v2 mark update rolls long P&L into equity and can be undone', () => {
+    const rolled = applyInputPatch(base, { applyMarkPrice: 355 })
+    expect(rolled.accountEval).toBe(10_000_010)
+    expect(rolled.currentPrice).toBe(355)
+    expect(rolled.markPriceUndoSnapshot?.accountEval).toBe(10_000_000)
+    expect(rolled.markPriceUndoSnapshot?.currentPrice).toBe(350)
+
+    const undone = applyInputPatch(rolled, { undoMarkPrice: true })
+    expect(undone.accountEval).toBe(10_000_000)
+    expect(undone.currentPrice).toBe(350)
+    expect(undone.markPriceUndoSnapshot).toBeUndefined()
+  })
+
+  it('v2 mark update rolls short P&L in the opposite direction', () => {
+    const rolled = applyInputPatch(
+      { ...base, positionSide: 'short' },
+      { applyMarkPrice: 355 },
+    )
+    expect(rolled.accountEval).toBe(9_999_990)
+    expect(rolled.currentPrice).toBe(355)
+  })
 })
 
 const orderBase: CalculatorInputs = {

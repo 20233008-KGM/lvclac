@@ -33,6 +33,8 @@ interface NumberStepperProps {
   stepUpLabel: string
   stepDownLabel: string
   ariaLabelledBy?: string
+  deferChangeUntilBlur?: boolean
+  onCommit?: (value: number | undefined) => void
   onEnterKey?: () => void
   onDeleteKey?: () => void
   disabled?: boolean
@@ -66,6 +68,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     stepUpLabel,
     stepDownLabel,
     ariaLabelledBy,
+    deferChangeUntilBlur = false,
+    onCommit,
     onEnterKey,
     onDeleteKey,
     disabled = false,
@@ -335,6 +339,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           optional={false}
           placeholder={placeholder}
           aria-labelledby={ariaLabelledBy}
+          deferChangeUntilBlur={deferChangeUntilBlur}
+          onCommit={onCommit}
           onEnterKey={onEnterKey}
           onDeleteKey={onDeleteKey}
           disabled={disabled}

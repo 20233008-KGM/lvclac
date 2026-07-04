@@ -48,15 +48,9 @@
 
 오늘 목표: 개발 리듬을 다시 켜고, 내일부터 바로 구현만 할 수 있게 결정과 설정을 닫는다.
 
-- [ ] 현재 코드 상태 확인: `npm run build`, `git status`
-- [ ] Supabase 프로젝트 확인 또는 생성
-- [ ] Project URL, anon public key 확보
-- [ ] 로컬 `.env`에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 입력
-- [ ] Supabase SQL 초안 정리: `profiles`, `number_sets`, `subscriptions`
-- [ ] Email provider, Google provider, Redirect URL 확인
-- [ ] 결제 방향 1차 결정: 한국 정산이면 국내 PG/PortOne, 해외 정산이면 Stripe
-- [ ] 내일 첫 작업 기록: "Supabase SQL 실행 후 숫자세트 저장 구현"
-- [ ] 변경사항 커밋 후 GitHub push
+- [ ] Codex에게 지시: "현재 코드 상태를 점검하고, Supabase/DB/Auth/결제 방향에서 내일부터 막힐 설정을 정리해줘."
+- [ ] 사람 결정: 결제 방향 1차 판단: 한국 정산이면 국내 PG/PortOne, 해외 정산이면 Stripe.
+- [ ] 사람 작업: 오늘 결정과 내일 첫 작업을 확인하고, 필요한 경우 GitHub push를 승인한다.
 
 오늘은 기능을 많이 만들기보다, 막히는 결정들을 제거하는 날이다. 시간이 남으면 `number_sets` 저장 로직부터 시작한다.
 
@@ -72,7 +66,7 @@
 | 7/7 | 화 | 이메일 로그인 완성 | 가입/로그인/로그아웃 작동 |
 | 7/8 | 수 | 구글 로그인 + 프로필 저장 | Google OAuth, 닉네임 저장 |
 | 7/9 | 목 | 숫자세트 CRUD 구현 | 저장/불러오기/삭제 작동 |
-| 7/10 | 금 | 클라우드 동기화 구현 | 로그인 사용자는 DB, 비로그인은 localStorage |
+| 7/10 | 금 | 저장 위치 선택과 클라우드 동기화 구현 | 비로그인은 localStorage, 로그인 사용자는 localStorage/DB 중 선택 |
 
 ## 2주차: 7/11 토 - 7/17 금
 
@@ -137,224 +131,110 @@
 - AdSense는 신청 후 승인 대기가 발생한다. 런칭의 필수 조건으로 묶지 말고, 승인 전에는 placeholder를 유지한다.
 - 법인설립은 개발을 막지 않는다. 정산, 세금, 환불 정책은 세무사/법무사 확인을 병렬로 진행한다.
 
-## 실제 작업 체크리스트: 2026-07-05 일요일 이후
+## 날짜별 실행 지시: 2026-07-05 일요일 이후
 
-추상적인 "정리", "점검", "방향 결정"은 빼고, 완료 여부가 눈에 보이는 작업만 남긴다.
+이 섹션은 사람이 세부 구현 항목을 읽기 위한 체크리스트가 아니다.  
+각 날짜의 한 줄 지시를 Codex에게 그대로 맡기면, Codex가 MCP/코드/문서를 보고 필요한 세부 작업으로 쪼개서 실행한다.  
+사람이 직접 해야 하는 일은 계정 생성, 심사 신청, 사업자/정산 정보 입력처럼 외부 서비스 권한이나 판단이 필요한 항목만 남긴다.
 
 ### 2026-07-05 일요일
 
-- [ ] Supabase 프로젝트를 생성한다.
-- [ ] Supabase Project URL을 `.env`에 `VITE_SUPABASE_URL`로 넣는다.
-- [ ] Supabase anon public key를 `.env`에 `VITE_SUPABASE_ANON_KEY`로 넣는다.
-- [ ] `profiles`, `number_sets`, `subscriptions` 생성 SQL 파일을 만든다.
-- [ ] `profiles`, `number_sets`, `subscriptions` RLS policy SQL을 만든다.
-- [ ] Google OAuth용 redirect URL을 Supabase와 Google Cloud Console에 등록한다.
-- [ ] 결제사는 하나만 고른다: Stripe 또는 PortOne.
+- [ ] Codex에게 지시: "Supabase MCP로 프로젝트와 DB를 런칭용으로 세팅하고, 환경변수와 마이그레이션 문서를 갱신해줘."
+- [ ] 사람 결정: 결제사는 하나만 고른다: Stripe 또는 PortOne.
+- [ ] 사람 작업: Google OAuth용 Client ID/Secret을 만들고 Supabase에 등록한다.
 
 ### 2026-07-06 월요일
 
-- [ ] Supabase SQL Editor에서 `profiles` 테이블 생성 SQL을 실행한다.
-- [ ] Supabase SQL Editor에서 `number_sets` 테이블 생성 SQL을 실행한다.
-- [ ] Supabase SQL Editor에서 `subscriptions` 테이블 생성 SQL을 실행한다.
-- [ ] Supabase SQL Editor에서 RLS policy SQL을 실행한다.
-- [ ] 앱에 Supabase client 파일을 추가한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "Supabase DB 스키마와 앱 Supabase client 연결 상태를 검증하고, 부족한 부분을 적용한 뒤 빌드까지 확인해줘."
 
 ### 2026-07-07 화요일
 
-- [ ] 이메일 가입 폼을 Supabase sign up에 연결한다.
-- [ ] 이메일 로그인 폼을 Supabase sign in에 연결한다.
-- [ ] 로그아웃 버튼을 Supabase sign out에 연결한다.
-- [ ] 로그인 session을 앱 상태에 저장한다.
-- [ ] 새로고침 후 session을 다시 불러오게 만든다.
-- [ ] 로그인 실패 메시지를 화면에 표시한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "이메일 회원가입/로그인/로그아웃/세션 복원을 실사용 기준으로 구현하고 검증해줘."
 
 ### 2026-07-08 수요일
 
-- [ ] Google 로그인 버튼을 Supabase OAuth에 연결한다.
-- [ ] OAuth callback 후 앱 화면으로 돌아오게 만든다.
-- [ ] 최초 로그인 사용자의 `profiles` row를 생성한다.
-- [ ] profile에 닉네임을 저장한다.
-- [ ] profile에서 닉네임을 불러와 화면에 표시한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "Google 로그인과 프로필 생성/닉네임 저장 흐름을 완성하고, OAuth callback까지 점검해줘."
+- [ ] 사람 작업: Google Cloud Console과 Supabase provider 설정값이 실제로 맞는지 확인한다.
 
 ### 2026-07-09 목요일
 
-- [ ] 숫자세트 저장 버튼을 `number_sets` insert에 연결한다.
-- [ ] 저장된 숫자세트 목록을 `number_sets` select로 불러온다.
-- [ ] 저장된 숫자세트를 클릭하면 현재 화면 값으로 불러온다.
-- [ ] 숫자세트 삭제 버튼을 `number_sets` delete에 연결한다.
-- [ ] 저장 성공, 저장 실패 메시지를 화면에 표시한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "로그인 사용자의 숫자세트 저장/불러오기/삭제 CRUD를 Supabase `number_sets`에 연결해줘."
 
 ### 2026-07-10 금요일
 
-- [ ] 비로그인 사용자는 기존 localStorage 저장을 쓰게 둔다.
-- [ ] 로그인 사용자는 Supabase `number_sets` 저장을 쓰게 만든다.
-- [ ] 로그아웃하면 DB 저장 목록을 숨긴다.
-- [ ] 로그인하면 DB 저장 목록을 보여준다.
-- [ ] localStorage 저장 목록을 DB로 가져오는 버튼을 만든다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "비로그인은 localStorage, 로그인 사용자는 localStorage 또는 Supabase 저장을 선택할 수 있도록 저장 흐름을 통합하고 마이그레이션 버튼까지 만들어줘."
 
 ### 2026-07-11 토요일
 
-- [ ] 새 이메일 계정으로 가입한다.
-- [ ] 가입한 계정으로 로그아웃 후 재로그인한다.
-- [ ] Google 계정으로 로그인한다.
-- [ ] 숫자세트를 1개 저장한다.
-- [ ] 저장한 숫자세트를 불러온다.
-- [ ] 저장한 숫자세트를 삭제한다.
-- [ ] 발견한 버그를 `docs/bugs.md`에 적는다.
+- [ ] Codex에게 지시: "인증과 숫자세트 저장 흐름을 통합 테스트하고, 발견한 버그를 `docs/bugs.md`에 정리해줘."
+- [ ] 사람 작업: 실제 이메일/Google 계정으로 로그인 테스트에 필요한 인증을 진행한다.
 
 ### 2026-07-12 일요일
 
-- [ ] `docs/bugs.md`의 로그인 차단 버그를 수정한다.
-- [ ] `docs/bugs.md`의 저장 차단 버그를 수정한다.
-- [ ] 배포 플랫폼에 Supabase 환경변수를 등록한다.
-- [ ] preview 배포를 실행한다.
-- [ ] preview URL에서 이메일 로그인을 실행한다.
-- [ ] preview URL에서 숫자세트 저장을 실행한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "`docs/bugs.md`의 로그인/저장 차단 버그를 고치고 preview 배포 전 상태로 검증해줘."
+- [ ] 사람 작업: 배포 플랫폼에 Supabase 환경변수를 등록한다.
 
 ### 2026-07-13 월요일
 
-- [ ] 결제 provider 계정을 만든다.
-- [ ] Pro 상품을 1개 만든다.
-- [ ] 테스트 secret key를 환경변수에 추가한다.
-- [ ] 테스트 webhook secret을 환경변수에 추가한다.
-- [ ] success URL을 만든다.
-- [ ] cancel URL을 만든다.
-- [ ] 결제 버튼을 배치할 화면을 만든다.
+- [ ] 사람 작업: 결제 provider 계정과 Pro 상품을 만든다.
+- [ ] Codex에게 지시: "선택한 결제 provider 기준으로 success/cancel URL과 결제 버튼 진입 화면을 준비해줘."
 
 ### 2026-07-14 화요일
 
-- [ ] checkout session 생성 API를 만든다.
-- [ ] 결제 버튼에서 checkout session 생성 API를 호출한다.
-- [ ] API 응답의 checkout URL로 이동하게 만든다.
-- [ ] 비로그인 사용자가 결제 버튼을 누르면 로그인 화면으로 보내게 만든다.
-- [ ] 결제 취소 후 cancel URL 화면을 표시한다.
-- [ ] 결제 성공 후 success URL 화면을 표시한다.
-- [ ] 테스트 결제창 진입까지 실행한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "결제 시작 API와 결제 버튼 흐름을 구현하고, 테스트 결제창 진입까지 확인해줘."
 
 ### 2026-07-15 수요일
 
-- [ ] webhook endpoint를 만든다.
-- [ ] webhook signature 검증을 추가한다.
-- [ ] 결제 성공 webhook에서 `subscriptions` row를 active로 저장한다.
-- [ ] 구독 취소 webhook에서 `subscriptions` row를 canceled로 저장한다.
-- [ ] 테스트 결제를 1회 실행한다.
-- [ ] Supabase에서 `subscriptions.status = active`를 확인한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "결제 웹훅 검증과 `subscriptions` 동기화를 구현하고 테스트 결제 상태 반영까지 확인해줘."
+- [ ] 사람 작업: 결제 provider 대시보드에서 webhook secret과 테스트 결제를 확인한다.
 
 ### 2026-07-16 목요일
 
-- [ ] 로그인 사용자 기준으로 `subscriptions`를 조회한다.
-- [ ] active 구독이면 `isPro = true`로 계산한다.
-- [ ] `isPro = true`면 광고 영역을 숨긴다.
-- [ ] `isPro = false`면 결제 버튼을 보여준다.
-- [ ] success URL 진입 후 구독 상태를 다시 불러온다.
-- [ ] Pro 계정으로 새로고침 후 광고가 숨겨지는지 실행한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "구독 상태 기반 Pro 권한을 앱에 적용하고, 광고 제거/결제 버튼 표시를 검증해줘."
 
 ### 2026-07-17 금요일
 
-- [ ] 결제 취소 화면에 다시 결제 버튼을 넣는다.
-- [ ] 결제 실패 메시지를 화면에 표시한다.
-- [ ] 구독 canceled 상태에서는 광고가 다시 보이게 만든다.
-- [ ] webhook 지연 시 success 화면에 "결제 확인 중" 상태를 표시한다.
-- [ ] 테스트 결제 성공 케이스를 처음부터 끝까지 1회 실행한다.
-- [ ] 테스트 결제 취소 케이스를 처음부터 끝까지 1회 실행한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "결제 성공/취소/실패/웹훅 지연 케이스를 다듬고 end-to-end로 검증해줘."
 
 ### 2026-07-18 토요일
 
-- [ ] 개인정보처리방침 페이지를 만든다.
-- [ ] 이용약관 페이지를 만든다.
-- [ ] 환불/해지 안내 페이지를 만든다.
-- [ ] 문의 페이지 또는 문의 이메일 링크를 만든다.
-- [ ] footer에 위 4개 링크를 추가한다.
-- [ ] 결제 화면에 환불/해지 안내 링크를 추가한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] Codex에게 지시: "개인정보처리방침, 이용약관, 환불/해지 안내, 문의 링크를 운영 페이지로 정리하고 footer/결제 화면에 연결해줘."
+- [ ] 사람 확인: 법적 문구와 실제 연락처/환불 정책이 맞는지 확인한다.
 
 ### 2026-07-19 일요일
 
-- [ ] 무료 테스트 계정을 만든다.
-- [ ] Pro 테스트 계정을 만든다.
-- [ ] 무료 계정으로 가입, 로그인, 숫자세트 저장을 실행한다.
-- [ ] 무료 계정으로 결제 버튼까지 진입한다.
-- [ ] Pro 계정으로 로그인해 광고가 없는지 실행한다.
-- [ ] 모바일 화면에서 가입, 저장, 결제 버튼을 실행한다.
-- [ ] 발견한 버그를 `docs/bugs.md`에 적는다.
+- [ ] Codex에게 지시: "무료/Pro 사용자 흐름과 모바일 핵심 화면을 베타 테스트하고 버그를 `docs/bugs.md`에 정리해줘."
+- [ ] 사람 작업: 실제 테스트 계정 인증과 결제 provider 테스트 승인 절차를 진행한다.
 
 ### 2026-07-20 월요일
 
-- [ ] 결제 provider에 정산 정보를 입력한다.
-- [ ] 결제 provider에 사업자 정보 또는 개인 정보를 입력한다.
-- [ ] 결제 provider에 입금 계좌를 등록한다.
-- [ ] 환불/해지 안내 페이지에 실제 환불 처리 방법을 적는다.
-- [ ] 문의 페이지에 실제 연락 가능한 이메일을 적는다.
-- [ ] 결제 화면에 필요한 사업자 표시 정보를 추가한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] 사람 결정/작업: 사업자, 정산, 입금 계좌, 환불 처리 방식을 확정하고 결제 provider에 입력한다.
+- [ ] Codex에게 지시: "확정된 사업자/환불/문의 정보를 앱의 운영 문서와 결제 화면에 반영해줘."
 
 ### 2026-07-21 화요일
 
-- [ ] production 배포 환경변수에 Supabase URL을 등록한다.
-- [ ] production 배포 환경변수에 Supabase anon key를 등록한다.
-- [ ] production 배포 환경변수에 결제 secret key를 등록한다.
-- [ ] production 배포 환경변수에 webhook secret을 등록한다.
-- [ ] 결제 provider의 webhook URL을 production URL로 등록한다.
-- [ ] production 배포를 실행한다.
-- [ ] production URL에서 로그인, 저장, 결제창 진입을 실행한다.
-- [ ] `npm run build`를 실행한다.
+- [ ] 사람 작업: production 배포 환경변수와 결제 provider webhook URL을 등록한다.
+- [ ] Codex에게 지시: "production 배포 전후로 로그인, 저장, 결제창 진입 smoke test를 실행해줘."
 
 ### 2026-07-22 수요일
 
-- [ ] AdSense 계정에 사이트 URL을 등록한다.
-- [ ] AdSense 사이트 소유권 확인 코드를 앱에 넣는다.
-- [ ] 개인정보처리방침 링크가 production URL에서 열리는지 실행한다.
-- [ ] 문의 링크가 production URL에서 열리는지 실행한다.
-- [ ] 깨진 링크가 있으면 수정한다.
-- [ ] AdSense 신청 버튼을 누른다.
-- [ ] 신청 완료 화면 또는 신청 상태를 캡처해 보관한다.
+- [ ] 사람 작업: AdSense에 사이트 URL을 등록하고 신청을 진행한다.
+- [ ] Codex에게 지시: "AdSense 소유권 확인 코드와 정책 링크 상태를 production 기준으로 점검해줘."
 
 ### 2026-07-23 목요일
 
-- [ ] `docs/bugs.md`의 결제 차단 버그를 수정한다.
-- [ ] `docs/bugs.md`의 로그인 차단 버그를 수정한다.
-- [ ] `docs/bugs.md`의 저장 차단 버그를 수정한다.
-- [ ] 모바일 화면에서 겹치는 UI를 수정한다.
-- [ ] production URL에서 이메일 로그인, Google 로그인, 저장, 결제를 실행한다.
-- [ ] `npm run build`를 실행한다.
-- [ ] 수정한 내용을 production에 배포한다.
+- [ ] Codex에게 지시: "`docs/bugs.md`의 런칭 차단 버그와 모바일 UI 문제를 수정하고 production 핵심 흐름을 재검증해줘."
 
 ### 2026-07-24 금요일
 
-- [ ] production 배포를 실행한다.
-- [ ] production URL에서 접속을 실행한다.
-- [ ] production URL에서 이메일 로그인을 실행한다.
-- [ ] production URL에서 Google 로그인을 실행한다.
-- [ ] production URL에서 숫자세트 저장을 실행한다.
-- [ ] production URL에서 결제창 진입을 실행한다.
-- [ ] GitHub에 런칭 태그를 만든다.
-- [ ] 런칭 공지 문구를 게시한다.
+- [ ] Codex에게 지시: "소프트 런칭 전 production 최종 smoke test, GitHub 태그, 런칭 기록을 준비해줘."
+- [ ] 사람 작업: 런칭 공지를 게시한다.
 
 ### 2026-07-25 토요일
 
-- [ ] production 오류 로그를 확인한다.
-- [ ] Supabase auth 로그를 확인한다.
-- [ ] Supabase database 로그를 확인한다.
-- [ ] 결제 provider webhook 로그를 확인한다.
-- [ ] 사용자 흐름을 막는 버그를 수정한다.
-- [ ] 수정한 내용을 production에 배포한다.
-- [ ] production URL에서 smoke test를 실행한다.
+- [ ] Codex에게 지시: "production, Supabase, 결제 webhook 로그를 확인하고 사용자 흐름을 막는 버그를 고쳐줘."
 
 ### 2026-07-26 일요일
 
-- [ ] `docs/bugs.md`에서 남은 버그를 다음 주 작업으로 옮긴다.
-- [ ] 다음 주 작업 목록 파일을 만든다.
-- [ ] 다음 주 첫 작업 3개를 적는다.
-- [ ] AdSense 신청 상태를 기록한다.
-- [ ] 결제 정산 상태를 기록한다.
-- [ ] production URL에서 로그인, 저장, 결제창 진입을 1회 실행한다.
+- [ ] Codex에게 지시: "남은 버그, AdSense 상태, 결제 정산 상태를 정리하고 다음 주 작업 목록을 만들어줘."
+- [ ] 사람 확인: AdSense와 결제 정산 상태를 실제 대시보드에서 확인한다.

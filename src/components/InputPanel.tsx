@@ -1,20 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
-import {
-  hasScenarioApplyUndo,
-  isPreviewModeActive,
-  isScenarioModeActive,
-  resolveEvaluationInputs,
-  type CalculatorInputPatch,
-} from '../calc/mtmLink'
+import { isPreviewModeActive, type CalculatorInputPatch } from '../calc/mtmLink'
 import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
-  CommitButtonSlot,
   ScenarioPriceApplyButton,
-  ScenarioPriceCommitButton,
 } from './InputCommitButton'
 import { NumberInput, type NumberInputHandle } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
@@ -24,6 +16,7 @@ import {
 import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { SaveDraftToggle } from './SaveDraftToggle'
 import { formatNumberForInput } from '../utils/inputFormat'
+import { formatNumber } from '../utils/format'
 
 interface InputPanelProps {
   inputs: CalculatorInputs
@@ -44,6 +37,7 @@ function Field({
   tooltipGuideHref,
   tooltipGuideLinkLabel,
   labelId,
+  className,
   children,
 }: {
   label: string
@@ -53,10 +47,11 @@ function Field({
   tooltipGuideHref?: string
   tooltipGuideLinkLabel?: string
   labelId?: string
+  className?: string
   children: React.ReactNode
 }) {
   return (
-    <label className="field">
+    <label className={`field${className ? ` ${className}` : ''}`}>
       <span className="field-label-row" id={labelId}>
         <span className="field-label-text">
           {label}
@@ -93,6 +88,7 @@ function numField(
     deferChangeUntilBlur: boolean
     onCommit: (value: number | undefined) => void
     disabled: boolean
+    className: string
   }>,
 ) {
   const value = inputs[key] as number | undefined
@@ -106,6 +102,7 @@ function numField(
       optionalText={optional ? optionalText : undefined}
       tooltip={showTooltip ? field.hint : undefined}
       tooltipLabel={showTooltip ? tooltipLabel : undefined}
+      className={inputProps?.className}
     >
       <NumberInput
         value={value}
@@ -132,6 +129,7 @@ function CurrentPriceField({
   tooltipGuideHref,
   tooltipGuideLinkLabel,
   disabled = false,
+  rollPnlOnChange = false,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -142,9 +140,18 @@ function CurrentPriceField({
   tooltipGuideHref?: string
   tooltipGuideLinkLabel?: string
   disabled?: boolean
+  rollPnlOnChange?: boolean
 }) {
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
+  function handleChange(v: number | undefined) {
+    if (!rollPnlOnChange) {
+      onChange({ currentPrice: v })
+      return
+    }
+    if (v != null) onChange({ applyMarkPrice: v })
+  }
+
   const fieldProps = {
     label: field.label,
     labelId: 'current-price-label',
@@ -165,10 +172,13 @@ function CurrentPriceField({
           stepUpLabel={stepUpLabel}
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="current-price-label"
+          deferChangeUntilBlur={rollPnlOnChange}
+          onCommit={handleChange}
+          onDeleteKey={rollPnlOnChange ? () => undefined : undefined}
           disabled={disabled}
           enableDragScrub
           dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
-          onChange={(v) => onChange({ currentPrice: v })}
+          onChange={handleChange}
         />
       </Field>
     )
@@ -182,13 +192,16 @@ function CurrentPriceField({
         placeholder={field.placeholder || undefined}
         aria-labelledby="current-price-label"
         disabled={disabled}
-        onChange={(v) => onChange({ currentPrice: v })}
+        deferChangeUntilBlur={rollPnlOnChange}
+        onCommit={handleChange}
+        onDeleteKey={rollPnlOnChange ? () => undefined : undefined}
+        onChange={handleChange}
       />
     </Field>
   )
 }
 
-function ScenarioPriceField({
+export function ScenarioPriceField({
   inputs,
   onChange,
   field,
@@ -196,9 +209,9 @@ function ScenarioPriceField({
   stepDownLabel,
   tooltipLabel,
   tooltipGuideLink,
-  commitLabel,
   clearLabel,
   applyPnlLabel,
+  disabled = false,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -207,48 +220,19 @@ function ScenarioPriceField({
   stepDownLabel: string
   tooltipLabel: string
   tooltipGuideLink: string
-  commitLabel: string
   clearLabel: string
   applyPnlLabel: string
+  disabled?: boolean
 }) {
   const inputRef = useRef<NumberInputHandle>(null)
-  const wasScenarioModeRef = useRef(false)
+  const [draftPrice, setDraftPrice] = useState<number | undefined>()
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
-  const scenarioModeActive = isScenarioModeActive(inputs)
-  const scenarioApplyUndoAvailable = hasScenarioApplyUndo(inputs)
-
-  function focusScenarioInput() {
-    requestAnimationFrame(() => inputRef.current?.focus())
-  }
-
-  function commitScenario(price: number) {
-    onChange({ commitScenarioPrice: price })
-  }
+  const scenarioApplyUndoAvailable = inputs.markPriceUndoSnapshot != null
 
   function clearScenario() {
-    onChange({ clearScenario: true })
+    setDraftPrice(undefined)
   }
-
-  useEffect(() => {
-    if (wasScenarioModeRef.current !== scenarioModeActive) {
-      focusScenarioInput()
-    }
-    wasScenarioModeRef.current = scenarioModeActive
-  }, [scenarioModeActive])
-
-  useEffect(() => {
-    if (!scenarioModeActive) return
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return
-      e.preventDefault()
-      onChange({ clearScenario: true })
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [scenarioModeActive, onChange])
 
   useEffect(() => {
     if (!scenarioApplyUndoAvailable) return
@@ -256,7 +240,7 @@ function ScenarioPriceField({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
       e.preventDefault()
-      onChange({ undoScenarioApply: true })
+      onChange({ undoMarkPrice: true })
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -264,32 +248,29 @@ function ScenarioPriceField({
   }, [scenarioApplyUndoAvailable, onChange])
 
   function resolveScenarioPrice(): number | undefined {
-    if (useStepper) return inputs.scenarioPrice
-    return inputRef.current?.readDraft() ?? inputs.scenarioPrice
+    if (useStepper) return draftPrice
+    return inputRef.current?.readDraft() ?? draftPrice
   }
 
   function applyScenarioToMark(price?: number) {
     const resolved = price ?? resolveScenarioPrice()
     if (resolved == null) return
-    onChange({ applyScenarioToMark: resolved })
+    onChange({ applyMarkPrice: resolved })
+    setDraftPrice(undefined)
   }
 
   /** Enter/↵ — 미진입: 시나리오 모드 진입 / 진입 후: 손익 반영 */
   function handleScenarioEnter() {
     const price = resolveScenarioPrice()
     if (price == null) return
-    if (scenarioModeActive) {
-      applyScenarioToMark(price)
-    } else {
-      commitScenario(price)
-    }
+    applyScenarioToMark(price)
   }
 
   function handleScenarioPriceChange(v: number | undefined) {
-    onChange({ scenarioPrice: v })
+    setDraftPrice(v)
   }
 
-  const applyPnlDisabled = useStepper && inputs.scenarioPrice == null
+  const applyPnlDisabled = draftPrice == null
 
   const scenarioPlaceholder =
     inputs.currentPrice != null
@@ -299,7 +280,7 @@ function ScenarioPriceField({
   const applyPnlButton = (
     <ScenarioPriceApplyButton
       label={applyPnlLabel}
-      disabled={applyPnlDisabled}
+      disabled={disabled || applyPnlDisabled}
       onClick={() => applyScenarioToMark()}
     />
   )
@@ -311,7 +292,7 @@ function ScenarioPriceField({
         <FieldLabelTooltip
           text={field.hint}
           label={tooltipLabel}
-          highlight={scenarioModeActive}
+          highlight={false}
           guideHref={GUIDE_PATH}
           guideLinkLabel={tooltipGuideLink}
         />
@@ -319,37 +300,20 @@ function ScenarioPriceField({
       <span className="field-label-action-slot">
         <button
           type="button"
-          className={`field-label-del-btn field-label-del-btn--scenario${scenarioModeActive ? '' : ' field-label-del-btn--hidden'}`}
+          className={`field-label-del-btn field-label-del-btn--scenario${scenarioApplyUndoAvailable ? '' : ' field-label-del-btn--hidden'}`}
           aria-label={clearLabel}
           title={clearLabel}
-          tabIndex={scenarioModeActive ? 0 : -1}
-          aria-hidden={!scenarioModeActive}
-          onClick={clearScenario}
+          tabIndex={scenarioApplyUndoAvailable ? 0 : -1}
+          aria-hidden={!scenarioApplyUndoAvailable}
+          onClick={() => onChange({ undoMarkPrice: true })}
         >
-          esc
+          undo
         </button>
       </span>
     </span>
   )
 
-  const commitButton = (
-    <ScenarioPriceCommitButton
-      label={commitLabel}
-      disabled={!scenarioModeActive && inputs.scenarioPrice == null}
-      onClick={() => {
-        const price = resolveScenarioPrice()
-        if (price != null) handleScenarioEnter()
-      }}
-    />
-  )
-
-  const commitBtnSlot = (
-    <CommitButtonSlot
-      previewActive={scenarioModeActive}
-      commitButton={commitButton}
-      applyButton={applyPnlButton}
-    />
-  )
+  const commitBtnSlot = applyPnlButton
 
   if (useStepper) {
     return (
@@ -357,7 +321,7 @@ function ScenarioPriceField({
         {labelRow}
         <NumberStepper
           ref={inputRef}
-          value={inputs.scenarioPrice}
+          value={draftPrice}
           step={tickSize}
           allowNegative={false}
           placeholder={scenarioPlaceholder}
@@ -365,6 +329,7 @@ function ScenarioPriceField({
           stepDownLabel={stepDownLabel}
           ariaLabelledBy="scenario-price-label"
           inlineSlot={commitBtnSlot}
+          disabled={disabled}
           enableDragScrub
           dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
           scrubSeedValue={inputs.currentPrice}
@@ -382,11 +347,12 @@ function ScenarioPriceField({
       <div className="input-commit-row input-commit-row--enter">
         <NumberInput
           ref={inputRef}
-          value={inputs.scenarioPrice}
+          value={draftPrice}
           allowDecimal={false}
           placeholder={scenarioPlaceholder}
           aria-labelledby="scenario-price-label"
           className="input-commit-row__input"
+          disabled={disabled}
           onEnterKey={handleScenarioEnter}
           onDeleteKey={clearScenario}
           onChange={handleScenarioPriceChange}
@@ -399,12 +365,120 @@ function ScenarioPriceField({
 
 const MARGIN_MODES = ['rate', 'perContract', 'total'] as const
 
+function setupCopy(lang: 'ko' | 'en') {
+  if (lang === 'ko') {
+    return {
+      setupTitle: '계좌 세팅',
+      updateTitle: '현재가 갱신',
+      baselinePrice: '기준 현재가',
+      updatePrice: '새 현재가',
+      updateHint:
+        '# 현재가 갱신\n새 현재가를 반영하면 기존 현재가 대비 손익이 계좌 평가금액에 자동 반영됩니다.\n\n계좌 세팅값은 잠가두고 여기만 움직이는 흐름을 권장합니다.',
+      lock: '세팅 잠금',
+      edit: '수정',
+      locked: '세팅 잠김',
+      lockedHint: '계좌 기준값을 바꾸면 이후 가격 갱신 결과가 달라집니다.',
+      apply: '현재가 반영',
+      undo: '마지막 반영 취소',
+      position: '포지션',
+    }
+  }
+  return {
+    setupTitle: 'Account setup',
+    updateTitle: 'Mark update',
+    baselinePrice: 'Baseline mark',
+    updatePrice: 'New mark',
+    updateHint:
+      '# Mark update\nApplying a new mark rolls P&L from the previous mark into account equity.\n\nKeep account setup locked and move only this field for daily updates.',
+    lock: 'Lock setup',
+    edit: 'Edit',
+    locked: 'Setup locked',
+    lockedHint: 'Changing account baseline values will change future mark updates.',
+    apply: 'Apply mark',
+    undo: 'Undo last apply',
+    position: 'Side',
+  }
+}
+
+function hasValue(value: number | undefined): boolean {
+  return value != null
+}
+
+function isAccountSetupComplete(inputs: CalculatorInputs): boolean {
+  const baseReady =
+    hasValue(inputs.accountEval) &&
+    hasValue(inputs.contractAmount) &&
+    hasValue(inputs.contracts) &&
+    hasValue(inputs.contractMultiplier) &&
+    hasValue(inputs.currentPrice)
+
+  if (!baseReady) return false
+
+  const mode = inputs.marginInputMode ?? 'rate'
+  if (mode === 'rate') {
+    return hasValue(inputs.maintenanceMarginRate) && hasValue(inputs.entrustedMarginRate)
+  }
+  if (mode === 'perContract') {
+    return (
+      hasValue(inputs.maintenanceMarginPerContract) &&
+      hasValue(inputs.entrustedMarginPerContract)
+    )
+  }
+  return hasValue(inputs.maintenanceMargin) && hasValue(inputs.entrustedMargin)
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="account-setup-summary__item">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  )
+}
+
+export function AccountSetupSummary({
+  inputs,
+  onEdit,
+}: {
+  inputs: CalculatorInputs
+  onEdit: () => void
+}) {
+  const { t } = useLanguage()
+  const c = setupCopy(t.lang)
+  const f = t.fields
+  const sideLabel = inputs.positionSide === 'long' ? t.long : t.short
+
+  return (
+    <div className="field-section account-setup-summary">
+      <div className="account-setup-summary__head">
+        <div>
+          <SectionTitle>{c.setupTitle}</SectionTitle>
+          <p>{c.lockedHint}</p>
+        </div>
+        <button type="button" className="account-setup-lock-btn" onClick={onEdit}>
+          {c.edit}
+        </button>
+      </div>
+      <div className="account-setup-summary__grid">
+        <SummaryItem label={c.position} value={sideLabel} />
+        <SummaryItem label={f.accountEquity.label} value={formatNumber(inputs.accountEval ?? null)} />
+        <SummaryItem label={f.contracts.label} value={formatNumber(inputs.contracts ?? null)} />
+        <SummaryItem label={f.contractAmount.label} value={formatNumber(inputs.contractAmount ?? null)} />
+        <SummaryItem label={f.contractMultiplier.label} value={formatNumber(inputs.contractMultiplier ?? null)} />
+        <SummaryItem label={c.baselinePrice} value={formatNumber(inputs.currentPrice ?? null)} />
+      </div>
+    </div>
+  )
+}
+
 function MarginSection({
   inputs,
   onChange,
+  setupScreen = false,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
+  setupScreen?: boolean
 }) {
   const { t } = useLanguage()
   const f = t.fields
@@ -439,9 +513,11 @@ function MarginSection({
         <>
           {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
+            className: setupScreen ? 'field--setup-screen' : '',
           })}
           {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
+            className: setupScreen ? 'field--setup-screen' : '',
           })}
         </>
       )}
@@ -450,9 +526,11 @@ function MarginSection({
         <>
           {numField(f.maintenanceMarginPerContract, 'maintenanceMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
+            className: setupScreen ? 'field--setup-screen' : '',
           })}
           {numField(f.entrustedMarginPerContract, 'entrustedMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
+            className: setupScreen ? 'field--setup-screen' : '',
           })}
         </>
       )}
@@ -461,9 +539,11 @@ function MarginSection({
         <>
           {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
+            className: setupScreen ? 'field--setup-screen' : '',
           })}
           {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, false, undefined, true, tooltipLabel, {
             disabled: scenarioModeActive,
+            className: setupScreen ? 'field--setup-screen' : '',
           })}
         </>
       )}
@@ -479,7 +559,22 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
   const scenarioModeActive = isPreviewModeActive(inputs)
-  const previewInputs = scenarioModeActive ? resolveEvaluationInputs(inputs) : inputs
+  const c = setupCopy(t.lang)
+  const setupComplete = isAccountSetupComplete(inputs)
+  const frozenFieldClass = setupComplete ? 'field--setup-screen' : ''
+
+  useEffect(() => {
+    if (!inputs.markPriceUndoSnapshot) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
+      e.preventDefault()
+      onChange({ undoMarkPrice: true })
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [inputs.markPriceUndoSnapshot, onChange])
 
   return (
     <section className="panel input-panel">
@@ -514,9 +609,10 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             tooltipLabel={t.fieldTooltipLabel}
             tooltipGuideHref={GUIDE_PATH}
             tooltipGuideLinkLabel={t.tooltipGuideLink}
+            className={frozenFieldClass}
           >
             <NumberInput
-              value={previewInputs.accountEval}
+              value={inputs.accountEval}
               allowDecimal={false}
               placeholder={f.accountEquity.placeholder || undefined}
               disabled={scenarioModeActive}
@@ -527,15 +623,17 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           </Field>
           {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
+            className: frozenFieldClass,
           })}
           <Field
             label={f.contracts.label}
             labelId="contracts-label"
             tooltip={f.contracts.hint}
             tooltipLabel={t.fieldTooltipLabel}
+            className={frozenFieldClass}
           >
             <NumberStepper
-              value={previewInputs.contracts}
+              value={inputs.contracts}
               step={1}
               allowNegative={false}
               placeholder={f.contracts.placeholder || undefined}
@@ -555,29 +653,19 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           <CurrentPriceField
             inputs={inputs}
             onChange={onChange}
-            field={f.currentPrice}
+            field={setupComplete ? { ...f.currentPrice, hint: c.updateHint } : f.currentPrice}
             stepUpLabel={t.stepUp}
             stepDownLabel={t.stepDown}
             tooltipLabel={t.fieldTooltipLabel}
             tooltipGuideHref={GUIDE_PATH}
             tooltipGuideLinkLabel={t.tooltipGuideLink}
             disabled={scenarioModeActive}
+            rollPnlOnChange={setupComplete}
           />
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
+            className: frozenFieldClass,
           })}
-          <ScenarioPriceField
-            inputs={inputs}
-            onChange={onChange}
-            field={f.scenarioPrice}
-            stepUpLabel={t.stepUp}
-            stepDownLabel={t.stepDown}
-            tooltipLabel={t.fieldTooltipLabel}
-            tooltipGuideLink={t.tooltipGuideLink}
-            commitLabel={t.scenarioPriceCommit}
-            clearLabel={t.scenarioPriceClear}
-            applyPnlLabel={t.scenarioApplyPnl}
-          />
           {numField(
             f.tickSize,
             'tickSize',
@@ -587,11 +675,17 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             t.optional,
             true,
             t.fieldTooltipLabel,
-            { disabled: scenarioModeActive },
+            {
+              disabled: scenarioModeActive,
+            },
           )}
         </div>
 
-        <MarginSection inputs={inputs} onChange={onChange} />
+        <MarginSection
+          inputs={inputs}
+          onChange={onChange}
+          setupScreen={setupComplete}
+        />
       </div>
     </section>
   )

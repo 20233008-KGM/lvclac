@@ -64,6 +64,12 @@ export interface CalculatorInputs {
     }
   }
   /** 주문 시나리오 진입 전 실제 inputs — Esc 시 복원 */
+  markPriceUndoSnapshot?: {
+    accountEval: number
+    currentPrice: number
+    mtmPriceAnchor?: number
+    evalSnapshotSide?: PositionSide
+  }
   orderScenarioRevertSnapshot?: {
     accountEval: number
     contracts?: number

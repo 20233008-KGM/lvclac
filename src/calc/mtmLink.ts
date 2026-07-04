@@ -15,6 +15,8 @@ export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   applyScenarioToMark?: number
   /** 손익 반영 취소 — 시나리오 미리보기 복원 */
   undoScenarioApply?: true
+  applyMarkPrice?: number
+  undoMarkPrice?: true
   /** 주문 시나리오 Enter — baseline과 함께 미리보기 진입 */
   commitOrderScenario?: OrderScenarioBaseline
   /** 주문 시나리오 Esc — 진입 전 상태 복원 */
@@ -253,6 +255,19 @@ export function revertOrderApply(prev: CalculatorInputs): Partial<CalculatorInpu
   }
 }
 
+export function revertMarkPriceApply(prev: CalculatorInputs): Partial<CalculatorInputs> | null {
+  const snap = prev.markPriceUndoSnapshot
+  if (!snap) return null
+
+  return {
+    accountEval: snap.accountEval,
+    currentPrice: snap.currentPrice,
+    mtmPriceAnchor: snap.mtmPriceAnchor,
+    evalSnapshotSide: snap.evalSnapshotSide,
+    markPriceUndoSnapshot: undefined,
+  }
+}
+
 export function revertScenarioState(prev: CalculatorInputs): Partial<CalculatorInputs> {
   const snap = prev.scenarioRevertSnapshot
   if (!snap) {
@@ -389,6 +404,8 @@ export function applyInputPatch(
     clearScenario,
     applyScenarioToMark,
     undoScenarioApply,
+    applyMarkPrice,
+    undoMarkPrice,
     commitOrderScenario,
     clearOrderScenario,
     applyOrderScenario,
@@ -397,6 +414,12 @@ export function applyInputPatch(
   } = patch
 
   const previewLocked = isPreviewModeActive(prev)
+
+  if (undoMarkPrice) {
+    const undone = revertMarkPriceApply(prev)
+    if (undone) return { ...prev, ...inputPatch, ...undone }
+    return { ...prev, ...inputPatch }
+  }
 
   if (undoOrderApply) {
     const undone = revertOrderApply(prev)
@@ -454,6 +477,24 @@ export function applyInputPatch(
             }
           : undefined
       return { ...base, ...rolled, scenarioApplyUndoSnapshot: undoSnapshot }
+    }
+    return base
+  }
+
+  if (applyMarkPrice != null) {
+    const base = { ...prev, ...sanitizePatchForScenarioLock(prev, inputPatch) }
+    const moved = applyPriceMove(base, applyMarkPrice)
+    if (moved) {
+      const undoSnapshot =
+        base.accountEval != null && base.currentPrice != null
+          ? {
+              accountEval: base.accountEval,
+              currentPrice: base.currentPrice,
+              mtmPriceAnchor: base.mtmPriceAnchor,
+              evalSnapshotSide: base.evalSnapshotSide,
+            }
+          : undefined
+      return { ...base, ...moved, markPriceUndoSnapshot: undoSnapshot }
     }
     return base
   }

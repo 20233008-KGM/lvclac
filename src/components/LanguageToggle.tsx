@@ -1,12 +1,18 @@
 import { useLanguage, type Locale } from '../i18n'
 
 interface LanguageToggleProps {
-  variant?: 'default' | 'header'
+  variant?: 'default' | 'header' | 'fixed'
+}
+
+const VARIANT_CLASS: Record<NonNullable<LanguageToggleProps['variant']>, string> = {
+  default: 'lang-toggle',
+  header: 'lang-toggle lang-toggle--header',
+  fixed: 'lang-toggle lang-toggle--header lang-toggle--fixed',
 }
 
 export function LanguageToggle({ variant = 'default' }: LanguageToggleProps) {
   const { locale, setLocale, t } = useLanguage()
-  const className = variant === 'header' ? 'lang-toggle lang-toggle--header' : 'lang-toggle'
+  const className = VARIANT_CLASS[variant]
 
   return (
     <div className={className} role="group" aria-label={t.langToggleLabel}>

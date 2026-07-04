@@ -1452,9 +1452,9 @@ input:focus:not(:focus-visible) {
 }
 
 .margin-mode-btn.active {
-  background: var(--color-primary);
+  background: var(--color-primary-muted);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -3563,6 +3563,142 @@ body.scrub-drag-active * {
   color: var(--color-text-muted);
 }
 
+/* Login CTA — filled accent button so the login entry point stands out
+   from the surrounding ghost utility controls */
+.auth-header-btn--primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border-color: var(--color-primary);
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
+}
+
+.auth-header-btn--primary:hover,
+.auth-header-btn--primary:focus-visible {
+  border-color: var(--color-primary);
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.auth-header-btn__icon {
+  flex-shrink: 0;
+}
+
+/* Logged-in account — avatar pill with dropdown menu */
+.auth-header-account {
+  position: relative;
+}
+
+.auth-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 36px;
+  max-width: 12rem;
+  padding: 2px var(--space-sm) 2px 2px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.auth-avatar-btn:hover,
+.auth-avatar-btn:focus-visible {
+  color: var(--color-text);
+  border-color: var(--color-text-dim);
+  outline: none;
+}
+
+.auth-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.auth-avatar--lg {
+  width: 36px;
+  height: 36px;
+}
+
+.auth-avatar-btn__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-avatar-btn__caret {
+  flex-shrink: 0;
+  font-size: 0.7em;
+  color: var(--color-text-dim);
+}
+
+.auth-menu {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 100;
+  min-width: 12rem;
+  padding: var(--space-xs);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.auth-menu__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.auth-menu__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.auth-menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.auth-menu__item:hover,
+.auth-menu__item:focus-visible {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  outline: none;
+}
+
 /* Disclaimer modal */
 .disclaimer-overlay {
   position: fixed;
@@ -4102,6 +4238,15 @@ a.site-footer__link:hover {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+}
+
+/* Pinned to the top-left of the viewport, isolated from page layout */
+.lang-toggle--fixed {
+  position: fixed;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 900;
+  box-shadow: var(--shadow-sm);
 }
 
 .lang-toggle--header .lang-btn {

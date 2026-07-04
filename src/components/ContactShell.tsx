@@ -2,7 +2,6 @@ import { useEffect, type ReactNode } from 'react'
 import type { BoardId } from '../config/boards'
 import { useLanguage } from '../i18n'
 import { AuthButton } from './auth/AuthButton'
-import { LanguageToggle } from './LanguageToggle'
 import { LegalLinks } from './ServiceDisclaimer'
 import '../styles/pages.css'
 
@@ -28,7 +27,6 @@ export function ContactShell({ boardId, children }: ContactShellProps) {
         <div className="contact-header__top">
           <div className="contact-header__actions">
             <AuthButton variant="header" />
-            <LanguageToggle variant="header" />
           </div>
         </div>
 

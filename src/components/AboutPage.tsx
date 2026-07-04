@@ -3,7 +3,6 @@ import { CONTACT_EMAIL } from '../config/site'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { AuthButton } from './auth/AuthButton'
-import { LanguageToggle } from './LanguageToggle'
 import { LegalLinks } from './ServiceDisclaimer'
 import '../styles/pages.css'
 
@@ -32,7 +31,6 @@ export function AboutPage() {
           </button>
           <div className="about-header__actions">
             <AuthButton variant="header" />
-            <LanguageToggle variant="header" />
           </div>
         </div>
 

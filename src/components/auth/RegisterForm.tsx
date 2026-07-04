@@ -1,68 +1,67 @@
 import { useState, type FormEvent } from 'react'
-import { validatePassword, validateUsername } from '../../auth/validation'
+import {
+  validateEmail,
+  validateNickname,
+  validatePassword,
+} from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
-
-function mapAuthError(message: string | null, t: ReturnType<typeof useLanguage>['t']): string | null {
-  if (!message) return null
-  if (message === 'username_taken') return t.auth.usernameTaken
-  return message
-}
+import { authErrorMessage } from './authMessages'
 
 export function RegisterForm() {
   const { t } = useLanguage()
-  const { register, checkUsername } = useAuth()
-  const [username, setUsername] = useState('')
+  const { signUpWithPassword } = useAuth()
+  const [nickname, setNickname] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [usernameStatus, setUsernameStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-
-  async function handleUsernameBlur() {
-    const err = validateUsername(username)
-    if (err) {
-      setUsernameStatus(err)
-      return
-    }
-    const available = await checkUsername(username)
-    setUsernameStatus(available ? null : t.auth.usernameTaken)
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
-    setError(null)
-
-    const available = await checkUsername(username)
-    if (!available) {
-      setError(t.auth.usernameTaken)
-      setSubmitting(false)
+    const validationErr =
+      validateNickname(nickname) ?? validateEmail(email) ?? validatePassword(password)
+    if (validationErr) {
+      setError(authErrorMessage(validationErr, t))
       return
     }
-
-    const err = await register(username, password)
-    if (err) setError(mapAuthError(err, t))
+    setSubmitting(true)
+    setError(null)
+    setNotice(null)
+    const err = await signUpWithPassword(email, password, nickname)
+    if (err === 'confirm_email') {
+      setNotice(t.auth.confirmEmailSent)
+    } else if (err) {
+      setError(authErrorMessage(err, t))
+    }
+    // err === null 이면 AuthProvider가 세션을 받아 모달이 자동으로 닫힘
     setSubmitting(false)
   }
 
-  const pwErr = password ? validatePassword(password) : null
+  const pwErr = password ? authErrorMessage(validatePassword(password), t) : null
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <label className="field">
-        <span>{t.auth.username}</span>
+        <span>{t.auth.nickname}</span>
         <input
           type="text"
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value)
-            setUsernameStatus(null)
-          }}
-          onBlur={handleUsernameBlur}
-          autoComplete="username"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          autoComplete="nickname"
           required
         />
-        {usernameStatus && <span className="hint hint-warn">{usernameStatus}</span>}
+      </label>
+      <label className="field">
+        <span>{t.auth.email}</span>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          required
+        />
       </label>
       <label className="field">
         <span>{t.auth.password}</span>
@@ -76,7 +75,8 @@ export function RegisterForm() {
         {pwErr && <span className="hint hint-warn">{pwErr}</span>}
       </label>
       {error && <p className="error-msg">{error}</p>}
-      <button type="submit" className="btn btn-primary" disabled={submitting || !!pwErr}>
+      {notice && <p className="hint hint-ok">{notice}</p>}
+      <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? '…' : t.auth.submitRegister}
       </button>
     </form>

@@ -1,40 +1,40 @@
 import { useState, type FormEvent } from 'react'
+import { validateEmail, validatePassword } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
-
-function mapAuthError(message: string | null, t: ReturnType<typeof useLanguage>['t']): string | null {
-  if (!message) return null
-  if (message === 'invalid_credentials') return t.auth.invalidCredentials
-  if (message === 'username_taken') return t.auth.usernameTaken
-  return message
-}
+import { authErrorMessage } from './authMessages'
 
 export function LoginForm() {
   const { t } = useLanguage()
-  const { login } = useAuth()
-  const [username, setUsername] = useState('')
+  const { signInWithPassword } = useAuth()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    const emailErr = validateEmail(email) ?? validatePassword(password)
+    if (emailErr) {
+      setError(authErrorMessage(emailErr, t))
+      return
+    }
     setSubmitting(true)
     setError(null)
-    const err = await login(username, password)
-    if (err) setError(mapAuthError(err, t))
+    const err = await signInWithPassword(email, password)
+    if (err) setError(authErrorMessage(err, t))
     setSubmitting(false)
   }
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <label className="field">
-        <span>{t.auth.username}</span>
+        <span>{t.auth.email}</span>
         <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          autoComplete="username"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
           required
         />
       </label>

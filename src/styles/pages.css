@@ -101,58 +101,82 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-width: 42rem;
 }
 
 .guide-panel {
-  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
 
 .guide-panel__title {
-  margin: 0 0 var(--space-sm);
-  font-size: var(--font-size-md);
-  line-height: 1.4;
+  margin: 0 0 var(--space-xs);
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--color-primary);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  line-height: 1.35;
   color: var(--color-text);
 }
 
 .guide-panel__paragraph {
   margin: 0;
   font-size: var(--font-size-sm);
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--color-text-muted);
+  white-space: pre-line;
   text-wrap: pretty;
 }
 
-.guide-panel__paragraph + .guide-panel__paragraph,
-.guide-panel__list {
-  margin-top: 0.65em;
+.guide-panel__paragraph + .guide-panel__paragraph {
+  margin-top: 0.55em;
 }
 
 .guide-panel__list {
-  margin-bottom: 0;
-  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: var(--space-xs) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-panel__list li {
+  position: relative;
+  padding-left: 1.15rem;
   font-size: var(--font-size-sm);
-  line-height: 1.75;
+  line-height: 1.7;
   color: var(--color-text-muted);
   text-wrap: pretty;
 }
 
-.guide-panel__list li + li {
-  margin-top: 0.45em;
+.guide-panel__list li::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0.65;
 }
 
 .guide-page__footnote {
-  margin: 0;
-  padding: var(--space-sm) var(--space-md);
+  margin: var(--space-xs) 0 0;
+  padding: var(--space-md) var(--space-lg);
   border: 1px solid var(--color-border-subtle);
+  border-left: 3px solid var(--color-text-dim);
   border-radius: var(--radius);
   font-size: 12px;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--color-text-dim);
   background: var(--color-surface);
+  white-space: pre-line;
   text-wrap: pretty;
 }
 

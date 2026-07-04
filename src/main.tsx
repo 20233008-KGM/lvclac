@@ -4,6 +4,7 @@ import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { CalculatorProvider } from './context/CalculatorContext.tsx'
 import { LanguageProvider } from './i18n'
+import { LanguageToggle } from './components/LanguageToggle.tsx'
 
 const Analytics = lazy(() =>
   import('@vercel/analytics/react').then((mod) => ({ default: mod.Analytics })),
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')!).render(
     <LanguageProvider>
       <AuthProvider>
         <CalculatorProvider>
+          <LanguageToggle variant="fixed" />
           <App />
           <Suspense fallback={null}>
             <Analytics />

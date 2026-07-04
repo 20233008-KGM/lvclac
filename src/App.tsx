@@ -6,7 +6,6 @@ import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDiscl
 import { AuthButton } from './components/auth/AuthButton'
 import { HowToUseButton } from './components/HowToUseButton'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
-import { LanguageToggle } from './components/LanguageToggle'
 import { SiteFooter } from './components/SiteFooter'
 import { parseBoardPath } from './config/boards'
 import { isAboutPath, isFormulasPath, isGuidePath } from './config/routes'
@@ -106,7 +105,6 @@ function CalculatorApp() {
                   )}
                   <HowToUseButton />
                   <AuthButton variant="header" />
-                  <LanguageToggle variant="header" />
                 </div>
               </header>
               <main

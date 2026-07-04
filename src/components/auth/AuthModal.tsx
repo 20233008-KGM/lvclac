@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { AuthPage } from './AuthPage'
@@ -32,7 +33,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  return (
+  const modal = (
     <div
       className="disclaimer-overlay"
       role="presentation"
@@ -59,4 +60,6 @@ export function AuthModal({ onClose }: AuthModalProps) {
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }

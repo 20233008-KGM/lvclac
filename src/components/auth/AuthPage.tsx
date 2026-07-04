@@ -4,37 +4,43 @@ import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
 import { useLanguage } from '../../i18n'
 
+type AuthMode = 'login' | 'register'
+
 export function AuthPage() {
   const { t } = useLanguage()
-  const [tab, setTab] = useState<'login' | 'register'>('login')
+  const [mode, setMode] = useState<AuthMode>('login')
+  const isLogin = mode === 'login'
 
   return (
     <div className="auth-card">
-      <h1 id="auth-modal-title">{t.auth.modalTitle}</h1>
-      <p className="auth-subtitle">{t.auth.subtitle}</p>
+      <div className="auth-card__header">
+        <h1 id="auth-modal-title">
+          {isLogin ? t.auth.loginTitle : t.auth.registerTitle}
+        </h1>
+        <p className="auth-subtitle">
+          {isLogin ? t.auth.loginSubtitle : t.auth.registerSubtitle}
+        </p>
+      </div>
 
       <GoogleButton />
       <div className="auth-divider">
         <span>{t.auth.or}</span>
       </div>
 
-      <div className="auth-tabs">
+      {isLogin ? <LoginForm /> : <RegisterForm />}
+
+      <p className="auth-switch">
+        <span>
+          {isLogin ? t.auth.switchToRegisterPrompt : t.auth.switchToLoginPrompt}
+        </span>
         <button
           type="button"
-          className={`auth-tab ${tab === 'login' ? 'active' : ''}`}
-          onClick={() => setTab('login')}
+          className="auth-switch__btn"
+          onClick={() => setMode(isLogin ? 'register' : 'login')}
         >
-          {t.auth.tabLogin}
+          {isLogin ? t.auth.switchToRegisterAction : t.auth.switchToLoginAction}
         </button>
-        <button
-          type="button"
-          className={`auth-tab ${tab === 'register' ? 'active' : ''}`}
-          onClick={() => setTab('register')}
-        >
-          {t.auth.tabRegister}
-        </button>
-      </div>
-      {tab === 'login' ? <LoginForm /> : <RegisterForm />}
+      </p>
     </div>
   )
 }

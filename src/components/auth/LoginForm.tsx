@@ -48,9 +48,13 @@ export function LoginForm() {
           required
         />
       </label>
-      {error && <p className="error-msg">{error}</p>}
+      {error && (
+        <p className="auth-alert auth-alert--error" role="alert">
+          {error}
+        </p>
+      )}
       <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? '…' : t.auth.submitLogin}
+        {submitting ? t.auth.loginSubmitting : t.auth.submitLogin}
       </button>
     </form>
   )

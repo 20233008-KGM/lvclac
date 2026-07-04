@@ -3,9 +3,12 @@ import {
   validateEmail,
   validateNickname,
   validatePassword,
+  validatePasswordConfirmation,
+  validateTermsAccepted,
 } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
+import { LegalLinks } from '../ServiceDisclaimer'
 import { authErrorMessage } from './authMessages'
 
 export function RegisterForm() {
@@ -14,6 +17,8 @@ export function RegisterForm() {
   const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -21,7 +26,11 @@ export function RegisterForm() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const validationErr =
-      validateNickname(nickname) ?? validateEmail(email) ?? validatePassword(password)
+      validateNickname(nickname) ??
+      validateEmail(email) ??
+      validatePassword(password) ??
+      validatePasswordConfirmation(password, passwordConfirmation) ??
+      validateTermsAccepted(termsAccepted)
     if (validationErr) {
       setError(authErrorMessage(validationErr, t))
       return
@@ -30,7 +39,7 @@ export function RegisterForm() {
     setError(null)
     setNotice(null)
     const err = await signUpWithPassword(email, password, nickname)
-    if (err === 'confirm_email') {
+    if (err === 'confirm_email' || err === 'email_taken') {
       setNotice(t.auth.confirmEmailSent)
     } else if (err) {
       setError(authErrorMessage(err, t))
@@ -40,6 +49,10 @@ export function RegisterForm() {
   }
 
   const pwErr = password ? authErrorMessage(validatePassword(password), t) : null
+  const confirmationErr =
+    passwordConfirmation && password
+      ? authErrorMessage(validatePasswordConfirmation(password, passwordConfirmation), t)
+      : null
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
@@ -74,10 +87,41 @@ export function RegisterForm() {
         />
         {pwErr && <span className="hint hint-warn">{pwErr}</span>}
       </label>
-      {error && <p className="error-msg">{error}</p>}
-      {notice && <p className="hint hint-ok">{notice}</p>}
+      <label className="field">
+        <span>{t.auth.passwordConfirmation}</span>
+        <input
+          type="password"
+          value={passwordConfirmation}
+          onChange={(e) => setPasswordConfirmation(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
+        {confirmationErr && <span className="hint hint-warn">{confirmationErr}</span>}
+      </label>
+      <label className="auth-consent">
+        <input
+          type="checkbox"
+          checked={termsAccepted}
+          onChange={(e) => setTermsAccepted(e.target.checked)}
+          required
+        />
+        <span>{t.auth.termsConsent}</span>
+      </label>
+      <div className="auth-legal-links">
+        <LegalLinks />
+      </div>
+      {error && (
+        <p className="auth-alert auth-alert--error" role="alert">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p className="auth-alert auth-alert--success" role="status">
+          {notice}
+        </p>
+      )}
       <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? '…' : t.auth.submitRegister}
+        {submitting ? t.auth.registerSubmitting : t.auth.submitRegister}
       </button>
     </form>
   )

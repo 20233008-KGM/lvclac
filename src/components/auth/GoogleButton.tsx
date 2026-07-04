@@ -54,7 +54,11 @@ export function GoogleButton() {
         <GoogleLogo />
         <span>{t.auth.continueWithGoogle}</span>
       </button>
-      {error && <p className="error-msg">{error}</p>}
+      {error && (
+        <p className="auth-alert auth-alert--error" role="alert">
+          {error}
+        </p>
+      )}
     </>
   )
 }

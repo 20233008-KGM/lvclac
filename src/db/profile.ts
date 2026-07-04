@@ -19,8 +19,44 @@ export async function fetchNickname(userId: string): Promise<string | null> {
   return data?.nickname ?? null
 }
 
+/** 최초 로그인 직후 auth trigger가 늦거나 누락되어도 profiles row를 보정한다. */
+export async function ensureProfile(
+  userId: string,
+  email: string,
+  fallbackNickname: string,
+): Promise<string> {
+  const fallback = fallbackNickname.trim() || email.split('@')[0] || '사용자'
+  if (!supabase) return fallback
+
+  const existing = await supabase
+    .from('profiles')
+    .select('nickname')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const currentNickname = existing.data?.nickname?.trim()
+  if (currentNickname) {
+    await supabase.from('profiles').update({ email }).eq('id', userId)
+    return currentNickname
+  }
+
+  const { data } = await supabase
+    .from('profiles')
+    .upsert({ id: userId, email, nickname: fallback }, { onConflict: 'id' })
+    .select('nickname')
+    .maybeSingle()
+
+  return data?.nickname?.trim() || fallback
+}
+
 /** profiles.nickname upsert. */
-export async function saveNickname(userId: string, nickname: string): Promise<void> {
+export async function saveNickname(
+  userId: string,
+  nickname: string,
+  email?: string,
+): Promise<void> {
   if (!supabase) return
-  await supabase.from('profiles').upsert({ id: userId, nickname: nickname.trim() })
+  await supabase
+    .from('profiles')
+    .upsert({ id: userId, email, nickname: nickname.trim() }, { onConflict: 'id' })
 }

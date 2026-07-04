@@ -9,7 +9,7 @@ import {
 } from 'react'
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from '../db/supabaseClient'
-import { fetchNickname, saveNickname, type AuthUser } from '../db/profile'
+import { ensureProfile, saveNickname, type AuthUser } from '../db/profile'
 
 /**
  * 인증 메서드는 성공 시 null, 실패/안내 시 코드 문자열을 반환합니다.
@@ -45,8 +45,9 @@ function fallbackNickname(supaUser: SupabaseUser): string {
 }
 
 async function buildUser(supaUser: SupabaseUser): Promise<AuthUser> {
-  const nickname = (await fetchNickname(supaUser.id)) ?? fallbackNickname(supaUser)
-  return { id: supaUser.id, email: supaUser.email ?? '', nickname }
+  const email = supaUser.email ?? ''
+  const nickname = await ensureProfile(supaUser.id, email, fallbackNickname(supaUser))
+  return { id: supaUser.id, email, nickname }
 }
 
 /** Supabase 에러 메시지를 UI 코드로 매핑. */
@@ -56,6 +57,8 @@ function mapAuthError(message: string | undefined): string {
   if (msg.includes('email not confirmed')) return 'email_not_confirmed'
   if (msg.includes('already registered') || msg.includes('already been registered'))
     return 'email_taken'
+  if (msg.includes('signup') && msg.includes('disabled')) return 'signup_disabled'
+  if (msg.includes('provider') && msg.includes('not enabled')) return 'provider_not_enabled'
   if (msg.includes('rate limit') || msg.includes('too many')) return 'rate_limited'
   return message || 'unknown_error'
 }
@@ -115,7 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { nickname: nickname.trim() } },
+        options: {
+          data: { nickname: nickname.trim() },
+          emailRedirectTo: window.location.origin,
+        },
       })
       if (error) return mapAuthError(error.message)
       // 이메일 확인이 켜져 있으면 세션 없이 user만 반환됨 → 확인 안내
@@ -145,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (nickname: string) => {
       if (!supabase || !user) return 'not_configured'
       const trimmed = nickname.trim()
-      await saveNickname(user.id, trimmed)
+      await saveNickname(user.id, trimmed, user.email)
       await supabase.auth.updateUser({ data: { nickname: trimmed } })
       setUser((prev) => (prev ? { ...prev, nickname: trimmed } : prev))
       return null

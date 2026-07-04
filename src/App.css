@@ -2403,8 +2403,7 @@ input:focus:not(:focus-visible) {
 
 /* Segmented controls */
 .mode-toggle,
-.side-toggle,
-.auth-tabs {
+.side-toggle {
   display: flex;
   gap: var(--space-xs);
   padding: 3px;
@@ -2418,8 +2417,7 @@ input:focus:not(:focus-visible) {
 }
 
 .mode-btn,
-.side-btn,
-.auth-tab {
+.side-btn {
   flex: 1;
   min-height: calc(var(--touch-min) - 8px);
   padding: var(--space-sm) var(--space-md);
@@ -2434,14 +2432,12 @@ input:focus:not(:focus-visible) {
 }
 
 .mode-btn:hover:not(.active),
-.auth-tab:hover:not(.active),
 .side-btn:hover:not(.active) {
   color: var(--color-text);
   background: var(--color-surface-2);
 }
 
-.mode-btn.active,
-.auth-tab.active {
+.mode-btn.active {
   background: var(--color-surface-3);
   border-color: var(--color-border);
   color: var(--color-text);

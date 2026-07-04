@@ -3539,8 +3539,15 @@ body.scrub-drag-active * {
 }
 
 .auth-header-btn--loading {
-  opacity: 0.5;
+  max-width: 7rem;
+  opacity: 0.65;
   cursor: default;
+}
+
+.auth-header-btn__loading-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .auth-header-user {
@@ -3636,9 +3643,22 @@ body.scrub-drag-active * {
 }
 
 .auth-avatar-btn__caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  font-size: 0.7em;
+  width: 10px;
   color: var(--color-text-dim);
+}
+
+.auth-avatar-btn__caret::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 5px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
 }
 
 .auth-menu {

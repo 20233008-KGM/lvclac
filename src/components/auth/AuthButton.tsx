@@ -66,7 +66,7 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
         disabled
         aria-hidden="true"
       >
-        …
+        <span className="auth-header-btn__loading-text">{t.loading}</span>
       </button>
     )
   }
@@ -99,9 +99,7 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
             {initial}
           </span>
           <span className="auth-avatar-btn__name">{user.nickname}</span>
-          <span className="auth-avatar-btn__caret" aria-hidden="true">
-            ▾
-          </span>
+          <span className="auth-avatar-btn__caret" aria-hidden="true" />
         </button>
         {menuOpen && (
           <div className="auth-menu" role="menu">

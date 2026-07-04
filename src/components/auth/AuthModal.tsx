@@ -53,7 +53,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
           onClick={onClose}
           aria-label={t.close}
         >
-          ×
+          <span className="auth-modal-close__mark" aria-hidden="true" />
         </button>
         <AuthPage />
       </div>

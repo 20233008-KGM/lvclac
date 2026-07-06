@@ -166,6 +166,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       })
       if (error) return mapAuthError(error.message)
+      // Supabase는 이메일 열거 공격 방지를 위해 이미 가입된 이메일도 200 + 에러 없이 반환한다.
+      // 이 경우 반환된 user의 identities가 빈 배열이라는 점으로만 기존 계정 여부를 구분할 수 있다.
+      if (data.user && data.user.identities?.length === 0) return 'email_taken'
       // 이메일 확인이 켜져 있으면 세션 없이 user만 반환됨 → 확인 안내
       if (data.user && !data.session) return 'confirm_email'
       return null

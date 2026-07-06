@@ -39,9 +39,10 @@ export function RegisterForm() {
     setError(null)
     setNotice(null)
     const err = await signUpWithPassword(email, password, nickname)
-    if (err === 'confirm_email' || err === 'email_taken') {
+    if (err === 'confirm_email') {
       setNotice(t.auth.confirmEmailSent)
     } else if (err) {
+      // email_taken 포함 — "이미 가입된 이메일입니다" 등 authMessages의 코드별 안내 표시
       setError(authErrorMessage(err, t))
     }
     // err === null 이면 AuthProvider가 세션을 받아 모달이 자동으로 닫힘

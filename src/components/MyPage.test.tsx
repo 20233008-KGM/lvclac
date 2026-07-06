@@ -8,6 +8,7 @@ describe('MyPageView', () => {
     copy: en.myPage,
     authLoading: false,
     configured: true,
+    isPro: false,
     nicknameDraft: '',
     nicknameBusy: false,
     nicknameMessage: null,
@@ -69,7 +70,7 @@ describe('MyPageView', () => {
     expect(html).toContain(en.myPage.cloudInputReady)
     expect(html).toContain('2 records')
     expect(html).toContain('1 records')
-    expect(html).toContain(en.myPage.planStatusValue)
+    expect(html).toContain(en.myPage.billing.statusFree)
     expect(html).toContain(en.myPage.deleteAccountTitle)
     expect(html).toContain('mailto:support@example.com')
   })

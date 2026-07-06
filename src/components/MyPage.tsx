@@ -17,6 +17,7 @@ import type { Messages } from '../i18n/types'
 import { useLanguage } from '../i18n'
 import { authErrorMessage } from './auth/authMessages'
 import { GoogleLogo } from './auth/GoogleLogo'
+import { BillingPanel } from './billing/BillingPanel'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
 
@@ -35,6 +36,7 @@ interface MyPageViewProps {
   authLoading: boolean
   configured: boolean
   user: AuthUser | null
+  isPro: boolean
   nicknameDraft: string
   nicknameBusy: boolean
   nicknameMessage: string | null
@@ -48,6 +50,8 @@ interface MyPageViewProps {
   accountSnapshotCount: number
   supportHref: string
   suggestionsHref: string
+  /** 구독 결제 패널. 로그인 사용자에게만 주입된다. */
+  billingPanel?: ReactNode
   /** 개발 전용 계정 초기화 패널. 프로덕션에서는 null. */
   devResetPanel?: ReactNode
   onNicknameChange: (value: string) => void
@@ -103,6 +107,7 @@ export function MyPageView({
   authLoading,
   configured,
   user,
+  isPro,
   nicknameDraft,
   nicknameBusy,
   nicknameMessage,
@@ -116,6 +121,7 @@ export function MyPageView({
   accountSnapshotCount,
   supportHref,
   suggestionsHref,
+  billingPanel,
   devResetPanel,
   onNicknameChange,
   onNicknameSubmit,
@@ -177,7 +183,9 @@ export function MyPageView({
                   {user.email}
                 </span>
               </div>
-              <span className="my-page-badge">{copy.planStatusValue}</span>
+              <span className={`my-page-badge${isPro ? '' : ' my-page-badge--muted'}`}>
+                {isPro ? copy.billing.statusPro : copy.billing.statusFree}
+              </span>
             </section>
 
             <main className="my-page-console">
@@ -321,17 +329,7 @@ export function MyPageView({
                 )}
               </section>
 
-              <section
-                id="my-page-plan"
-                className="my-page-panel"
-                aria-labelledby="my-page-plan-title"
-              >
-                <div className="my-page-panel-head">
-                  <h2 id="my-page-plan-title">{copy.planTitle}</h2>
-                  <span className="my-page-badge my-page-badge--muted">{copy.planStatusValue}</span>
-                </div>
-                <p>{copy.planBody}</p>
-              </section>
+              {billingPanel}
 
               <section
                 id="my-page-privacy"
@@ -394,6 +392,7 @@ export function MyPage() {
     linkedProviders,
     linkGoogle,
     unlinkGoogle,
+    isPro,
   } = useAuth()
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [identityBusy, setIdentityBusy] = useState<'link' | 'unlink' | null>(null)
@@ -545,6 +544,7 @@ export function MyPage() {
         authLoading={loading}
         configured={configured}
         user={user}
+        isPro={isPro}
         nicknameDraft={nicknameDraft}
         nicknameBusy={nicknameBusy}
         nicknameMessage={nicknameMessage}
@@ -558,6 +558,7 @@ export function MyPage() {
         accountSnapshotCount={accountSnapshotCount}
         supportHref={`mailto:${CONTACT_EMAIL}`}
         suggestionsHref={boardPath('suggestions')}
+        billingPanel={user ? <BillingPanel /> : null}
         devResetPanel={
           DevResetPanel && user ? (
             <Suspense fallback={null}>

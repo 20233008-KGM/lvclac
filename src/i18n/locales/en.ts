@@ -209,6 +209,33 @@ export const en: Messages = {
     planStatusValue: 'Billing integration pending',
     planBody:
       'Pro and ad-free access will be connected in a separate billing task. This page only reserves the status area for now.',
+    billing: {
+      statusFree: 'Free',
+      statusPro: 'Pro active',
+      statusTrial: 'Trial',
+      statusPastDue: 'Payment failed',
+      statusCanceled: 'Cancels soon',
+      freeHeadline: 'Upgrade to Pro',
+      freeBody:
+        'Subscribe to Pro to remove ads and unlock Pro-only features. Pay by card from anywhere in the world.',
+      monthlyName: 'Monthly',
+      monthlyPrice: '$5 / month',
+      yearlyName: 'Yearly',
+      yearlyPrice: '$48 / year',
+      yearlyNote: '2 months free vs monthly',
+      choosePlan: 'Subscribe to this plan',
+      redirecting: 'Redirecting to checkout…',
+      proHeadline: 'Pro active',
+      proBody:
+        'Thanks for subscribing. Update your payment method, view receipts, or cancel from the customer portal.',
+      renewsOn: 'Next billing date: {date}',
+      manageAction: 'Manage subscription',
+      notConfigured: 'Billing is not set up yet. Please try again later.',
+      checkoutError: 'Could not start checkout. Please try again shortly.',
+      checkoutCanceled: 'Checkout was canceled.',
+      checkoutSuccess: 'Payment complete. Updating your subscription status…',
+      taxNote: 'Payments are processed securely by Stripe. VAT may apply depending on your region.',
+    },
     privacyTitle: 'Privacy and security',
     privacyBody:
       'When cloud saving is enabled, inputs and records may be stored in Supabase DB and restricted to your account by RLS policies.',

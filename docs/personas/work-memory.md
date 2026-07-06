@@ -45,3 +45,13 @@
 - 남은 리스크: 이동된 레거시 문서의 내부 링크는 참고용으로 남을 수 있다. 전체 `npm run lint`는 기존 React lint 부채로 실패한다.
 - 다음 작업: 실제 로그인 계정으로 로컬 저장/클라우드 저장/저장 위치 전환 수동 smoke test.
 - 관련 문서/파일: `docs/product-core-design.md`, `docs/legacy/`, `docs/launch-schedule.md`.
+
+## 2026-07-05 - 로그인 사용자 주문기록/계좌스냅샷
+
+- 담당 페르소나: 총괄관리자, 제품관리자, ui관리자, 개발관리자, QA관리자, 보안관리자, 법무관리자, 데이터관리자
+- 상태: 코드 구현 및 자동 검증 완료. 실제 Supabase 원격 마이그레이션 적용과 로그인 계정 E2E는 외부 프로젝트 설정 필요.
+- 결정: 주문기록은 실제 브로커 체결이 아니라 계산기에서 `계좌에 확정`한 주문 시뮬레이션 기록으로만 저장한다. 계좌스냅샷은 로그인 사용자가 버튼으로 명시 저장한다. 두 데이터는 `order_history`, `account_snapshots` 별도 테이블과 owner-only RLS로 관리한다.
+- 검증: `npm run test` 24개 파일/225개 테스트 통과, `npm run build` 통과, 변경 대상 파일 eslint 통과. 전체 `npm run lint`는 기존 lint 부채로 실패한다.
+- 남은 리스크: 실제 Supabase 프로젝트에 `005_account_records.sql` 적용 필요, RLS Advisor/실계정 저장·조회·삭제 E2E 필요, in-app browser 제어 도구 미노출로 자동 화면 캡처 검증은 미수행.
+- 다음 작업: Supabase 마이그레이션 적용 후 로그인 계정으로 주문 시뮬레이션 저장, 계좌스냅샷 저장, 조회, 삭제 smoke test를 실행한다.
+- 관련 문서/파일: `docs/superpowers/specs/2026-07-05-account-records-design.md`, `docs/superpowers/plans/2026-07-05-account-records.md`, `supabase/migrations/005_account_records.sql`, `src/db/accountRecords.ts`, `src/components/AccountRecordsPanel.tsx`, `src/components/ResultPanel.tsx`.

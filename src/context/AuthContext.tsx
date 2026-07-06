@@ -10,6 +10,12 @@ import {
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from '../db/supabaseClient'
 import { ensureProfile, saveNickname, type AuthUser } from '../db/profile'
+import { consumeForcedConsent } from '../db/devFirstLogin'
+import {
+  fetchSubscription,
+  isActiveSubscription,
+  type SubscriptionRecord,
+} from '../db/billing'
 
 /**
  * 인증 메서드는 성공 시 null, 실패/안내 시 코드 문자열을 반환합니다.
@@ -29,6 +35,18 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<string | null>
   signOut: () => Promise<void>
   updateNickname: (nickname: string) => Promise<string | null>
+  /** 현재 계정에 연결된 로그인 수단(provider) 목록. 예: ['email', 'google'] */
+  linkedProviders: string[]
+  /** 로그인 상태에서 Google identity를 현재 계정에 연동. 성공 시 Google로 리다이렉트됨. */
+  linkGoogle: () => Promise<string | null>
+  /** 현재 계정에서 Google 연동을 해제. 마지막 로그인 수단이면 'last_identity' 반환. */
+  unlinkGoogle: () => Promise<string | null>
+  /** 현재 구독 상태. 미구독/비로그인이면 null. */
+  subscription: SubscriptionRecord | null
+  /** 유료(Pro) 여부. active/trialing 구독이면 true. */
+  isPro: boolean
+  /** 결제 성공 후 등 구독 상태를 다시 읽어온다. */
+  refreshSubscription: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -60,11 +78,23 @@ function mapAuthError(message: string | undefined): string {
   if (msg.includes('signup') && msg.includes('disabled')) return 'signup_disabled'
   if (msg.includes('provider') && msg.includes('not enabled')) return 'provider_not_enabled'
   if (msg.includes('rate limit') || msg.includes('too many')) return 'rate_limited'
+  if (msg.includes('manual linking is disabled')) return 'manual_linking_disabled'
+  if (msg.includes('identity is already linked') || msg.includes('already linked'))
+    return 'identity_already_linked'
+  if (msg.includes('at least 1 identity') || msg.includes('single identity'))
+    return 'last_identity'
   return message || 'unknown_error'
+}
+
+/** 세션 user의 identities 배열에서 provider 이름만 추출. */
+function providersOf(supaUser: SupabaseUser): string[] {
+  return (supaUser.identities ?? []).map((identity) => identity.provider)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [linkedProviders, setLinkedProviders] = useState<string[]>([])
+  const [subscription, setSubscription] = useState<SubscriptionRecord | null>(null)
   const [loading, setLoading] = useState(isSupabaseConfigured)
   // 동시에 도착하는 auth 이벤트가 오래된 사용자로 덮어쓰지 않도록 최신 세션만 반영
   const latestUserId = useRef<string | null>(null)
@@ -78,12 +108,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const supaUser = session?.user ?? null
       latestUserId.current = supaUser?.id ?? null
       if (!supaUser) {
-        if (active) setUser(null)
+        if (active) {
+          setUser(null)
+          setLinkedProviders([])
+          setSubscription(null)
+        }
         return
       }
+      const providers = providersOf(supaUser)
       const built = await buildUser(supaUser)
       // 그 사이 더 최신 이벤트가 들어왔으면 무시
-      if (active && latestUserId.current === supaUser.id) setUser(built)
+      if (active && latestUserId.current === supaUser.id) {
+        setUser(built)
+        setLinkedProviders(providers)
+      }
+      const subResult = await fetchSubscription(supaUser.id)
+      if (active && latestUserId.current === supaUser.id) {
+        setSubscription(subResult.data)
+      }
     }
 
     supabase.auth
@@ -133,9 +175,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) return 'not_configured'
+    // [개발] 테스트 계정 완전 삭제 직후 1회, 구글 동의/계정선택 화면을 강제로 다시 띄워
+    // 첫 로그인 경험을 재현한다. 프로덕션 빌드에서는 DEV가 false라 이 분기가 제거된다.
+    const forceFirstLogin = import.meta.env.DEV && consumeForcedConsent()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: window.location.origin,
+        ...(forceFirstLogin
+          ? { queryParams: { prompt: 'consent select_account' } }
+          : {}),
+      },
     })
     return error ? mapAuthError(error.message) : null
     // 성공 시 브라우저가 구글로 리다이렉트되므로 이후 코드는 실행되지 않음
@@ -145,6 +195,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return
     await supabase.auth.signOut()
     setUser(null)
+    setLinkedProviders([])
+    setSubscription(null)
+  }, [])
+
+  const refreshSubscription = useCallback(async () => {
+    const userId = latestUserId.current
+    if (!supabase || !userId) return
+    const result = await fetchSubscription(userId)
+    if (latestUserId.current === userId) setSubscription(result.data)
+  }, [])
+
+  const linkGoogle = useCallback(async () => {
+    if (!supabase) return 'not_configured'
+    const { error } = await supabase.auth.linkIdentity({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    return error ? mapAuthError(error.message) : null
+    // 성공 시 브라우저가 구글로 리다이렉트되므로 이후 코드는 실행되지 않음
+  }, [])
+
+  const unlinkGoogle = useCallback(async () => {
+    if (!supabase) return 'not_configured'
+    const { data, error } = await supabase.auth.getUserIdentities()
+    if (error) return mapAuthError(error.message)
+    const identities = data?.identities ?? []
+    const google = identities.find((identity) => identity.provider === 'google')
+    // 이미 연동이 없으면 성공으로 간주(멱등)
+    if (!google) {
+      setLinkedProviders((prev) => prev.filter((provider) => provider !== 'google'))
+      return null
+    }
+    // 마지막 로그인 수단은 해제 불가
+    if (identities.length <= 1) return 'last_identity'
+    const { error: unlinkError } = await supabase.auth.unlinkIdentity(google)
+    if (unlinkError) return mapAuthError(unlinkError.message)
+    setLinkedProviders((prev) => prev.filter((provider) => provider !== 'google'))
+    return null
   }, [])
 
   const updateNickname = useCallback(
@@ -170,6 +258,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signOut,
         updateNickname,
+        linkedProviders,
+        linkGoogle,
+        unlinkGoogle,
+        subscription,
+        isPro: isActiveSubscription(subscription?.status),
+        refreshSubscription,
       }}
     >
       {children}

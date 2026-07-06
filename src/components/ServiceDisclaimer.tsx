@@ -5,10 +5,14 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { usePathname } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-
-const ACK_KEY = 'leverage-disclaimer-ack-v3'
-const SKIP_KEY = 'leverage-disclaimer-skip-v3'
+import {
+  DISCLAIMER_ACK_KEY,
+  DISCLAIMER_SKIP_KEY,
+  readDisclaimerSkip,
+  shouldAutoShowDisclaimer,
+} from './serviceDisclaimerLogic'
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
@@ -20,43 +24,21 @@ type DisclaimerContextValue = {
 
 const DisclaimerContext = createContext<DisclaimerContextValue | null>(null)
 
-function readDisclaimerSkip(): boolean {
-  try {
-    return localStorage.getItem(SKIP_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
 function setDisclaimerSkip(skip: boolean): void {
   try {
-    if (skip) localStorage.setItem(SKIP_KEY, '1')
-    else localStorage.removeItem(SKIP_KEY)
+    if (skip) localStorage.setItem(DISCLAIMER_SKIP_KEY, '1')
+    else localStorage.removeItem(DISCLAIMER_SKIP_KEY)
   } catch {
     // ignore
-  }
-}
-
-function readDisclaimerAck(): boolean {
-  try {
-    return sessionStorage.getItem(ACK_KEY) === '1'
-  } catch {
-    return false
   }
 }
 
 function setDisclaimerAck(): void {
   try {
-    sessionStorage.setItem(ACK_KEY, '1')
+    sessionStorage.setItem(DISCLAIMER_ACK_KEY, '1')
   } catch {
     // ignore
   }
-}
-
-function shouldAutoShowDisclaimer(): boolean {
-  if (readDisclaimerSkip()) return false
-  if (readDisclaimerAck()) return false
-  return true
 }
 
 export function LegalEmphasis({ children }: { children: ReactNode }) {
@@ -131,9 +113,12 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
 }
 
 export function DisclaimerProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(shouldAutoShowDisclaimer)
+  const pathname = usePathname()
+  const [open, setOpen] = useState(() =>
+    shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
+  )
   const [mode, setMode] = useState<DisclaimerMode>('required')
-  const [skipActive, setSkipActive] = useState(readDisclaimerSkip)
+  const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
 
   const showAgain = () => {
     setMode('info')

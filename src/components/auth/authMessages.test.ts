@@ -16,6 +16,15 @@ describe('authErrorMessage', () => {
     expect(authErrorMessage('not_configured', en)).toBe(en.auth.notConfigured)
   })
 
+  it('maps Google identity-linking codes to dedicated copy', () => {
+    expect(authErrorMessage('manual_linking_disabled', ko)).toBe(ko.auth.manualLinkingDisabled)
+    expect(authErrorMessage('identity_already_linked', ko)).toBe(ko.auth.identityAlreadyLinked)
+    expect(authErrorMessage('last_identity', ko)).toBe(ko.auth.lastIdentity)
+    expect(authErrorMessage('manual_linking_disabled', en)).toBe(en.auth.manualLinkingDisabled)
+    expect(authErrorMessage('identity_already_linked', en)).toBe(en.auth.identityAlreadyLinked)
+    expect(authErrorMessage('last_identity', en)).toBe(en.auth.lastIdentity)
+  })
+
   it('returns null for empty codes and generic copy for unknown codes', () => {
     expect(authErrorMessage(null, en)).toBeNull()
     expect(authErrorMessage('unexpected_server_response', en)).toBe(en.auth.genericError)

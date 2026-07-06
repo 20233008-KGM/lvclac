@@ -93,14 +93,22 @@ export interface Messages {
   clearAllInputsModalTitle: string
   clearAllInputsModalBody: string
   clearAllInputsConfirm: string
+  accountSettingGuard: {
+    title: string
+    body: string
+    confirm: string
+    cancel: string
+  }
   draftSave: {
     label: string
     cloudLabel: string
     hint: string
     cloudHint: string
+    offHint: string
     storageModeLabel: string
     localMode: string
     cloudMode: string
+    noSaveMode: string
     cleared: string
     enableModalTitle: string
     cloudEnableModalTitle: string
@@ -110,6 +118,11 @@ export interface Messages {
     skipModalLabel: string
     showGuideAgain: string
     clearedModalTitle: string
+    deleteConfirmTitle: string
+    deleteConfirmBody: string
+    cloudDeleteConfirmBody: string
+    deleteConfirm: string
+    deleteCancel: string
     confirm: string
     statusLoading: string
     statusSaving: string
@@ -119,6 +132,129 @@ export interface Messages {
     migrateLocalToCloud: string
     migrateSuccess: string
     migrateError: string
+  }
+  accountRecords: {
+    title: string
+    orderHistoryTab: string
+    snapshotsTab: string
+    loginRequired: string
+    privacyNote: string
+    loading: string
+    loadError: string
+    retry: string
+    delete: string
+    saveSnapshot: string
+    savingSnapshot: string
+    orderHistoryEmpty: string
+    snapshotsEmpty: string
+    snapshotSaved: string
+    snapshotSaveError: string
+    orderSaved: string
+    orderSaveError: string
+    deleteError: string
+    orderSimulationLabel: string
+    before: string
+    after: string
+    contracts: string
+    price: string
+    side: string
+    createdAt: string
+    summaryLiquidation: string
+    summaryLeverage: string
+    summaryMaintenance: string
+    summaryAvailable: string
+    atRisk: string
+    noValue: string
+  }
+  myPage: {
+    title: string
+    subtitle: string
+    backToCalculator: string
+    loginTitle: string
+    loginBody: string
+    loginAction: string
+    configuredWarning: string
+    profileTitle: string
+    emailLabel: string
+    nicknameLabel: string
+    nicknamePlaceholder: string
+    nicknameHelp: string
+    saveNickname: string
+    savingNickname: string
+    nicknameSaved: string
+    nicknameError: string
+    nicknameRequired: string
+    linkedLoginTitle: string
+    linkedLoginBody: string
+    emailProvider: string
+    googleProvider: string
+    providerLinked: string
+    providerNotLinked: string
+    linkGoogleAction: string
+    unlinkGoogleAction: string
+    linkingInProgress: string
+    unlinkingInProgress: string
+    googleUnlinked: string
+    lastIdentityNote: string
+    primaryTag: string
+    storageTitle: string
+    storageBody: string
+    cloudInputTitle: string
+    cloudInputReady: string
+    cloudInputEmpty: string
+    storageLoading: string
+    snapshotsTitle: string
+    orderHistoryTitle: string
+    recordsCount: string
+    recordsEmpty: string
+    storageError: string
+    planTitle: string
+    planStatusLabel: string
+    planStatusValue: string
+    planBody: string
+    billing: {
+      /** 상태 배지 라벨 */
+      statusFree: string
+      statusPro: string
+      statusTrial: string
+      statusPastDue: string
+      statusCanceled: string
+      /** Free 안내 */
+      freeHeadline: string
+      freeBody: string
+      /** 플랜 카드 */
+      monthlyName: string
+      monthlyPrice: string
+      yearlyName: string
+      yearlyPrice: string
+      yearlyNote: string
+      /** 결제 진행 버튼/문구 */
+      choosePlan: string
+      redirecting: string
+      /** Pro 이용 중 */
+      proHeadline: string
+      proBody: string
+      renewsOn: string
+      manageAction: string
+      /** 안내/오류 */
+      notConfigured: string
+      checkoutError: string
+      checkoutCanceled: string
+      checkoutSuccess: string
+      taxNote: string
+    }
+    privacyTitle: string
+    privacyBody: string
+    localStorageNote: string
+    cloudStorageNote: string
+    deleteAccountTitle: string
+    deleteAccountBody: string
+    contactSupport: string
+    supportTitle: string
+    supportBody: string
+    suggestionsLink: string
+    emailLink: string
+    signOut: string
   }
   marginMode: {
     /** 토글 그룹 접근성 라벨 */

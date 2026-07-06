@@ -1,6 +1,8 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import type { AuthUser } from '../../db/profile'
 import { useLanguage } from '../../i18n'
+import { MY_PAGE_PATH } from '../../config/routes'
 
 const AuthModal = lazy(() => import('./AuthModal').then((mod) => ({ default: mod.AuthModal })))
 
@@ -30,6 +32,47 @@ function UserIcon() {
 
 function initialOf(name: string) {
   return name.trim().charAt(0).toUpperCase() || '?'
+}
+
+interface AccountMenuProps {
+  copy: {
+    myPage: string
+    logout: string
+  }
+  user: AuthUser
+  onClose: () => void
+  onSignOut: () => void
+}
+
+export function AccountMenu({ copy, user, onClose, onSignOut }: AccountMenuProps) {
+  const initial = initialOf(user.nickname)
+
+  return (
+    <div className="auth-menu" role="menu">
+      <div className="auth-menu__header">
+        <span className="auth-avatar auth-avatar--lg" aria-hidden="true">
+          {initial}
+        </span>
+        <span className="auth-menu__name" title={user.nickname}>
+          {user.nickname}
+        </span>
+      </div>
+      <a role="menuitem" className="auth-menu__item" href={MY_PAGE_PATH} onClick={onClose}>
+        {copy.myPage}
+      </a>
+      <button
+        type="button"
+        role="menuitem"
+        className="auth-menu__item"
+        onClick={() => {
+          onClose()
+          onSignOut()
+        }}
+      >
+        {copy.logout}
+      </button>
+    </div>
+  )
 }
 
 export function AuthButton({ variant = 'default' }: AuthButtonProps) {
@@ -102,27 +145,12 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
           <span className="auth-avatar-btn__caret" aria-hidden="true" />
         </button>
         {menuOpen && (
-          <div className="auth-menu" role="menu">
-            <div className="auth-menu__header">
-              <span className="auth-avatar auth-avatar--lg" aria-hidden="true">
-                {initial}
-              </span>
-              <span className="auth-menu__name" title={user.nickname}>
-                {user.nickname}
-              </span>
-            </div>
-            <button
-              type="button"
-              role="menuitem"
-              className="auth-menu__item"
-              onClick={() => {
-                setMenuOpen(false)
-                void signOut()
-              }}
-            >
-              {t.logout}
-            </button>
-          </div>
+          <AccountMenu
+            copy={{ myPage: t.myPage.title, logout: t.logout }}
+            user={user}
+            onClose={() => setMenuOpen(false)}
+            onSignOut={() => void signOut()}
+          />
         )}
       </div>
     )

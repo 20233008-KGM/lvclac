@@ -1003,3 +1003,418 @@ html[data-zone='about'] body {
 .about-zone .about-footer .site-footer__legal .link-btn:hover {
   color: var(--about-accent);
 }
+
+.my-page-shell {
+  min-height: 100dvh;
+  background:
+    linear-gradient(180deg, rgba(91, 141, 239, 0.08), transparent 260px),
+    var(--color-bg);
+}
+
+.my-page {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: calc(var(--space-xl) + 36px) var(--space-md) var(--space-xl);
+  color: var(--color-text);
+}
+
+.my-page-header {
+  display: grid;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.my-page-back {
+  width: fit-content;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.my-page-back:hover,
+.my-page-back:focus-visible {
+  color: var(--color-text);
+}
+
+.my-page-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.my-page-hero h1 {
+  margin: 0;
+  font-size: clamp(1.875rem, 4vw, 2.5rem);
+  line-height: 1.12;
+}
+
+.my-page-hero p,
+.my-page-panel p {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+/* Identity banner — the single, read-only "who you are" strip, shown once at
+   the top: avatar · name+email · plan badge (horizontal). */
+.my-page-identity-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  max-width: 100%;
+  margin-bottom: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.my-page-identity-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.my-page-avatar {
+  flex: none;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primary-muted);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.my-page-identity-card strong,
+.my-page-identity-meta {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-page-identity-card strong {
+  line-height: 1.32;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.my-page-identity-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.my-page-badge {
+  flex: none;
+  width: fit-content;
+  padding: 3px var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  background: var(--color-primary-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.my-page-badge--muted {
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+}
+
+.my-page-login {
+  width: min(100%, 560px);
+  padding: var(--space-lg);
+}
+
+/* Single-column stack of section cards. */
+.my-page-console {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.my-page-panel {
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  scroll-margin-top: var(--space-lg);
+}
+
+.my-page-panel h2,
+.my-page-delete-note h3 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+/* Blue left-accent title, consistent with the app's other pages (.guide-panel__title). */
+.my-page-panel h2 {
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--color-primary);
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.my-page-delete-note h3 {
+  font-size: var(--font-size-base);
+}
+
+.my-page-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+/* Editable field: muted label on top, control below, optional helper text. */
+.my-page-field {
+  display: grid;
+  gap: 6px;
+  margin-top: var(--space-md);
+  min-width: 0;
+}
+
+.my-page-storage-row dt,
+.my-page-field label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.my-page-field-help {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.my-page-inline-control {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 380px;
+  gap: var(--space-sm);
+}
+
+.my-page-inline-control input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.my-page-inline-control .btn {
+  min-height: 34px;
+  height: 34px;
+  width: auto;
+  padding-inline: var(--space-md);
+  white-space: nowrap;
+}
+
+.my-page-inline-control input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.my-page-form-message,
+.my-page-muted {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.my-page-form-message {
+  margin: 0;
+}
+
+.my-page-alert {
+  padding: var(--space-sm);
+  border: 1px solid rgba(255, 176, 84, 0.45);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 176, 84, 0.08);
+  color: var(--color-text);
+}
+
+.my-page-storage-list {
+  display: grid;
+  gap: 0;
+  margin: var(--space-md) 0 0;
+}
+
+.my-page-storage-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--space-xs);
+  align-items: start;
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-storage-row dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* 아이콘 | 이름 | 상태뱃지 | 액션 — 4개 컬럼을 모든 행이 공유(subgrid)해 세로 정렬 */
+.my-page-linked-list {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0;
+}
+
+.my-page-linked-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-linked-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.my-page-linked-logo {
+  flex: none;
+}
+
+.my-page-linked-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.my-page-linked-badge {
+  justify-self: end;
+  width: fit-content;
+  padding: 3px var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.my-page-linked-badge.is-linked {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+
+.my-page-linked-badge.is-unlinked {
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-subtle);
+}
+
+.my-page-linked-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  justify-self: end;
+  min-height: 32px;
+}
+
+/* '기본' 칩과 연동/해제 버튼을 같은 높이·같은 알약 형태로 통일해 대칭 맞춤 */
+.my-page-linked-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-dim);
+  background: var(--color-bg-elevated);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.my-page-linked-action .btn {
+  min-height: 32px;
+  padding: 0 12px;
+  width: auto;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.my-page-note-list {
+  margin: var(--space-md) 0 0;
+  padding-left: 1.2rem;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+.my-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.my-page-support-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: var(--space-lg);
+}
+
+.my-page-delete-note {
+  padding-left: var(--space-lg);
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+@media (max-width: 860px) {
+  .my-page {
+    padding: calc(var(--space-xl) + 36px) var(--space-sm) var(--space-lg);
+  }
+
+  .my-page-hero,
+  .my-page-support-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-page-identity-card {
+    flex-wrap: wrap;
+  }
+
+  .my-page-storage-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+
+  .my-page-inline-control {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    max-width: none;
+  }
+
+  .my-page-delete-note {
+    padding-left: 0;
+    padding-top: var(--space-md);
+    border-left: 0;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+}

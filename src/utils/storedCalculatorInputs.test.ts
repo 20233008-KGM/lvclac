@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { parseStoredCalculatorInputs } from './storedCalculatorInputs'
+import { hasMeaningfulCalculatorInputs, parseStoredCalculatorInputs } from './storedCalculatorInputs'
 
 describe('stored calculator inputs', () => {
-  it('구버전 비율 저장값을 현재 소수 비율로 정규화한다', () => {
+  it('normalizes legacy percent rates to current decimal rates', () => {
     const inputs = parseStoredCalculatorInputs({
       accountEval: 1000,
       maintenanceMarginRate: 5,
@@ -13,7 +13,7 @@ describe('stored calculator inputs', () => {
     expect(inputs?.entrustedMarginRate).toBe(0.1)
   })
 
-  it('구버전 필드명을 현재 필드명으로 마이그레이션한다', () => {
+  it('migrates legacy field names to current field names', () => {
     const inputs = parseStoredCalculatorInputs({
       additionalContracts: 3,
       priceMultiplier: 2,
@@ -25,9 +25,38 @@ describe('stored calculator inputs', () => {
     expect(inputs?.positionSide).toBe('short')
   })
 
-  it('객체가 아닌 저장값은 무시한다', () => {
+  it('ignores non-object stored values', () => {
     expect(parseStoredCalculatorInputs(null)).toBeNull()
     expect(parseStoredCalculatorInputs('broken')).toBeNull()
     expect(parseStoredCalculatorInputs([])).toBeNull()
+  })
+
+  it('treats default-only calculator state as no saved value', () => {
+    expect(hasMeaningfulCalculatorInputs({ mode: 'evaluate', positionSide: 'long' })).toBe(false)
+    expect(
+      hasMeaningfulCalculatorInputs({
+        mode: 'order',
+        positionSide: 'short',
+        marginInputMode: 'total',
+      }),
+    ).toBe(false)
+  })
+
+  it('treats any finite numeric calculator field as a saved value', () => {
+    expect(
+      hasMeaningfulCalculatorInputs({
+        mode: 'evaluate',
+        positionSide: 'long',
+        accountEval: 0,
+      }),
+    ).toBe(true)
+    expect(
+      hasMeaningfulCalculatorInputs({
+        mode: 'evaluate',
+        positionSide: 'long',
+        scenarioPrice: Number.NaN,
+        currentPrice: 350,
+      }),
+    ).toBe(true)
   })
 })

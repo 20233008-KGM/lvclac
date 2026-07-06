@@ -2,6 +2,33 @@ import { defaultInputs, type CalculatorInputs } from '../types'
 import { normalizeStoredRate } from './inputFormat'
 import { sanitizeDraftInputs } from './sanitizeDraftInputs'
 
+const MEANINGFUL_NUMBER_FIELDS: (keyof CalculatorInputs)[] = [
+  'accountEval',
+  'maintenanceMarginRate',
+  'maintenanceMargin',
+  'maintenanceMarginPerContract',
+  'entrustedMarginRate',
+  'entrustedMargin',
+  'entrustedMarginPerContract',
+  'contracts',
+  'contractAmount',
+  'currentPrice',
+  'contractMultiplier',
+  'orderContracts',
+  'orderPrice',
+  'mtmPriceAnchor',
+  'scenarioPrice',
+  'scenarioAppliedPrice',
+  'tickSize',
+]
+
+export function hasMeaningfulCalculatorInputs(inputs: CalculatorInputs): boolean {
+  return MEANINGFUL_NUMBER_FIELDS.some((field) => {
+    const value = inputs[field]
+    return typeof value === 'number' && Number.isFinite(value)
+  })
+}
+
 export function normalizeStoredCalculatorInputs(
   prefs: Partial<CalculatorInputs>,
 ): CalculatorInputs {

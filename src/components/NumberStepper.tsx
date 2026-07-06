@@ -38,6 +38,9 @@ interface NumberStepperProps {
   onEnterKey?: () => void
   onDeleteKey?: () => void
   disabled?: boolean
+  /** 잠금 상태 — 포커스/스텝 시도 시 onGuardBlocked 호출 후 편집 차단 */
+  guardLocked?: boolean
+  onGuardBlocked?: () => void
   /** 입력과 스테퍼 사이에 끼우는 버튼 등 (시나리오 가격 ↵/반영) */
   inlineSlot?: ReactNode
   /** 스테퍼 오른쪽에 붙는 버튼 등 (주문가 현재가) */
@@ -73,6 +76,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     onEnterKey,
     onDeleteKey,
     disabled = false,
+    guardLocked = false,
+    onGuardBlocked,
     inlineSlot,
     trailingSlot,
     enableDragScrub = false,
@@ -266,6 +271,10 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       onPointerDown: (e: PointerEvent<HTMLButtonElement>) => {
         if (disabled) return
         e.preventDefault()
+        if (guardLocked) {
+          onGuardBlocked?.()
+          return
+        }
         focusInput()
         e.currentTarget.setPointerCapture(e.pointerId)
         startHold(delta)
@@ -288,6 +297,10 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       onPointerDown: (e: PointerEvent<HTMLButtonElement>) => {
         if (disabled) return
         e.preventDefault()
+        if (guardLocked) {
+          onGuardBlocked?.()
+          return
+        }
         focusInput()
         e.currentTarget.setPointerCapture(e.pointerId)
 
@@ -344,6 +357,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           onEnterKey={onEnterKey}
           onDeleteKey={onDeleteKey}
           disabled={disabled}
+          guardLocked={guardLocked}
+          onGuardBlocked={onGuardBlocked}
           onChange={onChange}
         />
       </div>

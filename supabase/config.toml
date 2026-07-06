@@ -1,0 +1,31 @@
+# Supabase 프로젝트 설정 (코드로 관리하는 auth 설정)
+#
+# ⚠️ 중요: `supabase config push`는 아래 [auth] 설정 "전체"를 원격에 덮어씁니다.
+#          이 파일에 없는 항목은 기본값으로 리셋됩니다.
+#          현재 이 프로젝트는 대시보드로 설정돼 있으므로, 아직 이 파일이 모든
+#          설정(Google client id/secret, 실제 site_url 등)을 담고 있지 않습니다.
+#
+#          => 지금 단계에서는 push하지 말고, "Manual Linking"은 대시보드에서 켜세요.
+#             (Authentication → Sign In / Providers → "Allow manual linking" ON)
+#          => 나중에 모든 auth 설정을 코드로 관리하려면, 아래 주석 처리된 블록을
+#             실제 값/환경변수로 채운 뒤에만 `supabase config push`를 실행하세요.
+
+project_id = "yszjblzmzipshwtylqxa"
+
+[auth]
+# 이메일/비밀번호 계정에 Google 같은 소셜 로그인을 "추가 연동"할 수 있게 함.
+# 이 값이 false면 supabase.auth.linkIdentity()가 "Manual linking is disabled" 에러 반환.
+enable_manual_linking = true
+
+# --- push 하기 전에 반드시 채워야 하는 값들 (안 채우고 push하면 아래가 리셋됨) ---
+#
+# 배포 도메인. localhost로 리셋되면 이메일 인증 링크가 깨집니다.
+# site_url = "https://your-domain.com"
+# additional_redirect_urls = ["https://your-domain.com", "http://localhost:5173"]
+#
+# 기존 Google 로그인 설정. push 시 이 블록이 없으면 Google 로그인이 꺼집니다.
+# client_id/secret은 값 노출을 막기 위해 환경변수로 참조하세요.
+# [auth.external.google]
+# enabled = true
+# client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+# secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"

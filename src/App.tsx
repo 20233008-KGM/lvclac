@@ -8,7 +8,7 @@ import { HowToUseButton } from './components/HowToUseButton'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { parseBoardPath } from './config/boards'
-import { isAboutPath, isFormulasPath, isGuidePath } from './config/routes'
+import { isAboutPath, isFormulasPath, isGuidePath, isMyPagePath } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
 import { useCalculator } from './context/CalculatorContext'
@@ -30,6 +30,9 @@ const GuidePage = lazy(() =>
 )
 const AboutPage = lazy(() =>
   import('./components/AboutPage').then((mod) => ({ default: mod.AboutPage })),
+)
+const MyPage = lazy(() =>
+  import('./components/MyPage').then((mod) => ({ default: mod.MyPage })),
 )
 
 function CalculatorApp() {
@@ -168,6 +171,15 @@ function AppRouter() {
       <Suspense fallback={null}>
         <div key={pathname} className="route-enter route-enter--contact">
           <AboutPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isMyPagePath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter">
+          <MyPage />
         </div>
       </Suspense>
     )

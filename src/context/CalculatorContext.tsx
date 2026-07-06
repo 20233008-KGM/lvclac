@@ -15,7 +15,10 @@ import {
   fetchLatestNumberSet,
   saveNumberSet,
 } from '../db/numberSets'
-import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
+import {
+  hasMeaningfulCalculatorInputs,
+  parseStoredCalculatorInputs,
+} from '../utils/storedCalculatorInputs'
 
 const DRAFT_KEY = 'leverage_calculator_draft'
 const SAVE_ENABLED_KEY = 'leverage_save_enabled'
@@ -37,6 +40,8 @@ interface CalculatorContextValue {
   hasCloudDraft: boolean
   canMigrateLocalDraft: boolean
   setSaveEnabled: (enabled: boolean, mode?: SaveStorageMode) => Promise<string | null>
+  pauseSaving: () => void
+  deleteSavedData: (mode: SaveStorageMode) => Promise<string | null>
   setStorageMode: (mode: SaveStorageMode) => void
   migrateLocalDraftToCloud: () => Promise<string | null>
 }
@@ -82,7 +87,8 @@ function loadDraft(): CalculatorInputs | null {
   try {
     const raw = localStorage.getItem(DRAFT_KEY)
     if (!raw) return null
-    return parseStoredCalculatorInputs(JSON.parse(raw))
+    const draft = parseStoredCalculatorInputs(JSON.parse(raw))
+    return draft && hasMeaningfulCalculatorInputs(draft) ? draft : null
   } catch {
     return null
   }
@@ -142,6 +148,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setInputs({ ...defaultInputs })
   }, [])
 
+  const replaceInputsFromStorage = useCallback((nextInputs: CalculatorInputs) => {
+    suppressNextPersistRef.current = true
+    setInputs({ ...nextInputs })
+  }, [])
+
   const persistInputs = useCallback(
     async (
       value: CalculatorInputs,
@@ -149,6 +160,36 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       mode: SaveStorageMode = storageMode,
     ): Promise<string | null> => {
       if (!force && !saveEnabled) return null
+
+      if (!hasMeaningfulCalculatorInputs(value)) {
+        if (mode === 'local') {
+          clearDraft()
+          setHasLocalDraft(false)
+          setSyncStatus('idle')
+          setSyncError(null)
+          return null
+        }
+
+        if (!activeUserId) {
+          setSyncStatus('idle')
+          setSyncError(null)
+          setHasCloudDraft(false)
+          return null
+        }
+
+        setSyncStatus('saving')
+        setSyncError(null)
+        const result = await deleteNumberSet(activeUserId, cloudSetIdRef.current)
+        if (result.error) {
+          setSyncStatus('error')
+          setSyncError(result.error)
+          return result.error
+        }
+        setCloudSetId(null)
+        setHasCloudDraft(false)
+        setSyncStatus('idle')
+        return null
+      }
 
       if (mode === 'local') {
         saveDraft(value)
@@ -210,17 +251,89 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         return null
       }
 
+      if (mode === 'local') {
+        const draft = loadDraft()
+        if (draft) {
+          replaceInputsFromStorage(draft)
+          setHasLocalDraft(true)
+          setSyncStatus('saved')
+          return null
+        }
+      } else if (activeUserId) {
+        setSyncStatus('loading')
+        const result = await fetchLatestNumberSet(activeUserId)
+        if (result.error) {
+          setSyncStatus('error')
+          setSyncError(result.error)
+          return result.error
+        }
+        if (result.data && hasMeaningfulCalculatorInputs(result.data.inputs)) {
+          replaceInputsFromStorage(result.data.inputs)
+          setCloudSetId(result.data.id)
+          setHasCloudDraft(true)
+          setSyncStatus('saved')
+          return null
+        }
+        setCloudSetId(null)
+        setHasCloudDraft(false)
+      }
+
       return persistInputs(inputs, true, mode)
     },
     [activeUserId, inputs, persistInputs, storageMode],
   )
 
-  const setStorageMode = useCallback((mode: SaveStorageMode) => {
-    setStorageModeState(mode)
-    writeStorageMode(mode)
+  const pauseSaving = useCallback(() => {
+    // 저장만 끄고 화면은 빈 입력값으로 되돌린다. 이미 저장해 둔 로컬/클라우드 값은 삭제하지 않는다.
+    setSaveEnabledState(false)
+    writeSaveEnabled(false)
     setSyncStatus('idle')
     setSyncError(null)
-  }, [])
+    replaceInputsFromStorage(defaultInputs)
+  }, [replaceInputsFromStorage])
+
+  const deleteSavedData = useCallback(
+    async (mode: SaveStorageMode): Promise<string | null> => {
+      // 해당 위치에 저장된 값을 실제로 삭제하고, 저장을 끈 뒤 빈 입력값으로 되돌린다.
+      if (mode === 'local') {
+        clearDraft()
+        setHasLocalDraft(false)
+      } else if (activeUserId) {
+        setSyncStatus('saving')
+        setSyncError(null)
+        const result = await deleteNumberSet(activeUserId, cloudSetIdRef.current)
+        if (result.error) {
+          setSyncStatus('error')
+          setSyncError(result.error)
+          return result.error
+        }
+        setCloudSetId(null)
+        setHasCloudDraft(false)
+      }
+
+      setSaveEnabledState(false)
+      writeSaveEnabled(false)
+      setSyncStatus('idle')
+      setSyncError(null)
+      replaceInputsFromStorage(defaultInputs)
+      return null
+    },
+    [activeUserId, replaceInputsFromStorage],
+  )
+
+  const setStorageMode = useCallback((mode: SaveStorageMode) => {
+    suppressNextPersistRef.current = true
+    setStorageModeState(mode)
+    writeStorageMode(mode)
+    if (mode === 'local') {
+      const draft = loadDraft()
+      replaceInputsFromStorage(draft ?? defaultInputs)
+      setHasLocalDraft(Boolean(draft))
+      setCloudSetId(null)
+    }
+    setSyncStatus('idle')
+    setSyncError(null)
+  }, [replaceInputsFromStorage])
 
   const migrateLocalDraftToCloud = useCallback(async (): Promise<string | null> => {
     if (!activeUserId) return 'not_logged_in'
@@ -247,15 +360,14 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       return 'number_set_save_empty'
     }
 
-    suppressNextPersistRef.current = true
-    setInputs(result.data.inputs)
+    replaceInputsFromStorage(result.data.inputs)
     setCloudSetId(result.data.id)
     setHasCloudDraft(true)
     clearDraft()
     setHasLocalDraft(false)
     setSyncStatus('saved')
     return null
-  }, [activeUserId])
+  }, [activeUserId, replaceInputsFromStorage])
 
   useEffect(() => {
     if (authLoading) return
@@ -273,10 +385,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       if (storageMode === 'local') {
         const draft = loadDraft()
         if (draft) {
-          suppressNextPersistRef.current = true
-          setInputs(draft)
+          replaceInputsFromStorage(draft)
           setSyncStatus('saved')
         } else {
+          replaceInputsFromStorage(draft ?? defaultInputs)
           setSyncStatus('idle')
         }
         setCloudSetId(null)
@@ -300,13 +412,13 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         setSyncError(result.error)
         return
       }
-      if (result.data) {
-        suppressNextPersistRef.current = true
-        setInputs(result.data.inputs)
+      if (result.data && hasMeaningfulCalculatorInputs(result.data.inputs)) {
+        replaceInputsFromStorage(result.data.inputs)
         setCloudSetId(result.data.id)
         setHasCloudDraft(true)
         setSyncStatus('saved')
       } else {
+        replaceInputsFromStorage(defaultInputs)
         setCloudSetId(null)
         setHasCloudDraft(false)
         setSyncStatus('idle')
@@ -319,7 +431,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false
     }
-  }, [activeUserId, authLoading, saveEnabled, storageMode])
+  }, [activeUserId, authLoading, replaceInputsFromStorage, saveEnabled, storageMode])
 
   useEffect(() => {
     if (authLoading) return
@@ -332,8 +444,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     async function refreshCloudDraftPresence() {
       const result = await fetchLatestNumberSet(userId)
       if (!active || result.error) return
-      setHasCloudDraft(Boolean(result.data))
-      setCloudSetId(result.data?.id ?? null)
+      const hasDraft = Boolean(result.data && hasMeaningfulCalculatorInputs(result.data.inputs))
+      setHasCloudDraft(hasDraft)
+      setCloudSetId(hasDraft ? (result.data?.id ?? null) : null)
     }
 
     void refreshCloudDraftPresence()
@@ -375,6 +488,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         hasCloudDraft: cloudAvailable ? hasCloudDraft : false,
         canMigrateLocalDraft: Boolean(activeUserId && storageMode === 'cloud' && hasLocalDraft),
         setSaveEnabled,
+        pauseSaving,
+        deleteSavedData,
         setStorageMode,
         migrateLocalDraftToCloud,
       }}

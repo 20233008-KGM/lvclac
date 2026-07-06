@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import { isPreviewModeActive, type CalculatorInputPatch } from '../calc/mtmLink'
+import { isAccountSetupComplete } from './accountSettingGuard'
 import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
@@ -89,6 +91,8 @@ function numField(
     onCommit: (value: number | undefined) => void
     disabled: boolean
     className: string
+    guardLocked: boolean
+    onGuardBlocked: () => void
   }>,
 ) {
   const value = inputs[key] as number | undefined
@@ -113,6 +117,8 @@ function numField(
         disabled={inputProps?.disabled}
         deferChangeUntilBlur={inputProps?.deferChangeUntilBlur}
         onCommit={inputProps?.onCommit}
+        guardLocked={inputProps?.guardLocked}
+        onGuardBlocked={inputProps?.onGuardBlocked}
         onChange={(v) => onChange({ [key]: v })}
       />
     </Field>
@@ -400,33 +406,6 @@ function setupCopy(lang: 'ko' | 'en') {
   }
 }
 
-function hasValue(value: number | undefined): boolean {
-  return value != null
-}
-
-function isAccountSetupComplete(inputs: CalculatorInputs): boolean {
-  const baseReady =
-    hasValue(inputs.accountEval) &&
-    hasValue(inputs.contractAmount) &&
-    hasValue(inputs.contracts) &&
-    hasValue(inputs.contractMultiplier) &&
-    hasValue(inputs.currentPrice)
-
-  if (!baseReady) return false
-
-  const mode = inputs.marginInputMode ?? 'rate'
-  if (mode === 'rate') {
-    return hasValue(inputs.maintenanceMarginRate) && hasValue(inputs.entrustedMarginRate)
-  }
-  if (mode === 'perContract') {
-    return (
-      hasValue(inputs.maintenanceMarginPerContract) &&
-      hasValue(inputs.entrustedMarginPerContract)
-    )
-  }
-  return hasValue(inputs.maintenanceMargin) && hasValue(inputs.entrustedMargin)
-}
-
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="account-setup-summary__item">
@@ -475,10 +454,14 @@ function MarginSection({
   inputs,
   onChange,
   setupScreen = false,
+  guardLocked = false,
+  onGuardBlocked,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
   setupScreen?: boolean
+  guardLocked?: boolean
+  onGuardBlocked?: () => void
 }) {
   const { t } = useLanguage()
   const f = t.fields
@@ -487,6 +470,12 @@ function MarginSection({
   const mode = inputs.marginInputMode ?? 'rate'
 
   const tooltipLabel = t.fieldTooltipLabel
+  const guardProps = {
+    disabled: scenarioModeActive,
+    className: setupScreen ? 'field--setup-screen' : '',
+    guardLocked,
+    onGuardBlocked,
+  }
 
   return (
     <div className="field-section">
@@ -500,7 +489,7 @@ function MarginSection({
               className={`margin-mode-btn ${mode === value ? 'active' : ''}`}
               aria-pressed={mode === value}
               disabled={scenarioModeActive}
-              onClick={() => onChange({ marginInputMode: value })}
+              onClick={() => (guardLocked ? onGuardBlocked?.() : onChange({ marginInputMode: value }))}
             >
               {m[value]}
             </button>
@@ -511,40 +500,22 @@ function MarginSection({
 
       {mode === 'rate' && (
         <>
-          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, {
-            disabled: scenarioModeActive,
-            className: setupScreen ? 'field--setup-screen' : '',
-          })}
-          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, {
-            disabled: scenarioModeActive,
-            className: setupScreen ? 'field--setup-screen' : '',
-          })}
+          {numField(f.maintenanceMarginRate, 'maintenanceMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, guardProps)}
+          {numField(f.entrustedMarginRate, 'entrustedMarginRate', inputs, onChange, false, undefined, true, tooltipLabel, guardProps)}
         </>
       )}
 
       {mode === 'perContract' && (
         <>
-          {numField(f.maintenanceMarginPerContract, 'maintenanceMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, {
-            disabled: scenarioModeActive,
-            className: setupScreen ? 'field--setup-screen' : '',
-          })}
-          {numField(f.entrustedMarginPerContract, 'entrustedMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, {
-            disabled: scenarioModeActive,
-            className: setupScreen ? 'field--setup-screen' : '',
-          })}
+          {numField(f.maintenanceMarginPerContract, 'maintenanceMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, guardProps)}
+          {numField(f.entrustedMarginPerContract, 'entrustedMarginPerContract', inputs, onChange, false, undefined, true, tooltipLabel, guardProps)}
         </>
       )}
 
       {mode === 'total' && (
         <>
-          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, false, undefined, true, tooltipLabel, {
-            disabled: scenarioModeActive,
-            className: setupScreen ? 'field--setup-screen' : '',
-          })}
-          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, false, undefined, true, tooltipLabel, {
-            disabled: scenarioModeActive,
-            className: setupScreen ? 'field--setup-screen' : '',
-          })}
+          {numField(f.maintenanceMargin, 'maintenanceMargin', inputs, onChange, false, undefined, true, tooltipLabel, guardProps)}
+          {numField(f.entrustedMargin, 'entrustedMargin', inputs, onChange, false, undefined, true, tooltipLabel, guardProps)}
         </>
       )}
 
@@ -555,6 +526,73 @@ function MarginSection({
   )
 }
 
+function AccountSettingChangeModal({
+  title,
+  body,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onCancel,
+}: {
+  title: string
+  body: string
+  confirmLabel: string
+  cancelLabel: string
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onCancel])
+
+  const modal = (
+    <div
+      className="disclaimer-overlay"
+      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel()
+      }}
+    >
+      <div
+        className="disclaimer-modal draft-save-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="account-setting-guard-title"
+      >
+        <h2 id="account-setting-guard-title" className="disclaimer-modal-title">
+          {title}
+        </h2>
+        <p className="disclaimer-modal-text">{body}</p>
+        <div className="account-setting-guard-actions">
+          <button type="button" className="btn btn-ghost draft-save-modal-btn" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary draft-save-modal-btn"
+            onClick={onConfirm}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return createPortal(modal, document.body)
+}
+
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
@@ -562,6 +600,24 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const c = setupCopy(t.lang)
   const setupComplete = isAccountSetupComplete(inputs)
   const frozenFieldClass = setupComplete ? 'field--setup-screen' : ''
+  // 세팅 완료 후에는 baseline 필드가 잠긴다. 편집을 시도하면 확인창이 뜨고,
+  // 확인해야 잠금이 풀려 편집할 수 있다. 현재가/틱사이즈는 잠금 대상이 아니다.
+  const [settingsUnlocked, setSettingsUnlocked] = useState(false)
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false)
+  const guardLocked = setupComplete && !settingsUnlocked
+
+  function requestUnlock() {
+    setUnlockModalOpen(true)
+  }
+
+  function confirmUnlock() {
+    setSettingsUnlocked(true)
+    setUnlockModalOpen(false)
+  }
+
+  function cancelUnlock() {
+    setUnlockModalOpen(false)
+  }
 
   useEffect(() => {
     if (!inputs.markPriceUndoSnapshot) return
@@ -577,6 +633,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   }, [inputs.markPriceUndoSnapshot, onChange])
 
   return (
+    <>
     <section className="panel input-panel">
       <div className="input-panel__head">
         <h2>{t.input}</h2>
@@ -593,7 +650,9 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
                 type="button"
                 className={`side-btn ${inputs.positionSide === side ? 'active' : ''}`}
                 disabled={scenarioModeActive}
-                onClick={() => onChange({ positionSide: side })}
+                onClick={() =>
+                  guardLocked ? requestUnlock() : onChange({ positionSide: side })
+                }
               >
                 {side === 'long' ? t.long : t.short}
               </button>
@@ -616,6 +675,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               allowDecimal={false}
               placeholder={f.accountEquity.placeholder || undefined}
               disabled={scenarioModeActive}
+              guardLocked={guardLocked}
+              onGuardBlocked={requestUnlock}
               onChange={(v) =>
                 onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
               }
@@ -624,6 +685,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
             className: frozenFieldClass,
+            guardLocked,
+            onGuardBlocked: requestUnlock,
           })}
           <Field
             label={f.contracts.label}
@@ -641,6 +704,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               stepDownLabel={t.stepDown}
               ariaLabelledBy="contracts-label"
               disabled={scenarioModeActive}
+              guardLocked={guardLocked}
+              onGuardBlocked={requestUnlock}
               onChange={(v) =>
                 onChange({ contracts: v === undefined ? v : Math.max(0, v) })
               }
@@ -665,6 +730,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
             className: frozenFieldClass,
+            guardLocked,
+            onGuardBlocked: requestUnlock,
           })}
           {numField(
             f.tickSize,
@@ -685,8 +752,21 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           inputs={inputs}
           onChange={onChange}
           setupScreen={setupComplete}
+          guardLocked={guardLocked}
+          onGuardBlocked={requestUnlock}
         />
       </div>
     </section>
+    {unlockModalOpen && (
+      <AccountSettingChangeModal
+        title={t.accountSettingGuard.title}
+        body={t.accountSettingGuard.body}
+        confirmLabel={t.accountSettingGuard.confirm}
+        cancelLabel={t.accountSettingGuard.cancel}
+        onConfirm={confirmUnlock}
+        onCancel={cancelUnlock}
+      />
+    )}
+    </>
   )
 }

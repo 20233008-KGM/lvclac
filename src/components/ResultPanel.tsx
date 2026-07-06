@@ -1,17 +1,27 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { calculateEvaluate, calculateOrder, captureOrderScenarioBaseline, checkOrderExceedsMaxBuyable } from '../calc/leverage'
 import {
+  applyInputPatch,
   hasOrderApplyUndo,
   isOrderScenarioModeActive,
   resolveEvaluationInputs,
   type CalculatorInputPatch,
 } from '../calc/mtmLink'
+import {
+  buildAccountSnapshotPayload,
+  buildOrderHistoryPayload,
+  createAccountRecordsRepository,
+  type AccountSnapshotRecord,
+  type OrderHistoryRecord,
+} from '../db/accountRecords'
 import { calcMargins, inputsReadyForOrderSim, withReferencePrice } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
 import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
+import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n'
+import { AccountRecordsPanel, type AccountRecordsTab } from './AccountRecordsPanel'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
   CommitButtonSlot,
@@ -38,6 +48,12 @@ interface ResultPanelProps {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
 }
+
+type OrderApplyHandler = (
+  beforeInputs: CalculatorInputs,
+  afterInputs: CalculatorInputs,
+  orderResult: OrderResult,
+) => void
 
 function ResultHero({
   label,
@@ -305,6 +321,7 @@ function OrderInputs({
   commitLabel,
   clearLabel,
   applyLabel,
+  onApplyOrderScenario,
 }: {
   inputs: CalculatorInputs
   onChange: (patch: CalculatorInputPatch) => void
@@ -322,6 +339,7 @@ function OrderInputs({
   commitLabel: string
   clearLabel: string
   applyLabel: string
+  onApplyOrderScenario?: OrderApplyHandler
 }) {
   const priceInputRef = useRef<NumberInputHandle>(null)
   const wasOrderScenarioRef = useRef(false)
@@ -345,7 +363,9 @@ function OrderInputs({
   }
 
   function applyOrderScenario() {
+    const afterInputs = applyInputPatch(inputs, { applyOrderScenario: true })
     onChange({ applyOrderScenario: true })
+    onApplyOrderScenario?.(inputs, afterInputs, orderResult)
   }
 
   function handleOrderEnter() {
@@ -623,18 +643,30 @@ function OrderResults({
 
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
+  const userId = user?.id ?? null
+  const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
+  const [recordsTab, setRecordsTab] = useState<AccountRecordsTab>('orders')
+  const [orderRecords, setOrderRecords] = useState<OrderHistoryRecord[]>([])
+  const [snapshotRecords, setSnapshotRecords] = useState<AccountSnapshotRecord[]>([])
+  const [recordsLoading, setRecordsLoading] = useState(false)
+  const [recordsError, setRecordsError] = useState<string | null>(null)
+  const [recordsNotice, setRecordsNotice] = useState<string | null>(null)
+  const [snapshotBusy, setSnapshotBusy] = useState(false)
+  const recordsRequestIdRef = useRef(0)
+  const activeRecordsUserIdRef = useRef(userId)
 
   const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
   const evaluateResult = useMemo(
     () => calculateEvaluate(inputs),
-    [inputs, positionSide],
+    [inputs],
   )
   const orderResult = useMemo(
     () => calculateOrder(inputs),
-    [inputs, positionSide, orderContracts, orderPrice],
+    [inputs],
   )
 
   const orderBlocked = useMemo(() => {
@@ -655,6 +687,121 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const orderScenarioActive = isOrderScenarioModeActive(inputs)
   const orderChipText = formatOrderScenarioChip(inputs, t.orderScenarioChip)
 
+  const loadRecords = useCallback(async () => {
+    const requestId = recordsRequestIdRef.current + 1
+    recordsRequestIdRef.current = requestId
+
+    if (!userId) {
+      setOrderRecords([])
+      setSnapshotRecords([])
+      setRecordsLoading(false)
+      setRecordsError(null)
+      setRecordsNotice(null)
+      return
+    }
+
+    setRecordsLoading(true)
+    setRecordsError(null)
+    const result = await recordsRepository.fetchRecentRecords(userId)
+    if (
+      recordsRequestIdRef.current !== requestId ||
+      activeRecordsUserIdRef.current !== userId
+    ) {
+      return
+    }
+    if (result.error !== null) {
+      setRecordsError(t.accountRecords.loadError)
+      setRecordsLoading(false)
+      return
+    }
+
+    setOrderRecords(result.data.orderHistory)
+    setSnapshotRecords(result.data.accountSnapshots)
+    setRecordsLoading(false)
+  }, [recordsRepository, t.accountRecords.loadError, userId])
+
+  const saveSnapshot = useCallback(async () => {
+    if (!userId) return
+
+    setSnapshotBusy(true)
+    setRecordsNotice(null)
+    const payload = buildAccountSnapshotPayload(
+      inputs,
+      evaluateResult,
+      t.accountRecords.snapshotsTab,
+    )
+    const result = await recordsRepository.createAccountSnapshot(userId, payload)
+    if (activeRecordsUserIdRef.current !== userId) {
+      setSnapshotBusy(false)
+      return
+    }
+    if (result.error !== null) {
+      setRecordsNotice(t.accountRecords.snapshotSaveError)
+      setSnapshotBusy(false)
+      return
+    }
+
+    setSnapshotRecords((prev) => [result.data, ...prev])
+    setRecordsTab('snapshots')
+    setRecordsNotice(t.accountRecords.snapshotSaved)
+    setSnapshotBusy(false)
+  }, [evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
+
+  const saveOrderRecord = useCallback<OrderApplyHandler>(
+    (beforeInputs, afterInputs, result) => {
+      if (!userId) return
+
+      const payload = buildOrderHistoryPayload(beforeInputs, afterInputs, result)
+      setRecordsNotice(null)
+      void recordsRepository.createOrderHistory(userId, payload).then((created) => {
+        if (activeRecordsUserIdRef.current !== userId) return
+        if (created.error !== null) {
+          setRecordsNotice(t.accountRecords.orderSaveError)
+          return
+        }
+
+        setOrderRecords((prev) => [created.data, ...prev])
+        setRecordsTab('orders')
+        setRecordsNotice(t.accountRecords.orderSaved)
+      })
+    },
+    [recordsRepository, t.accountRecords, userId],
+  )
+
+  const deleteOrderRecord = useCallback(
+    (id: string) => {
+      if (!userId) return
+
+      setRecordsNotice(null)
+      void recordsRepository.deleteOrderHistory(userId, id).then((result) => {
+        if (activeRecordsUserIdRef.current !== userId) return
+        if (result.error !== null) {
+          setRecordsNotice(t.accountRecords.deleteError)
+          return
+        }
+        setOrderRecords((prev) => prev.filter((record) => record.id !== id))
+      })
+    },
+    [recordsRepository, t.accountRecords.deleteError, userId],
+  )
+
+  const deleteSnapshotRecord = useCallback(
+    (id: string) => {
+      if (!userId) return
+
+      setRecordsNotice(null)
+      void recordsRepository.deleteAccountSnapshot(userId, id).then((result) => {
+        if (activeRecordsUserIdRef.current !== userId) return
+        if (result.error !== null) {
+          setRecordsNotice(t.accountRecords.deleteError)
+          return
+        }
+        setSnapshotRecords((prev) => prev.filter((record) => record.id !== id))
+      })
+    },
+    [recordsRepository, t.accountRecords.deleteError, userId],
+  )
+
   useEffect(() => {
     if (!orderScenarioActive) return
 
@@ -667,6 +814,17 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [orderScenarioActive, onChange])
+
+  useEffect(() => {
+    activeRecordsUserIdRef.current = userId
+  }, [userId])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadRecords()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [loadRecords])
 
   return (
     <div className="result-column">
@@ -735,6 +893,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           commitLabel={t.orderScenarioCommit}
           clearLabel={t.orderScenarioClear}
           applyLabel={t.orderScenarioApply}
+          onApplyOrderScenario={saveOrderRecord}
         />
         <OrderResults
           key={`${positionSide}-${orderContracts ?? 'empty'}-${orderPrice ?? 'mark'}`}
@@ -742,6 +901,27 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           orderBlocked={orderBlocked}
         />
       </section>
+
+      <AccountRecordsPanel
+        copy={t.accountRecords}
+        signedIn={Boolean(userId)}
+        activeTab={recordsTab}
+        onTabChange={setRecordsTab}
+        loading={recordsLoading}
+        error={recordsError}
+        notice={recordsNotice}
+        orderRecords={orderRecords}
+        snapshotRecords={snapshotRecords}
+        onRetry={() => {
+          void loadRecords()
+        }}
+        onSaveSnapshot={() => {
+          void saveSnapshot()
+        }}
+        onDeleteOrder={deleteOrderRecord}
+        onDeleteSnapshot={deleteSnapshotRecord}
+        snapshotBusy={snapshotBusy}
+      />
     </div>
   )
 }

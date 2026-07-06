@@ -7,7 +7,9 @@ import { TooltipBody } from './TooltipBody'
 
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 
-type ModalKind = 'enable' | 'enable-info' | 'cleared' | null
+type ModalKind = 'enable' | 'enable-info' | 'delete-confirm' | null
+
+type SaveSlot = 'off' | SaveStorageMode
 
 function skipEnableModalKey(mode: SaveStorageMode): string {
   return `${SKIP_ENABLE_MODAL_KEY}_${mode}`
@@ -121,6 +123,15 @@ function CloudIcon() {
   )
 }
 
+function OffIcon() {
+  return (
+    <svg viewBox="0 0 28 28" aria-hidden="true">
+      <circle cx="14" cy="14" r="8.4" fill="none" />
+      <line x1="8.1" y1="8.1" x2="19.9" y2="19.9" />
+    </svg>
+  )
+}
+
 export function SaveDraftToggle() {
   const { t } = useLanguage()
   const {
@@ -132,11 +143,14 @@ export function SaveDraftToggle() {
     hasLocalDraft,
     hasCloudDraft,
     setSaveEnabled,
+    pauseSaving,
+    deleteSavedData,
     setStorageMode,
     migrateLocalDraftToCloud,
   } = useCalculator()
   const [modal, setModal] = useState<ModalKind>(null)
   const [pendingMode, setPendingMode] = useState<SaveStorageMode | null>(null)
+  const [pendingDeleteMode, setPendingDeleteMode] = useState<SaveStorageMode | null>(null)
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [, refreshSkipState] = useState(0)
   const [busy, setBusy] = useState(false)
@@ -145,7 +159,11 @@ export function SaveDraftToggle() {
   const modalMode = pendingMode ?? storageMode
   const modalIsCloud = modalMode === 'cloud'
   const skipActive = readSkipEnableModal(storageMode)
-  const hint = isCloud ? t.draftSave.cloudHint : t.draftSave.hint
+  const hint = !saveEnabled
+    ? t.draftSave.offHint
+    : isCloud
+      ? t.draftSave.cloudHint
+      : t.draftSave.hint
   const enableTitle = modalIsCloud
     ? t.draftSave.cloudEnableModalTitle
     : t.draftSave.enableModalTitle
@@ -177,23 +195,15 @@ export function SaveDraftToggle() {
     return error
   }
 
-  const handleChange = (next: boolean) => {
-    if (next) {
-      if (readSkipEnableModal(storageMode)) {
-        void applySaveEnabled(true)
-        return
-      }
-      openEnableModal(storageMode)
-      return
-    }
-    void applySaveEnabled(false).then((error) => {
-      if (!error) setModal('cleared')
-    })
-  }
+  const storedForMode = (mode: SaveStorageMode) => (mode === 'local' ? hasLocalDraft : hasCloudDraft)
 
   const handleModeChange = (mode: SaveStorageMode) => {
     if (mode === storageMode) return
     setNotice(null)
+    if (storedForMode(mode)) {
+      setStorageMode(mode)
+      return
+    }
     if (saveEnabled && !readSkipEnableModal(mode)) {
       openEnableModal(mode)
       return
@@ -230,9 +240,28 @@ export function SaveDraftToggle() {
     setModal(null)
   }
 
-  const dismissCleared = () => setModal(null)
+  const confirmDelete = () => {
+    const mode = pendingDeleteMode
+    if (!mode) return
+    setBusy(true)
+    setNotice(null)
+    void deleteSavedData(mode).then((error) => {
+      setBusy(false)
+      setPendingDeleteMode(null)
+      if (error) setNotice(t.draftSave.statusError)
+      else setModal(null)
+    })
+  }
 
-  const { anchorRef, anchorHandlers, renderTooltip } = useFloatingTooltip({ placement: 'top' })
+  const cancelDelete = () => {
+    setPendingDeleteMode(null)
+    setModal(null)
+  }
+
+  const { anchorRef, anchorHandlers, renderTooltip } = useFloatingTooltip({
+    placement: 'top',
+    horizontalAlign: 'right',
+  })
 
   const showGuideAgain = () => {
     setSkipEnableModal(storageMode, false)
@@ -249,12 +278,23 @@ export function SaveDraftToggle() {
     })
   }
 
-  const handleSlotClick = (mode: SaveStorageMode) => {
+  const handleSlotClick = (slot: SaveSlot) => {
     if (busy || syncStatus === 'loading') return
     setNotice(null)
 
+    if (slot === 'off') {
+      if (!saveEnabled) return
+      pauseSaving()
+      return
+    }
+
+    const mode = slot
+
     if (saveEnabled && storageMode === mode) {
-      handleChange(false)
+      // 이미 활성인 저장 슬롯을 다시 누르면 저장값 삭제 여부를 묻는다.
+      if (!storedForMode(mode)) return
+      setPendingDeleteMode(mode)
+      setModal('delete-confirm')
       return
     }
 
@@ -262,18 +302,25 @@ export function SaveDraftToggle() {
       if (mode !== storageMode) {
         setStorageMode(mode)
       }
+      if (storedForMode(mode)) {
+        void applySaveEnabled(true, mode)
+        return
+      }
+      if (!storedForMode(mode) && !readSkipEnableModal(mode)) {
+        openEnableModal(mode)
+        return
+      }
       if (readSkipEnableModal(mode)) {
         void applySaveEnabled(true, mode)
         return
       }
-      openEnableModal(mode)
       return
     }
 
     handleModeChange(mode)
   }
 
-  const slotModes: SaveStorageMode[] = cloudAvailable ? ['local', 'cloud'] : ['local']
+  const slots: SaveSlot[] = cloudAvailable ? ['off', 'local', 'cloud'] : ['off', 'local']
 
   return (
     <>
@@ -285,7 +332,35 @@ export function SaveDraftToggle() {
           aria-label={t.draftSave.storageModeLabel}
           {...anchorHandlers}
         >
-          {slotModes.map((mode) => {
+          {slots.map((slot) => {
+            if (slot === 'off') {
+              const active = !saveEnabled
+              const className = [
+                'draft-save-slot',
+                'draft-save-slot--off',
+                active ? 'draft-save-slot--active' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+
+              return (
+                <button
+                  key="off"
+                  type="button"
+                  className={className}
+                  aria-pressed={active}
+                  aria-label={t.draftSave.noSaveMode}
+                  title={t.draftSave.noSaveMode}
+                  disabled={busy || syncStatus === 'loading'}
+                  onClick={() => handleSlotClick('off')}
+                >
+                  <OffIcon />
+                  <span className="draft-save-slot__sr-label">{t.draftSave.noSaveMode}</span>
+                </button>
+              )
+            }
+
+            const mode = slot
             const stored = mode === 'local' ? hasLocalDraft : hasCloudDraft
             const active = saveEnabled && storageMode === mode
             const modeLabel = mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode
@@ -381,13 +456,23 @@ export function SaveDraftToggle() {
         </DraftSaveModal>
       )}
 
-      {modal === 'cleared' && (
+      {modal === 'delete-confirm' && (
         <DraftSaveModal
-          title={t.draftSave.clearedModalTitle}
-          confirmLabel={t.draftSave.confirm}
-          onConfirm={dismissCleared}
+          title={t.draftSave.deleteConfirmTitle}
+          confirmLabel={t.draftSave.deleteConfirm}
+          onConfirm={confirmDelete}
+          onDismiss={cancelDelete}
+          footer={
+            <button type="button" className="link-btn draft-save-delete-cancel" onClick={cancelDelete}>
+              {t.draftSave.deleteCancel}
+            </button>
+          }
         >
-          <p className="disclaimer-modal-text">{t.draftSave.cleared}</p>
+          <p className="disclaimer-modal-text draft-save-delete-text">
+            {pendingDeleteMode === 'cloud'
+              ? t.draftSave.cloudDeleteConfirmBody
+              : t.draftSave.deleteConfirmBody}
+          </p>
         </DraftSaveModal>
       )}
     </>

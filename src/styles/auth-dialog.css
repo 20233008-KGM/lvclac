@@ -161,6 +161,14 @@
   margin-top: 0.2rem;
 }
 
+.auth-consent-note {
+  margin: var(--space-sm) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  text-align: center;
+}
+
 .auth-legal-links {
   margin-top: calc(var(--space-sm) * -1);
 }

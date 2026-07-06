@@ -49,6 +49,10 @@ interface NumberInputProps {
   /** Enter 키 입력 시 (defer 없이도 사용 가능) */
   onEnterKey?: () => void
   disabled?: boolean
+  /** 잠금 상태 — 포커스/편집 시도 시 onGuardBlocked 호출 후 편집 차단 */
+  guardLocked?: boolean
+  /** 잠금 상태에서 편집을 시도했을 때 */
+  onGuardBlocked?: () => void
 }
 
 export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(function NumberInput(
@@ -67,6 +71,8 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     onDeleteKey,
     onEnterKey,
     disabled = false,
+    guardLocked = false,
+    onGuardBlocked,
   },
   ref,
 ) {
@@ -168,7 +174,20 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
           disabled={disabled}
           value={text}
           title={overflowing && !focused ? text : undefined}
-          onFocus={() => setFocused(true)}
+          onMouseDown={(e) => {
+            if (guardLocked) {
+              e.preventDefault()
+              onGuardBlocked?.()
+            }
+          }}
+          onFocus={() => {
+            if (guardLocked) {
+              onGuardBlocked?.()
+              inputElRef.current?.blur()
+              return
+            }
+            setFocused(true)
+          }}
           onBlur={() => {
             if (skipBlurCommitRef.current) {
               skipBlurCommitRef.current = false

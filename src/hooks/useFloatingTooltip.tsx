@@ -17,6 +17,7 @@ const FADE_MS = 140
 const HIDE_GRACE_MS = 220
 
 export type FloatingTooltipPlacement = 'top' | 'bottom'
+export type FloatingTooltipHorizontalAlign = 'center' | 'right'
 
 function clampHorizontal(centerX: number, halfWidth: number) {
   const min = VIEWPORT_MARGIN + halfWidth
@@ -28,10 +29,13 @@ function positionTooltip(
   anchor: DOMRect,
   tip: DOMRect,
   preferred: FloatingTooltipPlacement,
-): { top: number; left: number; placement: FloatingTooltipPlacement } {
-  const centerX = anchor.left + anchor.width / 2
+  horizontalAlign: FloatingTooltipHorizontalAlign,
+): { top: number; left: number; placement: FloatingTooltipPlacement; anchorX: number } {
   const halfW = tip.width / 2
-  const left = clampHorizontal(centerX, halfW)
+  const anchorX = horizontalAlign === 'right' ? anchor.right : anchor.left + anchor.width / 2
+  const preferredCenter =
+    horizontalAlign === 'right' ? anchor.right - halfW : anchor.left + anchor.width / 2
+  const left = clampHorizontal(preferredCenter, halfW)
 
   const spaceAbove = anchor.top - VIEWPORT_MARGIN
   const spaceBelow = window.innerHeight - VIEWPORT_MARGIN - anchor.bottom
@@ -47,7 +51,7 @@ function positionTooltip(
       ? anchor.top - GAP - tip.height
       : anchor.bottom + GAP
 
-  return { top, left, placement }
+  return { top, left, placement, anchorX }
 }
 
 function isFocusLeavingAnchor(anchor: HTMLElement, event: FocusEvent) {
@@ -57,12 +61,14 @@ function isFocusLeavingAnchor(anchor: HTMLElement, event: FocusEvent) {
 
 interface UseFloatingTooltipOptions {
   placement?: FloatingTooltipPlacement
+  horizontalAlign?: FloatingTooltipHorizontalAlign
   /** anchor가 아닌 자식(버튼 등)에 포커스가 있을 때 */
   focusWithin?: boolean
 }
 
 export function useFloatingTooltip({
   placement = 'top',
+  horizontalAlign = 'center',
   focusWithin = false,
 }: UseFloatingTooltipOptions = {}) {
   const anchorRef = useRef<HTMLElement>(null)
@@ -102,10 +108,14 @@ export function useFloatingTooltip({
 
     const anchorRect = anchor.getBoundingClientRect()
     const tipRect = tip.getBoundingClientRect()
-    const { top, left, placement: resolved } = positionTooltip(anchorRect, tipRect, placement)
+    const {
+      top,
+      left,
+      placement: resolved,
+      anchorX,
+    } = positionTooltip(anchorRect, tipRect, placement, horizontalAlign)
 
-    const anchorCenterX = anchorRect.left + anchorRect.width / 2
-    const arrowLeft = anchorCenterX - tipRect.left
+    const arrowLeft = anchorX - tipRect.left
 
     setResolvedPlacement(resolved)
     setStyle({
@@ -115,7 +125,7 @@ export function useFloatingTooltip({
       zIndex: TOOLTIP_Z,
       ['--floating-tooltip-arrow-left' as string]: `${arrowLeft}px`,
     })
-  }, [placement])
+  }, [horizontalAlign, placement])
 
   useLayoutEffect(() => {
     if (!mounted) return

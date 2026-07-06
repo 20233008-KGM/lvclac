@@ -35,20 +35,21 @@ export function BillingPanel() {
   const copy = t.myPage.billing
   const { isPro, subscription, refreshSubscription } = useAuth()
   const [busy, setBusy] = useState<BusyState>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  // 리다이렉트 복귀 메시지는 최초 렌더에서 URL로부터 초기화(effect 내 setState 회피).
+  const [message, setMessage] = useState<string | null>(() => {
+    const checkout = readCheckoutParam()
+    if (checkout === 'success') return copy.checkoutSuccess
+    if (checkout === 'cancel') return copy.checkoutCanceled
+    return null
+  })
   const mapError = useCheckoutError()
 
-  // 결제 리다이렉트 복귀(?checkout=success|cancel) 처리 후 URL 정리.
+  // 결제 복귀 시 구독 상태를 다시 읽고, URL의 ?checkout= 흔적을 정리한다(부수효과만).
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const checkout = params.get('checkout')
+    const checkout = readCheckoutParam()
     if (!checkout) return
-    if (checkout === 'success') {
-      setMessage(copy.checkoutSuccess)
-      void refreshSubscription()
-    } else if (checkout === 'cancel') {
-      setMessage(copy.checkoutCanceled)
-    }
+    if (checkout === 'success') void refreshSubscription()
+    const params = new URLSearchParams(window.location.search)
     params.delete('checkout')
     const query = params.toString()
     window.history.replaceState(
@@ -56,7 +57,7 @@ export function BillingPanel() {
       '',
       `${window.location.pathname}${query ? `?${query}` : ''}`,
     )
-  }, [copy.checkoutCanceled, copy.checkoutSuccess, refreshSubscription])
+  }, [refreshSubscription])
 
   const handleCheckout = useCallback(
     async (plan: BillingPlan) => {

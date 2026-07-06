@@ -95,6 +95,32 @@ function EnableModalBody({ lines }: { lines: string[] }) {
   )
 }
 
+function LocalComputerIcon() {
+  return (
+    <svg viewBox="0 0 28 28" aria-hidden="true">
+      <rect className="draft-save-slot__fill" x="7.4" y="6.2" width="13.2" height="10.8" rx="1.4" />
+      <rect x="6.1" y="4.9" width="15.8" height="13.4" rx="1.9" fill="none" />
+      <line x1="10.4" y1="22.1" x2="17.6" y2="22.1" />
+      <line x1="14" y1="18.4" x2="14" y2="22.1" />
+    </svg>
+  )
+}
+
+function CloudIcon() {
+  return (
+    <svg viewBox="0 0 28 28" aria-hidden="true">
+      <path
+        className="draft-save-slot__fill"
+        d="M8.4 21h11.2a5.05 5.05 0 0 0 .4-10.1A6.45 6.45 0 0 0 7.7 12.8 4.25 4.25 0 0 0 8.4 21z"
+      />
+      <path
+        d="M8.4 21h11.2a5.05 5.05 0 0 0 .4-10.1A6.45 6.45 0 0 0 7.7 12.8 4.25 4.25 0 0 0 8.4 21z"
+        fill="none"
+      />
+    </svg>
+  )
+}
+
 export function SaveDraftToggle() {
   const { t } = useLanguage()
   const {
@@ -103,6 +129,8 @@ export function SaveDraftToggle() {
     cloudAvailable,
     syncStatus,
     canMigrateLocalDraft,
+    hasLocalDraft,
+    hasCloudDraft,
     setSaveEnabled,
     setStorageMode,
     migrateLocalDraftToCloud,
@@ -117,7 +145,6 @@ export function SaveDraftToggle() {
   const modalMode = pendingMode ?? storageMode
   const modalIsCloud = modalMode === 'cloud'
   const skipActive = readSkipEnableModal(storageMode)
-  const label = isCloud ? t.draftSave.cloudLabel : t.draftSave.label
   const hint = isCloud ? t.draftSave.cloudHint : t.draftSave.hint
   const enableTitle = modalIsCloud
     ? t.draftSave.cloudEnableModalTitle
@@ -131,13 +158,9 @@ export function SaveDraftToggle() {
       ? t.draftSave.statusLoading
       : syncStatus === 'saving'
         ? t.draftSave.statusSaving
-        : syncStatus === 'saved'
-          ? isCloud
-            ? t.draftSave.statusSavedCloud
-            : t.draftSave.statusSavedLocal
-          : syncStatus === 'error'
-            ? t.draftSave.statusError
-            : null
+        : syncStatus === 'error'
+          ? t.draftSave.statusError
+          : null
 
   const openEnableModal = (mode: SaveStorageMode = storageMode) => {
     setPendingMode(mode === storageMode ? null : mode)
@@ -145,10 +168,10 @@ export function SaveDraftToggle() {
     setModal('enable')
   }
 
-  const applySaveEnabled = async (next: boolean) => {
+  const applySaveEnabled = async (next: boolean, mode: SaveStorageMode = storageMode) => {
     setBusy(true)
     setNotice(null)
-    const error = await setSaveEnabled(next)
+    const error = await setSaveEnabled(next, mode)
     if (error) setNotice(t.draftSave.statusError)
     setBusy(false)
     return error
@@ -185,8 +208,15 @@ export function SaveDraftToggle() {
       refreshSkipState((value) => value + 1)
     }
     if (pendingMode) {
-      setStorageMode(pendingMode)
+      const targetMode = pendingMode
+      setStorageMode(targetMode)
       setPendingMode(null)
+      if (!saveEnabled) {
+        void applySaveEnabled(true, targetMode).then((error) => {
+          if (!error) setModal(null)
+        })
+        return
+      }
       setModal(null)
       return
     }
@@ -219,39 +249,75 @@ export function SaveDraftToggle() {
     })
   }
 
+  const handleSlotClick = (mode: SaveStorageMode) => {
+    if (busy || syncStatus === 'loading') return
+    setNotice(null)
+
+    if (saveEnabled && storageMode === mode) {
+      handleChange(false)
+      return
+    }
+
+    if (!saveEnabled) {
+      if (mode !== storageMode) {
+        setStorageMode(mode)
+      }
+      if (readSkipEnableModal(mode)) {
+        void applySaveEnabled(true, mode)
+        return
+      }
+      openEnableModal(mode)
+      return
+    }
+
+    handleModeChange(mode)
+  }
+
+  const slotModes: SaveStorageMode[] = cloudAvailable ? ['local', 'cloud'] : ['local']
+
   return (
     <>
       <div className="draft-save">
-        <label
-          ref={anchorRef as RefObject<HTMLLabelElement>}
-          className="input-option-toggle draft-save-tooltip-anchor"
+        <div
+          ref={anchorRef as RefObject<HTMLDivElement>}
+          className="draft-save-slots draft-save-tooltip-anchor"
+          role="group"
+          aria-label={t.draftSave.storageModeLabel}
           {...anchorHandlers}
         >
-          <input
-            type="checkbox"
-            checked={saveEnabled}
-            disabled={busy || syncStatus === 'loading'}
-            onChange={(e) => handleChange(e.target.checked)}
-          />
-          <span className="input-option-toggle__label">{label}</span>
-          {renderTooltip('draft-save-tooltip', <TooltipBody text={hint} />)}
-        </label>
-        {cloudAvailable && (
-          <div className="draft-save-mode" role="group" aria-label={t.draftSave.storageModeLabel}>
-            {(['local', 'cloud'] as const).map((mode) => (
+          {slotModes.map((mode) => {
+            const stored = mode === 'local' ? hasLocalDraft : hasCloudDraft
+            const active = saveEnabled && storageMode === mode
+            const modeLabel = mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode
+            const modeClass =
+              mode === 'local' ? 'draft-save-slot--local' : 'draft-save-slot--cloud'
+            const className = [
+              'draft-save-slot',
+              modeClass,
+              stored ? 'draft-save-slot--stored' : '',
+              active ? 'draft-save-slot--active' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')
+
+            return (
               <button
                 key={mode}
                 type="button"
-                className={`draft-save-mode__btn${storageMode === mode ? ' active' : ''}`}
-                aria-pressed={storageMode === mode}
+                className={className}
+                aria-pressed={active}
+                aria-label={modeLabel}
+                title={modeLabel}
                 disabled={busy || syncStatus === 'loading'}
-                onClick={() => handleModeChange(mode)}
+                onClick={() => handleSlotClick(mode)}
               >
-                {mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode}
+                {mode === 'local' ? <LocalComputerIcon /> : <CloudIcon />}
+                <span className="draft-save-slot__sr-label">{modeLabel}</span>
               </button>
-            ))}
-          </div>
-        )}
+            )
+          })}
+          {renderTooltip('draft-save-tooltip', <TooltipBody text={hint} />)}
+        </div>
         {saveEnabled && statusText && (
           <span className={`draft-save-status draft-save-status--${syncStatus}`}>
             {statusText}

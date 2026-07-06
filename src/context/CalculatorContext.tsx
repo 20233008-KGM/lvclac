@@ -34,8 +34,9 @@ interface CalculatorContextValue {
   syncStatus: SaveSyncStatus
   syncError: string | null
   hasLocalDraft: boolean
+  hasCloudDraft: boolean
   canMigrateLocalDraft: boolean
-  setSaveEnabled: (enabled: boolean) => Promise<string | null>
+  setSaveEnabled: (enabled: boolean, mode?: SaveStorageMode) => Promise<string | null>
   setStorageMode: (mode: SaveStorageMode) => void
   migrateLocalDraftToCloud: () => Promise<string | null>
 }
@@ -124,6 +125,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [cloudSetId, setCloudSetId] = useState<string | null>(null)
   const [hasLocalDraft, setHasLocalDraft] = useState(hasStoredDraft)
+  const [hasCloudDraft, setHasCloudDraft] = useState(false)
   const cloudSetIdRef = useRef<string | null>(null)
   const mountedRef = useRef(false)
   const suppressNextPersistRef = useRef(false)
@@ -141,10 +143,14 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const persistInputs = useCallback(
-    async (value: CalculatorInputs, force = false): Promise<string | null> => {
+    async (
+      value: CalculatorInputs,
+      force = false,
+      mode: SaveStorageMode = storageMode,
+    ): Promise<string | null> => {
       if (!force && !saveEnabled) return null
 
-      if (storageMode === 'local') {
+      if (mode === 'local') {
         saveDraft(value)
         setHasLocalDraft(true)
         setSyncStatus('saved')
@@ -171,6 +177,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         return 'number_set_save_empty'
       }
       setCloudSetId(result.data.id)
+      setHasCloudDraft(true)
       setSyncStatus('saved')
       return null
     },
@@ -178,13 +185,13 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   )
 
   const setSaveEnabled = useCallback(
-    async (enabled: boolean): Promise<string | null> => {
+    async (enabled: boolean, mode: SaveStorageMode = storageMode): Promise<string | null> => {
       setSaveEnabledState(enabled)
       writeSaveEnabled(enabled)
       setSyncError(null)
 
       if (!enabled) {
-        if (storageMode === 'local') {
+        if (mode === 'local') {
           clearDraft()
           setHasLocalDraft(false)
         } else if (activeUserId) {
@@ -196,13 +203,14 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             return result.error
           }
           setCloudSetId(null)
+          setHasCloudDraft(false)
         }
 
         setSyncStatus('idle')
         return null
       }
 
-      return persistInputs(inputs, true)
+      return persistInputs(inputs, true, mode)
     },
     [activeUserId, inputs, persistInputs, storageMode],
   )
@@ -242,6 +250,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     suppressNextPersistRef.current = true
     setInputs(result.data.inputs)
     setCloudSetId(result.data.id)
+    setHasCloudDraft(true)
     clearDraft()
     setHasLocalDraft(false)
     setSyncStatus('saved')
@@ -278,6 +287,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       if (!activeUserId) {
         setSyncStatus('idle')
         setSyncError(null)
+        setHasCloudDraft(false)
         return
       }
 
@@ -294,15 +304,39 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         suppressNextPersistRef.current = true
         setInputs(result.data.inputs)
         setCloudSetId(result.data.id)
+        setHasCloudDraft(true)
         setSyncStatus('saved')
       } else {
         setCloudSetId(null)
+        setHasCloudDraft(false)
         setSyncStatus('idle')
       }
       setHasLocalDraft(hasStoredDraft())
     }
 
     void syncConfiguredStorage()
+
+    return () => {
+      active = false
+    }
+  }, [activeUserId, authLoading, saveEnabled, storageMode])
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!activeUserId) return
+    if (saveEnabled && storageMode === 'cloud') return
+
+    let active = true
+    const userId = activeUserId
+
+    async function refreshCloudDraftPresence() {
+      const result = await fetchLatestNumberSet(userId)
+      if (!active || result.error) return
+      setHasCloudDraft(Boolean(result.data))
+      setCloudSetId(result.data?.id ?? null)
+    }
+
+    void refreshCloudDraftPresence()
 
     return () => {
       active = false
@@ -338,6 +372,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         syncStatus,
         syncError,
         hasLocalDraft,
+        hasCloudDraft: cloudAvailable ? hasCloudDraft : false,
         canMigrateLocalDraft: Boolean(activeUserId && storageMode === 'cloud' && hasLocalDraft),
         setSaveEnabled,
         setStorageMode,

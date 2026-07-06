@@ -1,10 +1,60 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useCalculator } from '../context/CalculatorContext'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 
 interface ClearAllInputsButtonProps {
   disabled?: boolean
+}
+
+function ClearAllInputsModal({
+  title,
+  body,
+  confirmLabel,
+  onConfirm,
+  onClose,
+}: {
+  title: string
+  body: string
+  confirmLabel: string
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  const modal = (
+    <div
+      className="disclaimer-overlay"
+      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div
+        className="disclaimer-modal draft-save-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clear-all-inputs-modal-title"
+      >
+        <h2 id="clear-all-inputs-modal-title" className="disclaimer-modal-title">
+          {title}
+        </h2>
+        <p className="disclaimer-modal-text">{body}</p>
+        <button type="button" className="btn btn-primary draft-save-modal-btn" onClick={onConfirm}>
+          {confirmLabel}
+        </button>
+      </div>
+    </div>
+  )
+
+  return createPortal(modal, document.body)
 }
 
 export function ClearAllInputsButton({ disabled = false }: ClearAllInputsButtonProps) {
@@ -32,28 +82,13 @@ export function ClearAllInputsButton({ disabled = false }: ClearAllInputsButtonP
       </div>
 
       {confirmOpen && (
-        <div
-          className="disclaimer-overlay"
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setConfirmOpen(false)
-          }}
-        >
-          <div
-            className="disclaimer-modal draft-save-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="clear-all-inputs-modal-title"
-          >
-            <h2 id="clear-all-inputs-modal-title" className="disclaimer-modal-title">
-              {t.clearAllInputsModalTitle}
-            </h2>
-            <p className="disclaimer-modal-text">{t.clearAllInputsModalBody}</p>
-            <button type="button" className="btn btn-primary draft-save-modal-btn" onClick={handleConfirm}>
-              {t.clearAllInputsConfirm}
-            </button>
-          </div>
-        </div>
+        <ClearAllInputsModal
+          title={t.clearAllInputsModalTitle}
+          body={t.clearAllInputsModalBody}
+          confirmLabel={t.clearAllInputsConfirm}
+          onConfirm={handleConfirm}
+          onClose={() => setConfirmOpen(false)}
+        />
       )}
     </>
   )

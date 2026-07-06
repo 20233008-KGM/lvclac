@@ -1,4 +1,5 @@
-import { useState, type ReactNode, type RefObject } from 'react'
+import { useEffect, useState, type ReactNode, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { useCalculator, type SaveStorageMode } from '../context/CalculatorContext'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
@@ -47,7 +48,15 @@ function DraftSaveModal({
 }) {
   const dismiss = onDismiss ?? onConfirm
 
-  return (
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  const modal = (
     <div
       className="disclaimer-overlay"
       role="presentation"
@@ -72,6 +81,8 @@ function DraftSaveModal({
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }
 
 function EnableModalBody({ lines }: { lines: string[] }) {

@@ -40,13 +40,21 @@ Supabase Auth 는 Go 템플릿으로 본문을 렌더링합니다. 가입 시 `u
 `emails/supabase/*.html` 을 직접 고치지 마세요. 생성물입니다.
 
 ```sh
-node emails/build.mjs              # 문구표 → HTML 4종 + subjects.json
+node emails/build.mjs              # 문구표 → HTML 4종 + subjects.json + 프리뷰 8종
 node scripts/push-email-templates.mjs   # 관리 API로 업로드 (SUPABASE_ACCESS_TOKEN 필요)
 ```
 
-문구는 [`emails/build.mjs`](../emails/build.mjs) 상단의 `templates` 객체에서 한/영 쌍으로 관리합니다.
+문구는 [`emails/build.mjs`](../emails/build.mjs) 상단의 `templates` 객체에서 한/영 쌍으로 관리합니다. 레이아웃·색은 같은 파일의 `LIGHT` / `DARK` 팔레트와 `render()` 함수에 있습니다.
 
 업로드 직후 `GET /config/auth` 는 옛 값을 돌려줄 때가 있습니다. 검증은 PATCH 응답 본문으로 합니다. 되돌리려면 대시보드에서 각 템플릿을 비우면 Supabase 기본값으로 돌아갑니다.
+
+### 다크 모드
+
+메일은 라이트/다크 두 벌을 한 HTML에 담아 보냅니다. 규칙과 클라이언트별 지원 범위는 [`emails/README.md`](../emails/README.md#다크-모드)에 있습니다.
+
+**Gmail 웹/앱은 `prefers-color-scheme` 를 지원하지 않습니다.** Gmail 다크모드 사용자는 라이트 카드를 계속 보게 되며, 이는 버그가 아니라 우회 불가능한 제약입니다. Gmail 앱처럼 색을 강제 반전하는 경우를 대비해 순수 `#ffffff`/`#000000` 을 쓰지 않는 것으로 방어합니다.
+
+`node emails/build.mjs` 후 `emails/preview/*.ko.html` 을 브라우저에서 열고 OS 다크 모드를 토글해 양쪽을 확인하세요.
 
 ---
 

@@ -1,6 +1,6 @@
 {
-  "confirm-signup": "{{ if eq .Data.language \"en\" }}[Futures Calculator] Confirm your email address{{ else }}[선물 계산기] 이메일 인증을 완료해 주세요{{ end }}",
-  "recovery": "{{ if eq .Data.language \"en\" }}[Futures Calculator] Reset your password{{ else }}[선물 계산기] 비밀번호 재설정{{ end }}",
-  "magic-link": "{{ if eq .Data.language \"en\" }}[Futures Calculator] Your sign-in link{{ else }}[선물 계산기] 로그인 링크{{ end }}",
-  "email-change": "{{ if eq .Data.language \"en\" }}[Futures Calculator] Confirm your new email address{{ else }}[선물 계산기] 이메일 주소 변경 확인{{ end }}"
+  "confirm-signup": "{{ if eq .Data.language \"en\" }}[LiqGuard] Confirm your email address{{ else }}[LiqGuard] 이메일 인증을 완료해 주세요{{ end }}",
+  "recovery": "{{ if eq .Data.language \"en\" }}[LiqGuard] Reset your password{{ else }}[LiqGuard] 비밀번호 재설정{{ end }}",
+  "magic-link": "{{ if eq .Data.language \"en\" }}[LiqGuard] Your sign-in link{{ else }}[LiqGuard] 로그인 링크{{ end }}",
+  "email-change": "{{ if eq .Data.language \"en\" }}[LiqGuard] Confirm your new email address{{ else }}[LiqGuard] 이메일 주소 변경 확인{{ end }}"
 }

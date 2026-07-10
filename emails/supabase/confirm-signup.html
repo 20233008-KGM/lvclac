@@ -3,59 +3,112 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light" />
-  <meta name="supported-color-schemes" content="light" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
   <title>{{ if eq .Data.language "en" }}Confirm your email{{ else }}이메일 인증{{ end }}</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+
+    .e-body, .e-page { background-color: #0d1017 !important; }
+    .e-card { background-color: #1e232d !important; border-color: #2a3040 !important; }
+    .e-heading { color: #e8eaed !important; }
+    .e-text { color: #c3c9d4 !important; }
+    .e-muted { color: #9aa3b2 !important; }
+    .e-faint { color: #9aa3b2 !important; }
+    .e-strong { color: #e8eaed !important; }
+    .e-divider { border-top-color: #2a3040 !important; }
+    .e-header { background-color: #12151c !important; }
+    .e-title { color: #f5f7fa !important; }
+    .e-accent { background-color: #5b8def !important; }
+    .e-btn { background-color: #5b8def !important; }
+    .e-btn-label { color: #f5f7fa !important; }
+    .e-link { color: #5b8def !important; }
+    }
+
+    /* Outlook.com은 색을 반전하며 data-ogsc(글자)·data-ogsb(배경)를 붙인다.
+       미디어 쿼리를 타지 않으므로 같은 규칙을 한 번 더 적용해 되돌린다. */
+
+    [data-ogsc] .e-body, .e-body[data-ogsc], [data-ogsc] .e-page, .e-page[data-ogsc] { background-color: #0d1017 !important; }
+    [data-ogsc] .e-card, .e-card[data-ogsc] { background-color: #1e232d !important; border-color: #2a3040 !important; }
+    [data-ogsc] .e-heading, .e-heading[data-ogsc] { color: #e8eaed !important; }
+    [data-ogsc] .e-text, .e-text[data-ogsc] { color: #c3c9d4 !important; }
+    [data-ogsc] .e-muted, .e-muted[data-ogsc] { color: #9aa3b2 !important; }
+    [data-ogsc] .e-faint, .e-faint[data-ogsc] { color: #9aa3b2 !important; }
+    [data-ogsc] .e-strong, .e-strong[data-ogsc] { color: #e8eaed !important; }
+    [data-ogsc] .e-divider, .e-divider[data-ogsc] { border-top-color: #2a3040 !important; }
+    [data-ogsc] .e-header, .e-header[data-ogsc] { background-color: #12151c !important; }
+    [data-ogsc] .e-title, .e-title[data-ogsc] { color: #f5f7fa !important; }
+    [data-ogsc] .e-accent, .e-accent[data-ogsc] { background-color: #5b8def !important; }
+    [data-ogsc] .e-btn, .e-btn[data-ogsc] { background-color: #5b8def !important; }
+    [data-ogsc] .e-btn-label, .e-btn-label[data-ogsc] { color: #f5f7fa !important; }
+    [data-ogsc] .e-link, .e-link[data-ogsc] { color: #5b8def !important; }
+
+    [data-ogsb] .e-body, .e-body[data-ogsb], [data-ogsb] .e-page, .e-page[data-ogsb] { background-color: #0d1017 !important; }
+    [data-ogsb] .e-card, .e-card[data-ogsb] { background-color: #1e232d !important; border-color: #2a3040 !important; }
+    [data-ogsb] .e-heading, .e-heading[data-ogsb] { color: #e8eaed !important; }
+    [data-ogsb] .e-text, .e-text[data-ogsb] { color: #c3c9d4 !important; }
+    [data-ogsb] .e-muted, .e-muted[data-ogsb] { color: #9aa3b2 !important; }
+    [data-ogsb] .e-faint, .e-faint[data-ogsb] { color: #9aa3b2 !important; }
+    [data-ogsb] .e-strong, .e-strong[data-ogsb] { color: #e8eaed !important; }
+    [data-ogsb] .e-divider, .e-divider[data-ogsb] { border-top-color: #2a3040 !important; }
+    [data-ogsb] .e-header, .e-header[data-ogsb] { background-color: #12151c !important; }
+    [data-ogsb] .e-title, .e-title[data-ogsb] { color: #f5f7fa !important; }
+    [data-ogsb] .e-accent, .e-accent[data-ogsb] { background-color: #5b8def !important; }
+    [data-ogsb] .e-btn, .e-btn[data-ogsb] { background-color: #5b8def !important; }
+    [data-ogsb] .e-btn-label, .e-btn-label[data-ogsb] { color: #f5f7fa !important; }
+    [data-ogsb] .e-link, .e-link[data-ogsb] { color: #5b8def !important; }
+  </style>
 </head>
-<body style="margin:0;padding:0;background-color:#eef1f6;font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef1f6;padding:32px 16px;">
+<body class="e-body" style="margin:0;padding:0;background-color:#f6f8fa;font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="e-page" style="background-color:#f6f8fa;padding:24px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #dde3ec;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="e-card" style="max-width:560px;background-color:#fdfdfe;border-radius:12px;overflow:hidden;border:1px solid #e3e8ef;">
           <tr>
-            <td style="background-color:#12151c;padding:28px 32px 24px;">
-              <p style="margin:0 0 8px;font-size:13px;line-height:1.4;color:#9aa3b2;letter-spacing:0.02em;">Farfield Software</p>
-              <h1 style="margin:0;font-size:22px;line-height:1.35;font-weight:600;color:#ffffff;">{{ if eq .Data.language "en" }}Futures Calculator{{ else }}선물 계산기{{ end }}</h1>
-              <div style="margin-top:16px;width:48px;height:3px;background-color:#5b8def;border-radius:999px;"></div>
+            <td class="e-header" style="background-color:#12151c;padding:28px 32px 24px;">
+              <p class="e-faint" style="margin:0 0 8px;font-size:13px;line-height:1.4;color:#9aa3b2;letter-spacing:0.02em;">Farfield Software</p>
+              <h1 class="e-title" style="margin:0;font-size:22px;line-height:1.35;font-weight:600;color:#f5f7fa;">LiqGuard</h1>
+              <p class="e-faint" style="margin:6px 0 0;font-size:13px;line-height:1.5;color:#9aa3b2;">{{ if eq .Data.language "en" }}Futures liquidation & margin calculator{{ else }}선물 청산가·증거금 계산기{{ end }}</p>
+              <div class="e-accent" style="margin-top:16px;width:48px;height:3px;background-color:#5b8def;border-radius:999px;"></div>
             </td>
           </tr>
           <tr>
             <td style="padding:32px;">
-              <h2 style="margin:0 0 12px;font-size:20px;line-height:1.4;font-weight:600;color:#1a2233;">{{ if eq .Data.language "en" }}Confirm your email address{{ else }}이메일 인증을 완료해 주세요{{ end }}</h2>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#4a5568;">
+              <h2 class="e-heading" style="margin:0 0 12px;font-size:20px;line-height:1.4;font-weight:600;color:#1a2233;">{{ if eq .Data.language "en" }}Confirm your email address{{ else }}이메일 인증을 완료해 주세요{{ end }}</h2>
+              <p class="e-text" style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#4a5568;">
                 {{ if eq .Data.language "en" }}Welcome. Use the button below to finish signing up, and start calculating liquidation prices and margin with cloud-saved presets.{{ else }}안녕하세요. 아래 버튼을 눌러 가입을 마무리해 주세요. 청산가·증거금 계산과 클라우드 저장을 바로 이용할 수 있습니다.{{ end }}
               </p>
-              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#6b7280;">
-                {{ if eq .Data.language "en" }}Signing up as{{ else }}가입 이메일{{ end }}: <span style="color:#1a2233;font-weight:600;">{{ .Email }}</span>
+              <p class="e-muted" style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#6b7280;">
+                {{ if eq .Data.language "en" }}Signing up as{{ else }}가입 이메일{{ end }}: <span class="e-strong" style="color:#1a2233;font-weight:600;">{{ .Email }}</span>
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="border-radius:8px;background-color:#5b8def;">
-                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:8px;">
+                  <td class="e-btn" style="border-radius:8px;background-color:#5b8def;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" class="e-btn-label" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;line-height:1;color:#f5f7fa;text-decoration:none;border-radius:8px;">
                       {{ if eq .Data.language "en" }}Confirm email address{{ else }}이메일 인증하기{{ end }}
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#6b7280;">
+              <p class="e-muted" style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#6b7280;">
                 {{ if eq .Data.language "en" }}If the button doesn't work, paste the link below into your browser.{{ else }}버튼이 보이지 않으면 아래 링크를 브라우저에 붙여넣어 주세요.{{ end }}
               </p>
               <p style="margin:8px 0 0;font-size:12px;line-height:1.6;word-break:break-all;">
-                <a href="{{ .ConfirmationURL }}" style="color:#5b8def;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                <a href="{{ .ConfirmationURL }}" class="e-link" style="color:#5b8def;text-decoration:underline;">{{ .ConfirmationURL }}</a>
               </p>
             </td>
           </tr>
           <tr>
             <td style="padding:0 32px 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5eaf0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="e-divider" style="border-top:1px solid #e5eaf0;">
                 <tr>
                   <td style="padding-top:20px;">
-                    <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#9aa3b2;">
+                    <p class="e-faint" style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#9aa3b2;">
                       {{ if eq .Data.language "en" }}If you didn't sign up, you can safely ignore this email. The link expires after a while.{{ else }}본인이 가입하지 않았다면 이 메일을 무시해 주세요. 링크는 일정 시간 후 만료됩니다.{{ end }}
                     </p>
-                    <p style="margin:0;font-size:12px;line-height:1.6;color:#9aa3b2;">
-                      {{ if eq .Data.language "en" }}Contact{{ else }}문의{{ end }}: <a href="mailto:contact@farfield.software" style="color:#5b8def;text-decoration:none;">contact@farfield.software</a>
-                      · <a href="{{ .SiteURL }}" style="color:#5b8def;text-decoration:none;">{{ .SiteURL }}</a>
+                    <p class="e-faint" style="margin:0;font-size:12px;line-height:1.6;color:#9aa3b2;">
+                      {{ if eq .Data.language "en" }}Contact{{ else }}문의{{ end }}: <a href="mailto:contact@liqguard.com" class="e-link" style="color:#5b8def;text-decoration:none;">contact@liqguard.com</a>
+                      · <a href="{{ .SiteURL }}" class="e-link" style="color:#5b8def;text-decoration:none;">{{ .SiteURL }}</a>
                     </p>
                   </td>
                 </tr>
@@ -63,7 +116,7 @@
             </td>
           </tr>
         </table>
-        <p style="margin:16px 0 0;font-size:11px;line-height:1.5;color:#9aa3b2;">© Farfield Software</p>
+        <p class="e-faint" style="margin:16px 0 0;font-size:11px;line-height:1.5;color:#9aa3b2;">© Farfield Software</p>
       </td>
     </tr>
   </table>

@@ -3,17 +3,21 @@
 상태: lvclac repo 전용 장기 메모리
 전역 공통 지침: [`C:\Users\rlarb\Documents\agent-global-memory.md`](C:\Users\rlarb\Documents\agent-global-memory.md)
 
+=================================================================
+아래는 사람이 작성하는 칸 입니다. ai는 건들지마세요.
 
-## 소통(사람이 작성했습니다. 건들지마세요)
+## 소통
 
 - 설명 및 답변은 아주아주 쉽게 하세요.
 - 작업은 내가 판단하는 데 도움이 될 대략적인 예상 시간이나 작업량을 함께 알려주세요.
+- 내가 웹에서 직접 처리해줘야하는 일이 있으면 여러분이 브라우저 제어툴로 화면을 켜서 '이것만 클릭하시면 됩니다'하고 안내합니다.
+- 자주 웃어주세요. 요즘 심적으로 힘듭니다.
 
-## codex 작업 방식(사람이 작성했습니다. 건들지마세요)
+## codex 작업 방식
 
-- Codex는 내장 Chrome 연결 도구가 이상하게 작동하므로, 내가 만든 AutoCorp Chrome 도구를 사용하세요. claude,cursor는 autocorpchrome말고 본인 앱의 원래 브라우저 툴을 사용해도 됩니다.
+- Codex는 내장 Chrome 연결 도구가 이상하게 작동하므로, 내가 만든 AutoCorp Chrome 도구를 사용하세요. claude,cursor는 autocorp chrome말고 본인 앱의 원래 브라우저 툴(claude in chrome)을 사용해도 됩니다.
 
-## 작업 참고 및 최신화(사람이 작성했습니다. 건들지마세요)
+## 작업 참고 및 최신화
 
 1. 업무할 때는 Whimsical, Notion, Google Calendar를 참고해서 무엇을 해야 하는지 확인하세요.
 2. 일이 끝나면 Whimsical, Notion, Google Calendar에 체계적으로 정리하여 최신 상태로 업데이트하세요.
@@ -25,25 +29,29 @@ Notion은 각 프로젝트의 Project OS를 최신 기준으로 사용합니다.
 3. Whimsical에서는 텍스트만 수정하세요. 배치나 디자인은 내가 예쁘게 만들어둔 상태를 건드리지 마세요.
    컴포넌트를 붙여야 할 때는 기존 컴포넌트를 건드리지 말고 주변부에 붙여두세요. 나중에 내(인간)가 정리할게요.
 
-4. 작업이 끝나면 본인 변경분을 커밋하세요.
+4. 작업이 끝나면 본인 변경분을 꼭 커밋하세요.
+
+=================================================================
+아래는 ai가 적는 칸 입니다.
 
 ## 공통 운영 규칙
 
 - 구현 작업 후에는 변경 내용, 검증, 미검증, 남은 제품/운영 리스크를 보고합니다.
-- 이 repo는 브랜치를 나누지 않고 `main`에 바로 커밋해 쌓습니다. `main`에서 작업을 시작해도 별도 작업 브랜치를 만들지 마세요. 여럿이 동시에 건드리는 대공사일 때만 예외적으로 브랜치를 씁니다.
+- 이 repo는 브랜치를 나누지 않고 가급적이면 `main`에 바로 커밋해 쌓습니다. `main`에서 작업을 시작해도 가급적이면 별도 작업 브랜치를 만들지 마세요. 사람 사용자가 관리가 힘듭니다. 여럿이 동시에 건드리는 대공사일 때만 예외적으로 브랜치를 씁니다.
 
 
 ## Agent Operating Rules
 
-이 섹션은 lvclac 에이전트 운영 규칙의 단일 원본입니다. Claude, Cursor, Codex용 repo 진입 파일은 전역 메모리와 이 문서를 먼저 읽게 하는 포인터 역할만 합니다.
+이 섹션은 lvclac 에이전트 운영 규칙입니다.
 
 - 최신 Notion 기준: https://app.notion.com/p/36426e6d586f80a3ad15f147fae38ed9
 - 일상 작업 기록 DB: Agent Work Log https://app.notion.com/p/5ed33baec3464baa9e4517217a0f90ef
-- 작업 시작 시 Notion Project OS, 관련 Task, 관련 Docs를 먼저 확인합니다.
-- 작업 종료 시 Agent Work Log에 변경 내용, 검증한 것, 검증하지 못한 것, 남은 리스크를 기록합니다.
+- 작업 시작 시 Notion Project OS, 관련 Task, 관련 page를 먼저 확인합니다.
+
+- 작업 종료 시 Agent Work Log에 꼭 변경 내용, 검증한 것, 검증하지 못한 것, 남은 리스크를 기록합니다.
+
 - Release 성격의 변경은 Release Notes 또는 Releases DB에 남깁니다.
 - 버그, 장애, QA 리스크는 QA / Test Plan 또는 Incidents / QA DB에 남깁니다.
-- Notion 문서와 repo 문서가 충돌하면 Project OS와 이 파일을 우선합니다.
 - 오래된 Notion 문서는 `휴지통/레거시`, 오래된 repo 문서는 `docs/legacy/`를 참고 전용으로 봅니다.
 
 ## Active 문서

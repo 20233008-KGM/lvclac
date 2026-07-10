@@ -24,19 +24,21 @@
    관련 내용이 있는지만 확인하지 말고, 본인이 한 일을 기록하는 겁니다.
 
 Whimsical, Google Calendar는 관련 내용만 최신화하고 관련 내용이 없으면 건들지 않습니다.
-Notion은 각 프로젝트의 Project OS를 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Release Notes, QA/Incident, 또는 관련 문서에 기록합니다.
+Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Release Notes, QA/Incident, 또는 관련 문서에 기록합니다.
 
 3. Whimsical에서는 텍스트만 수정하세요. 배치나 디자인은 내가 예쁘게 만들어둔 상태를 건드리지 마세요.
    컴포넌트를 붙여야 할 때는 기존 컴포넌트를 건드리지 말고 주변부에 붙여두세요. 나중에 내(인간)가 정리할게요.
 
-4. 작업이 끝나면 본인 변경분을 꼭 커밋하세요.
+4. 작업이 끝나면 본인 변경분을 꼭 커밋하세요. 커밋메시지도 상세히 적으세요.
+
+5. 미뤄둔 일은 backlog에 기록하고, 당장 이어서 할일은 tasks db에 기록합니다.
 
 =================================================================
 아래는 ai가 적는 칸 입니다.
 
 ## 공통 운영 규칙
 
-- 구현 작업 후에는 변경 내용, 검증, 미검증, 남은 제품/운영 리스크를 보고합니다.
+- 구현 관련 작업 후에는 변경 내용, 검증, 미검증, 남은 제품/운영 리스크를 보고합니다.
 - 이 repo는 브랜치를 나누지 않고 가급적이면 `main`에 바로 커밋해 쌓습니다. `main`에서 작업을 시작해도 가급적이면 별도 작업 브랜치를 만들지 마세요. 사람 사용자가 관리가 힘듭니다. 여럿이 동시에 건드리는 대공사일 때만 예외적으로 브랜치를 씁니다.
 
 
@@ -44,11 +46,11 @@ Notion은 각 프로젝트의 Project OS를 최신 기준으로 사용합니다.
 
 이 섹션은 lvclac 에이전트 운영 규칙입니다.
 
-- 최신 Notion 기준: https://app.notion.com/p/36426e6d586f80a3ad15f147fae38ed9
+- Notion 주소: https://app.notion.com/p/36426e6d586f80a3ad15f147fae38ed9
 - 일상 작업 기록 DB: Agent Work Log https://app.notion.com/p/5ed33baec3464baa9e4517217a0f90ef
 - 작업 시작 시 Notion Project OS, 관련 Task, 관련 page를 먼저 확인합니다.
 
-- 작업 종료 시 Agent Work Log에 꼭 변경 내용, 검증한 것, 검증하지 못한 것, 남은 리스크를 기록합니다.
+- 모든 종류의(행정,법무,개발 등등) 업무 종료 시 [Agent Work Log](https://app.notion.com/p/5ed33baec3464baa9e4517217a0f90ef?v=85c0159949314d4a87f1f2217f3e3d60)에 꼭 업무 내용을 상세히 기록합니다.
 
 - Release 성격의 변경은 Release Notes 또는 Releases DB에 남깁니다.
 - 버그, 장애, QA 리스크는 QA / Test Plan 또는 Incidents / QA DB에 남깁니다.

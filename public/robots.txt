@@ -1,9 +1,4 @@
+# 정식 공개 전까지 전체 색인을 막는다.
+# 공개 시점에 경로별 Allow + Sitemap 구성으로 되돌린다.
 User-agent: *
-Allow: /product
-Allow: /pricing
-Allow: /terms
-Allow: /privacy
-Allow: /refund-policy
 Disallow: /
-
-Sitemap: /sitemap.xml

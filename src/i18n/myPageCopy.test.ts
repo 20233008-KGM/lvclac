@@ -45,6 +45,17 @@ describe('my page copy', () => {
     expect(en.myPage.accountSettingGuardToggleHint).toContain('this device only')
   })
 
+  it('provides number-set management copy for preferences in both languages', () => {
+    expect(ko.myPage.numberSetsTitle).toBe('숫자세트')
+    expect(ko.myPage.numberSetsLimitNote).toContain('각 위치 최대 10개')
+    expect(ko.myPage.addLocalNumberSet).toBe('이 기기 세트 추가')
+    expect(ko.myPage.addCloudNumberSet).toBe('클라우드 세트 추가')
+    expect(en.myPage.numberSetsTitle).toBe('Number sets')
+    expect(en.myPage.numberSetsLimitNote).toContain('up to 10 per location')
+    expect(en.myPage.addLocalNumberSet).toBe('Add device set')
+    expect(en.myPage.addCloudNumberSet).toBe('Add cloud set')
+  })
+
   it('provides the side/pill nav copy for both languages', () => {
     expect(ko.myPage.navLabel).toBe('마이페이지 섹션 바로가기')
     expect(ko.myPage.navAccount).toBe('계정')

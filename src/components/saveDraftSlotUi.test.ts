@@ -37,11 +37,12 @@ describe('draft save slot UI', () => {
 
   it('asks to delete stored data when clicking the already-active save slot', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
+    const ctx = source('src/context/CalculatorContext.tsx')
 
-    expect(text).toContain("setModal('delete-confirm')")
-    expect(text).toContain('setPendingDeleteMode(mode)')
-    expect(text).toContain('deleteSavedData')
-    expect(text).toContain('deleteConfirmTitle')
+    expect(text).not.toContain("setModal('delete-confirm')")
+    expect(text).not.toContain('setPendingDeleteMode(mode)')
+    expect(ctx).toContain('deleteNumberSetById')
+    expect(text).not.toContain('deleteConfirmTitle')
   })
 
   it('keeps the no-save slot non-destructive by pausing instead of deleting', () => {
@@ -160,6 +161,7 @@ describe('draft save slot UI', () => {
     expect(text).toContain("import { formatSavedAtCompact } from '../utils/format'")
     expect(text).toContain('formatSavedAtCompact(savedAt)')
     expect(text).toContain('<div className="draft-save-row">')
+    expect(text).not.toContain('draft-save-status--icon-only')
     expect(text).not.toContain('statusSavedLocal')
     expect(text).not.toContain('statusSavedCloud')
   })
@@ -248,5 +250,51 @@ describe('draft save slot UI', () => {
     expect(css).toContain('width: 20px;')
     expect(css).toContain('height: 20px;')
     expect(css).toContain('.draft-save-slot--active.draft-save-slot--stored')
+  })
+
+  it('renders an icon-only number-set picker next to the storage slots', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const css = source('src/App.css')
+
+    expect(text).toContain('draft-number-set-picker')
+    expect(text).toContain('aria-label={t.draftSave.numberSetPickerLabel}')
+    expect(text).toContain('aria-haspopup="menu"')
+    expect(text).toContain('aria-expanded={numberSetMenuOpen}')
+    expect(text).toContain('role="menu"')
+    expect(text).toContain('draft-number-set-menu')
+    expect(text).toContain('NumberSetStackIcon')
+    expect(css).toContain('.draft-number-set-picker {')
+    expect(css).toContain('.draft-number-set-menu {')
+  })
+
+  it('keeps number-set names inside the menu instead of the closed save row', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+
+    expect(text).toContain('.map((numberSet) => numberSet)')
+    expect(text).toContain('numberSet.title')
+    expect(text).toContain('handleNumberSetSelect(numberSet.storageMode, numberSet.id)')
+    expect(text).not.toContain('draft-number-set-active-chip')
+  })
+
+  it('exposes number-set list actions from the calculator context', () => {
+    const text = source('src/context/CalculatorContext.tsx')
+
+    expect(text).toContain('export interface CalculatorNumberSet')
+    expect(text).toContain('numberSets: CalculatorNumberSet[]')
+    expect(text).toContain('activeNumberSetId: string | null')
+    expect(text).toContain('numberSetLimits: Record<SaveStorageMode, number>')
+    expect(text).toContain('selectNumberSet: (mode: SaveStorageMode, setId: string) => Promise<string | null>')
+    expect(text).toContain('createNumberSet: (mode: SaveStorageMode) => Promise<string | null>')
+    expect(text).toContain('renameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => Promise<string | null>')
+    expect(text).toContain('deleteNumberSetById: (mode: SaveStorageMode, setId: string) => Promise<string | null>')
+  })
+
+  it('uses multi-set cloud helpers instead of latest-only selection for lists', () => {
+    const db = source('src/db/numberSets.ts')
+
+    expect(db).toContain('export async function fetchNumberSets')
+    expect(db).toContain('export async function createNumberSet')
+    expect(db).toContain('export async function renameNumberSet')
+    expect(db).toContain(".order('updated_at', { ascending: false })")
   })
 })

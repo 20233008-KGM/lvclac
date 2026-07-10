@@ -1055,28 +1055,6 @@ html[data-zone='about'] body {
   line-height: 1.65;
 }
 
-/* Identity banner — the single, read-only "who you are" strip, shown once at
-   the top: avatar · name+email · plan badge (horizontal). */
-.my-page-identity-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  max-width: 100%;
-  margin-bottom: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-bg-elevated);
-  box-shadow: var(--shadow-sm);
-}
-
-.my-page-identity-info {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
 .my-page-avatar {
   flex: none;
   display: grid;
@@ -1089,7 +1067,7 @@ html[data-zone='about'] body {
   font-weight: 700;
 }
 
-.my-page-identity-card strong,
+.my-page-account-hub__name,
 .my-page-identity-meta {
   display: block;
   min-width: 0;
@@ -1098,10 +1076,10 @@ html[data-zone='about'] body {
   white-space: nowrap;
 }
 
-.my-page-identity-card strong {
+.my-page-account-hub__name {
   line-height: 1.32;
-  font-size: var(--font-size-base);
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .my-page-identity-meta {
@@ -1203,43 +1181,130 @@ html[data-zone='about'] body {
   line-height: 1.3;
 }
 
-.my-page-panel-head {
+.my-page-panel h2.my-page-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.my-page-account-hub {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.my-page-account-hub__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-md);
 }
 
-.my-page-account-email {
-  margin: 4px 0 0;
-  padding-left: 0.7rem;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  line-height: 1.45;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.my-page-account-hub__identity {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
 }
 
-.my-page-panel-section {
-  margin-top: var(--space-md);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border-subtle);
+.my-page-account-hub__identity-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
-.my-page-panel-section h3 {
+.my-page-account-hub__name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.my-page-account-hub__grid {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.9fr) minmax(16rem, 1.35fr);
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.my-page-account-hub__block {
+  min-width: 0;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+
+.my-page-account-hub__block h3 {
   margin: 0;
   color: var(--color-text);
   font-size: var(--font-size-base);
   line-height: 1.35;
 }
 
-.my-page-panel-section > p {
+.my-page-account-hub .my-page-field {
+  margin-top: 0;
+}
+
+.my-page-account-hub .my-page-nickname-form {
+  display: grid;
+  align-content: start;
+  gap: var(--space-xs);
+  width: auto;
+}
+
+.my-page-account-hub .my-page-nickname-form .my-page-inline-control {
+  width: min(100%, 19rem);
+}
+
+.my-page-account-hub .my-page-nickname-form input {
+  flex: 0 1 13.5rem;
+  max-width: 13.5rem;
+}
+
+.my-page-account-hub__billing .my-page-billing-status-card {
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.my-page-account-hub__billing .my-page-billing-free-headline {
+  margin-top: 0;
+}
+
+.my-page-account-hub__billing .my-page-plans {
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.my-page-linked-logins-note {
   margin-top: var(--space-xs);
 }
 
-.my-page-panel-section .my-page-billing {
-  margin-top: var(--space-xs);
+.my-page-account-hub__logins .my-page-linked-list {
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.my-page-account-hub__logins .my-page-linked-row {
+  grid-template-columns: 20px minmax(0, 1fr) 5.5rem 7rem;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+.my-page-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
 }
 
 /* Editable field: muted label on top, control below, optional helper text. */
@@ -1339,138 +1404,6 @@ html[data-zone='about'] body {
   overflow-wrap: anywhere;
   color: var(--color-text);
   font-weight: 600;
-}
-
-.records-summary-panel {
-  display: grid;
-  gap: var(--space-md);
-}
-
-.records-summary-link {
-  width: auto;
-  white-space: nowrap;
-}
-
-.records-summary-toggle {
-  margin-top: var(--space-xs);
-}
-
-.records-summary-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: var(--space-md);
-}
-
-.records-summary-block {
-  min-width: 0;
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.records-summary-block-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-
-.records-summary-block-head h3,
-.records-detail-panel h3,
-.records-detail-panel h4 {
-  margin: 0;
-  color: var(--color-text);
-}
-
-.records-summary-block-head span {
-  flex: none;
-  color: var(--color-text-dim);
-  font-size: var(--font-size-xs);
-}
-
-.records-summary-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-sm);
-  margin: 0;
-}
-
-.records-summary-metric {
-  min-width: 0;
-  padding: var(--space-sm);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
-}
-
-.records-summary-metric dt,
-.records-detail-metric dt {
-  color: var(--color-text-dim);
-  font-size: var(--font-size-xs);
-}
-
-.records-summary-metric dd,
-.records-detail-metric dd {
-  margin: 3px 0 0;
-  overflow-wrap: anywhere;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-}
-
-.records-summary-orders {
-  display: grid;
-  gap: var(--space-xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.records-summary-order {
-  display: grid;
-  grid-template-columns: 4.5rem minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-sm);
-  min-width: 0;
-  padding: var(--space-xs) 0;
-  border-top: 1px solid var(--color-border-subtle);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
-.records-summary-order:first-child {
-  border-top: 0;
-}
-
-.records-summary-order strong {
-  color: var(--color-text);
-  font-variant-numeric: tabular-nums;
-}
-
-.records-summary-order time {
-  color: var(--color-text-dim);
-  font-size: var(--font-size-xs);
-  white-space: nowrap;
-}
-
-.records-summary-side {
-  width: fit-content;
-  padding: 2px var(--space-xs);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-}
-
-.records-summary-side--long {
-  color: var(--color-primary);
-  background: var(--color-primary-muted);
-}
-
-.records-summary-side--short {
-  color: var(--color-warning, #f6ad55);
-  background: color-mix(in srgb, var(--color-warning, #f6ad55) 14%, transparent);
 }
 
 .records-archive .my-page-console {
@@ -1673,6 +1606,12 @@ html[data-zone='about'] body {
   box-shadow: var(--shadow-sm);
 }
 
+.records-detail-panel h3,
+.records-detail-panel h4 {
+  margin: 0;
+  color: var(--color-text);
+}
+
 .records-detail-head,
 .records-detail-compare {
   display: flex;
@@ -1714,82 +1653,18 @@ html[data-zone='about'] body {
   background: var(--color-bg-elevated);
 }
 
-/* 계정 설정: 프로필 · 구독 · 로그인 수단 섹션 분리 */
-.my-page-account-sections {
-  display: grid;
-  gap: 0;
-  margin-top: var(--space-lg);
+.records-detail-metric dt {
+  color: var(--color-text-dim);
+  font-size: var(--font-size-xs);
 }
 
-.my-page-account-section {
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.my-page-account-section:first-child {
-  padding-top: 0;
-  border-top: none;
-}
-
-.my-page-account-section h3 {
-  margin: 0;
+.records-detail-metric dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
   color: var(--color-text);
-  font-size: var(--font-size-base);
-  line-height: 1.35;
-}
-
-.my-page-account-section__desc {
-  margin: var(--space-xs) 0 0;
-  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  line-height: 1.45;
-}
-
-.my-page-account-section__footer {
-  margin-top: var(--space-sm);
-}
-
-.my-page-account-section--profile .my-page-field {
-  margin-top: var(--space-md);
-}
-
-.my-page-account-section--profile .my-page-field-help {
-  margin-top: var(--space-xs);
-}
-
-.my-page-account-section--profile .my-page-nickname-form {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  min-width: 0;
-}
-
-.my-page-account-section--profile .my-page-nickname-form input {
-  flex: 1;
-  min-width: 0;
-  max-width: 16rem;
-  min-height: 40px;
-  height: 40px;
-  padding: 0 var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.25;
-}
-
-.my-page-account-section--profile .my-page-nickname-form input:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.my-page-account-section--profile .my-page-nickname-form .btn-primary {
-  min-height: 40px;
-  height: 40px;
-  width: auto;
-  flex: none;
-  padding-inline: var(--space-md);
-  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 
 .my-page-billing-status-card {
@@ -1835,10 +1710,6 @@ html[data-zone='about'] body {
   line-height: 1.35;
 }
 
-.my-page-account-section--billing .my-page-plans {
-  margin-top: var(--space-sm);
-}
-
 .my-page-linked-group {
   margin-top: var(--space-md);
   border: 1px solid var(--color-border-subtle);
@@ -1860,11 +1731,7 @@ html[data-zone='about'] body {
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.my-page-account-section--linked .my-page-set-password-form {
-  margin-top: var(--space-md);
-}
-
-/* @deprecated — legacy flat settings list (replaced by .my-page-account-sections) */
+/* @deprecated — legacy flat settings list. */
 .my-page-settings-list {
   list-style: none;
   display: grid;
@@ -2125,12 +1992,31 @@ html[data-zone='about'] body {
 }
 
 .records-summary-panel .my-page-panel-head {
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--space-md);
 }
 
 .records-summary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   white-space: nowrap;
+}
+
+.records-summary-link:hover,
+.records-summary-link:focus-visible {
+  color: var(--color-text);
 }
 
 .my-page-toggle {
@@ -2151,17 +2037,13 @@ html[data-zone='about'] body {
 
 .records-summary-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr);
   gap: var(--space-sm);
   margin-top: var(--space-md);
 }
 
 .records-summary-block {
   min-width: 0;
-  padding: var(--space-sm);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
 }
 
 .records-summary-block-head {
@@ -2169,86 +2051,94 @@ html[data-zone='about'] body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
 }
 
 .records-summary-block-head h3 {
   margin: 0;
   color: var(--color-text);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
 }
 
 .records-summary-block-head span {
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
 }
 
-.records-summary-metrics {
+.records-summary-table {
   display: grid;
-  gap: var(--space-xs);
-  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
 }
 
-.records-summary-metric {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding-top: var(--space-xs);
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.records-summary-metric:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.records-summary-metric dt,
-.records-summary-order time {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
-.records-summary-metric dd {
-  margin: 0;
-  color: var(--color-text);
-  font-weight: 700;
-  text-align: right;
-}
-
-.records-summary-orders {
+.records-summary-row {
   display: grid;
-  gap: var(--space-xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.records-summary-order {
-  display: grid;
-  grid-template-columns: 5.5rem 4rem minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-xs);
   align-items: center;
+  gap: var(--space-xs);
   min-width: 0;
-  padding-top: var(--space-xs);
+  min-height: 34px;
+  padding: 0 var(--space-sm);
   border-top: 1px solid var(--color-border-subtle);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
 }
 
-.records-summary-order:first-child {
-  padding-top: 0;
+.records-summary-row:first-child {
   border-top: 0;
 }
 
-.records-summary-order span {
+.records-summary-table--snapshot .records-summary-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.records-summary-table--orders .records-summary-row {
+  grid-template-columns: 5.75rem 4rem minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.records-summary-head {
+  min-height: 30px;
+  background: color-mix(in srgb, var(--color-bg-elevated) 82%, var(--color-border-subtle));
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.records-summary-head span,
+.records-summary-row time,
+.records-summary-row strong,
+.records-summary-row > span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.records-summary-values,
+.records-summary-order {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.records-summary-row strong {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.records-summary-table--snapshot .records-summary-values strong {
+  text-align: right;
+}
+
+.records-summary-row time {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .records-summary-side {
   width: fit-content;
+  max-width: 100%;
   padding: 2px 7px;
   border-radius: var(--radius-sm);
   background: var(--color-primary-muted);
@@ -2309,6 +2199,115 @@ html[data-zone='about'] body {
   margin: 0;
   color: var(--color-text);
   font-size: var(--font-size-base);
+}
+
+.my-page-number-sets {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.my-page-number-set-usage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.my-page-number-set-usage-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-xs) var(--space-sm);
+  align-items: center;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+
+.my-page-number-set-usage-card span {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.my-page-number-set-usage-card strong {
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.my-page-number-set-usage-card .btn {
+  grid-column: 1 / -1;
+  min-height: 32px;
+}
+
+.my-page-number-set-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-page-number-set-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--space-sm);
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.my-page-number-set-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.my-page-number-set-main input {
+  min-width: 0;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+.my-page-number-set-main input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.my-page-number-set-main span {
+  color: var(--color-text-dim);
+  font-size: 11px;
+}
+
+.my-page-number-set-active {
+  padding: 4px 7px;
+  border: 1px solid color-mix(in srgb, var(--color-success) 42%, transparent);
+  border-radius: 999px;
+  color: var(--color-success);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.my-page-number-set-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.my-page-number-set-actions .btn {
+  min-height: 32px;
+  height: 32px;
+  width: auto;
+  padding-inline: var(--space-sm);
 }
 
 .my-page-automation-form {
@@ -2477,20 +2476,6 @@ html[data-zone='about'] body {
     width: 100%;
   }
 
-  .my-page-account-section--profile .my-page-nickname-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .my-page-account-section--profile .my-page-nickname-form input {
-    max-width: none;
-    width: 100%;
-  }
-
-  .my-page-account-section--profile .my-page-nickname-form .btn-primary {
-    width: 100%;
-  }
-
   .my-page-linked-item {
     grid-template-columns: 20px minmax(0, 1fr);
     grid-template-rows: auto auto;
@@ -2518,6 +2503,11 @@ html[data-zone='about'] body {
   .my-page-setting-row--billing,
   .my-page-setting-row--linked,
   .my-page-linked-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .my-page-account-hub__logins .my-page-linked-row {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
@@ -2644,10 +2634,6 @@ html[data-zone='about'] body {
     grid-template-columns: 1fr;
   }
 
-  .my-page-identity-card {
-    flex-wrap: wrap;
-  }
-
   .my-page-body {
     grid-template-columns: 1fr;
     gap: var(--space-sm);
@@ -2668,6 +2654,19 @@ html[data-zone='about'] body {
     align-items: stretch;
   }
 
+  .my-page-account-hub__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-page-account-hub__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .my-page-account-hub__head > .btn {
+    align-self: flex-start;
+  }
+
   .my-page-storage-row {
     grid-template-columns: 1fr;
     gap: var(--space-xs);
@@ -2679,9 +2678,26 @@ html[data-zone='about'] body {
     max-width: none;
   }
 
+  .my-page-account-hub .my-page-nickname-form .my-page-inline-control,
+  .my-page-account-hub .my-page-nickname-form input {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+
   .my-page-automation-form,
+  .my-page-number-set-usage,
+  .my-page-number-set-row,
   .my-page-support-grid {
     grid-template-columns: 1fr;
+  }
+
+  .my-page-number-set-actions {
+    justify-content: stretch;
+  }
+
+  .my-page-number-set-actions .btn {
+    flex: 1 1 6rem;
   }
 
   .my-page-automation-actions {
@@ -2694,7 +2710,6 @@ html[data-zone='about'] body {
   }
 
   .records-summary-grid,
-  .records-summary-metrics,
   .records-detail-compare {
     grid-template-columns: 1fr;
   }
@@ -2704,9 +2719,25 @@ html[data-zone='about'] body {
     display: grid;
   }
 
-  .records-summary-order {
-    grid-template-columns: 1fr;
-    align-items: start;
+  .records-summary-link {
+    min-height: 34px;
+    padding: 0 var(--space-sm);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-elevated);
+    text-decoration: none;
+  }
+
+  .records-summary-table {
+    overflow-x: auto;
+  }
+
+  .records-summary-table--snapshot .records-summary-row {
+    min-width: 22rem;
+  }
+
+  .records-summary-table--orders .records-summary-row {
+    min-width: 32rem;
   }
 
   .records-timeline-toolbar,

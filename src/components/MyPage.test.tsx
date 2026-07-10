@@ -20,6 +20,10 @@ const summary: AccountRecordSummary = {
   isAtRisk: false,
 }
 
+function occurrences(text: string, needle: string): number {
+  return text.split(needle).length - 1
+}
+
 function authUser(overrides: Partial<AuthUser> = {}): AuthUser {
   return {
     id: 'user-1',
@@ -35,8 +39,12 @@ function snapshotRecord(): AccountSnapshotRecord {
   return {
     id: 'snapshot-1',
     title: 'Latest snapshot',
-    inputs: { ...sampleInputs, accountEval: 44_127_669 },
-    result: summary,
+    inputs: { ...sampleInputs, accountEval: 48_537_669 },
+    result: {
+      ...summary,
+      toleranceRate: 20.03,
+      leverageRatio: 2.42,
+    },
     source: 'manual',
     sourceLocalDate: null,
     createdAt: '2026-07-10T02:01:00.000Z',
@@ -120,11 +128,18 @@ describe('MyPageView', () => {
 
     expect(html).toContain('my-page-shell')
     expect(html).toContain('my-page-console')
-    expect(html).toContain('my-page-account-email')
-    expect(html).toContain('my-page-identity-card')
+    expect(html).toContain('class="my-page-panel my-page-account-hub"')
+    expect(html).toContain('my-page-account-hub__identity')
+    expect(html).toContain('my-page-avatar')
+    expect(html).toContain('my-page-badge')
+    expect(html).not.toContain('my-page-identity-card')
+    expect(html).not.toContain('my-page-account-email')
     expect(html).toContain(en.myPage.navAccount)
-    expect(html).toContain('user@example.com')
+    expect(occurrences(html, '>user@example.com<')).toBe(1)
     expect(html).toContain('Trader Kim')
+    expect(html).toContain('my-page-account-hub__grid')
+    expect(html).toContain('my-page-account-hub__block')
+    expect(html).toContain('my-page-linked-logins-note')
     expect(html).toContain(en.myPage.recordsSummaryTitle)
     expect(html).toContain(en.myPage.recordsArchiveLink)
     expect(html).toContain('href="/records"')
@@ -151,7 +166,7 @@ describe('MyPageView', () => {
       <MyPageView {...baseProps} user={authUser()} linkedProviders={['email']} />,
     )
 
-    expect(html).toContain('my-page-panel-section')
+    expect(html).toContain('my-page-account-hub__logins')
     expect(html).toContain('my-page-linked-list')
     expect(html).toContain(en.myPage.navAccount)
     expect(html).toContain(en.myPage.linkedLoginTitle)
@@ -189,7 +204,7 @@ describe('MyPageView', () => {
 })
 
 describe('AccountRecordsSummaryPanel', () => {
-  it('shows the latest snapshot metrics, five recent orders, and the records ledger link', () => {
+  it('shows ledger-style snapshot and order summary tables with the records ledger link', () => {
     const html = renderToStaticMarkup(
       <AccountRecordsSummaryPanel
         copy={en.myPage}
@@ -214,16 +229,23 @@ describe('AccountRecordsSummaryPanel', () => {
       />,
     )
 
-    expect(html).toContain(en.accountRecords.summaryAccountEquity)
-    expect(html).toContain(en.accountRecords.summaryLiquidationBuffer)
-    expect(html).toContain(en.accountRecords.summaryLeverage)
-    expect(html).toContain('44,127,669')
-    expect(html).toContain('17.03%')
-    expect(html).toContain('2.66')
+    expect(html).toContain('records-summary-table records-summary-table--snapshot')
+    expect(occurrences(html, en.accountRecords.summaryAccountEquity)).toBe(1)
+    expect(occurrences(html, en.accountRecords.summaryLiquidationBuffer)).toBe(1)
+    expect(occurrences(html, en.accountRecords.summaryLeverage)).toBe(1)
+    expect(html).toContain('48,537,669')
+    expect(html).toContain('20.03%')
+    expect(html).toContain('2.42')
     expect(html).toContain(en.myPage.recordsArchiveLink)
+    expect(html).toContain('<a class="records-summary-link" href="/records">')
     expect(html).toContain('href="/records"')
-    expect(html).toContain(en.accountRecords.archiveOrderContracts)
-    expect(html).toContain(en.accountRecords.archiveOrderPrice)
+    expect(html).toContain('records-summary-table records-summary-table--orders')
+    expect(html).toContain(en.accountRecords.createdAt)
+    expect(html).toContain(en.accountRecords.side)
+    expect(occurrences(html, en.accountRecords.archiveOrderContracts)).toBe(1)
+    expect(occurrences(html, en.accountRecords.archiveOrderPrice)).toBe(1)
+    expect(html).not.toContain(`${en.accountRecords.archiveOrderContracts} <strong>`)
+    expect(html).not.toContain(`${en.accountRecords.archiveOrderPrice} <strong>`)
     expect(html).toContain('295,500')
     expect(html).not.toContain('276,000')
   })

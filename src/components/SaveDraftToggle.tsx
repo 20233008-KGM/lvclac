@@ -1,5 +1,15 @@
-import { useEffect, useId, useRef, useState, type DragEvent, type ReactNode, type RefObject } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type DragEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { createPortal } from 'react-dom'
+import { MY_PAGE_PATH } from '../config/routes'
 import { useCalculator, type SaveStorageMode } from '../context/CalculatorContext'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
@@ -9,7 +19,7 @@ import { TooltipBody } from './TooltipBody'
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 const DRAFT_SLOT_DRAG_TYPE = 'application/x-lvclac-draft-slot'
 
-type ModalKind = 'enable' | 'enable-info' | 'delete-confirm' | null
+type ModalKind = 'enable' | 'enable-info' | null
 
 type SaveSlot = 'off' | SaveStorageMode
 
@@ -138,6 +148,17 @@ function OffIcon() {
   )
 }
 
+function NumberSetStackIcon() {
+  return (
+    <svg viewBox="0 0 28 28" aria-hidden="true">
+      <rect x="8" y="6.2" width="12" height="4.2" rx="1.4" fill="none" />
+      <rect x="8" y="11.9" width="12" height="4.2" rx="1.4" fill="none" />
+      <rect x="8" y="17.6" width="12" height="4.2" rx="1.4" fill="none" />
+      <path d="m21.2 10.6 2 2 2-2" fill="none" />
+    </svg>
+  )
+}
+
 export function SaveDraftToggle() {
   const { t } = useLanguage()
   const {
@@ -149,21 +170,27 @@ export function SaveDraftToggle() {
     hasCloudDraft,
     localDraftSavedAt,
     cloudDraftSavedAt,
+    numberSets,
+    activeNumberSetId,
     setSaveEnabled,
     pauseSaving,
-    deleteSavedData,
     setStorageMode,
+    selectNumberSet,
+    createNumberSet,
     copyDraftBetweenStorageModes,
   } = useCalculator()
   const [modal, setModal] = useState<ModalKind>(null)
   const [pendingMode, setPendingMode] = useState<SaveStorageMode | null>(null)
-  const [pendingDeleteMode, setPendingDeleteMode] = useState<SaveStorageMode | null>(null)
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [, refreshSkipState] = useState(0)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [draggingMode, setDraggingMode] = useState<SaveStorageMode | null>(null)
   const [dropTargetMode, setDropTargetMode] = useState<SaveStorageMode | null>(null)
+  const [numberSetMenuOpen, setNumberSetMenuOpen] = useState(false)
+  const [numberSetMenuStyle, setNumberSetMenuStyle] = useState<CSSProperties | null>(null)
+  const numberSetPickerRef = useRef<HTMLButtonElement>(null)
+  const numberSetMenuRef = useRef<HTMLDivElement>(null)
   const isCloud = storageMode === 'cloud'
   const modalMode = pendingMode ?? storageMode
   const modalIsCloud = modalMode === 'cloud'
@@ -189,6 +216,11 @@ export function SaveDraftToggle() {
           : syncStatus === 'saving'
             ? t.draftSave.statusSaving
             : null
+  const menuNumberSets = numberSets
+    .map((numberSet) => numberSet)
+    .filter((numberSet) => cloudAvailable || numberSet.storageMode === 'local')
+  const localNumberSets = menuNumberSets.filter((numberSet) => numberSet.storageMode === 'local')
+  const cloudNumberSets = menuNumberSets.filter((numberSet) => numberSet.storageMode === 'cloud')
 
   const openEnableModal = (mode: SaveStorageMode = storageMode) => {
     setPendingMode(mode === storageMode ? null : mode)
@@ -264,24 +296,6 @@ export function SaveDraftToggle() {
     setModal(null)
   }
 
-  const confirmDelete = () => {
-    const mode = pendingDeleteMode
-    if (!mode) return
-    setBusy(true)
-    setNotice(null)
-    void deleteSavedData(mode).then((error) => {
-      setBusy(false)
-      setPendingDeleteMode(null)
-      if (error) setNotice(t.draftSave.statusError)
-      else setModal(null)
-    })
-  }
-
-  const cancelDelete = () => {
-    setPendingDeleteMode(null)
-    setModal(null)
-  }
-
   const helpTooltipId = useId()
   const slotsRowRef = useRef<HTMLDivElement>(null)
   const { anchorRef: helpAnchorRef, anchorHandlers: helpAnchorHandlers, focusWithinHandlers: helpFocusWithinHandlers, renderTooltip: renderHelpTooltip } = useFloatingTooltip({
@@ -295,6 +309,85 @@ export function SaveDraftToggle() {
     setSkipEnableModal(storageMode, false)
     refreshSkipState((value) => value + 1)
     setModal('enable-info')
+  }
+
+  const positionNumberSetMenu = () => {
+    const anchor = numberSetPickerRef.current
+    if (!anchor) return
+    const rect = anchor.getBoundingClientRect()
+    const gap = 8
+    const viewportPadding = 12
+    const width = Math.min(320, Math.max(240, window.innerWidth - 24))
+    const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12)
+    const desiredHeight = Math.min(320, window.innerHeight - viewportPadding * 2)
+    const measuredHeight = numberSetMenuRef.current?.offsetHeight
+    const menuHeight = Math.min(measuredHeight ?? desiredHeight, desiredHeight)
+    const spaceBelow = window.innerHeight - rect.bottom - gap - viewportPadding
+    const spaceAbove = rect.top - gap - viewportPadding
+    const openAbove = spaceBelow < menuHeight && spaceAbove > spaceBelow
+    const availableHeight = openAbove ? spaceAbove : spaceBelow
+    const maxHeight = Math.min(desiredHeight, Math.max(180, availableHeight))
+    const top = openAbove
+      ? Math.max(viewportPadding, rect.top - gap - Math.min(menuHeight, maxHeight))
+      : Math.min(rect.bottom + gap, window.innerHeight - viewportPadding - maxHeight)
+    setNumberSetMenuStyle({
+      position: 'fixed',
+      top,
+      left,
+      width,
+      maxHeight,
+    })
+  }
+
+  useEffect(() => {
+    if (!numberSetMenuOpen) return
+    positionNumberSetMenu()
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (numberSetPickerRef.current?.contains(target)) return
+      if (numberSetMenuRef.current?.contains(target)) return
+      setNumberSetMenuOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setNumberSetMenuOpen(false)
+    }
+    const onResize = () => positionNumberSetMenu()
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('scroll', onResize, true)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('scroll', onResize, true)
+    }
+  }, [numberSetMenuOpen])
+
+  const handleNumberSetSelect = (mode: SaveStorageMode, setId: string) => {
+    setNumberSetMenuOpen(false)
+    setBusy(true)
+    setNotice(null)
+    void selectNumberSet(mode, setId).then((error) => {
+      setBusy(false)
+      if (error) setNotice(t.draftSave.statusError)
+    })
+  }
+
+  const handleNumberSetAdd = () => {
+    setBusy(true)
+    setNotice(null)
+    void createNumberSet(storageMode).then((error) => {
+      setBusy(false)
+      if (error === 'number_set_limit_reached') {
+        setNotice(t.draftSave.numberSetLimitReached)
+      } else if (error) {
+        setNotice(t.draftSave.statusError)
+      }
+    })
   }
 
   const handleSlotDragStart = (event: DragEvent<HTMLButtonElement>, mode: SaveStorageMode) => {
@@ -361,13 +454,7 @@ export function SaveDraftToggle() {
 
     const mode = slot
 
-    if (saveEnabled && storageMode === mode) {
-      // 이미 활성인 저장 슬롯을 다시 누르면 저장값 삭제 여부를 묻는다.
-      if (!storedForMode(mode)) return
-      setPendingDeleteMode(mode)
-      setModal('delete-confirm')
-      return
-    }
+    if (saveEnabled && storageMode === mode) return
 
     if (!saveEnabled) {
       if (mode !== storageMode) {
@@ -392,6 +479,80 @@ export function SaveDraftToggle() {
   }
 
   const slots: SaveSlot[] = cloudAvailable ? ['off', 'local', 'cloud'] : ['off', 'local']
+
+  const renderNumberSetGroup = (mode: SaveStorageMode, label: string) => {
+    const groupSets = mode === 'local' ? localNumberSets : cloudNumberSets
+    if (groupSets.length === 0) return null
+
+    return (
+      <div className="draft-number-set-menu__group">
+        <div className="draft-number-set-menu__group-label">{label}</div>
+        {groupSets.map((numberSet) => {
+          const active = saveEnabled && storageMode === mode && activeNumberSetId === numberSet.id
+          return (
+            <button
+              key={`${mode}:${numberSet.id}`}
+              type="button"
+              className={`draft-number-set-menu__item${
+                active ? ' draft-number-set-menu__item--active' : ''
+              }`}
+              role="menuitemradio"
+              aria-checked={active}
+              onClick={() => handleNumberSetSelect(numberSet.storageMode, numberSet.id)}
+            >
+              <span className="draft-number-set-menu__check" aria-hidden="true">
+                {active ? '✓' : ''}
+              </span>
+              <span className="draft-number-set-menu__copy">
+                <strong>{numberSet.title}</strong>
+                <span>{mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode}</span>
+              </span>
+              {active && (
+                <span className="draft-number-set-menu__pill">{t.draftSave.numberSetActive}</span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const numberSetMenu =
+    numberSetMenuOpen && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            ref={numberSetMenuRef}
+            className="draft-number-set-menu"
+            role="menu"
+            style={numberSetMenuStyle ?? undefined}
+          >
+            <div className="draft-number-set-menu__head">
+              <span>{t.draftSave.numberSetMenuTitle}</span>
+              <span>{menuNumberSets.length}</span>
+            </div>
+            {renderNumberSetGroup('local', t.draftSave.localMode)}
+            {renderNumberSetGroup('cloud', t.draftSave.cloudMode)}
+            <div className="draft-number-set-menu__actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={busy}
+                onClick={handleNumberSetAdd}
+              >
+                {t.draftSave.numberSetAdd}
+              </button>
+              <a
+                className="btn btn-ghost"
+                href={`${MY_PAGE_PATH}#my-page-preferences`}
+                onClick={() => setNumberSetMenuOpen(false)}
+              >
+                {t.draftSave.numberSetManage}
+              </a>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null
 
   return (
     <>
@@ -471,6 +632,21 @@ export function SaveDraftToggle() {
                 </button>
               )
             })}
+            <button
+              ref={numberSetPickerRef}
+              type="button"
+              className="draft-save-slot draft-number-set-picker"
+              aria-label={t.draftSave.numberSetPickerLabel}
+              aria-haspopup="menu"
+              aria-expanded={numberSetMenuOpen}
+              disabled={busy || syncStatus === 'loading'}
+              onClick={() => setNumberSetMenuOpen((open) => !open)}
+            >
+              <NumberSetStackIcon />
+              <span className="draft-save-slot__sr-label">
+                {t.draftSave.numberSetPickerLabel}
+              </span>
+            </button>
             <span
               ref={helpAnchorRef as RefObject<HTMLSpanElement>}
               className="field-label-tooltip-anchor draft-save-slots__help"
@@ -494,6 +670,7 @@ export function SaveDraftToggle() {
               )}
             </span>
           </div>
+          {numberSetMenu}
           {saveEnabled && statusText && (
             <span className={`draft-save-status draft-save-status--${syncStatus}`}>
               <span className="draft-save-status__check" aria-hidden="true">
@@ -551,25 +728,6 @@ export function SaveDraftToggle() {
         </DraftSaveModal>
       )}
 
-      {modal === 'delete-confirm' && (
-        <DraftSaveModal
-          title={t.draftSave.deleteConfirmTitle}
-          confirmLabel={t.draftSave.deleteConfirm}
-          onConfirm={confirmDelete}
-          onDismiss={cancelDelete}
-          footer={
-            <button type="button" className="link-btn draft-save-delete-cancel" onClick={cancelDelete}>
-              {t.draftSave.deleteCancel}
-            </button>
-          }
-        >
-          <p className="disclaimer-modal-text draft-save-delete-text">
-            {pendingDeleteMode === 'cloud'
-              ? t.draftSave.cloudDeleteConfirmBody
-              : t.draftSave.deleteConfirmBody}
-          </p>
-        </DraftSaveModal>
-      )}
     </>
   )
 }

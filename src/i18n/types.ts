@@ -154,6 +154,12 @@ export interface Messages {
     copyError: string
     helpHint: string
     helpHintLabel: string
+    numberSetPickerLabel: string
+    numberSetMenuTitle: string
+    numberSetAdd: string
+    numberSetManage: string
+    numberSetActive: string
+    numberSetLimitReached: string
   }
   accountRecords: {
     title: string
@@ -297,6 +303,21 @@ export interface Messages {
     preferencesTitle: string
     accountSettingGuardToggleLabel: string
     accountSettingGuardToggleHint: string
+    numberSetsTitle: string
+    numberSetsBody: string
+    numberSetsLimitNote: string
+    numberSetsLocalTitle: string
+    numberSetsCloudTitle: string
+    addLocalNumberSet: string
+    addCloudNumberSet: string
+    renameNumberSet: string
+    deleteNumberSet: string
+    selectNumberSet: string
+    activeNumberSet: string
+    numberSetNamePlaceholder: string
+    numberSetLimitReached: string
+    numberSetLoginRequired: string
+    numberSetError: string
     planTitle: string
     planStatusLabel: string
     planStatusValue: string

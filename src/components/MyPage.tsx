@@ -11,6 +11,11 @@ import {
 import { boardPath } from '../config/boards'
 import { ADMIN_FEEDBACK_PATH, RECORDS_PATH } from '../config/routes'
 import { CONTACT_EMAIL } from '../config/site'
+import {
+  useCalculator,
+  type CalculatorNumberSet,
+  type SaveStorageMode,
+} from '../context/CalculatorContext'
 import { useAuth } from '../context/AuthContext'
 import {
   createAccountRecordsRepository,
@@ -21,7 +26,7 @@ import type {
   AccountSnapshotAutomationSettings,
   AccountSnapshotAutomationSettingsInput,
 } from '../db/accountSnapshotAutomation'
-import { fetchLatestNumberSet } from '../db/numberSets'
+import { fetchNumberSets } from '../db/numberSets'
 import type { AuthUser } from '../db/profile'
 import type { Messages } from '../i18n/types'
 import { useLanguage } from '../i18n'
@@ -247,21 +252,6 @@ function InboxIcon() {
   )
 }
 
-function RecordsSummaryMetric({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
-  return (
-    <div className="records-summary-metric">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  )
-}
-
 function LatestSnapshotSummary({
   copy,
   recordsCopy,
@@ -275,21 +265,34 @@ function LatestSnapshotSummary({
     return <p className="account-records-empty">{copy.latestSnapshotEmpty}</p>
   }
 
+  const metrics = [
+    {
+      label: recordsCopy.summaryAccountEquity,
+      value: formatNumber(snapshot.inputs.accountEval ?? null),
+    },
+    {
+      label: recordsCopy.summaryLiquidationBuffer,
+      value: formatPercent(snapshot.result.toleranceRate),
+    },
+    {
+      label: recordsCopy.summaryLeverage,
+      value: formatLeverageValue(snapshot.result.leverageRatio),
+    },
+  ]
+
   return (
-    <dl className="records-summary-metrics">
-      <RecordsSummaryMetric
-        label={recordsCopy.summaryAccountEquity}
-        value={formatNumber(snapshot.inputs.accountEval ?? null)}
-      />
-      <RecordsSummaryMetric
-        label={recordsCopy.summaryLiquidationBuffer}
-        value={formatPercent(snapshot.result.toleranceRate)}
-      />
-      <RecordsSummaryMetric
-        label={recordsCopy.summaryLeverage}
-        value={formatLeverageValue(snapshot.result.leverageRatio)}
-      />
-    </dl>
+    <div className="records-summary-table records-summary-table--snapshot" role="table">
+      <div className="records-summary-row records-summary-head" role="row">
+        {metrics.map((metric) => (
+          <span key={metric.label} role="columnheader">{metric.label}</span>
+        ))}
+      </div>
+      <div className="records-summary-row records-summary-values" role="row">
+        {metrics.map((metric) => (
+          <strong key={metric.label} role="cell">{metric.value}</strong>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -307,23 +310,24 @@ function RecentOrderList({
   }
 
   return (
-    <ul className="records-summary-orders">
+    <div className="records-summary-table records-summary-table--orders" role="table">
+      <div className="records-summary-row records-summary-head" role="row">
+        <span role="columnheader">{recordsCopy.createdAt}</span>
+        <span role="columnheader">{recordsCopy.side}</span>
+        <span role="columnheader">{recordsCopy.archiveOrderContracts}</span>
+        <span role="columnheader">{recordsCopy.archiveOrderPrice}</span>
+      </div>
       {orders.slice(0, 5).map((order) => (
-        <li key={order.id} className="records-summary-order">
-          <time dateTime={order.createdAt}>{formatSavedAtCompact(order.createdAt)}</time>
-          <span className={`records-summary-side records-summary-side--${order.positionSide}`}>
+        <div key={order.id} className="records-summary-row records-summary-order" role="row">
+          <time dateTime={order.createdAt} role="cell">{formatSavedAtCompact(order.createdAt)}</time>
+          <span className={`records-summary-side records-summary-side--${order.positionSide}`} role="cell">
             {order.positionSide}
           </span>
-          <span>
-            {recordsCopy.archiveOrderContracts}{' '}
-            <strong>{formatNumber(order.orderContracts)}</strong>
-          </span>
-          <span>
-            {recordsCopy.archiveOrderPrice} <strong>{formatNumber(order.orderPrice)}</strong>
-          </span>
-        </li>
+          <strong role="cell">{formatNumber(order.orderContracts)}</strong>
+          <strong role="cell">{formatNumber(order.orderPrice)}</strong>
+        </div>
       ))}
-    </ul>
+    </div>
   )
 }
 
@@ -370,7 +374,7 @@ export function AccountRecordsSummaryPanel({
           <h2 id="my-page-records-summary-title">{copy.recordsSummaryTitle}</h2>
           <p>{copy.storageBody}</p>
         </div>
-        <a className="btn btn-ghost records-summary-link" href={archiveHref}>
+        <a className="records-summary-link" href={archiveHref}>
           {copy.recordsArchiveLink}
         </a>
       </div>
@@ -544,6 +548,157 @@ export function AccountSnapshotAutomationPanel({
   )
 }
 
+function NumberSetRow({
+  copy,
+  numberSet,
+  active,
+  busy,
+  onRenameNumberSet,
+  onDeleteNumberSet,
+  onSelectNumberSet,
+}: {
+  copy: MyPageCopy
+  numberSet: CalculatorNumberSet
+  active: boolean
+  busy: boolean
+  onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
+  onSelectNumberSet: (mode: SaveStorageMode, setId: string) => void
+}) {
+  const [titleDraft, setTitleDraft] = useState(numberSet.title)
+
+  return (
+    <li className="my-page-number-set-row">
+      <div className="my-page-number-set-main">
+        <input
+          value={titleDraft}
+          aria-label={copy.numberSetNamePlaceholder}
+          placeholder={copy.numberSetNamePlaceholder}
+          disabled={busy}
+          onChange={(event) => setTitleDraft(event.currentTarget.value)}
+        />
+        <span>
+          {numberSet.storageMode === 'local' ? copy.numberSetsLocalTitle : copy.numberSetsCloudTitle}
+        </span>
+      </div>
+      {active && <span className="my-page-number-set-active">{copy.activeNumberSet}</span>}
+      <div className="my-page-number-set-actions">
+        <button
+          type="button"
+          className="btn btn-ghost"
+          disabled={busy || titleDraft.trim() === numberSet.title}
+          onClick={() => onRenameNumberSet(numberSet.storageMode, numberSet.id, titleDraft)}
+        >
+          {copy.renameNumberSet}
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          disabled={busy || active}
+          onClick={() => onSelectNumberSet(numberSet.storageMode, numberSet.id)}
+        >
+          {active ? copy.activeNumberSet : copy.selectNumberSet}
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          disabled={busy}
+          onClick={() => onDeleteNumberSet(numberSet.storageMode, numberSet.id)}
+        >
+          {copy.deleteNumberSet}
+        </button>
+      </div>
+    </li>
+  )
+}
+
+function NumberSetPreferencesPanel({
+  copy,
+  localNumberSets,
+  cloudNumberSets,
+  activeNumberSetId,
+  numberSetLimits,
+  busy,
+  notice,
+  onCreateNumberSet,
+  onRenameNumberSet,
+  onDeleteNumberSet,
+  onSelectNumberSet,
+}: {
+  copy: MyPageCopy
+  localNumberSets: CalculatorNumberSet[]
+  cloudNumberSets: CalculatorNumberSet[]
+  activeNumberSetId: string | null
+  numberSetLimits: Record<SaveStorageMode, number>
+  busy: boolean
+  notice: string | null
+  onCreateNumberSet: (mode: SaveStorageMode) => void
+  onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
+  onSelectNumberSet: (mode: SaveStorageMode, setId: string) => void
+}) {
+  const allNumberSets = [...localNumberSets, ...cloudNumberSets]
+
+  return (
+    <section className="my-page-preference-block my-page-number-sets">
+      <div className="my-page-panel-head">
+        <div>
+          <h3>{copy.numberSetsTitle}</h3>
+          <p>{copy.numberSetsBody}</p>
+        </div>
+      </div>
+
+      <div className="my-page-number-set-usage">
+        <div className="my-page-number-set-usage-card">
+          <span>{copy.numberSetsLocalTitle}</span>
+          <strong>
+            {localNumberSets.length} / {numberSetLimits.local}
+          </strong>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={busy || localNumberSets.length >= numberSetLimits.local}
+            onClick={() => onCreateNumberSet('local')}
+          >
+            {copy.addLocalNumberSet}
+          </button>
+        </div>
+        <div className="my-page-number-set-usage-card">
+          <span>{copy.numberSetsCloudTitle}</span>
+          <strong>
+            {cloudNumberSets.length} / {numberSetLimits.cloud}
+          </strong>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={busy || cloudNumberSets.length >= numberSetLimits.cloud}
+            onClick={() => onCreateNumberSet('cloud')}
+          >
+            {copy.addCloudNumberSet}
+          </button>
+        </div>
+      </div>
+
+      <ul className="my-page-number-set-list">
+        {allNumberSets.map((numberSet) => (
+          <NumberSetRow
+            key={`${numberSet.storageMode}:${numberSet.id}:${numberSet.title}`}
+            copy={copy}
+            numberSet={numberSet}
+            active={activeNumberSetId === numberSet.id}
+            busy={busy}
+            onRenameNumberSet={onRenameNumberSet}
+            onDeleteNumberSet={onDeleteNumberSet}
+            onSelectNumberSet={onSelectNumberSet}
+          />
+        ))}
+      </ul>
+      <p className="my-page-field-help">{copy.numberSetsLimitNote}</p>
+      {notice && <p className="my-page-form-message" role="status">{notice}</p>}
+    </section>
+  )
+}
+
 export function MyPageView({
   copy,
   authLoading,
@@ -636,21 +791,6 @@ export function MyPageView({
           </section>
         ) : (
           <>
-            <section className="my-page-identity-card" aria-label={copy.navAccount}>
-              <span className="my-page-avatar" aria-hidden="true">
-                {user.nickname.trim().charAt(0).toUpperCase() || '?'}
-              </span>
-              <div className="my-page-identity-info">
-                <strong title={user.nickname}>{user.nickname}</strong>
-                <span className="my-page-identity-meta" title={user.email}>
-                  {user.email}
-                </span>
-              </div>
-              <span className={`my-page-badge${isPro ? '' : ' my-page-badge--muted'}`}>
-                {isPro ? copy.billing.statusPro : copy.billing.statusFree}
-              </span>
-            </section>
-
             <div className="my-page-body">
               <nav className="my-page-nav" aria-label={copy.navLabel}>
                 {MY_PAGE_NAV_ITEMS.map((item) => {
@@ -671,48 +811,73 @@ export function MyPageView({
               <main className="my-page-console">
               <section
                 id="my-page-profile"
-                className="my-page-panel"
+                className="my-page-panel my-page-account-hub"
                 aria-labelledby="my-page-profile-title"
               >
-                <div className="my-page-panel-head">
-                  <div>
-                    <h2 id="my-page-profile-title">{copy.navAccount}</h2>
-                    <p className="my-page-account-email" title={user.email}>
-                      {user.email}
-                    </p>
+                <h2 id="my-page-profile-title" className="my-page-sr-only">
+                  {copy.navAccount}
+                </h2>
+                <div className="my-page-account-hub__head">
+                  <div className="my-page-account-hub__identity">
+                    <span className="my-page-avatar" aria-hidden="true">
+                      {user.nickname.trim().charAt(0).toUpperCase() || '?'}
+                    </span>
+                    <div className="my-page-account-hub__identity-copy">
+                      <div className="my-page-account-hub__name-row">
+                        <strong className="my-page-account-hub__name" title={user.nickname}>
+                          {user.nickname}
+                        </strong>
+                        <span className={`my-page-badge${isPro ? '' : ' my-page-badge--muted'}`}>
+                          {isPro ? copy.billing.statusPro : copy.billing.statusFree}
+                        </span>
+                      </div>
+                      <span className="my-page-identity-meta" title={user.email}>
+                        {user.email}
+                      </span>
+                    </div>
                   </div>
                   <button type="button" className="btn btn-ghost" onClick={onSignOut}>
                     {copy.signOut}
                   </button>
                 </div>
-                <form className="my-page-field my-page-nickname-form" onSubmit={submitNickname}>
-                  <label htmlFor="my-page-nickname">{copy.nicknameLabel}</label>
-                  <div className="my-page-inline-control">
-                    <input
-                      id="my-page-nickname"
-                      value={nicknameDraft}
-                      placeholder={copy.nicknamePlaceholder}
-                      disabled={nicknameBusy}
-                      onChange={(event) => onNicknameChange(event.currentTarget.value)}
-                    />
-                    <button type="submit" className="btn btn-primary" disabled={nicknameBusy}>
-                      {nicknameBusy ? copy.savingNickname : copy.saveNickname}
-                    </button>
-                  </div>
-                  <p className="my-page-field-help">{copy.nicknameHelp}</p>
-                  {nicknameMessage && (
-                    <p className="my-page-form-message" role="status">
-                      {nicknameMessage}
-                    </p>
+
+                <div className="my-page-account-hub__grid">
+                  <form
+                    className="my-page-account-hub__block my-page-field my-page-nickname-form"
+                    onSubmit={submitNickname}
+                  >
+                    <label htmlFor="my-page-nickname">{copy.nicknameLabel}</label>
+                    <div className="my-page-inline-control">
+                      <input
+                        id="my-page-nickname"
+                        value={nicknameDraft}
+                        placeholder={copy.nicknamePlaceholder}
+                        disabled={nicknameBusy}
+                        onChange={(event) => onNicknameChange(event.currentTarget.value)}
+                      />
+                      <button type="submit" className="btn btn-primary" disabled={nicknameBusy}>
+                        {nicknameBusy ? copy.savingNickname : copy.saveNickname}
+                      </button>
+                    </div>
+                    <p className="my-page-field-help">{copy.nicknameHelp}</p>
+                    {nicknameMessage && (
+                      <p className="my-page-form-message" role="status">
+                        {nicknameMessage}
+                      </p>
+                    )}
+                  </form>
+                  {billingPanel && (
+                    <div className="my-page-account-hub__block my-page-account-hub__billing">
+                      {billingPanel}
+                    </div>
                   )}
-                </form>
-                {billingPanel}
+                </div>
                 <div
-                  className="my-page-panel-section"
+                  className="my-page-account-hub__block my-page-account-hub__logins"
                   aria-labelledby="my-page-linked-logins-title"
                 >
                   <h3 id="my-page-linked-logins-title">{copy.linkedLoginTitle}</h3>
-                  <p>{copy.linkedLoginBody}</p>
+                  <p className="my-page-linked-logins-note">{copy.linkedLoginBody}</p>
                   <ul className="my-page-linked-list">
                   <li className="my-page-linked-row">
                     <span className="my-page-linked-icon" aria-hidden="true">
@@ -941,6 +1106,15 @@ export function MyPage() {
     setAutoSaveOrderHistory,
     isPro,
   } = useAuth()
+  const {
+    numberSets,
+    activeNumberSetId,
+    numberSetLimits,
+    createNumberSet,
+    renameNumberSet,
+    deleteNumberSetById,
+    selectNumberSet,
+  } = useCalculator()
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [identityBusy, setIdentityBusy] = useState<'link' | 'unlink' | 'setPassword' | null>(null)
   const [passwordFormOpen, setPasswordFormOpen] = useState(false)
@@ -989,6 +1163,8 @@ export function MyPage() {
     useState<AccountSnapshotAutomationSettings | null>(null)
   const [automationBusy, setAutomationBusy] = useState(false)
   const [automationNotice, setAutomationNotice] = useState<string | null>(null)
+  const [numberSetBusy, setNumberSetBusy] = useState(false)
+  const [numberSetNotice, setNumberSetNotice] = useState<string | null>(null)
   const browserTimeZone = useMemo(() => suggestedBrowserTimeZone(), [])
   const automationPanelKey = [
     automationSettings?.updatedAt ?? 'new',
@@ -1010,6 +1186,8 @@ export function MyPage() {
   const latestSnapshot =
     user && recordsState.userId === user.id ? recordsState.latestSnapshot : null
   const recentOrders = user && recordsState.userId === user.id ? recordsState.recentOrders : []
+  const localNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'local')
+  const cloudNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'cloud')
 
   useEffect(() => {
     if (!user) {
@@ -1031,7 +1209,7 @@ export function MyPage() {
 
     let active = true
 
-    fetchLatestNumberSet(user.id)
+    fetchNumberSets(user.id)
       .then((numberSetResult) => {
         if (!active) return
         if (numberSetResult.error) {
@@ -1042,10 +1220,11 @@ export function MyPage() {
           })
           return
         }
+        const cloudSets = numberSetResult.data ?? []
         setStorageState({
           userId: user.id,
           error: null,
-          hasCloudInput: Boolean(numberSetResult.data),
+          hasCloudInput: cloudSets.length > 0,
         })
       })
       .catch(() => {
@@ -1283,6 +1462,54 @@ export function MyPage() {
     [autoSaveBusy, setAutoSaveOrderHistory, t.myPage.autoSaveOrderHistoryError, user],
   )
 
+  const runNumberSetAction = useCallback(
+    async (action: () => Promise<string | null>) => {
+      if (!user || numberSetBusy) return
+      setNumberSetBusy(true)
+      setNumberSetNotice(null)
+      const error = await action()
+      setNumberSetBusy(false)
+      if (error === 'number_set_limit_reached') setNumberSetNotice(t.myPage.numberSetLimitReached)
+      else if (error === 'not_logged_in') setNumberSetNotice(t.myPage.numberSetLoginRequired)
+      else if (error) setNumberSetNotice(t.myPage.numberSetError)
+    },
+    [
+      numberSetBusy,
+      t.myPage.numberSetError,
+      t.myPage.numberSetLimitReached,
+      t.myPage.numberSetLoginRequired,
+      user,
+    ],
+  )
+
+  const handleCreateNumberSet = useCallback(
+    (mode: SaveStorageMode) => {
+      void runNumberSetAction(() => createNumberSet(mode))
+    },
+    [createNumberSet, runNumberSetAction],
+  )
+
+  const handleRenameNumberSet = useCallback(
+    (mode: SaveStorageMode, setId: string, title: string) => {
+      void runNumberSetAction(() => renameNumberSet(mode, setId, title))
+    },
+    [renameNumberSet, runNumberSetAction],
+  )
+
+  const handleDeleteNumberSet = useCallback(
+    (mode: SaveStorageMode, setId: string) => {
+      void runNumberSetAction(() => deleteNumberSetById(mode, setId))
+    },
+    [deleteNumberSetById, runNumberSetAction],
+  )
+
+  const handleSelectNumberSet = useCallback(
+    (mode: SaveStorageMode, setId: string) => {
+      void runNumberSetAction(() => selectNumberSet(mode, setId))
+    },
+    [runNumberSetAction, selectNumberSet],
+  )
+
   return (
     <>
       <MyPageView
@@ -1329,6 +1556,19 @@ export function MyPage() {
               aria-labelledby="my-page-preferences-title"
             >
               <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
+              <NumberSetPreferencesPanel
+                copy={t.myPage}
+                localNumberSets={localNumberSets}
+                cloudNumberSets={cloudNumberSets}
+                activeNumberSetId={activeNumberSetId}
+                numberSetLimits={numberSetLimits}
+                busy={numberSetBusy}
+                notice={numberSetNotice}
+                onCreateNumberSet={handleCreateNumberSet}
+                onRenameNumberSet={handleRenameNumberSet}
+                onDeleteNumberSet={handleDeleteNumberSet}
+                onSelectNumberSet={handleSelectNumberSet}
+              />
               <AccountSnapshotAutomationPanel
                 key={automationPanelKey}
                 copy={t.myPage}

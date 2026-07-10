@@ -2,7 +2,7 @@ import type { CalculatorInputs } from '../types'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 import { supabase } from './supabaseClient'
 
-const DEFAULT_SET_TITLE = '기본 세트'
+export const DEFAULT_SET_TITLE = '기본 세트'
 
 interface NumberSetRow {
   id: string
@@ -28,6 +28,10 @@ function unavailable<T>(): NumberSetResult<T> {
 
 function mapError(error: { message?: string } | null | undefined): string {
   return error?.message || 'number_set_error'
+}
+
+function normalizeTitle(title: string | null | undefined): string {
+  return title?.trim() || DEFAULT_SET_TITLE
 }
 
 function rowToRecord(row: NumberSetRow): NumberSetRecord {
@@ -56,10 +60,44 @@ export async function fetchLatestNumberSet(
   return { data: data ? rowToRecord(data) : null, error: null }
 }
 
+export async function fetchNumberSets(
+  userId: string,
+): Promise<NumberSetResult<NumberSetRecord[]>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .select('id,title,inputs,updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .returns<NumberSetRow[]>()
+
+  if (error) return { data: null, error: mapError(error) }
+  return { data: (data ?? []).map(rowToRecord), error: null }
+}
+
+export async function createNumberSet(
+  userId: string,
+  inputs: CalculatorInputs,
+  title = DEFAULT_SET_TITLE,
+): Promise<NumberSetResult<NumberSetRecord>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .insert({ user_id: userId, title: normalizeTitle(title), inputs })
+    .select('id,title,inputs,updated_at')
+    .single<NumberSetRow>()
+
+  if (error) return { data: null, error: mapError(error) }
+  return { data: rowToRecord(data), error: null }
+}
+
 export async function saveNumberSet(
   userId: string,
   inputs: CalculatorInputs,
   setId?: string | null,
+  title?: string | null,
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
 
@@ -68,7 +106,7 @@ export async function saveNumberSet(
   if (existingId) {
     const { data, error } = await supabase
       .from('number_sets')
-      .update({ title: DEFAULT_SET_TITLE, inputs })
+      .update(title == null ? { inputs } : { title: normalizeTitle(title), inputs })
       .eq('id', existingId)
       .eq('user_id', userId)
       .select('id,title,inputs,updated_at')
@@ -80,11 +118,31 @@ export async function saveNumberSet(
 
   const { data, error } = await supabase
     .from('number_sets')
-    .insert({ user_id: userId, title: DEFAULT_SET_TITLE, inputs })
+    .insert({ user_id: userId, title: normalizeTitle(title), inputs })
     .select('id,title,inputs,updated_at')
     .single<NumberSetRow>()
 
   if (error) return { data: null, error: mapError(error) }
+  return { data: rowToRecord(data), error: null }
+}
+
+export async function renameNumberSet(
+  userId: string,
+  setId: string,
+  title: string,
+): Promise<NumberSetResult<NumberSetRecord>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .update({ title: normalizeTitle(title) })
+    .eq('id', setId)
+    .eq('user_id', userId)
+    .select('id,title,inputs,updated_at')
+    .maybeSingle<NumberSetRow>()
+
+  if (error) return { data: null, error: mapError(error) }
+  if (!data) return { data: null, error: 'number_set_not_found' }
   return { data: rowToRecord(data), error: null }
 }
 

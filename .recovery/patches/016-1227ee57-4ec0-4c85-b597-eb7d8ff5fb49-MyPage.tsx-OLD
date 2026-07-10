@@ -1,0 +1,3 @@
+  onLinkGoogle: () => void
+  onUnlinkGoogle: () => void
+  onLoginClick: () => void

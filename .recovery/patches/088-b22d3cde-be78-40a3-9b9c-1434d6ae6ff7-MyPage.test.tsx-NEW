@@ -1,0 +1,3 @@
+    expect(html).not.toContain('id="my-page-privacy"')
+    expect(html).not.toContain(en.myPage.privacyTitle)
+    expect(html).toContain(en.myPage.deleteAccountTitle)

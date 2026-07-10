@@ -1,0 +1,7 @@
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
+        billingPanel={<div id="my-page-plan">plan stub</div>}
+      />,
+    )

@@ -1,0 +1,79 @@
+/* 연동된 로그인: 카드형 행, 이름·상태·액션 열 정렬 고정 */
+.my-page-linked-list {
+  list-style: none;
+  display: grid;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0 0;
+  padding: 0;
+}
+
+.my-page-linked-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 7rem 7.5rem;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+
+.my-page-linked-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.my-page-linked-logo {
+  flex: none;
+}
+
+.my-page-linked-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.35;
+}
+
+.my-page-linked-status {
+  justify-self: start;
+  font-size: var(--font-size-sm);
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.my-page-linked-status.is-linked {
+  color: var(--color-success);
+}
+
+.my-page-linked-status.is-unlinked {
+  color: var(--color-text-muted);
+}
+
+.my-page-linked-action {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 32px;
+}
+
+.my-page-linked-btn {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.my-page-linked-btn--setup.btn-primary {
+  width: 100%;
+}
+
+.my-page-linked-btn--unlink.btn-ghost:disabled {
+  opacity: 0.45;
+}

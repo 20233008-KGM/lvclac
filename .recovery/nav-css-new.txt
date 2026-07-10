@@ -1,0 +1,87 @@
+.my-page-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+
+.my-page-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-sm);
+  padding-left: calc(var(--space-sm) + 3px);
+  border: none;
+  border-left: 3px solid transparent;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.35;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.my-page-nav a:hover,
+.my-page-nav a:focus-visible {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  outline: none;
+}
+
+.my-page-nav a.is-active,
+.my-page-nav a[aria-current='location'] {
+  border-left-color: var(--color-primary);
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  .my-page-body {
+    display: grid;
+    grid-template-columns: minmax(9.5rem, max-content) minmax(0, 1fr);
+    gap: var(--space-md);
+    align-items: start;
+  }
+
+  .my-page-nav {
+    position: sticky;
+    top: var(--space-lg);
+    align-self: start;
+  }
+}
+
+@media (max-width: 1023px) {
+  .my-page-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 2px;
+    padding: 2px;
+    padding-bottom: var(--space-xs);
+    margin-bottom: var(--space-md);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .my-page-nav a {
+    flex: none;
+    min-height: var(--touch-min);
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    padding-left: var(--space-sm);
+  }
+
+  .my-page-nav a.is-active,
+  .my-page-nav a[aria-current='location'] {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-primary);
+  }
+}

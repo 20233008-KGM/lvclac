@@ -9,7 +9,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react'
-import { NumberInput, type NumberInputHandle } from './NumberInput'
+import { NumberInput, type NumberInputChangeMeta, type NumberInputHandle } from './NumberInput'
 import {
   HOLD_DELAY_MS,
   HOLD_INTERVAL_MS,
@@ -26,7 +26,7 @@ import {
 
 interface NumberStepperProps {
   value: number | undefined
-  onChange: (value: number | undefined) => void
+  onChange: (value: number | undefined, meta?: NumberStepperChangeMeta) => void
   step?: number
   allowNegative?: boolean
   placeholder?: string
@@ -34,7 +34,7 @@ interface NumberStepperProps {
   stepDownLabel: string
   ariaLabelledBy?: string
   deferChangeUntilBlur?: boolean
-  onCommit?: (value: number | undefined) => void
+  onCommit?: (value: number | undefined, meta?: NumberInputChangeMeta) => void
   onEnterKey?: () => void
   onDeleteKey?: () => void
   disabled?: boolean
@@ -53,6 +53,10 @@ interface NumberStepperProps {
   scrubSeedValue?: number
 }
 
+interface NumberStepperChangeMeta extends NumberInputChangeMeta {
+  gestureStart?: boolean
+}
+
 interface PointerSession {
   mode: PointerMode
   startY: number
@@ -60,6 +64,8 @@ interface PointerSession {
   delta: number
   scrubAccumPx: number
 }
+
+let nextNumberStepperInstanceId = 0
 
 export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(function NumberStepper(
   {
@@ -92,6 +98,10 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pointerSessionRef = useRef<PointerSession | null>(null)
+  const gestureEmittedRef = useRef(false)
+  const stepperInstanceIdRef = useRef(++nextNumberStepperInstanceId)
+  const gestureGroupSerialRef = useRef(0)
+  const gestureHistoryGroupRef = useRef<string | null>(null)
   const [scrubbingDelta, setScrubbingDelta] = useState<number | null>(null)
 
   useImperativeHandle(ref, () => ({
@@ -146,13 +156,36 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     return effectiveValue()
   }, [enableDragScrub, effectiveValue, scrubBaseValue])
 
+  const beginGestureHistoryGroup = useCallback(() => {
+    gestureGroupSerialRef.current += 1
+    gestureHistoryGroupRef.current = `number-stepper-${stepperInstanceIdRef.current}-${gestureGroupSerialRef.current}`
+  }, [])
+
+  const currentGestureHistoryGroup = useCallback(() => {
+    if (!gestureHistoryGroupRef.current) beginGestureHistoryGroup()
+    return gestureHistoryGroupRef.current ?? undefined
+  }, [beginGestureHistoryGroup])
+
+  const endGestureHistoryGroup = useCallback(() => {
+    gestureHistoryGroupRef.current = null
+  }, [])
+
+  const emitChange = useCallback((next: number | undefined) => {
+    const gestureStart = !gestureEmittedRef.current
+    gestureEmittedRef.current = true
+    valueRef.current = next
+    onChangeRef.current(next, {
+      gestureStart,
+      historyGroup: currentGestureHistoryGroup(),
+    })
+  }, [currentGestureHistoryGroup])
+
   const bump = useCallback(
     (delta: number) => {
       const next = bumpBase() + delta
-      valueRef.current = next
-      onChangeRef.current(next)
+      emitChange(next)
     },
-    [bumpBase],
+    [bumpBase, emitChange],
   )
 
   const stopHold = useCallback(() => {
@@ -165,6 +198,11 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       holdIntervalRef.current = null
     }
   }, [])
+
+  const stopStepGesture = useCallback(() => {
+    stopHold()
+    endGestureHistoryGroup()
+  }, [endGestureHistoryGroup, stopHold])
 
   const startHold = useCallback(
     (delta: number) => {
@@ -201,10 +239,9 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 
       const current = valueRef.current ?? scrubBaseValue()
       const next = applyScrubTicks(current, tickDelta, step, minValue)
-      valueRef.current = next
-      onChangeRef.current(next)
+      emitChange(next)
     },
-    [dragScrubPxPerTick, minValue, scrubBaseValue, step],
+    [dragScrubPxPerTick, emitChange, minValue, scrubBaseValue, step],
   )
 
   const enterScrubMode = useCallback(
@@ -220,11 +257,10 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 
       const seed = scrubBaseValue()
       if (valueRef.current == null) {
-        valueRef.current = seed
-        onChangeRef.current(seed)
+        emitChange(seed)
       }
     },
-    [scrubBaseValue, stopHold],
+    [emitChange, scrubBaseValue, stopHold],
   )
 
   const endPointerSession = useCallback(() => {
@@ -240,12 +276,12 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       const current = valueRef.current ?? scrubBaseValue()
       const snapped = snapToStep(current, step)
       const clamped = minValue != null ? Math.max(minValue, snapped) : snapped
-      valueRef.current = clamped
-      onChangeRef.current(clamped)
+      emitChange(clamped)
     }
 
     resetPointerSession()
-  }, [bump, minValue, resetPointerSession, scrubBaseValue, step, stopHold])
+    endGestureHistoryGroup()
+  }, [bump, emitChange, endGestureHistoryGroup, minValue, resetPointerSession, scrubBaseValue, step, stopHold])
 
   const scheduleHoldRepeat = useCallback(
     (delta: number) => {
@@ -275,13 +311,15 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           onGuardBlocked?.()
           return
         }
+        gestureEmittedRef.current = false
+        beginGestureHistoryGroup()
         focusInput()
         e.currentTarget.setPointerCapture(e.pointerId)
         startHold(delta)
       },
-      onPointerUp: stopHold,
-      onPointerCancel: stopHold,
-      onLostPointerCapture: stopHold,
+      onPointerUp: stopStepGesture,
+      onPointerCancel: stopStepGesture,
+      onLostPointerCapture: stopStepGesture,
       onContextMenu: (e: MouseEvent) => e.preventDefault(),
     }
   }
@@ -301,6 +339,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           onGuardBlocked?.()
           return
         }
+        gestureEmittedRef.current = false
+        beginGestureHistoryGroup()
         focusInput()
         e.currentTarget.setPointerCapture(e.pointerId)
 

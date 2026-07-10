@@ -1,0 +1,44 @@
+              <section
+                id="my-page-profile"
+                className="my-page-panel"
+                aria-labelledby="my-page-profile-title"
+              >
+                <div className="my-page-panel-head">
+                  <div>
+                    <h2 id="my-page-profile-title">{copy.profileTitle}</h2>
+                  </div>
+                  <button type="button" className="btn btn-ghost" onClick={onSignOut}>
+                    {copy.signOut}
+                  </button>
+                </div>
+                <form className="my-page-field my-page-nickname-form" onSubmit={submitNickname}>
+                  <label htmlFor="my-page-nickname">{copy.nicknameLabel}</label>
+                  <div className="my-page-inline-control">
+                    <input
+                      id="my-page-nickname"
+                      value={nicknameDraft}
+                      placeholder={copy.nicknamePlaceholder}
+                      disabled={nicknameBusy}
+                      onChange={(event) => onNicknameChange(event.currentTarget.value)}
+                    />
+                    <button type="submit" className="btn btn-primary" disabled={nicknameBusy}>
+                      {nicknameBusy ? copy.savingNickname : copy.saveNickname}
+                    </button>
+                  </div>
+                  <p className="my-page-field-help">{copy.nicknameHelp}</p>
+                  {nicknameMessage && (
+                    <p className="my-page-form-message" role="status">
+                      {nicknameMessage}
+                    </p>
+                  )}
+                </form>
+              </section>
+
+              <section
+                id="my-page-linked-logins"
+                className="my-page-panel"
+                aria-labelledby="my-page-linked-logins-title"
+              >
+                <h2 id="my-page-linked-logins-title">{copy.linkedLoginTitle}</h2>
+                <p>{copy.linkedLoginBody}</p>
+                <ul className="my-page-linked-list">

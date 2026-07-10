@@ -9,7 +9,7 @@ describe('AccountMenu', () => {
     const html = renderToStaticMarkup(
       <AccountMenu
         copy={{ myPage: en.myPage.title, logout: en.logout }}
-        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim' }}
+        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
         onSignOut={vi.fn()}
         onClose={vi.fn()}
       />,

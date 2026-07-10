@@ -1,0 +1,20 @@
+    expect(adminHtml).toContain(en.myPage.adminFeedbackLink)
+    expect(adminHtml).toContain('href="/admin/feedback"')
+    expect(normalHtml).not.toContain(en.myPage.adminFeedbackLink)
+  })
+
+  it('renders support channels as compact cards with descriptions', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
+      />,
+    )
+
+    expect(html).toContain('my-page-support-channels')
+    expect(html).toContain('my-page-support-channel')
+    expect(html).toContain('my-page-support-delete-card')
+    expect(html).toContain(en.myPage.suggestionsDesc)
+    expect(html).toContain(en.myPage.emailDesc)
+    expect(html).not.toContain('my-page-support-grid')
+  })

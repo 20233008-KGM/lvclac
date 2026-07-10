@@ -27,13 +27,17 @@ export interface NumberInputHandle {
   focus: () => void
 }
 
+export interface NumberInputChangeMeta {
+  historyGroup?: string
+}
+
 interface NumberInputProps {
   value: number | undefined
-  onChange: (value: number | undefined) => void
+  onChange: (value: number | undefined, meta?: NumberInputChangeMeta) => void
   /** blur 시에만 onChange/onCommit 호출 (타이핑 중 부모 state 미갱신) */
   deferChangeUntilBlur?: boolean
   /** defer 모드에서 blur 확정 시 호출 (없으면 onChange 사용) */
-  onCommit?: (value: number | undefined) => void
+  onCommit?: (value: number | undefined, meta?: NumberInputChangeMeta) => void
   /** defer 모드에서 onCommit이 있으면 값이 같아도 commit 호출 */
   forceCommit?: boolean
   allowDecimal?: boolean
@@ -54,6 +58,8 @@ interface NumberInputProps {
   /** 잠금 상태에서 편집을 시도했을 때 */
   onGuardBlocked?: () => void
 }
+
+let nextNumberInputInstanceId = 0
 
 export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(function NumberInput(
   {
@@ -80,6 +86,9 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   const { layoutMode, fitScale } = useLayout()
   const skipBlurCommitRef = useRef(false)
   const inputElRef = useRef<HTMLInputElement>(null)
+  const inputInstanceIdRef = useRef(++nextNumberInputInstanceId)
+  const historyGroupSerialRef = useRef(0)
+  const historyGroupRef = useRef<string | null>(null)
   const formatValue = isRate
     ? (v: number | undefined | null) => formatRateForInput(v)
     : (v: number | undefined | null) => formatNumberForInput(v, allowDecimal, allowNegative)
@@ -115,6 +124,20 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   const overflowing = useOverflowEllipsis(inputElRef, true, [text, layoutMode, fitScale])
   const ellipsisActive = !focused && (layoutMode === 'manual' || overflowing)
 
+  function beginHistoryGroup() {
+    historyGroupSerialRef.current += 1
+    historyGroupRef.current = `number-input-${inputInstanceIdRef.current}-${historyGroupSerialRef.current}`
+  }
+
+  function currentChangeMeta(): NumberInputChangeMeta {
+    if (!historyGroupRef.current) beginHistoryGroup()
+    return { historyGroup: historyGroupRef.current ?? undefined }
+  }
+
+  function endHistoryGroup() {
+    historyGroupRef.current = null
+  }
+
   function commitFromText(): boolean {
     const normalized = readDraftFromText()
     if (normalized === undefined) {
@@ -128,11 +151,12 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
         : normalized !== value
 
     if (shouldCommit) {
-      handler(normalized)
+      handler(normalized, currentChangeMeta())
     }
     setText(formatValue(normalized))
     setFocused(false)
     setTruncatedAttempt(false)
+    endHistoryGroup()
     return shouldCommit
   }
 
@@ -141,10 +165,10 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     setTruncatedAttempt(false)
     if (deferChangeUntilBlur) {
       const handler = onCommit ?? onChange
-      handler(undefined)
+      handler(undefined, currentChangeMeta())
       return
     }
-    onChange(undefined)
+    onChange(undefined, currentChangeMeta())
   }
 
   useImperativeHandle(ref, () => ({
@@ -187,12 +211,14 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
               return
             }
             setFocused(true)
+            beginHistoryGroup()
           }}
           onBlur={() => {
             if (skipBlurCommitRef.current) {
               skipBlurCommitRef.current = false
               setFocused(false)
               setTruncatedAttempt(false)
+              endHistoryGroup()
               return
             }
             if (!deferChangeUntilBlur) {
@@ -201,11 +227,13 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
               const parsed = parseFormattedInput(text)
               if (parsed === '') {
                 setText(formatValue(value))
+                endHistoryGroup()
                 return
               }
               const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
-              if (normalized !== value) onChange(normalized)
+              if (normalized !== value) onChange(normalized, currentChangeMeta())
               setText(formatValue(normalized))
+              endHistoryGroup()
               return
             }
             commitFromText()
@@ -253,10 +281,10 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
 
             const parsed = parseFormattedInput(formatted)
             if (parsed === '') {
-              onChange(undefined)
+              onChange(undefined, currentChangeMeta())
               return
             }
-            onChange(normalizeInputValue(parsed, { isRate, allowDecimal }))
+            onChange(normalizeInputValue(parsed, { isRate, allowDecimal }), currentChangeMeta())
           }}
         />
         {showHint && (

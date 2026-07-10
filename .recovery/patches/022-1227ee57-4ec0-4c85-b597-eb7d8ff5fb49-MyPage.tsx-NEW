@@ -1,0 +1,14 @@
+    linkedProviders,
+    linkGoogle,
+    unlinkGoogle,
+    setPasswordForCurrentUser,
+    isPro,
+  } = useAuth()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [showAccountSettingGuard, setShowAccountSettingGuard] = useState(
+    () => !readSkipAccountSettingGuard(),
+  )
+  const [identityBusy, setIdentityBusy] = useState<'link' | 'unlink' | 'setPassword' | null>(null)
+  const [passwordFormOpen, setPasswordFormOpen] = useState(false)
+  const [passwordDraft, setPasswordDraft] = useState('')
+  const [passwordConfirmationDraft, setPasswordConfirmationDraft] = useState('')

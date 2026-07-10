@@ -1,0 +1,5 @@
+    expect(html).toContain('my-page-account-sections')
+    expect(html).toContain('my-page-linked-group')
+    expect(html).toContain(en.myPage.profileTitle)
+    expect(html).toContain(en.myPage.linkedLoginTitle)
+    expect(html).toContain(en.myPage.linkedLoginBody)

@@ -1,4 +1,5 @@
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { loadEnv, type Plugin } from 'vite'
+import { configDefaults, defineConfig } from 'vitest/config'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import react from '@vitejs/plugin-react'
 import { handleDevReset, type DevResetConfig } from './scripts/devResetHandler'
@@ -77,14 +78,14 @@ function devResetPlugin(env: Record<string, string>): Plugin {
 }
 
 /**
- * 로컬 dev(`npm run dev`)에서 Stripe 결제 엔드포인트를 프로덕션(api/stripe/*)과 동일하게 노출한다.
+ * 로컬 dev(`npm run dev`)에서 Paddle 결제 엔드포인트를 프로덕션(api/billing/*)과 동일하게 노출한다.
  * `apply: 'serve'`라 프로덕션 빌드에는 포함되지 않으며, 실제 배포는 Vercel Function이 처리한다.
- * STRIPE_SECRET_KEY 등 비밀은 비-VITE 접두사라 클라이언트 번들에 노출되지 않는다.
+ * PADDLE_API_KEY 등 비밀은 비-VITE 접두사라 클라이언트 번들에 노출되지 않는다.
  */
 function billingDevPlugin(env: Record<string, string>): Plugin {
   const config = readBillingConfig(env)
   return {
-    name: 'stripe-billing-dev',
+    name: 'paddle-billing-dev',
     apply: 'serve',
     configureServer(server) {
       const deps = config ? createBillingDeps(config) : null
@@ -93,7 +94,7 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
         sendBillingJson(res, 500, { ok: false, error: message })
       }
 
-      server.middlewares.use('/api/stripe/checkout', (req, res, next) => {
+      server.middlewares.use('/api/billing/checkout', (req, res, next) => {
         if (req.method !== 'POST') return next()
         void (async () => {
           try {
@@ -110,7 +111,7 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
         })()
       })
 
-      server.middlewares.use('/api/stripe/portal', (req, res, next) => {
+      server.middlewares.use('/api/billing/portal', (req, res, next) => {
         if (req.method !== 'POST') return next()
         void (async () => {
           try {
@@ -126,14 +127,14 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
         })()
       })
 
-      server.middlewares.use('/api/stripe/webhook', (req, res, next) => {
+      server.middlewares.use('/api/billing/webhook', (req, res, next) => {
         if (req.method !== 'POST') return next()
         void (async () => {
           try {
             const rawBody = await readRawBody(req)
             const result = await handleWebhook(
               config,
-              { rawBody, signature: headerValue(req, 'stripe-signature') },
+              { rawBody, signature: headerValue(req, 'paddle-signature') },
               deps as never,
             )
             sendBillingJson(res, result.status, result.body)
@@ -182,6 +183,9 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: true,
       modulePreload: { polyfill: false },
       sourcemap: false,
+    },
+    test: {
+      exclude: [...configDefaults.exclude, '**/.recovery/**'],
     },
   }
 })

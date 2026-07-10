@@ -1,0 +1,19 @@
+        ) : (
+          <>
+            <section className="my-page-identity-card" aria-label={copy.navAccount}>
+              <span className="my-page-avatar" aria-hidden="true">
+                {user.nickname.trim().charAt(0).toUpperCase() || '?'}
+              </span>
+              <div className="my-page-identity-info">
+                <strong title={user.nickname}>{user.nickname}</strong>
+                <span className="my-page-identity-meta" title={user.email}>
+                  {user.email}
+                </span>
+              </div>
+              <span className={`my-page-badge${isPro ? '' : ' my-page-badge--muted'}`}>
+                {isPro ? copy.billing.statusPro : copy.billing.statusFree}
+              </span>
+            </section>
+
+            <div className="my-page-body">
+              <nav className="my-page-nav" aria-label={copy.navLabel}>

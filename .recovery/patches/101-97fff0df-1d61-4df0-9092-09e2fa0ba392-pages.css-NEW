@@ -1,0 +1,152 @@
+/* 계정 설정: 프로필 · 구독 · 로그인 수단 섹션 분리 */
+.my-page-account-sections {
+  display: grid;
+  gap: 0;
+  margin-top: var(--space-lg);
+}
+
+.my-page-account-section {
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-account-section:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.my-page-account-section h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  line-height: 1.35;
+}
+
+.my-page-account-section__desc {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.my-page-account-section__footer {
+  margin-top: var(--space-sm);
+}
+
+.my-page-account-section--profile .my-page-field {
+  margin-top: var(--space-md);
+}
+
+.my-page-account-section--profile .my-page-field-help {
+  margin-top: var(--space-xs);
+}
+
+.my-page-account-section--profile .my-page-nickname-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.my-page-account-section--profile .my-page-nickname-form input {
+  flex: 1;
+  min-width: 0;
+  max-width: 16rem;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.my-page-account-section--profile .my-page-nickname-form input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.my-page-account-section--profile .my-page-nickname-form .btn-primary {
+  min-height: 40px;
+  height: 40px;
+  width: auto;
+  flex: none;
+  padding-inline: var(--space-md);
+  white-space: nowrap;
+}
+
+.my-page-billing-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-radius: var(--radius);
+  background: var(--color-primary-muted);
+}
+
+.my-page-billing-status-card__copy {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.my-page-billing-status-card__headline {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.35;
+}
+
+.my-page-billing-status-card .btn-primary {
+  width: auto;
+  min-width: 7.5rem;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 14px;
+  white-space: nowrap;
+  flex: none;
+}
+
+.my-page-billing-free-headline {
+  margin: var(--space-md) 0 0;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.35;
+}
+
+.my-page-account-section--billing .my-page-plans {
+  margin-top: var(--space-sm);
+}
+
+.my-page-linked-group {
+  margin-top: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  overflow: hidden;
+}
+
+.my-page-linked-item {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 5.5rem auto;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  min-height: 52px;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.my-page-linked-item + .my-page-linked-item {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-account-section--linked .my-page-set-password-form {
+  margin-top: var(--space-md);
+}
+
+/* @deprecated — legacy flat settings list (replaced by .my-page-account-sections) */
+.my-page-settings-list {

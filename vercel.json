@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/account-snapshots",
+      "schedule": "*/15 * * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]

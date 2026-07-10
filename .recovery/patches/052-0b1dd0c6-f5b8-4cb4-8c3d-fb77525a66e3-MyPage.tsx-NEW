@@ -1,0 +1,57 @@
+              <section
+                id="my-page-support"
+                className="my-page-panel"
+                aria-labelledby="my-page-support-title"
+              >
+                <h2 id="my-page-support-title">{copy.supportTitle}</h2>
+                <p>{copy.supportBody}</p>
+                <div className="my-page-support-channels">
+                  <a className="my-page-support-channel" href={suggestionsHref}>
+                    <span className="my-page-support-channel__icon" aria-hidden="true">
+                      <LightbulbIcon />
+                    </span>
+                    <span className="my-page-support-channel__body">
+                      <span className="my-page-support-channel__title">{copy.suggestionsLink}</span>
+                      <span className="my-page-support-channel__desc">{copy.suggestionsDesc}</span>
+                    </span>
+                    <span className="my-page-support-channel__arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </a>
+                  <a className="my-page-support-channel" href={supportHref}>
+                    <span className="my-page-support-channel__icon" aria-hidden="true">
+                      <MailIcon />
+                    </span>
+                    <span className="my-page-support-channel__body">
+                      <span className="my-page-support-channel__title">{copy.emailLink}</span>
+                      <span className="my-page-support-channel__desc">{copy.emailDesc}</span>
+                    </span>
+                    <span className="my-page-support-channel__arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </a>
+                  {adminFeedbackHref && (
+                    <a className="my-page-support-channel" href={adminFeedbackHref}>
+                      <span className="my-page-support-channel__icon" aria-hidden="true">
+                        <InboxIcon />
+                      </span>
+                      <span className="my-page-support-channel__body">
+                        <span className="my-page-support-channel__title">
+                          {copy.adminFeedbackLink}
+                        </span>
+                        <span className="my-page-support-channel__desc">{copy.adminFeedbackDesc}</span>
+                      </span>
+                      <span className="my-page-support-channel__arrow" aria-hidden="true">
+                        →
+                      </span>
+                    </a>
+                  )}
+                </div>
+                <div className="my-page-support-delete-card">
+                  <h3>{copy.deleteAccountTitle}</h3>
+                  <p>{copy.deleteAccountBody}</p>
+                  <a className="link-btn" href={supportHref}>
+                    {copy.contactSupport}
+                  </a>
+                </div>
+              </section>

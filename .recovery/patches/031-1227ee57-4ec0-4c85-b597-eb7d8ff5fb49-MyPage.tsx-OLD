@@ -1,0 +1,63 @@
+                  <li className="my-page-linked-row">
+                    <span className="my-page-linked-icon">
+                      <MailIcon />
+                    </span>
+                    <span className="my-page-linked-name">{copy.emailProvider}</span>
+                    <span
+                      className={`my-page-linked-badge ${hasEmail ? 'is-linked' : 'is-unlinked'}`}
+                    >
+                      {hasEmail ? copy.providerLinked : copy.providerNotLinked}
+                    </span>
+                    <span className="my-page-linked-action">
+                      {hasEmail ? (
+                        <span className="my-page-linked-chip">{copy.primaryTag}</span>
+                      ) : canSetPassword ? (
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          disabled={identityBusy !== null}
+                          aria-expanded={passwordFormOpen}
+                          aria-controls="my-page-set-password-form"
+                          onClick={onPasswordFormToggle}
+                        >
+                          {copy.setPasswordAction}
+                        </button>
+                      ) : null}
+                    </span>
+                  </li>
+                  <li className="my-page-linked-row">
+                    <span className="my-page-linked-icon">
+                      <GoogleLogo className="my-page-linked-logo" />
+                    </span>
+                    <span className="my-page-linked-name">{copy.googleProvider}</span>
+                    <span
+                      className={`my-page-linked-badge ${hasGoogle ? 'is-linked' : 'is-unlinked'}`}
+                    >
+                      {hasGoogle ? copy.providerLinked : copy.providerNotLinked}
+                    </span>
+                    <span className="my-page-linked-action">
+                      {hasGoogle ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          disabled={identityBusy !== null || !canUnlinkGoogle}
+                          onClick={onUnlinkGoogle}
+                        >
+                          {identityBusy === 'unlink'
+                            ? copy.unlinkingInProgress
+                            : copy.unlinkGoogleAction}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          disabled={identityBusy !== null}
+                          onClick={onLinkGoogle}
+                        >
+                          {identityBusy === 'link'
+                            ? copy.linkingInProgress
+                            : copy.linkGoogleAction}
+                        </button>
+                      )}
+                    </span>
+                  </li>

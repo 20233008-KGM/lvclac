@@ -1,0 +1,7 @@
+        onLinkGoogle={() => void handleLinkGoogle()}
+        onUnlinkGoogle={() => void handleUnlinkGoogle()}
+        onPasswordFormToggle={handlePasswordFormToggle}
+        onPasswordDraftChange={setPasswordDraft}
+        onPasswordConfirmationDraftChange={setPasswordConfirmationDraft}
+        onSetPasswordSubmit={() => void handleSetPassword()}
+        onLoginClick={() => setAuthModalOpen(true)}

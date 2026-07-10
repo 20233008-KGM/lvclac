@@ -1,0 +1,3 @@
+        ) : (
+          <div className="my-page-body">
+              <nav className="my-page-nav" aria-label={copy.navLabel}>

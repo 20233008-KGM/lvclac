@@ -5,6 +5,10 @@ function cleanOptionalNumber(value: number | undefined): number | undefined {
   return Number.isFinite(value) ? value : undefined
 }
 
+function cleanContractAmountRole(value: CalculatorInputs['contractAmountRole']) {
+  return value === 'entryPrice' || value === 'fixedSpec' ? value : undefined
+}
+
 function cleanSnapshot(snapshot: CalculatorInputs['scenarioRevertSnapshot']) {
   if (!snapshot) return snapshot
   const accountEval = cleanOptionalNumber(snapshot.accountEval)
@@ -20,12 +24,18 @@ function cleanOrderRevertSnapshot(snapshot: CalculatorInputs['orderScenarioRever
     ...snapshot,
     accountEval,
     contracts: cleanOptionalNumber(snapshot.contracts),
+    contractAmount: cleanOptionalNumber(snapshot.contractAmount),
+    contractAmountRole: cleanContractAmountRole(snapshot.contractAmountRole),
   }
 }
 
 function cleanOrderBaseline(baseline: OrderScenarioBaseline | undefined) {
   if (!baseline) return baseline
-  return baseline
+  const contractAmount =
+    typeof baseline.contractAmount === 'number' && Number.isFinite(baseline.contractAmount)
+      ? baseline.contractAmount
+      : null
+  return { ...baseline, contractAmount }
 }
 
 function cleanOrderApplyUndoSnapshot(snapshot: CalculatorInputs['orderApplyUndoSnapshot']) {
@@ -48,6 +58,8 @@ function cleanOrderApplyUndoSnapshot(snapshot: CalculatorInputs['orderApplyUndoS
     ...snapshot,
     accountEval,
     contracts: cleanOptionalNumber(snapshot.contracts),
+    contractAmount: cleanOptionalNumber(snapshot.contractAmount),
+    contractAmountRole: cleanContractAmountRole(snapshot.contractAmountRole),
     orderContracts,
     orderPrice,
     orderScenarioRevertSnapshot,
@@ -95,6 +107,7 @@ export function sanitizeDraftInputs(inputs: CalculatorInputs): CalculatorInputs 
     entrustedMarginPerContract: cleanOptionalNumber(inputs.entrustedMarginPerContract),
     contracts: cleanOptionalNumber(inputs.contracts),
     contractAmount: cleanOptionalNumber(inputs.contractAmount),
+    contractAmountRole: cleanContractAmountRole(inputs.contractAmountRole),
     currentPrice: cleanOptionalNumber(inputs.currentPrice),
     contractMultiplier: cleanOptionalNumber(inputs.contractMultiplier),
     orderContracts: cleanOptionalNumber(inputs.orderContracts),

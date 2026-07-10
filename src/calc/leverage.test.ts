@@ -5,6 +5,7 @@ import {
   calcMaxBuyable,
   calcToleranceDelta,
   calcToleranceRate,
+  buildAfterOrderInputs,
   calculateEvaluate,
   calculateOrder,
 } from './leverage'
@@ -120,6 +121,158 @@ describe('calcToleranceDelta', () => {
   })
 })
 
+describe('buildAfterOrderInputs', () => {
+  it('포지션 확장 주문 시 약정가격을 가중평균으로 갱신', () => {
+    const after = buildAfterOrderInputs(
+      {
+        mode: 'order',
+        positionSide: 'long',
+        accountEval: 1_000_000,
+        contracts: 10,
+        contractAmount: 100,
+        contractAmountRole: 'entryPrice',
+        contractMultiplier: 1,
+        currentPrice: 105,
+        orderPrice: 110,
+      },
+      12,
+      2,
+    )
+
+    expect(after.contracts).toBe(12)
+    expect(after.contractAmount).toBeCloseTo(101.6666667, 6)
+  })
+
+  it('포지션 축소 주문 시 남은 포지션 약정가격은 유지', () => {
+    const after = buildAfterOrderInputs(
+      {
+        mode: 'order',
+        positionSide: 'long',
+        accountEval: 1_000_000,
+        contracts: 10,
+        contractAmount: 100,
+        contractAmountRole: 'entryPrice',
+        contractMultiplier: 1,
+        currentPrice: 105,
+        orderPrice: 110,
+      },
+      8,
+      -2,
+    )
+
+    expect(after.contracts).toBe(8)
+    expect(after.contractAmount).toBe(100)
+  })
+
+  it('롱 포지션 전량 청산 주문 시 약정가격을 0으로 초기화', () => {
+    const after = buildAfterOrderInputs(
+      {
+        mode: 'order',
+        positionSide: 'long',
+        accountEval: 1_000_000,
+        contracts: 10,
+        contractAmount: 100,
+        contractAmountRole: 'entryPrice',
+        contractMultiplier: 1,
+        currentPrice: 105,
+        orderPrice: 110,
+      },
+      0,
+      -10,
+    )
+
+    expect(after.contracts).toBe(0)
+    expect(after.contractAmount).toBe(0)
+  })
+
+  it('숏 포지션 전량 청산 주문 시 약정가격을 0으로 초기화', () => {
+    const after = buildAfterOrderInputs(
+      {
+        mode: 'order',
+        positionSide: 'short',
+        accountEval: 1_000_000,
+        contracts: 10,
+        contractAmount: 100,
+        contractAmountRole: 'entryPrice',
+        contractMultiplier: 1,
+        currentPrice: 105,
+        orderPrice: 110,
+      },
+      0,
+      -10,
+    )
+
+    expect(after.contracts).toBe(0)
+    expect(after.contractAmount).toBe(0)
+  })
+
+  it('기존 값과 주문가 스케일이 다르면 고정 스펙값으로 보고 덮어쓰지 않음', () => {
+    const after = buildAfterOrderInputs(
+      {
+        mode: 'order',
+        positionSide: 'long',
+        accountEval: 1_000_000,
+        contracts: 10,
+        contractAmount: 250_000,
+        contractMultiplier: 1,
+        currentPrice: 350,
+        orderPrice: 360,
+      },
+      12,
+      2,
+    )
+
+    expect(after.contracts).toBe(12)
+    expect(after.contractAmount).toBe(250_000)
+  })
+
+  it('preserves contract amount without entry price role even when order price has the same scale', () => {
+    const base = {
+      mode: 'order' as const,
+      positionSide: 'long' as const,
+      accountEval: 1_000_000_000,
+      contracts: 58,
+      contractAmount: 309_931,
+      contractMultiplier: 1,
+      currentPrice: 295_500,
+      orderPrice: 295_500,
+    }
+
+    const unknownRole = buildAfterOrderInputs(base, 63, 5)
+    const fixedSpec = buildAfterOrderInputs(
+      { ...base, contractAmountRole: 'fixedSpec' as const },
+      63,
+      5,
+    )
+
+    expect(unknownRole.contractAmount).toBe(309_931)
+    expect(fixedSpec.contractAmount).toBe(309_931)
+  })
+
+  it('전량 청산이면 entryPrice 역할이 아니어도 약정가격을 0으로 초기화', () => {
+    const base = {
+      mode: 'order' as const,
+      positionSide: 'long' as const,
+      accountEval: 1_000_000_000,
+      contracts: 58,
+      contractAmount: 309_931,
+      contractMultiplier: 1,
+      currentPrice: 295_500,
+      orderPrice: 295_500,
+    }
+
+    const unknownRole = buildAfterOrderInputs(base, 0, -58)
+    const fixedSpec = buildAfterOrderInputs(
+      { ...base, contractAmountRole: 'fixedSpec' as const },
+      0,
+      -58,
+    )
+
+    expect(unknownRole.contractAmount).toBe(0)
+    expect(fixedSpec.contractAmount).toBe(0)
+  })
+})
+
 describe('calcLeverageRatio', () => {
   it('약정가치 ÷ 계좌 평가금액', () => {
     expect(calcLeverageRatio(500_000, 10_000_000)).toBe(0.05)
@@ -217,6 +370,27 @@ describe('calculateEvaluate', () => {
     expect(result.margins?.perContractEntrusted).toBeCloseTo(35, 5)
   })
 
+  it('전량 청산 후 약정가격 0이면 현재가 기준 1계약 증거금과 한도 산출', () => {
+    const result = calculateEvaluate({
+      mode: 'evaluate',
+      accountEval: 10_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contracts: 0,
+      contractAmount: 0,
+      contractMultiplier: 10,
+      currentPrice: 350,
+      positionSide: 'long',
+    })
+
+    expect(result.liquidationPrice).toBeNull()
+    expect(result.margins?.availableMargin).toBe(10_000)
+    expect(result.margins?.perContractEntrusted).toBeCloseTo(350, 5)
+    expect(result.margins?.perContractMaintenance).toBeCloseTo(175, 5)
+    expect(result.maxBuyable).toBe(28)
+    expect(result.maxBuyableMessage).toBeNull()
+  })
+
   it('약정금액 없이 보유 계약·현재가·증거금률만으로 청산가·한도 산출', () => {
     const result = calculateEvaluate({
       mode: 'evaluate',
@@ -304,6 +478,26 @@ describe('calculateOrder', () => {
     expect(explicit.afterMargins?.availableMargin).toBe(atMark.afterMargins?.availableMargin)
   })
 
+  it('includes before and after contract amount in order result data', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 1_000_000_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contracts: 58,
+      contractAmount: 309_931,
+      contractAmountRole: 'entryPrice',
+      contractMultiplier: 1,
+      currentPrice: 295_500,
+      positionSide: 'long',
+      orderContracts: 5,
+      orderPrice: 295_500,
+    })
+
+    expect(result.beforeContractAmount).toBe(309_931)
+    expect(result.afterContractAmount).toBeCloseTo(308_785.68253968254, 8)
+  })
+
   it('롱 — 저가 매수 시 주문 후 가용증거금 개선', () => {
     const atMark = calculateOrder({
       ...sampleInputs,
@@ -337,6 +531,44 @@ describe('calculateOrder', () => {
     expect(result.beforeMargins?.entrustedMargin).toBe(0)
     expect(result.afterMargins?.entrustedMargin).toBeCloseTo(700, 5)
     expect(result.afterLiquidation).toBeNull()
+  })
+
+  it('전량 청산 후 약정가격 0 상태의 한도 초과 신규 매수 주문은 경고', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 10_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contracts: 0,
+      contractAmount: 0,
+      contractMultiplier: 10,
+      currentPrice: 350,
+      positionSide: 'long',
+      orderContracts: 29,
+    })
+
+    expect(result.orderCapacityMessage).toBe('order_exceeds_max_buyable')
+    expect(result.orderMessage).toBe('order_exceeds_max_buyable')
+    expect(result.isAtRiskAfter).toBe(true)
+  })
+
+  it('전량 청산 후 약정가격 0 상태의 한도 초과 신규 매도 주문은 경고', () => {
+    const result = calculateOrder({
+      mode: 'order',
+      accountEval: 10_000,
+      maintenanceMarginRate: 0.05,
+      entrustedMarginRate: 0.1,
+      contracts: 0,
+      contractAmount: 0,
+      contractMultiplier: 10,
+      currentPrice: 350,
+      positionSide: 'short',
+      orderContracts: 29,
+    })
+
+    expect(result.orderCapacityMessage).toBe('order_exceeds_max_sellable')
+    expect(result.orderMessage).toBe('order_exceeds_max_sellable')
+    expect(result.isAtRiskAfter).toBe(true)
   })
 
   it('현재가 없을 때 주문가를 기준가로 신규 매수 시뮬', () => {

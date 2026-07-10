@@ -1,0 +1,18 @@
+  const hasCloudInput = user && storageState.userId === user.id ? storageState.hasCloudInput : false
+
+  useEffect(() => {
+    if (!user) {
+      setPasswordFormOpen(false)
+      setPasswordDraft('')
+      setPasswordConfirmationDraft('')
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) {
+      return
+    }
+
+    let active = true
+
+    fetchLatestNumberSet(user.id)

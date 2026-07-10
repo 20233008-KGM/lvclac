@@ -1,11 +1,5 @@
-/**
- * Stripe 구독 객체 → Supabase `subscriptions` 행 동기화 로직.
- * webhook 핸들러에서 사용하며, 순수하게 테스트 가능하도록 deps(admin)를 인자로 받는다.
- */
-import type Stripe from 'stripe'
 import type { BillingDeps } from './billingConfig'
 
-/** DB check 제약이 허용하는 status 집합. */
 export type SubscriptionStatus =
   | 'inactive'
   | 'trialing'
@@ -14,11 +8,17 @@ export type SubscriptionStatus =
   | 'canceled'
   | 'unpaid'
 
-/**
- * Stripe subscription.status → DB status.
- * incomplete / incomplete_expired / paused 등 미허용 값은 'inactive'로 접는다.
- */
-export function mapStripeStatus(status: string | null | undefined): SubscriptionStatus {
+export interface PaddleSubscription {
+  id?: string | null
+  customer_id?: string | null
+  customer?: string | { id?: string | null } | null
+  status?: string | null
+  current_billing_period?: { ends_at?: string | null } | null
+  next_billed_at?: string | null
+  custom_data?: Record<string, unknown> | null
+}
+
+export function mapPaddleStatus(status: string | null | undefined): SubscriptionStatus {
   switch (status) {
     case 'active':
       return 'active'
@@ -35,28 +35,21 @@ export function mapStripeStatus(status: string | null | undefined): Subscription
   }
 }
 
-/**
- * 현재 결제 주기 종료 시각(ISO)을 구한다.
- * 신규 API 버전에서는 current_period_end가 subscription item으로 이동했으므로
- * top-level → 첫 item 순으로 방어적으로 조회한다.
- */
-export function getPeriodEndIso(sub: Stripe.Subscription): string | null {
-  const record = sub as unknown as {
-    current_period_end?: number | null
-    items?: { data?: Array<{ current_period_end?: number | null }> }
-  }
-  const seconds =
-    record.current_period_end ?? record.items?.data?.[0]?.current_period_end ?? null
-  if (typeof seconds !== 'number' || !Number.isFinite(seconds)) return null
-  return new Date(seconds * 1000).toISOString()
+export function getPeriodEndIso(sub: PaddleSubscription): string | null {
+  const value = sub.current_billing_period?.ends_at ?? sub.next_billed_at ?? null
+  if (typeof value !== 'string' || !value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
-/** Stripe customer id를 문자열로 정규화. */
 export function customerIdOf(
-  customer: string | { id: string } | null | undefined,
+  value: PaddleSubscription | string | { id?: string | null } | null | undefined,
 ): string | null {
-  if (!customer) return null
-  return typeof customer === 'string' ? customer : customer.id
+  if (!value) return null
+  if (typeof value === 'string') return value
+  if ('customer_id' in value && typeof value.customer_id === 'string') return value.customer_id
+  if ('customer' in value) return customerIdOf(value.customer)
+  return typeof value.id === 'string' ? value.id : null
 }
 
 export interface SubscriptionPatch {
@@ -67,10 +60,6 @@ export interface SubscriptionPatch {
   updated_at: string
 }
 
-/**
- * user_id 기준으로 구독 행을 upsert한다. user_id에 unique 제약을 두지 않으므로
- * (numberSets와 동일하게) 존재하면 update, 없으면 insert 한다.
- */
 export async function upsertSubscriptionByUser(
   deps: BillingDeps,
   userId: string,
@@ -87,24 +76,17 @@ export async function upsertSubscriptionByUser(
   if (existing.data) {
     const { error } = await deps.admin
       .from('subscriptions')
-      .update(patch)
+      .update({ provider: 'paddle', ...patch })
       .eq('id', existing.data.id)
     return error ? { ok: false, error: error.message } : { ok: true }
   }
 
   const { error } = await deps.admin
     .from('subscriptions')
-    .insert({ user_id: userId, provider: 'stripe', ...patch })
+    .insert({ user_id: userId, provider: 'paddle', ...patch })
   return error ? { ok: false, error: error.message } : { ok: true }
 }
 
-/**
- * webhook 이벤트에서 user_id를 결정한다.
- * 1) 명시적 hint(client_reference_id / metadata.user_id)
- * 2) provider_customer_id로 기존 행 역조회
- * 3) Stripe customer.metadata.user_id 조회
- * 셋 다 실패하면 null(매핑 불가 → 안전하게 스킵).
- */
 export async function resolveUserId(
   deps: BillingDeps,
   hint: string | null | undefined,
@@ -119,38 +101,27 @@ export async function resolveUserId(
       .eq('provider_customer_id', customerId)
       .maybeSingle<{ user_id: string }>()
     if (byCustomer.data?.user_id) return byCustomer.data.user_id
-
-    try {
-      const customer = await deps.stripe.customers.retrieve(customerId)
-      if (customer && !customer.deleted) {
-        const metaUserId = (customer.metadata as Record<string, string> | undefined)?.user_id
-        if (metaUserId) return metaUserId
-      }
-    } catch {
-      // customer 조회 실패는 무시하고 매핑 불가로 처리
-    }
   }
 
   return null
 }
 
-/** Stripe subscription을 받아 DB에 반영한다. */
 export async function syncSubscription(
   deps: BillingDeps,
-  sub: Stripe.Subscription,
+  sub: PaddleSubscription,
   userIdHint: string | null,
 ): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
-  const customerId = customerIdOf(sub.customer)
-  const metaUserId = (sub.metadata as Record<string, string> | undefined)?.user_id ?? null
+  const customerId = customerIdOf(sub)
+  const customUserId = sub.custom_data?.user_id
+  const metaUserId = typeof customUserId === 'string' ? customUserId : null
   const userId = await resolveUserId(deps, userIdHint || metaUserId, customerId)
   if (!userId) return { ok: true, skipped: true }
 
-  const result = await upsertSubscriptionByUser(deps, userId, {
+  return upsertSubscriptionByUser(deps, userId, {
     provider_customer_id: customerId,
-    provider_subscription_id: sub.id,
-    status: mapStripeStatus(sub.status),
+    provider_subscription_id: sub.id ?? null,
+    status: mapPaddleStatus(sub.status),
     current_period_end: getPeriodEndIso(sub),
     updated_at: new Date().toISOString(),
   })
-  return result
 }

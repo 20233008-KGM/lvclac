@@ -107,3 +107,20 @@ export function formatToleranceDelta(
   const formatted = formatNumber(magnitude, decimals)
   return side === 'long' ? `-${formatted}` : `+${formatted}`
 }
+
+/** 저장 시각 — ISO 문자열을 로컬 절대시간으로 표시 */
+export function formatSavedAt(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString()
+}
+
+/** 저장 시각 압축 표시 — MM.DD HH:mm(24시간제) */
+export function formatSavedAtCompact(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const day = `${pad(date.getMonth() + 1)}.${pad(date.getDate())}`
+  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return `${day} ${time}`
+}

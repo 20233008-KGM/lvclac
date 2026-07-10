@@ -1,0 +1,8 @@
+.my-page-inline-control {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 380px;
+  gap: var(--space-sm);
+}

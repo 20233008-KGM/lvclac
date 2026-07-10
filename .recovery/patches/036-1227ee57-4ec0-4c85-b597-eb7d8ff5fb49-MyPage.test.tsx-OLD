@@ -1,0 +1,5 @@
+    expect(html).not.toContain(en.myPage.lastIdentityNote)
+    // 이메일은 연동됨 뱃지 + '기본' 칩, Google은 미연동 뱃지
+    expect(html).toContain('my-page-linked-badge is-linked')
+    expect(html).toContain('my-page-linked-badge is-unlinked')
+    expect(html).toContain(`my-page-linked-chip">${en.myPage.primaryTag}`)

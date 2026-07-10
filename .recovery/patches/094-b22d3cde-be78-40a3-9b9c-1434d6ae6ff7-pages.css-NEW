@@ -1,0 +1,27 @@
+.my-page-setting-row__value-stack {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.my-page-setting-row__value-stack .my-page-field-help {
+  margin: 0;
+  font-weight: 400;
+}
+
+.my-page-settings-note {
+  padding: 0 var(--space-md);
+  border: none;
+  background: transparent;
+  min-height: 0;
+}
+
+.my-page-settings-note .my-page-form-message {
+  margin: 0;
+}
+
+.my-page-account-settings-meta {
+  display: grid;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}

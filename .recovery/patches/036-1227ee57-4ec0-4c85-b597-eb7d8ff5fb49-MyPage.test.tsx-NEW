@@ -1,0 +1,5 @@
+    expect(html).not.toContain(en.myPage.lastIdentityNote)
+    // 이메일은 연동됨 상태 + '기본', Google은 미연동
+    expect(html).toContain('my-page-linked-status is-linked')
+    expect(html).toContain('my-page-linked-status is-unlinked')
+    expect(html).toContain(`${en.myPage.providerLinked} · ${en.myPage.primaryTag}`)

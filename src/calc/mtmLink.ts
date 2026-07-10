@@ -16,6 +16,8 @@ export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   /** 손익 반영 취소 — 시나리오 미리보기 복원 */
   undoScenarioApply?: true
   applyMarkPrice?: number
+  /** 같은 제스처(드래그/꾹누르기) 중간 호출 — true면 markPriceUndoSnapshot을 새로 캡처하지 않고 유지 */
+  preserveMarkPriceUndoSnapshot?: true
   undoMarkPrice?: true
   /** 주문 시나리오 Enter — baseline과 함께 미리보기 진입 */
   commitOrderScenario?: OrderScenarioBaseline
@@ -109,6 +111,8 @@ function orderInputsFromRevertSnapshot(inputs: CalculatorInputs): CalculatorInpu
     ...inputs,
     accountEval: snap.accountEval,
     contracts: snap.contracts,
+    contractAmount: snap.contractAmount,
+    contractAmountRole: snap.contractAmountRole,
     mtmPriceAnchor: snap.mtmPriceAnchor,
     evalSnapshotSide: snap.evalSnapshotSide,
   }
@@ -134,6 +138,8 @@ export function resolveOrderPreviewInputs(inputs: CalculatorInputs): CalculatorI
   return {
     ...inputs,
     contracts: afterInputs.contracts,
+    contractAmount: afterInputs.contractAmount,
+    contractAmountRole: afterInputs.contractAmountRole,
     accountEval: afterInputs.accountEval,
     evalSnapshotSide: afterInputs.evalSnapshotSide,
   }
@@ -152,6 +158,8 @@ export function enterOrderScenarioPreview(
     orderScenarioRevertSnapshot: {
       accountEval,
       contracts: prev.contracts,
+      contractAmount: prev.contractAmount,
+      contractAmountRole: prev.contractAmountRole,
       mtmPriceAnchor: prev.mtmPriceAnchor,
       evalSnapshotSide: prev.evalSnapshotSide,
     },
@@ -205,6 +213,8 @@ export function applyOrderScenarioToAccount(
 
   return {
     contracts: afterInputs.contracts,
+    contractAmount: afterInputs.contractAmount,
+    contractAmountRole: afterInputs.contractAmountRole,
     accountEval: afterInputs.accountEval,
     evalSnapshotSide: afterInputs.evalSnapshotSide,
     orderContracts: undefined,
@@ -245,6 +255,8 @@ export function revertOrderApply(prev: CalculatorInputs): Partial<CalculatorInpu
   return {
     accountEval: snap.accountEval,
     contracts: snap.contracts,
+    contractAmount: snap.contractAmount,
+    contractAmountRole: snap.contractAmountRole,
     mtmPriceAnchor: snap.mtmPriceAnchor,
     evalSnapshotSide: snap.evalSnapshotSide,
     orderContracts: snap.orderContracts,
@@ -300,6 +312,8 @@ export function revertOrderScenarioState(prev: CalculatorInputs): Partial<Calcul
     orderScenarioRevertSnapshot: undefined,
     accountEval: snap.accountEval,
     contracts: snap.contracts,
+    contractAmount: snap.contractAmount,
+    contractAmountRole: snap.contractAmountRole,
     mtmPriceAnchor: snap.mtmPriceAnchor,
     evalSnapshotSide: snap.evalSnapshotSide,
   }
@@ -405,6 +419,7 @@ export function applyInputPatch(
     applyScenarioToMark,
     undoScenarioApply,
     applyMarkPrice,
+    preserveMarkPriceUndoSnapshot,
     undoMarkPrice,
     commitOrderScenario,
     clearOrderScenario,
@@ -445,6 +460,8 @@ export function applyInputPatch(
           ? {
               accountEval: base.accountEval,
               contracts: base.contracts,
+              contractAmount: base.contractAmount,
+              contractAmountRole: base.contractAmountRole,
               mtmPriceAnchor: base.mtmPriceAnchor,
               evalSnapshotSide: base.evalSnapshotSide,
               orderContracts: base.orderContracts,
@@ -485,8 +502,10 @@ export function applyInputPatch(
     const base = { ...prev, ...sanitizePatchForScenarioLock(prev, inputPatch) }
     const moved = applyPriceMove(base, applyMarkPrice)
     if (moved) {
-      const undoSnapshot =
-        base.accountEval != null && base.currentPrice != null
+      const keepExisting = preserveMarkPriceUndoSnapshot === true && base.markPriceUndoSnapshot != null
+      const undoSnapshot = keepExisting
+        ? base.markPriceUndoSnapshot
+        : base.accountEval != null && base.currentPrice != null
           ? {
               accountEval: base.accountEval,
               currentPrice: base.currentPrice,

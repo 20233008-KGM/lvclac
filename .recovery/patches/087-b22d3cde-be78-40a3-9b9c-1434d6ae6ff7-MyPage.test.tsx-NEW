@@ -1,0 +1,5 @@
+    expect(html).toContain('my-page-shell')
+    expect(html).toContain('my-page-console')
+    expect(html).toContain('my-page-account-email')
+    expect(html).not.toContain('my-page-identity-card')
+    expect(html).toContain(en.myPage.navAccount)

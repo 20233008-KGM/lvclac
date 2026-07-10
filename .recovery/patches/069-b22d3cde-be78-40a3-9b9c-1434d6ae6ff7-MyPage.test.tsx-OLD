@@ -1,0 +1,2 @@
+    expect(html).toContain(en.myPage.profileTitle)
+    expect(html).toContain('user@example.com')

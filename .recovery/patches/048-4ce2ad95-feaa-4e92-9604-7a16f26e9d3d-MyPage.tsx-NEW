@@ -1,0 +1,15 @@
+              <nav className="my-page-nav" aria-label={copy.navLabel}>
+                {MY_PAGE_NAV_ITEMS.map((item) => {
+                  const isActive = activeNavHref === item.href
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      className={isActive ? 'is-active' : undefined}
+                      aria-current={isActive ? 'location' : undefined}
+                    >
+                      {navLabels[item.href]}
+                    </a>
+                  )
+                })}
+              </nav>

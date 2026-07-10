@@ -1,0 +1,4 @@
+    linkedProviders: [] as string[],
+    identityBusy: null as 'link' | 'unlink' | null,
+    identityMessage: null,
+    supportHref: 'mailto:support@example.com',

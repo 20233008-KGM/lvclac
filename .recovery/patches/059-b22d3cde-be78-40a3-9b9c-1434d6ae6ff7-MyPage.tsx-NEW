@@ -1,0 +1,12 @@
+  for (const item of MY_PAGE_NAV_ITEMS) {
+    if (item.sectionIds.some((sectionId) => `#${sectionId}` === normalized)) {
+      return item.href
+    }
+  }
+
+  if (normalized === '#my-page-linked-logins') {
+    return '#my-page-profile'
+  }
+
+  return MY_PAGE_NAV_ITEMS[0].href
+}

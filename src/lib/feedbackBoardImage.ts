@@ -12,15 +12,17 @@ const ACCEPTED_MIME_TYPES = new Set([
 
 export type AttachmentError = 'invalid_type' | 'too_large' | 'too_many'
 
+export function validateImageFile(file: File): AttachmentError | null {
+  if (!ACCEPTED_MIME_TYPES.has(file.type)) return 'invalid_type'
+  if (file.size > MAX_ATTACHMENT_BYTES) return 'too_large'
+  return null
+}
+
 export async function readImageAttachment(
   file: File,
 ): Promise<{ ok: true; attachment: BoardPostAttachment } | { ok: false; error: AttachmentError }> {
-  if (!ACCEPTED_MIME_TYPES.has(file.type)) {
-    return { ok: false, error: 'invalid_type' }
-  }
-  if (file.size > MAX_ATTACHMENT_BYTES) {
-    return { ok: false, error: 'too_large' }
-  }
+  const error = validateImageFile(file)
+  if (error) return { ok: false, error }
 
   const dataUrl = await readFileAsDataUrl(file)
   return {

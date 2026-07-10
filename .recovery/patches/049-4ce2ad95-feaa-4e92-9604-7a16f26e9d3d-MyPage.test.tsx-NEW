@@ -1,0 +1,5 @@
+    expect(html).toContain('id="my-page-plan"')
+    expect(html).toContain('id="my-page-support"')
+    expect(html).toContain('aria-current="location"')
+    expect(html).toContain('class="is-active"')
+  })

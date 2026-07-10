@@ -25,17 +25,21 @@ function clampHorizontal(centerX: number, halfWidth: number) {
   return Math.max(min, Math.min(max, centerX))
 }
 
+function rightAlignedLeft(anchorRight: number) {
+  return Math.min(anchorRight, window.innerWidth - VIEWPORT_MARGIN)
+}
+
 function positionTooltip(
   anchor: DOMRect,
   tip: DOMRect,
   preferred: FloatingTooltipPlacement,
   horizontalAlign: FloatingTooltipHorizontalAlign,
-): { top: number; left: number; placement: FloatingTooltipPlacement; anchorX: number } {
+): { top: number; left: number; placement: FloatingTooltipPlacement } {
   const halfW = tip.width / 2
-  const anchorX = horizontalAlign === 'right' ? anchor.right : anchor.left + anchor.width / 2
-  const preferredCenter =
-    horizontalAlign === 'right' ? anchor.right - halfW : anchor.left + anchor.width / 2
-  const left = clampHorizontal(preferredCenter, halfW)
+  const left =
+    horizontalAlign === 'right'
+      ? rightAlignedLeft(anchor.right)
+      : clampHorizontal(anchor.left + anchor.width / 2, halfW)
 
   const spaceAbove = anchor.top - VIEWPORT_MARGIN
   const spaceBelow = window.innerHeight - VIEWPORT_MARGIN - anchor.bottom
@@ -51,7 +55,7 @@ function positionTooltip(
       ? anchor.top - GAP - tip.height
       : anchor.bottom + GAP
 
-  return { top, left, placement, anchorX }
+  return { top, left, placement }
 }
 
 function isFocusLeavingAnchor(anchor: HTMLElement, event: FocusEvent) {
@@ -64,12 +68,15 @@ interface UseFloatingTooltipOptions {
   horizontalAlign?: FloatingTooltipHorizontalAlign
   /** anchor가 아닌 자식(버튼 등)에 포커스가 있을 때 */
   focusWithin?: boolean
+  /** 위치 계산에 쓸 별도 앵커 (호버/포커스는 anchorRef 유지) */
+  positionAnchorRef?: RefObject<HTMLElement | null>
 }
 
 export function useFloatingTooltip({
   placement = 'top',
   horizontalAlign = 'center',
   focusWithin = false,
+  positionAnchorRef,
 }: UseFloatingTooltipOptions = {}) {
   const anchorRef = useRef<HTMLElement>(null)
   const tooltipRef = useRef<HTMLSpanElement>(null)
@@ -102,19 +109,26 @@ export function useFloatingTooltip({
   }, [])
 
   const updatePosition = useCallback(() => {
-    const anchor = anchorRef.current
+    const trigger = anchorRef.current
+    const positionEl = positionAnchorRef?.current ?? trigger
     const tip = tooltipRef.current
-    if (!anchor || !tip) return
+    if (!positionEl || !tip) return
 
-    const anchorRect = anchor.getBoundingClientRect()
+    const positionRect = positionEl.getBoundingClientRect()
+    const triggerRect = trigger?.getBoundingClientRect()
     const tipRect = tip.getBoundingClientRect()
     const {
       top,
       left,
       placement: resolved,
-      anchorX,
-    } = positionTooltip(anchorRect, tipRect, placement, horizontalAlign)
+    } = positionTooltip(positionRect, tipRect, placement, horizontalAlign)
 
+    const anchorX =
+      horizontalAlign === 'right' && triggerRect
+        ? triggerRect.left + triggerRect.width / 2
+        : horizontalAlign === 'right'
+          ? positionRect.right
+          : positionRect.left + positionRect.width / 2
     const arrowLeft = anchorX - tipRect.left
 
     setResolvedPlacement(resolved)
@@ -125,7 +139,7 @@ export function useFloatingTooltip({
       zIndex: TOOLTIP_Z,
       ['--floating-tooltip-arrow-left' as string]: `${arrowLeft}px`,
     })
-  }, [horizontalAlign, placement])
+  }, [horizontalAlign, placement, positionAnchorRef])
 
   useLayoutEffect(() => {
     if (!mounted) return

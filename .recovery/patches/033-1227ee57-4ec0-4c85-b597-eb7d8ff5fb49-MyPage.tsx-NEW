@@ -1,0 +1,6 @@
+  const canSetPassword = !hasEmail && Boolean(user?.email.trim())
+  const emailStatusLabel = hasEmail
+    ? `${copy.providerLinked} · ${copy.primaryTag}`
+    : copy.providerNotLinked
+  const googleStatusLabel = hasGoogle ? copy.providerLinked : copy.providerNotLinked
+  const submitNickname = (event: FormEvent) => {

@@ -1,0 +1,11 @@
+.my-page-inline-control {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  min-width: 0;
+  gap: var(--space-sm);
+}
+
+.my-page-nickname-form .my-page-inline-control {
+  width: 100%;
+}

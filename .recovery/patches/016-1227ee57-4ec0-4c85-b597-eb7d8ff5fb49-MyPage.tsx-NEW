@@ -1,0 +1,7 @@
+  onLinkGoogle: () => void
+  onUnlinkGoogle: () => void
+  onPasswordFormToggle: () => void
+  onPasswordDraftChange: (value: string) => void
+  onPasswordConfirmationDraftChange: (value: string) => void
+  onSetPasswordSubmit: () => void
+  onLoginClick: () => void

@@ -1,6 +1,6 @@
 /**
  * Node http(req/res) ↔ 결제 핸들러 사이의 얇은 어댑터.
- * Vercel Function(api/stripe/*)과 Vite dev 미들웨어에서 공용으로 쓴다.
+ * Vercel Functions and Vite dev middleware share this adapter.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -43,7 +43,7 @@ export function readJsonBody(req: IncomingMessage): Promise<Record<string, unkno
   })
 }
 
-/** 원문(raw) 본문을 Buffer로 읽는다. Stripe 서명 검증에는 파싱 전 원문이 필요하다. */
+/** Read the raw body as Buffer for Paddle webhook signature verification. */
 export function readRawBody(req: IncomingMessage): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []

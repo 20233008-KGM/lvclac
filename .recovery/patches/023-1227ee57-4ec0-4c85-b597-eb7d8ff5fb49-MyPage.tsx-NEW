@@ -1,0 +1,54 @@
+  const handleUnlinkGoogle = useCallback(async () => {
+    if (!user || identityBusy) return
+    setIdentityBusy('unlink')
+    setIdentityMessageState({ userId: user.id, value: null })
+    const error = await unlinkGoogle()
+    setIdentityBusy(null)
+    setIdentityMessageState({
+      userId: user.id,
+      value: error ? authErrorMessage(error, t) : t.myPage.googleUnlinked,
+    })
+  }, [identityBusy, t, unlinkGoogle, user])
+
+  const handlePasswordFormToggle = useCallback(() => {
+    if (!user || identityBusy) return
+    setPasswordFormOpen((open) => !open)
+    setIdentityMessageState({ userId: user.id, value: null })
+  }, [identityBusy, user])
+
+  const handleSetPassword = useCallback(async () => {
+    if (!user || identityBusy) return
+    const validationError =
+      validatePassword(passwordDraft) ??
+      validatePasswordConfirmation(passwordDraft, passwordConfirmationDraft)
+    if (validationError) {
+      setIdentityMessageState({
+        userId: user.id,
+        value: authErrorMessage(validationError, t),
+      })
+      return
+    }
+
+    setIdentityBusy('setPassword')
+    setIdentityMessageState({ userId: user.id, value: null })
+    const error = await setPasswordForCurrentUser(passwordDraft)
+    setIdentityBusy(null)
+    if (error) {
+      setIdentityMessageState({ userId: user.id, value: authErrorMessage(error, t) })
+      return
+    }
+
+    setPasswordFormOpen(false)
+    setPasswordDraft('')
+    setPasswordConfirmationDraft('')
+    setIdentityMessageState({ userId: user.id, value: t.myPage.passwordSetSuccess })
+  }, [
+    identityBusy,
+    passwordConfirmationDraft,
+    passwordDraft,
+    setPasswordForCurrentUser,
+    t,
+    user,
+  ])
+
+  return (

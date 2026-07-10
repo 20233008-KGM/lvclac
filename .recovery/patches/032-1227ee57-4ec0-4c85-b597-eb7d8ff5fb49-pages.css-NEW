@@ -1,0 +1,102 @@
+/* 아이콘 | 이름 | (상태뱃지 + 액션) — trailing 열 너비를 행마다 동일하게 고정 */
+.my-page-linked-list {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+}
+
+.my-page-linked-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-linked-trailing {
+  display: grid;
+  grid-template-columns: 5.75rem 7.5rem;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.my-page-linked-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.my-page-linked-logo {
+  flex: none;
+}
+
+.my-page-linked-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.my-page-linked-badge {
+  justify-self: end;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.my-page-linked-badge.is-linked {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+
+.my-page-linked-badge.is-unlinked {
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-subtle);
+}
+
+.my-page-linked-action {
+  display: flex;
+  align-items: center;
+  justify-content: stretch;
+  min-height: 32px;
+  width: 100%;
+}
+
+/* '기본' 칩과 연동/해제 버튼을 같은 높이·같은 알약 형태로 통일해 대칭 맞춤 */
+.my-page-linked-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-dim);
+  background: var(--color-bg-elevated);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.my-page-linked-action .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}

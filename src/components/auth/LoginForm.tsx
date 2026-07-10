@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { validateEmail, validatePassword } from '../../auth/validation'
+import { validateEmail, validateLoginPassword } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { authErrorMessage } from './authMessages'
@@ -14,7 +14,7 @@ export function LoginForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    const emailErr = validateEmail(email) ?? validatePassword(password)
+    const emailErr = validateEmail(email) ?? validateLoginPassword(password)
     if (emailErr) {
       setError(authErrorMessage(emailErr, t))
       return

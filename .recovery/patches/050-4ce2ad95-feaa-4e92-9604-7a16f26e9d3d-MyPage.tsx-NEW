@@ -1,0 +1,15 @@
+function resolveMyPageNavHref(hash: string) {
+  const normalized = hash.startsWith('#') ? hash : hash ? `#${hash}` : ''
+  if (!normalized) return MY_PAGE_NAV_ITEMS[0].href
+
+  const direct = MY_PAGE_NAV_ITEMS.find((item) => item.href === normalized)
+  if (direct) return direct.href
+
+  for (const item of MY_PAGE_NAV_ITEMS) {
+    if (item.sectionIds.some((sectionId) => `#${sectionId}` === normalized)) {
+      return item.href
+    }
+  }
+
+  return MY_PAGE_NAV_ITEMS[0].href
+}

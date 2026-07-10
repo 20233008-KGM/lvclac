@@ -1,0 +1,18 @@
+@media (max-width: 620px) {
+  .my-page-plans {
+    grid-template-columns: 1fr;
+  }
+
+  .my-page-billing-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .my-page-billing-row .my-page-actions {
+    width: 100%;
+  }
+
+  .my-page-billing-row .btn-primary {
+    width: 100%;
+  }
+}

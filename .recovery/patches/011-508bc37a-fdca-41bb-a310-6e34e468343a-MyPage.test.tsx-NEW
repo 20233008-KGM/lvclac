@@ -1,0 +1,1 @@
+  it('renders the records summary as a compact hub entry instead of the full records browser', () => {

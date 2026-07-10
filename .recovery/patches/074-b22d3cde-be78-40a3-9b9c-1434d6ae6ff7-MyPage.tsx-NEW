@@ -1,0 +1,6 @@
+  const navLabels: Record<(typeof MY_PAGE_NAV_ITEMS)[number]['href'], string> = {
+    '#my-page-profile': copy.navAccount,
+    '#my-page-records-summary': copy.navData,
+    '#my-page-preferences': copy.preferencesTitle,
+    '#my-page-support': copy.navSupport,
+  }

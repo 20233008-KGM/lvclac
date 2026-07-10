@@ -1,0 +1,21 @@
+  it('renders signed-in account hub sections with records summary', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
+        nicknameDraft="Trader Kim"
+        nicknameMessage={en.myPage.nicknameSaved}
+        recordsSummaryPanel={<div className="records-summary-stub">records summary</div>}
+      />,
+    )
+
+    expect(html).toContain('my-page-shell')
+    expect(html).toContain('my-page-console')
+    expect(html).toContain('my-page-identity-card')
+    expect(html).toContain('my-page-identity-info')
+    expect(html).toContain('my-page-identity-meta')
+    expect(html).toContain('my-page-badge')
+    expect(html).toContain(en.myPage.profileTitle)
+    expect(html).toContain('user@example.com')
+    expect(html).toContain('Trader Kim')
+    expect(html).toContain('records-summary-stub')

@@ -1,0 +1,6 @@
+/**
+ * 마이페이지 구독 패널. Free 사용자는 플랜 선택 → Paddle Checkout,
+ * Pro 사용자는 Customer Portal로 구독을 관리한다. 자체적으로 useAuth를 쓰므로
+ * MyPageView(순수 뷰)에는 노드로 주입된다(devResetPanel과 동일 패턴).
+ */
+export function BillingPanel({ embedded = false }: { embedded?: boolean }) {

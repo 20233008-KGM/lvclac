@@ -96,10 +96,16 @@ cloud input saving. Broken or unexpected JSON must not crash the UI.
 
 ## UI Behavior
 
-Add a logged-in-only records panel near the result column, below the existing
-order section.
+The records panel is not rendered inline. A trigger button ("View records" /
+`기록 보기`) is shown at all times below the existing order section,
+regardless of sign-in state. Clicking it opens the records panel inside a
+modal (portal-rendered into `document.body`, same pattern as `AuthModal`).
+The modal closes via its close button, the Escape key, or a click on the
+overlay background. Records are pre-fetched on mount (before the modal is
+ever opened) so opening the modal does not incur a loading delay for an
+already-loaded session.
 
-Panel requirements:
+Panel requirements (rendered inside the modal):
 
 - Two tabs: order history and account snapshots.
 - Signed-out state: a compact prompt that login is required.
@@ -161,6 +167,10 @@ Manual/browser verification:
 - Delete removes rows.
 - Supabase failure shows a non-blocking error.
 - Mobile layout has no overflow or overlapping controls.
+- Records trigger button is visible and enabled both signed-in and signed-out.
+- Clicking the trigger button opens the records modal.
+- The modal closes via the close button, the Escape key, and a click on the
+  overlay background.
 
 Run at minimum:
 

@@ -1,0 +1,3 @@
+    onLinkGoogle: vi.fn(),
+    onUnlinkGoogle: vi.fn(),
+    onLoginClick: vi.fn(),

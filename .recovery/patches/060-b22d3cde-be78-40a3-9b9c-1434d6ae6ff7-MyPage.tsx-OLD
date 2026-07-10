@@ -1,0 +1,1 @@
+            <section className="my-page-identity-card" aria-label={copy.profileTitle}>

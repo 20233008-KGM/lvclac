@@ -1,0 +1,74 @@
+  return (
+    <section
+      id="my-page-plan"
+      className="my-page-panel"
+      aria-labelledby="my-page-plan-title"
+    >
+      <div className="my-page-panel-head">
+        <h2 id="my-page-plan-title">{t.myPage.planTitle}</h2>
+      </div>
+
+      {isPro ? (
+        <div className="my-page-billing">
+          <div className="my-page-billing-row">
+            <div className="my-page-billing-row__copy">
+              <p className="my-page-billing-headline">{copy.proHeadline}</p>
+              <p>{copy.proBody}</p>
+              {subscription?.currentPeriodEnd && (
+                <p className="my-page-field-help">
+                  {copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))}
+                </p>
+              )}
+            </div>
+            <div className="my-page-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy !== null}
+                onClick={() => void handleManage()}
+              >
+                {busy === 'portal' ? copy.redirecting : copy.manageAction}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="my-page-billing">
+          <p className="my-page-billing-headline">{copy.freeHeadline}</p>
+          <p>{copy.freeBody}</p>
+          <div className="my-page-plans">
+            <PlanCard
+              name={copy.monthlyName}
+              price={copy.monthlyPrice}
+              action={copy.choosePlan}
+              busyLabel={copy.redirecting}
+              busy={busy === 'monthly'}
+              disabled={busy !== null}
+              onSelect={() => void handleCheckout('monthly')}
+            />
+            <PlanCard
+              name={copy.yearlyName}
+              price={copy.yearlyPrice}
+              note={copy.yearlyNote}
+              action={copy.choosePlan}
+              busyLabel={copy.redirecting}
+              busy={busy === 'yearly'}
+              disabled={busy !== null}
+              highlighted
+              onSelect={() => void handleCheckout('yearly')}
+            />
+          </div>
+          <p className="my-page-field-help">{copy.taxNote}</p>
+        </div>
+      )}
+
+      {message && (
+        <p className="my-page-form-message" role="status">
+          {message}
+        </p>
+      )}
+    </section>
+  )
+}
+
+interface PlanCardProps {

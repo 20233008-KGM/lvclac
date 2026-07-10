@@ -1,0 +1,2 @@
+    expect(html).toContain('id="my-page-profile"')
+    expect(html).toContain('id="my-page-plan"')

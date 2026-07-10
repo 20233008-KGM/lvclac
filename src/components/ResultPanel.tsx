@@ -1,27 +1,38 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { calculateEvaluate, calculateOrder, captureOrderScenarioBaseline, checkOrderExceedsMaxBuyable } from '../calc/leverage'
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react'
+import { calculateEvaluate, calculateOrder, captureOrderScenarioBaseline } from '../calc/leverage'
 import {
   applyInputPatch,
-  hasOrderApplyUndo,
   isOrderScenarioModeActive,
   resolveEvaluationInputs,
   type CalculatorInputPatch,
 } from '../calc/mtmLink'
+import type { CalculatorHistoryOptions } from '../context/calculatorHistory'
+import {
+  beginOrderHistorySave,
+  completeOrderHistorySave,
+} from '../context/orderHistoryUndoSync'
 import {
   buildAccountSnapshotPayload,
   buildOrderHistoryPayload,
   createAccountRecordsRepository,
-  type AccountSnapshotRecord,
-  type OrderHistoryRecord,
 } from '../db/accountRecords'
-import { calcMargins, inputsReadyForOrderSim, withReferencePrice } from '../calc/margins'
 import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
-import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
+import { FORMULAS_PATH, GUIDE_PATH, MY_PAGE_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
+import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n'
-import { AccountRecordsPanel, type AccountRecordsTab } from './AccountRecordsPanel'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
   CommitButtonSlot,
@@ -30,7 +41,7 @@ import {
 } from './InputCommitButton'
 import { LegalEmphasis } from './ServiceDisclaimer'
 import { FitText, FitTextGroup } from './FitText'
-import { NumberInput, type NumberInputHandle } from './NumberInput'
+import { NumberInput, type NumberInputChangeMeta, type NumberInputHandle } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
 import {
   CONTRACTS_SCRUB_PX_PER_TICK,
@@ -40,13 +51,22 @@ import { formatNumberForInput } from '../utils/inputFormat'
 import {
   formatLeverageValue,
   formatNumber,
+  formatPercent,
   formatToleranceDelta,
   formatTolerancePercent,
 } from '../utils/format'
+import {
+  calcEntryPriceReturnRate,
+  calcPositionUnrealizedPnl,
+} from '../calc/positionMetrics'
+
+const SnapshotSavedModal = lazy(() =>
+  import('./SnapshotSavedModal').then((mod) => ({ default: mod.SnapshotSavedModal })),
+)
 
 interface ResultPanelProps {
   inputs: CalculatorInputs
-  onChange: (patch: CalculatorInputPatch) => void
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
 }
 
 type OrderApplyHandler = (
@@ -55,26 +75,92 @@ type OrderApplyHandler = (
   orderResult: OrderResult,
 ) => void
 
+function historyOptions(meta?: NumberInputChangeMeta): CalculatorHistoryOptions | undefined {
+  return meta?.historyGroup ? { historyGroup: meta.historyGroup } : undefined
+}
+
 function ResultHero({
   label,
+  labelMeta,
+  labelMetaTooltip,
   value,
   sub,
   danger,
+  className,
 }: {
   label: string
+  labelMeta?: string | null
+  labelMetaTooltip?: string | null
   value: string
   sub?: string | null
   danger?: boolean
+  className?: string
 }) {
+  const cardClassName = [
+    'result-hero-card',
+    danger ? 'danger' : '',
+    className ?? '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <div className={`result-hero-card ${danger ? 'danger' : ''}`}>
-      <span className="result-hero-label">{label}</span>
+    <div className={cardClassName}>
+      <span className="result-hero-label-row">
+        <span className="result-hero-label">{label}</span>
+        {labelMeta && (
+          <ResultHeroLabelMeta value={labelMeta} tooltip={labelMetaTooltip} />
+        )}
+      </span>
       <span className="result-hero-value">
         <FitText>{value}</FitText>
       </span>
       {sub && <span className="result-hero-sub">{sub}</span>}
     </div>
   )
+}
+
+function ResultHeroLabelMeta({
+  value,
+  tooltip,
+}: {
+  value: string
+  tooltip?: string | null
+}) {
+  const id = useId()
+  const hasTooltip = tooltip != null
+  const { anchorRef, anchorHandlers, renderTooltip } = useFloatingTooltip({
+    placement: 'top',
+  })
+
+  return (
+    <span
+      ref={anchorRef as RefObject<HTMLSpanElement>}
+      className={`result-hero-label-meta${hasTooltip ? ' result-hero-label-meta--tooltip' : ''}`}
+      tabIndex={hasTooltip ? 0 : undefined}
+      aria-describedby={hasTooltip ? id : undefined}
+      {...(hasTooltip ? anchorHandlers : {})}
+    >
+      {value}
+      {hasTooltip &&
+        renderTooltip(
+          'field-label-tooltip result-hero-pnl-tooltip',
+          <span className="result-hero-pnl-tooltip__value">{tooltip}</span>,
+          { id },
+        )}
+    </span>
+  )
+}
+
+function formatEntryReturnMeta(value: number | null): string | null {
+  if (value == null) return null
+  const formatted = formatPercent(value)
+  return value > 0 ? `+${formatted}` : formatted
+}
+
+function formatEntryPnlTooltip(value: number | null): string | null {
+  if (value == null) return null
+  if (value === 0) return '0'
+  const formatted = formatNumber(Math.abs(value))
+  return value > 0 ? `+${formatted}` : `-${formatted}`
 }
 
 function ResultRow({
@@ -192,9 +278,13 @@ function ResultSheet({
 function EvaluateResults({
   result,
   currentPrice,
+  entryReturnRate,
+  entryPnl,
 }: {
   result: EvaluateResult
   currentPrice?: number
+  entryReturnRate: number | null
+  entryPnl: number | null
 }) {
   const { t, translateCalcMessage } = useLanguage()
   const r = t.results
@@ -219,7 +309,10 @@ function EvaluateResults({
         />
         <ResultHero
           label={t.fields.currentPrice.label}
+          labelMeta={formatEntryReturnMeta(entryReturnRate)}
+          labelMetaTooltip={formatEntryPnlTooltip(entryPnl)}
           value={formatNumber(currentPrice ?? null)}
+          className="result-hero-card--mark"
         />
         <ResultHero
           label={r.tolerancePercent}
@@ -324,7 +417,7 @@ function OrderInputs({
   onApplyOrderScenario,
 }: {
   inputs: CalculatorInputs
-  onChange: (patch: CalculatorInputPatch) => void
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
   orderResult: OrderResult
   contractsField: { label: string; hint: string; placeholder?: string }
   priceField: { label: string; hint: string; placeholder?: string }
@@ -352,8 +445,6 @@ function OrderInputs({
     currentPrice != null
       ? formatNumberForInput(currentPrice)
       : priceField.placeholder || undefined
-  const orderApplyUndoAvailable = hasOrderApplyUndo(inputs)
-
   const orderReady =
     inputs.orderContracts != null && inputs.orderPrice != null
 
@@ -383,19 +474,6 @@ function OrderInputs({
     }
     wasOrderScenarioRef.current = orderScenarioActive
   }, [orderScenarioActive])
-
-  useEffect(() => {
-    if (!orderApplyUndoAvailable) return
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
-      e.preventDefault()
-      onChange({ undoOrderApply: true })
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [orderApplyUndoAvailable, onChange])
 
   const contractsLabel = orderScenarioActive ? scenarioContractsLabel : contractsField.label
   const priceLabel = orderScenarioActive ? scenarioPriceLabel : priceField.label
@@ -469,7 +547,7 @@ function OrderInputs({
               dragScrubPxPerTick={CONTRACTS_SCRUB_PX_PER_TICK}
               scrubSeedValue={0}
               onEnterKey={handleOrderEnter}
-              onChange={(v) => onChange({ orderContracts: v })}
+              onChange={(v, meta) => onChange({ orderContracts: v }, historyOptions(meta))}
             />
           </div>
         </div>
@@ -502,7 +580,7 @@ function OrderInputs({
                 dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
                 scrubSeedValue={currentPrice}
                 onEnterKey={handleOrderEnter}
-                onChange={(v) => onChange({ orderPrice: v })}
+                onChange={(v, meta) => onChange({ orderPrice: v }, historyOptions(meta))}
               />
             ) : (
               <div className="result-order-price-row">
@@ -514,7 +592,7 @@ function OrderInputs({
                   aria-labelledby="order-price-label"
                   className="result-order-price-row__input"
                   onEnterKey={handleOrderEnter}
-                  onChange={(v) => onChange({ orderPrice: v })}
+                  onChange={(v, meta) => onChange({ orderPrice: v }, historyOptions(meta))}
                 />
                 {markInlineButton}
               </div>
@@ -567,6 +645,11 @@ function OrderResults({
       after: hasAfter ? formatLiq(result.afterLiquidation) : '-',
       dangerBefore: result.isAtRiskBefore,
       dangerAfter: afterAtRisk,
+    },
+    {
+      index: t.fields.contractAmount.label,
+      before: formatNumber(result.beforeContractAmount),
+      after: hasAfter ? formatNumber(result.afterContractAmount) : '-',
     },
     {
       index: r.tolerancePercent,
@@ -649,17 +732,16 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const f = t.fields
   const userId = user?.id ?? null
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
-  const [recordsTab, setRecordsTab] = useState<AccountRecordsTab>('orders')
-  const [orderRecords, setOrderRecords] = useState<OrderHistoryRecord[]>([])
-  const [snapshotRecords, setSnapshotRecords] = useState<AccountSnapshotRecord[]>([])
-  const [recordsLoading, setRecordsLoading] = useState(false)
-  const [recordsError, setRecordsError] = useState<string | null>(null)
-  const [recordsNotice, setRecordsNotice] = useState<string | null>(null)
   const [snapshotBusy, setSnapshotBusy] = useState(false)
-  const recordsRequestIdRef = useRef(0)
+  const [snapshotSavedModalOpen, setSnapshotSavedModalOpen] = useState(false)
+  const [snapshotSaveNotice, setSnapshotSaveNotice] = useState<string | null>(null)
+  const [orderSaveNotice, setOrderSaveNotice] = useState<string | null>(null)
+  const snapshotButtonRef = useRef<HTMLButtonElement>(null)
   const activeRecordsUserIdRef = useRef(userId)
 
   const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
+  const entryReturnRate = calcEntryPriceReturnRate(evalInputs)
+  const entryPnl = calcPositionUnrealizedPnl(evalInputs)
   const evaluateResult = useMemo(
     () => calculateEvaluate(inputs),
     [inputs],
@@ -669,62 +751,16 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     [inputs],
   )
 
-  const orderBlocked = useMemo(() => {
-    const evalInputs = withReferencePrice(resolveEvaluationInputs(inputs))
-    if (!inputsReadyForOrderSim(evalInputs)) return false
-    const marginResult = calcMargins(evalInputs, evalInputs.contracts ?? 0)
-    if (!marginResult) return false
-    return (
-      checkOrderExceedsMaxBuyable(
-        orderContracts,
-        evalInputs.accountEval!,
-        marginResult.margins,
-        positionSide,
-      ) !== null
-    )
-  }, [inputs, orderContracts, positionSide])
+  const orderBlocked = orderResult.orderCapacityMessage !== null
 
   const orderScenarioActive = isOrderScenarioModeActive(inputs)
   const orderChipText = formatOrderScenarioChip(inputs, t.orderScenarioChip)
-
-  const loadRecords = useCallback(async () => {
-    const requestId = recordsRequestIdRef.current + 1
-    recordsRequestIdRef.current = requestId
-
-    if (!userId) {
-      setOrderRecords([])
-      setSnapshotRecords([])
-      setRecordsLoading(false)
-      setRecordsError(null)
-      setRecordsNotice(null)
-      return
-    }
-
-    setRecordsLoading(true)
-    setRecordsError(null)
-    const result = await recordsRepository.fetchRecentRecords(userId)
-    if (
-      recordsRequestIdRef.current !== requestId ||
-      activeRecordsUserIdRef.current !== userId
-    ) {
-      return
-    }
-    if (result.error !== null) {
-      setRecordsError(t.accountRecords.loadError)
-      setRecordsLoading(false)
-      return
-    }
-
-    setOrderRecords(result.data.orderHistory)
-    setSnapshotRecords(result.data.accountSnapshots)
-    setRecordsLoading(false)
-  }, [recordsRepository, t.accountRecords.loadError, userId])
 
   const saveSnapshot = useCallback(async () => {
     if (!userId) return
 
     setSnapshotBusy(true)
-    setRecordsNotice(null)
+    setSnapshotSaveNotice(null)
     const payload = buildAccountSnapshotPayload(
       inputs,
       evaluateResult,
@@ -736,70 +772,37 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       return
     }
     if (result.error !== null) {
-      setRecordsNotice(t.accountRecords.snapshotSaveError)
+      setSnapshotSaveNotice(t.accountRecords.snapshotSaveError)
       setSnapshotBusy(false)
       return
     }
 
-    setSnapshotRecords((prev) => [result.data, ...prev])
-    setRecordsTab('snapshots')
-    setRecordsNotice(t.accountRecords.snapshotSaved)
+    setSnapshotSavedModalOpen(true)
     setSnapshotBusy(false)
   }, [evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
 
   const saveOrderRecord = useCallback<OrderApplyHandler>(
     (beforeInputs, afterInputs, result) => {
-      if (!userId) return
+      if (!userId || !user?.autoSaveOrderHistory) return
 
       const payload = buildOrderHistoryPayload(beforeInputs, afterInputs, result)
-      setRecordsNotice(null)
+      const saveGeneration = beginOrderHistorySave()
+      setOrderSaveNotice(null)
       void recordsRepository.createOrderHistory(userId, payload).then((created) => {
         if (activeRecordsUserIdRef.current !== userId) return
         if (created.error !== null) {
-          setRecordsNotice(t.accountRecords.orderSaveError)
+          setOrderSaveNotice(t.accountRecords.orderSaveError)
           return
         }
+        if (!created.data) return
 
-        setOrderRecords((prev) => [created.data, ...prev])
-        setRecordsTab('orders')
-        setRecordsNotice(t.accountRecords.orderSaved)
-      })
-    },
-    [recordsRepository, t.accountRecords, userId],
-  )
-
-  const deleteOrderRecord = useCallback(
-    (id: string) => {
-      if (!userId) return
-
-      setRecordsNotice(null)
-      void recordsRepository.deleteOrderHistory(userId, id).then((result) => {
-        if (activeRecordsUserIdRef.current !== userId) return
-        if (result.error !== null) {
-          setRecordsNotice(t.accountRecords.deleteError)
-          return
+        const race = completeOrderHistorySave(saveGeneration, created.data.id)
+        if (race.deleteImmediately) {
+          void recordsRepository.deleteOrderHistory(userId, race.deleteImmediately)
         }
-        setOrderRecords((prev) => prev.filter((record) => record.id !== id))
       })
     },
-    [recordsRepository, t.accountRecords.deleteError, userId],
-  )
-
-  const deleteSnapshotRecord = useCallback(
-    (id: string) => {
-      if (!userId) return
-
-      setRecordsNotice(null)
-      void recordsRepository.deleteAccountSnapshot(userId, id).then((result) => {
-        if (activeRecordsUserIdRef.current !== userId) return
-        if (result.error !== null) {
-          setRecordsNotice(t.accountRecords.deleteError)
-          return
-        }
-        setSnapshotRecords((prev) => prev.filter((record) => record.id !== id))
-      })
-    },
-    [recordsRepository, t.accountRecords.deleteError, userId],
+    [recordsRepository, t.accountRecords.orderSaveError, user?.autoSaveOrderHistory, userId],
   )
 
   useEffect(() => {
@@ -819,33 +822,46 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     activeRecordsUserIdRef.current = userId
   }, [userId])
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadRecords()
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [loadRecords])
-
   return (
     <div className="result-column">
       <section className="panel result-panel">
         <div className="result-panel__head">
           <h2>{t.result}</h2>
-          <a
-            className="result-panel__formulas-btn"
-            href={FORMULAS_PATH}
-            onClick={(event) => {
-              event.preventDefault()
-              navigate(FORMULAS_PATH)
-            }}
-          >
-            {t.formulas.title}
-          </a>
+          <div className="result-panel__head-actions">
+            {userId && (
+              <button
+                type="button"
+                ref={snapshotButtonRef}
+                className="result-panel__head-btn"
+                disabled={snapshotBusy}
+                onClick={() => void saveSnapshot()}
+              >
+                {snapshotBusy ? t.accountRecords.savingSnapshot : t.accountRecords.saveSnapshot}
+              </button>
+            )}
+            <a
+              className="result-panel__head-btn"
+              href={FORMULAS_PATH}
+              onClick={(event) => {
+                event.preventDefault()
+                navigate(FORMULAS_PATH)
+              }}
+            >
+              {t.formulas.title}
+            </a>
+          </div>
+          {snapshotSaveNotice && (
+            <p className="account-records-error" role="alert">
+              {snapshotSaveNotice}
+            </p>
+          )}
         </div>
         <EvaluateResults
           key={positionSide}
           result={evaluateResult}
           currentPrice={evalInputs.currentPrice}
+          entryReturnRate={entryReturnRate}
+          entryPnl={entryPnl}
         />
         <p className="result-panel__warning" role="note">
           <LegalEmphasis>{t.legal.resultMismatchWarning}</LegalEmphasis>
@@ -900,28 +916,31 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           result={orderResult}
           orderBlocked={orderBlocked}
         />
+        {orderSaveNotice && (
+          <p className="account-records-error" role="alert">
+            {orderSaveNotice}
+          </p>
+        )}
       </section>
 
-      <AccountRecordsPanel
-        copy={t.accountRecords}
-        signedIn={Boolean(userId)}
-        activeTab={recordsTab}
-        onTabChange={setRecordsTab}
-        loading={recordsLoading}
-        error={recordsError}
-        notice={recordsNotice}
-        orderRecords={orderRecords}
-        snapshotRecords={snapshotRecords}
-        onRetry={() => {
-          void loadRecords()
-        }}
-        onSaveSnapshot={() => {
-          void saveSnapshot()
-        }}
-        onDeleteOrder={deleteOrderRecord}
-        onDeleteSnapshot={deleteSnapshotRecord}
-        snapshotBusy={snapshotBusy}
-      />
+      {snapshotSavedModalOpen && (
+        <Suspense fallback={null}>
+          <SnapshotSavedModal
+            copy={{
+              title: t.accountRecords.savedModalTitle,
+              body: t.accountRecords.snapshotSaved,
+              goToRecords: t.accountRecords.savedModalGoToRecords,
+              close: t.close,
+            }}
+            restoreFocusRef={snapshotButtonRef}
+            onClose={() => setSnapshotSavedModalOpen(false)}
+            onGoToRecords={() => {
+              setSnapshotSavedModalOpen(false)
+              navigate(MY_PAGE_PATH)
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

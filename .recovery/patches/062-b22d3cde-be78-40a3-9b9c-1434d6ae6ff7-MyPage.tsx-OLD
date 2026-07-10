@@ -1,0 +1,27 @@
+                {identityMessage && (
+                  <p className="my-page-form-message" role="status">
+                    {identityMessage}
+                  </p>
+                )}
+              </section>
+
+              {recordsSummaryPanel}
+
+              {billingPanel}
+
+              {preferencesPanel}
+
+              <section
+                id="my-page-privacy"
+                className="my-page-panel"
+                aria-labelledby="my-page-privacy-title"
+              >
+                <h2 id="my-page-privacy-title">{copy.privacyTitle}</h2>
+                <p>{copy.privacyBody}</p>
+                <ul className="my-page-note-list">
+                  <li>{copy.localStorageNote}</li>
+                  <li>{copy.cloudStorageNote}</li>
+                </ul>
+              </section>
+
+              <section

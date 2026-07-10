@@ -1,0 +1,8 @@
+                    <div className="my-page-linked-body">
+                      <span className="my-page-linked-name">{copy.googleProvider}</span>
+                      <span
+                        className={`my-page-linked-status ${hasGoogle ? 'is-linked' : 'is-unlinked'}`}
+                      >
+                        {googleStatusLabel}
+                      </span>
+                    </div>

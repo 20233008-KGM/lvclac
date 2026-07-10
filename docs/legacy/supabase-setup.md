@@ -30,6 +30,7 @@
 - **Authentication → URL Configuration**:
   - Site URL: 운영 도메인 (예: `https://your-domain.com`). 로컬 개발만이면 `http://localhost:5173`
   - Redirect URLs에 추가: `http://localhost:5173`, 운영 도메인
+- **프로덕션 인증 메일 브랜딩**: Supabase 기본 메일 대신 Resend SMTP + 커스텀 HTML — [`docs/auth-email-setup.md`](../auth-email-setup.md)
 
 ## 3. 구글 로그인 활성화
 

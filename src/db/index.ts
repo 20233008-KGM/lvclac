@@ -8,6 +8,7 @@ import {
 } from './adapters/supabaseAdapter'
 
 /** 어댑터 구현 완료 후 VITE_SUPABASE_ENABLED=true 와 URL을 함께 설정하세요. */
+/** @deprecated Legacy repository wiring. New account flows must use AuthContext/Supabase Auth. */
 function isSupabaseEnabled(): boolean {
   return (
     import.meta.env.VITE_SUPABASE_ENABLED === 'true' &&

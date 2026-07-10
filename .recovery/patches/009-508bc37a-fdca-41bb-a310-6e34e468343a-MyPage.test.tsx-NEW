@@ -1,0 +1,9 @@
+    expect(html).toContain('href="#my-page-profile"')
+    expect(html).toContain('href="#my-page-records-summary"')
+    expect(html).toContain('href="#my-page-plan"')
+    expect(html).toContain('href="#my-page-support"')
+
+    // each href target must exist as a real section id in the rendered markup
+    expect(html).toContain('id="my-page-profile"')
+    expect(html).toContain('id="my-page-plan"')
+    expect(html).toContain('id="my-page-support"')

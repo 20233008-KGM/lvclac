@@ -1,0 +1,5 @@
+@media (max-width: 620px) {
+  .my-page-plans {
+    grid-template-columns: 1fr;
+  }
+}

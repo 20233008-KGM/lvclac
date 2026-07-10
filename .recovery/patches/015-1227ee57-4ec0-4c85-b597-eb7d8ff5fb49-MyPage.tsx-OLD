@@ -1,0 +1,3 @@
+  linkedProviders: string[]
+  identityBusy: 'link' | 'unlink' | null
+  identityMessage: string | null

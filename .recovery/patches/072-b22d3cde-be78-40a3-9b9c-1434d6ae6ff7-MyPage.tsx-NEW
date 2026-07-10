@@ -1,0 +1,6 @@
+const MY_PAGE_NAV_ITEMS = [
+  { href: '#my-page-profile', sectionIds: ['my-page-profile'] as const },
+  { href: '#my-page-records-summary', sectionIds: ['my-page-records-summary'] as const },
+  { href: '#my-page-preferences', sectionIds: ['my-page-preferences'] as const },
+  { href: '#my-page-support', sectionIds: ['my-page-support'] as const },
+] as const

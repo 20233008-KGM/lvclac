@@ -1,0 +1,92 @@
+/* 아이콘 | 이름 | 상태뱃지 | 액션 — 4개 컬럼을 모든 행이 공유(subgrid)해 세로 정렬 */
+.my-page-linked-list {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0;
+}
+
+.my-page-linked-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-linked-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.my-page-linked-logo {
+  flex: none;
+}
+
+.my-page-linked-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.my-page-linked-badge {
+  justify-self: end;
+  width: fit-content;
+  padding: 3px var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.my-page-linked-badge.is-linked {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+
+.my-page-linked-badge.is-unlinked {
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-subtle);
+}
+
+.my-page-linked-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  justify-self: end;
+  min-height: 32px;
+}
+
+/* '기본' 칩과 연동/해제 버튼을 같은 높이·같은 알약 형태로 통일해 대칭 맞춤 */
+.my-page-linked-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-dim);
+  background: var(--color-bg-elevated);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.my-page-linked-action .btn {
+  min-height: 32px;
+  padding: 0 12px;
+  width: auto;
+  font-size: 12px;
+  font-weight: 600;
+}

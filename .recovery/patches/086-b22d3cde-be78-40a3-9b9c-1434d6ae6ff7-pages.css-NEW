@@ -1,0 +1,7 @@
+.my-page-panel-section > p {
+  margin-top: var(--space-xs);
+}
+
+.my-page-panel-section .my-page-billing {
+  margin-top: var(--space-xs);
+}

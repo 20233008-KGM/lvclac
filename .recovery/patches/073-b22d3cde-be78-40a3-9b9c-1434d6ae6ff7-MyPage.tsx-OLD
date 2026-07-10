@@ -1,0 +1,5 @@
+  if (normalized === '#my-page-linked-logins') {
+    return '#my-page-profile'
+  }
+
+  return MY_PAGE_NAV_ITEMS[0].href

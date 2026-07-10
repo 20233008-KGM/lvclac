@@ -1,0 +1,2 @@
+  const canSetPassword = !hasEmail && Boolean(user?.email.trim())
+  const submitNickname = (event: FormEvent) => {

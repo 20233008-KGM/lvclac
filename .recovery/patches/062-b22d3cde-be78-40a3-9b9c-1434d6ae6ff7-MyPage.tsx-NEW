@@ -1,0 +1,15 @@
+                {identityMessage && (
+                  <p className="my-page-form-message" role="status">
+                    {identityMessage}
+                  </p>
+                )}
+                </div>
+              </section>
+
+              {recordsSummaryPanel}
+
+              {billingPanel}
+
+              {preferencesPanel}
+
+              <section

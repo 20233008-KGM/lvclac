@@ -1,0 +1,13 @@
+  const handleUnlinkGoogle = useCallback(async () => {
+    if (!user || identityBusy) return
+    setIdentityBusy('unlink')
+    setIdentityMessageState({ userId: user.id, value: null })
+    const error = await unlinkGoogle()
+    setIdentityBusy(null)
+    setIdentityMessageState({
+      userId: user.id,
+      value: error ? authErrorMessage(error, t) : t.myPage.googleUnlinked,
+    })
+  }, [identityBusy, t, unlinkGoogle, user])
+
+  return (

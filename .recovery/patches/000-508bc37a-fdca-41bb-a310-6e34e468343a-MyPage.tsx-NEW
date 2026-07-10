@@ -1,0 +1,3 @@
+  identityBusy: 'link' | 'unlink' | null
+  identityMessage: string | null
+  supportHref: string

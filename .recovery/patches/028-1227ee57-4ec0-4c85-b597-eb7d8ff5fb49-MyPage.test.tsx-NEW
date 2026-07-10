@@ -1,0 +1,7 @@
+    linkedProviders: [] as string[],
+    identityBusy: null as 'link' | 'unlink' | 'setPassword' | null,
+    identityMessage: null,
+    passwordFormOpen: false,
+    passwordDraft: '',
+    passwordConfirmationDraft: '',
+    supportHref: 'mailto:support@example.com',

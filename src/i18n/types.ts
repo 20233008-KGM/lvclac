@@ -50,6 +50,24 @@ export interface Messages {
     experiencedBody: string
     guideLink: string
   }
+  calculatorHistory: {
+    buttonLabel: string
+    menuTitle: string
+    undoSection: string
+    redoSection: string
+    empty: string
+    diff: {
+      accountEval: string
+      currentPrice: string
+      contracts: string
+      orderPreview: string
+      orderApply: string
+      scenarioPreview: string
+      scenarioApply: string
+      multiple: string
+      generic: string
+    }
+  }
   optional: string
   fieldTooltipLabel: string
   tooltipGuideLink: string
@@ -98,6 +116,7 @@ export interface Messages {
     body: string
     confirm: string
     cancel: string
+    skipModalLabel: string
   }
   draftSave: {
     label: string
@@ -126,12 +145,15 @@ export interface Messages {
     confirm: string
     statusLoading: string
     statusSaving: string
-    statusSavedLocal: string
-    statusSavedCloud: string
     statusError: string
     migrateLocalToCloud: string
     migrateSuccess: string
     migrateError: string
+    copyHint: string
+    copySuccess: string
+    copyError: string
+    helpHint: string
+    helpHintLabel: string
   }
   accountRecords: {
     title: string
@@ -160,11 +182,36 @@ export interface Messages {
     side: string
     createdAt: string
     summaryLiquidation: string
+    summaryAccountEquity: string
+    summaryLiquidationBuffer: string
     summaryLeverage: string
     summaryMaintenance: string
     summaryAvailable: string
     atRisk: string
     noValue: string
+    savedModalTitle: string
+    savedModalGoToRecords: string
+    bulkDeleteOrders: string
+    bulkDeleteSnapshots: string
+    bulkDeleteBusy: string
+    bulkDeleteConfirmOrders: string
+    bulkDeleteConfirmSnapshots: string
+    bulkDeleteConfirmButton: string
+    bulkDeleteCancel: string
+    bulkDeleteError: string
+    loadMore: string
+    loadOlderRecords: string
+    loadingMore: string
+    loadMoreError: string
+    timelineEmpty: string
+    shownCount: string
+    bulkDeleteConfirmOrdersWithCount: string
+    bulkDeleteConfirmSnapshotsWithCount: string
+    recordsArchiveTitle: string
+    recordsArchiveDescription: string
+    archiveOrderContracts: string
+    archiveOrderPrice: string
+    detail: string
   }
   myPage: {
     title: string
@@ -197,6 +244,14 @@ export interface Messages {
     googleUnlinked: string
     lastIdentityNote: string
     primaryTag: string
+    setPasswordAction: string
+    settingPasswordInProgress: string
+    passwordSetSuccess: string
+    setPasswordEmailHelp: string
+    setPasswordNoEmail: string
+    savePassword: string
+    passwordLabel: string
+    passwordConfirmationLabel: string
     storageTitle: string
     storageBody: string
     cloudInputTitle: string
@@ -207,7 +262,41 @@ export interface Messages {
     orderHistoryTitle: string
     recordsCount: string
     recordsEmpty: string
+    recordsSummaryTitle: string
+    latestSnapshotTitle: string
+    latestSnapshotEmpty: string
+    recentOrdersTitle: string
+    recentOrdersEmpty: string
+    recordsArchiveLink: string
     storageError: string
+    autoSaveOrderHistoryLabel: string
+    autoSaveOrderHistoryHint: string
+    autoSaveOrderHistoryError: string
+    autoSnapshotTitle: string
+    autoSnapshotBody: string
+    autoSnapshotDefaultLabel: string
+    autoSnapshotLabelLabel: string
+    autoSnapshotLabelPlaceholder: string
+    autoSnapshotTimeZoneLabel: string
+    autoSnapshotTimeOfDayLabel: string
+    autoSnapshotProRequired: string
+    autoSnapshotCloudRequired: string
+    autoSnapshotSave: string
+    autoSnapshotSaving: string
+    autoSnapshotDisable: string
+    autoSnapshotSaved: string
+    autoSnapshotDisabled: string
+    autoSnapshotError: string
+    autoSnapshotNextRun: string
+    autoSnapshotLastRun: string
+    navLabel: string
+    navAccount: string
+    navData: string
+    navPlanPreferences: string
+    navSupport: string
+    preferencesTitle: string
+    accountSettingGuardToggleLabel: string
+    accountSettingGuardToggleHint: string
     planTitle: string
     planStatusLabel: string
     planStatusValue: string
@@ -253,8 +342,34 @@ export interface Messages {
     supportTitle: string
     supportBody: string
     suggestionsLink: string
+    suggestionsDesc: string
     emailLink: string
+    emailDesc: string
+    adminFeedbackLink: string
+    adminFeedbackDesc: string
     signOut: string
+  }
+  adminFeedback: {
+    title: string
+    description: string
+    accessDeniedTitle: string
+    accessDeniedBody: string
+    loginRequiredTitle: string
+    loginRequiredBody: string
+    boardFilter: string
+    statusFilter: string
+    allBoards: string
+    allStatuses: string
+    loading: string
+    loadError: string
+    retry: string
+    empty: string
+    author: string
+    contact: string
+    createdAt: string
+    status: string
+    updateError: string
+    statusLabels: Record<import('../db/feedbackPosts').FeedbackStatus, string>
   }
   marginMode: {
     /** 토글 그룹 접근성 라벨 */
@@ -347,10 +462,20 @@ export interface Messages {
   boards: {
     portalCompany: string
     storageNotice: string
+    loginRequiredTitle: string
+    loginRequiredBody: string
+    loginAction: string
     writePost: string
     postList: string
     localPostListDesc: string
+    myPostListDesc: string
     submitSuccess: string
+    submitError: string
+    submitting: string
+    loading: string
+    loadError: string
+    retry: string
+    postsEmpty: string
     postTitle: string
     postTitlePlaceholder: string
     postBody: string

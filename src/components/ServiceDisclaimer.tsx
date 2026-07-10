@@ -5,8 +5,13 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import {
+  PRIVACY_PATH,
+  REFUND_POLICY_PATH,
+  TERMS_PATH,
+} from '../config/routes'
 import { usePathname } from '../hooks/usePathname'
-import { useLanguage } from '../i18n'
+import { useLanguage, type Locale } from '../i18n'
 import {
   DISCLAIMER_ACK_KEY,
   DISCLAIMER_SKIP_KEY,
@@ -16,6 +21,11 @@ import {
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
+
+export const footerLegalCopy: Record<Locale, { refundPolicy: string }> = {
+  ko: { refundPolicy: '환불 정책' },
+  en: { refundPolicy: 'Refund Policy' },
+}
 
 type DisclaimerContextValue = {
   skipActive: boolean
@@ -85,9 +95,25 @@ export function DisclaimerShowAgainLink({ variant = 'default' }: { variant?: 'de
 }
 
 export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'footer' }) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const [view, setView] = useState<LegalView>(null)
   const isFooter = variant === 'footer'
+
+  if (isFooter) {
+    return (
+      <div className="site-footer__legal">
+        <a className="link-btn" href={TERMS_PATH}>
+          {t.legal.termsLink}
+        </a>
+        <a className="link-btn" href={PRIVACY_PATH}>
+          {t.legal.privacyLink}
+        </a>
+        <a className="link-btn" href={REFUND_POLICY_PATH}>
+          {footerLegalCopy[locale].refundPolicy}
+        </a>
+      </div>
+    )
+  }
 
   return (
     <>

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   validateEmail,
+  validateLoginPassword,
+  validateNewPassword,
   validateNickname,
-  validatePassword,
   validatePasswordConfirmation,
   validateTermsAccepted,
 } from './validation'
@@ -14,12 +15,18 @@ describe('auth validation', () => {
     expect(validateEmail(' user@example.com ')).toBeNull()
   })
 
-  it('rejects missing, short, long, and common passwords', () => {
-    expect(validatePassword('')).toBe('password_required')
-    expect(validatePassword('1234567')).toBe('password_too_short')
-    expect(validatePassword('a'.repeat(129))).toBe('password_too_long')
-    expect(validatePassword('password')).toBe('password_too_common')
-    expect(validatePassword('market-safe-42')).toBeNull()
+  it('rejects missing, short, long, and common new passwords', () => {
+    expect(validateNewPassword('')).toBe('password_required')
+    expect(validateNewPassword('1234567')).toBe('password_too_short')
+    expect(validateNewPassword('a'.repeat(129))).toBe('password_too_long')
+    expect(validateNewPassword('password')).toBe('password_too_common')
+    expect(validateNewPassword('market-safe-42')).toBeNull()
+  })
+
+  it('only requires a non-empty password for login submissions', () => {
+    expect(validateLoginPassword('')).toBe('password_required')
+    expect(validateLoginPassword('1234567')).toBeNull()
+    expect(validateLoginPassword('password')).toBeNull()
   })
 
   it('validates password confirmation', () => {

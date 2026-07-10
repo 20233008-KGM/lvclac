@@ -1,0 +1,42 @@
+.my-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.my-page-actions .btn-primary {
+  width: auto;
+}
+
+/* 구독 결제 패널 */
+.my-page-billing {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.my-page-billing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.my-page-billing-row__copy {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.my-page-billing-row .my-page-actions {
+  margin-top: 0;
+  flex: none;
+}
+
+.my-page-billing-row .btn-primary {
+  width: auto;
+  min-width: 8rem;
+  white-space: nowrap;
+}

@@ -1,0 +1,2 @@
+    expect(html).toContain('my-page-panel-section')
+    expect(html).toContain(en.myPage.linkedLoginTitle)

@@ -1,0 +1,11 @@
+  it('renders auth configuration warning when Supabase is not configured', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        configured={false}
+        user={null}
+      />,
+    )
+
+    expect(html).toContain(en.myPage.configuredWarning)
+  })

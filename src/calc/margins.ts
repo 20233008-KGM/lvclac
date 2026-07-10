@@ -107,16 +107,18 @@ export function withReferencePrice(inputs: CalculatorInputs): CalculatorInputs {
 
 export function calcPositionNotional(inputs: NotionalInputs, contracts: number): number {
   const multiplier = inputs.contractMultiplier ?? 1
+  const contractAmount = inputs.contractAmount
   if (
-    inputs.contractAmount != null &&
+    contractAmount != null &&
+    contractAmount > 0 &&
     inputs.currentPrice != null &&
     isWonAccountIndexFieldMismatch(inputs as CalculatorInputs)
   ) {
     return calcIndexNotionalWon(inputs.currentPrice, contracts, inputs.contractMultiplier)
   }
   // 약정금액 경로: price×pointValue와 동치이나 부동소수 취소 오차 방지
-  if (inputs.contractAmount != null) {
-    return contracts * inputs.contractAmount * multiplier
+  if (contractAmount != null && contractAmount > 0) {
+    return contracts * contractAmount * multiplier
   }
   const pointValue = resolvePointValue(inputs)
   if (
@@ -272,7 +274,9 @@ export function calcMargins(
     resolveEntrustedMargin(inputs, heldContracts)
 
   const perContractMaintenance =
-    heldContracts > 0 ? maintenanceMargin / heldContracts : 0
+    heldContracts > 0
+      ? maintenanceMargin / heldContracts
+      : resolveMaintenanceMargin(inputs, 1).amount
   const perContractEntrusted =
     heldContracts > 0
       ? entrustedMargin / heldContracts

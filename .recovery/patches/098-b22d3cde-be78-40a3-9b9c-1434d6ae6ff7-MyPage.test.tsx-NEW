@@ -1,0 +1,3 @@
+    expect(html).toContain('my-page-settings-list')
+    expect(html).toContain('my-page-setting-row')
+    expect(html).toContain(en.myPage.linkedLoginBody)

@@ -4,6 +4,7 @@ export type PositionSide = 'long' | 'short'
 export type CalculatorMode = 'evaluate' | 'order'
 export type MaintenanceMarginSource = 'direct' | 'rate'
 export type EntrustedMarginSource = 'direct' | 'rate'
+export type ContractAmountRole = 'entryPrice' | 'fixedSpec'
 
 /**
  * 증거금 입력 방식 — 셋 중 하나만 선택.
@@ -30,6 +31,7 @@ export interface CalculatorInputs {
   entrustedMarginPerContract?: number
   contracts?: number
   contractAmount?: number
+  contractAmountRole?: ContractAmountRole
   currentPrice?: number
   contractMultiplier?: number
   positionSide: PositionSide
@@ -73,6 +75,8 @@ export interface CalculatorInputs {
   orderScenarioRevertSnapshot?: {
     accountEval: number
     contracts?: number
+    contractAmount?: number
+    contractAmountRole?: ContractAmountRole
     mtmPriceAnchor?: number
     evalSnapshotSide?: PositionSide
   }
@@ -82,6 +86,8 @@ export interface CalculatorInputs {
   orderApplyUndoSnapshot?: {
     accountEval: number
     contracts?: number
+    contractAmount?: number
+    contractAmountRole?: ContractAmountRole
     mtmPriceAnchor?: number
     evalSnapshotSide?: PositionSide
     orderContracts?: number
@@ -89,6 +95,8 @@ export interface CalculatorInputs {
     orderScenarioRevertSnapshot: {
       accountEval: number
       contracts?: number
+      contractAmount?: number
+      contractAmountRole?: ContractAmountRole
       mtmPriceAnchor?: number
       evalSnapshotSide?: PositionSide
     }
@@ -100,6 +108,7 @@ export interface CalculatorInputs {
 
 /** 주문 시나리오 진입 직전 after 열 지표 — 모드 중 before 열에 고정 */
 export interface OrderScenarioBaseline {
+  contractAmount: number | null
   liquidation: number | null
   tolerance: number | null
   toleranceDelta: number | null
@@ -138,6 +147,8 @@ export interface EvaluateResult {
 
 export interface OrderResult {
   positionSide: PositionSide
+  beforeContractAmount: number | null
+  afterContractAmount: number | null
   beforeLiquidation: number | null
   afterLiquidation: number | null
   beforeTolerance: number | null

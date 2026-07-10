@@ -1,0 +1,89 @@
+  if (embedded) {
+    if (isPro) {
+      return (
+        <>
+          <li
+            id="my-page-plan"
+            className="my-page-setting-row my-page-setting-row--billing"
+            aria-labelledby="my-page-plan-title"
+          >
+            <span className="my-page-setting-row__label" id="my-page-plan-title">
+              {planLabel}
+            </span>
+            <div className="my-page-setting-row__value-stack">
+              <span className="my-page-setting-row__value">{copy.proHeadline}</span>
+              {subscription?.currentPeriodEnd && (
+                <span className="my-page-field-help">
+                  {copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))}
+                </span>
+              )}
+              <span className="my-page-field-help">{copy.proBody}</span>
+            </div>
+            <span className="my-page-setting-row__action">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy !== null}
+                onClick={() => void handleManage()}
+              >
+                {busy === 'portal' ? copy.redirecting : copy.manageAction}
+              </button>
+            </span>
+          </li>
+          {messageNode && (
+            <li className="my-page-settings-note">
+              {messageNode}
+            </li>
+          )}
+        </>
+      )
+    }
+
+    return (
+      <>
+        <li
+          id="my-page-plan"
+          className="my-page-setting-row my-page-setting-row--billing"
+          aria-labelledby="my-page-plan-title"
+        >
+          <span className="my-page-setting-row__label" id="my-page-plan-title">
+            {planLabel}
+          </span>
+          <span className="my-page-setting-row__value">{copy.freeHeadline}</span>
+        </li>
+        <li className="my-page-setting-row my-page-setting-row--billing-plans">
+          <div className="my-page-billing">
+            <p className="my-page-field-help">{copy.freeBody}</p>
+            <div className="my-page-plans">
+              <PlanCard
+                name={copy.monthlyName}
+                price={copy.monthlyPrice}
+                action={copy.choosePlan}
+                busyLabel={copy.redirecting}
+                busy={busy === 'monthly'}
+                disabled={busy !== null}
+                onSelect={() => void handleCheckout('monthly')}
+              />
+              <PlanCard
+                name={copy.yearlyName}
+                price={copy.yearlyPrice}
+                note={copy.yearlyNote}
+                action={copy.choosePlan}
+                busyLabel={copy.redirecting}
+                busy={busy === 'yearly'}
+                disabled={busy !== null}
+                highlighted
+                onSelect={() => void handleCheckout('yearly')}
+              />
+            </div>
+            <p className="my-page-field-help">{copy.taxNote}</p>
+          </div>
+        </li>
+        {messageNode && (
+          <li className="my-page-settings-note">
+            {messageNode}
+          </li>
+        )}
+      </>
+    )
+  }

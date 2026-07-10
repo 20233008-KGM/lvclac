@@ -1,2 +1,9 @@
 User-agent: *
+Allow: /product
+Allow: /pricing
+Allow: /terms
+Allow: /privacy
+Allow: /refund-policy
 Disallow: /
+
+Sitemap: /sitemap.xml

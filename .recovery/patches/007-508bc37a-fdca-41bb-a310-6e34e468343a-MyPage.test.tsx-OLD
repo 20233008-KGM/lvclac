@@ -1,0 +1,6 @@
+    identityBusy: null as 'link' | 'unlink' | null,
+    identityMessage: null,
+    storageLoading: false,
+    storageError: null,
+    hasCloudInput: false,
+    supportHref: 'mailto:support@example.com',

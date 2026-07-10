@@ -1,4 +1,6 @@
 // Launch: unused — auth deferred
+// @deprecated Legacy prototype repository. New account flows must go through
+// Supabase Auth via AuthContext instead of this password-hash interface.
 import type { User } from '../types'
 
 export interface AuthRepository {

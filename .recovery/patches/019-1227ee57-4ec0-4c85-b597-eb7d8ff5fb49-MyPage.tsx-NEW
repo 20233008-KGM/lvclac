@@ -1,0 +1,12 @@
+  const hasEmail = linkedProviders.includes('email')
+  const hasGoogle = linkedProviders.includes('google')
+  const canUnlinkGoogle = hasGoogle && linkedProviders.length > 1
+  const canSetPassword = !hasEmail && Boolean(user?.email.trim())
+  const submitNickname = (event: FormEvent) => {
+    event.preventDefault()
+    onNicknameSubmit()
+  }
+  const submitPassword = (event: FormEvent) => {
+    event.preventDefault()
+    onSetPasswordSubmit()
+  }

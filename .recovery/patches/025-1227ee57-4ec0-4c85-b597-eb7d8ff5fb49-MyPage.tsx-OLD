@@ -1,0 +1,3 @@
+        onLinkGoogle={() => void handleLinkGoogle()}
+        onUnlinkGoogle={() => void handleUnlinkGoogle()}
+        onLoginClick={() => setAuthModalOpen(true)}

@@ -1,0 +1,22 @@
+  it('uses compact storage rows instead of nested status cards', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        user={{
+          id: 'user-1',
+          email: 'very.long.email.address.for.layout.testing@example.com',
+          nickname: 'Very Long Trader Name For Layout Testing',
+          autoSaveOrderHistory: true,
+          isAdmin: false,
+        }}
+        nicknameDraft="Very Long Trader Name For Layout Testing"
+      />,
+    )
+
+    expect(html).toContain('my-page-storage-list')
+    expect(html).toContain('my-page-storage-row')
+    expect(html).not.toContain('my-page-status-grid')
+    expect(html).not.toContain('my-page-status')
+  })
+
+  it('renders the records summary as a compact hub entry instead of the full records browser', () => {

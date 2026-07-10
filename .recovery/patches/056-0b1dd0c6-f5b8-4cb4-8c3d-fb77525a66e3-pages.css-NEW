@@ -1,0 +1,6 @@
+  .my-page-inline-control {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    max-width: none;
+  }
+}

@@ -1,0 +1,84 @@
+type MyPageCopy = Messages['myPage']
+
+const MY_PAGE_NAV_ITEMS = [
+  { href: '#my-page-profile', sectionIds: ['my-page-profile'] as const },
+  { href: '#my-page-records-summary', sectionIds: ['my-page-records-summary'] as const },
+  { href: '#my-page-plan', sectionIds: ['my-page-plan', 'my-page-preferences'] as const },
+  { href: '#my-page-support', sectionIds: ['my-page-support'] as const },
+] as const
+
+function resolveMyPageNavHref(hash: string) {
+  const normalized = hash.startsWith('#') ? hash : `#${hash}`
+  return MY_PAGE_NAV_ITEMS.some((item) => item.href === normalized) ? normalized : MY_PAGE_NAV_ITEMS[0].href
+}
+
+function useMyPageNavActive(enabled: boolean) {
+  const [activeHref, setActiveHref] = useState(() =>
+    typeof window === 'undefined' ? MY_PAGE_NAV_ITEMS[0].href : resolveMyPageNavHref(window.location.hash),
+  )
+
+  useEffect(() => {
+    if (!enabled) return
+
+    const sectionToNav = new Map<string, string>()
+    for (const item of MY_PAGE_NAV_ITEMS) {
+      for (const sectionId of item.sectionIds) {
+        sectionToNav.set(sectionId, item.href)
+      }
+    }
+
+    const sections = [...sectionToNav.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((element): element is HTMLElement => element != null)
+
+    if (sections.length === 0) return
+
+    const visibleRatios = new Map<string, number>()
+
+    const syncActiveFromVisible = () => {
+      let bestSectionId = sections[0].id
+      let bestRatio = visibleRatios.get(bestSectionId) ?? 0
+
+      for (const section of sections.slice(1)) {
+        const ratio = visibleRatios.get(section.id) ?? 0
+        if (ratio > bestRatio) {
+          bestRatio = ratio
+          bestSectionId = section.id
+        }
+      }
+
+      const href = sectionToNav.get(bestSectionId)
+      if (href) setActiveHref(href)
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          visibleRatios.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0)
+        }
+        syncActiveFromVisible()
+      },
+      {
+        root: null,
+        rootMargin: '-20% 0px -55% 0px',
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+      },
+    )
+
+    for (const section of sections) {
+      observer.observe(section)
+    }
+
+    const onHashChange = () => {
+      setActiveHref(resolveMyPageNavHref(window.location.hash))
+    }
+
+    window.addEventListener('hashchange', onHashChange)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('hashchange', onHashChange)
+    }
+  }, [enabled])
+
+  return activeHref
+}

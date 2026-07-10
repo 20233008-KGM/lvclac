@@ -1,0 +1,6 @@
+              <nav className="my-page-nav" aria-label={copy.navLabel}>
+                <a href="#my-page-profile">{copy.navAccount}</a>
+                <a href="#my-page-records-summary">{copy.navData}</a>
+                <a href="#my-page-plan">{copy.navPlanPreferences}</a>
+                <a href="#my-page-support">{copy.navSupport}</a>
+              </nav>

@@ -1,0 +1,26 @@
+              <section
+                id="my-page-storage"
+                className="my-page-panel"
+                aria-labelledby="my-page-storage-title"
+              >
+                <h2 id="my-page-storage-title">{copy.storageTitle}</h2>
+                <p>{copy.storageBody}</p>
+                {storageLoading ? (
+                  <p className="my-page-muted" role="status">
+                    {copy.storageLoading}
+                  </p>
+                ) : storageError ? (
+                  <p className="my-page-alert" role="alert">
+                    {storageError}
+                  </p>
+                ) : (
+                  <dl className="my-page-storage-list">
+                    <StorageRow
+                      title={copy.cloudInputTitle}
+                      value={hasCloudInput ? copy.cloudInputReady : copy.cloudInputEmpty}
+                    />
+                  </dl>
+                )}
+              </section>
+
+              {recordsSummaryPanel}

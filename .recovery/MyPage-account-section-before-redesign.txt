@@ -1,0 +1,157 @@
+                <ul className="my-page-settings-list" aria-label={copy.navAccount}>
+                  <li className="my-page-setting-row my-page-setting-row--nickname">
+                    <span className="my-page-setting-row__label">
+                      <label htmlFor="my-page-nickname">{copy.nicknameLabel}</label>
+                    </span>
+                    <div className="my-page-setting-row__control">
+                      <form className="my-page-nickname-form" onSubmit={submitNickname}>
+                        <input
+                          id="my-page-nickname"
+                          value={nicknameDraft}
+                          placeholder={copy.nicknamePlaceholder}
+                          disabled={nicknameBusy}
+                          onChange={(event) => onNicknameChange(event.currentTarget.value)}
+                        />
+                        <button type="submit" className="btn btn-primary" disabled={nicknameBusy}>
+                          {nicknameBusy ? copy.savingNickname : copy.saveNickname}
+                        </button>
+                      </form>
+                    </div>
+                  </li>
+                  {billingPanel}
+                  <li className="my-page-setting-row my-page-setting-row--linked">
+                    <span className="my-page-linked-icon" aria-hidden="true">
+                      <MailIcon />
+                    </span>
+                    <span className="my-page-linked-name">{copy.emailProvider}</span>
+                    <span
+                      className={`my-page-linked-status ${hasEmail ? 'is-linked' : 'is-unlinked'}`}
+                    >
+                      {emailStatusLabel}
+                    </span>
+                    <span className="my-page-linked-action">
+                      {!hasEmail && canSetPassword ? (
+                        <button
+                          type="button"
+                          className="btn btn-primary my-page-linked-btn my-page-linked-btn--setup"
+                          disabled={identityBusy !== null}
+                          aria-expanded={passwordFormOpen}
+                          aria-controls="my-page-set-password-form"
+                          onClick={onPasswordFormToggle}
+                        >
+                          {copy.setPasswordAction}
+                        </button>
+                      ) : null}
+                    </span>
+                  </li>
+                  <li className="my-page-setting-row my-page-setting-row--linked">
+                    <span className="my-page-linked-icon" aria-hidden="true">
+                      <GoogleLogo className="my-page-linked-logo" />
+                    </span>
+                    <span className="my-page-linked-name">{copy.googleProvider}</span>
+                    <span
+                      className={`my-page-linked-status ${hasGoogle ? 'is-linked' : 'is-unlinked'}`}
+                    >
+                      {googleStatusLabel}
+                    </span>
+                    <span className="my-page-linked-action">
+                      {hasGoogle ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost my-page-linked-btn my-page-linked-btn--unlink"
+                          disabled={identityBusy !== null || !canUnlinkGoogle}
+                          onClick={onUnlinkGoogle}
+                        >
+                          {identityBusy === 'unlink'
+                            ? copy.unlinkingInProgress
+                            : copy.unlinkGoogleAction}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-primary my-page-linked-btn my-page-linked-btn--setup"
+                          disabled={identityBusy !== null}
+                          onClick={onLinkGoogle}
+                        >
+                          {identityBusy === 'link'
+                            ? copy.linkingInProgress
+                            : copy.linkGoogleAction}
+                        </button>
+                      )}
+                    </span>
+                  </li>
+                </ul>
+                <div className="my-page-account-settings-meta">
+                  <p className="my-page-field-help">{copy.nicknameHelp}</p>
+                  {nicknameMessage && (
+                    <p className="my-page-form-message" role="status">
+                      {nicknameMessage}
+                    </p>
+                  )}
+                  <p className="my-page-field-help">{copy.linkedLoginBody}</p>
+                {!hasEmail && user && !user.email.trim() && (
+                  <p className="my-page-field-help">{copy.setPasswordNoEmail}</p>
+                )}
+                {passwordFormOpen && canSetPassword && user && (
+                  <form
+                    id="my-page-set-password-form"
+                    className="my-page-set-password-form"
+                    onSubmit={submitPassword}
+                  >
+                    <label className="my-page-field" htmlFor="my-page-set-password-email">
+                      <span>{copy.emailLabel}</span>
+                      <input
+                        id="my-page-set-password-email"
+                        type="email"
+                        value={user.email}
+                        readOnly
+                        aria-readonly="true"
+                      />
+                    </label>
+                    <p className="my-page-field-help">{copy.setPasswordEmailHelp}</p>
+                    <label className="my-page-field" htmlFor="my-page-set-password">
+                      <span>{copy.passwordLabel}</span>
+                      <input
+                        id="my-page-set-password"
+                        type="password"
+                        value={passwordDraft}
+                        autoComplete="new-password"
+                        disabled={identityBusy === 'setPassword'}
+                        onChange={(event) => onPasswordDraftChange(event.currentTarget.value)}
+                      />
+                    </label>
+                    <label className="my-page-field" htmlFor="my-page-set-password-confirm">
+                      <span>{copy.passwordConfirmationLabel}</span>
+                      <input
+                        id="my-page-set-password-confirm"
+                        type="password"
+                        value={passwordConfirmationDraft}
+                        autoComplete="new-password"
+                        disabled={identityBusy === 'setPassword'}
+                        onChange={(event) =>
+                          onPasswordConfirmationDraftChange(event.currentTarget.value)
+                        }
+                      />
+                    </label>
+                    <div className="my-page-actions">
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={identityBusy === 'setPassword'}
+                      >
+                        {identityBusy === 'setPassword'
+                          ? copy.settingPasswordInProgress
+                          : copy.savePassword}
+                      </button>
+                    </div>
+                  </form>
+                )}
+                {hasGoogle && !canUnlinkGoogle && (
+                  <p className="my-page-field-help">{copy.lastIdentityNote}</p>
+                )}
+                {identityMessage && (
+                  <p className="my-page-form-message" role="status">
+                    {identityMessage}
+                  </p>
+                )}
+                </div>

@@ -1,0 +1,23 @@
+.my-page-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.my-page-panel-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.my-page-panel-section h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  line-height: 1.35;
+}
+
+.my-page-panel-section > p {
+  margin-top: var(--space-xs);
+}

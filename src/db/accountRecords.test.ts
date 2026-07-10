@@ -80,6 +80,324 @@ describe('account records repository helpers', () => {
     })
   })
 
+  it('bulk-deletes all order history rows for a user with no per-id filter', async () => {
+    const calls: { table: string; column: string; value: string }[] = []
+    const client = {
+      from(table: string) {
+        return {
+          delete() {
+            return {
+              async eq(column: string, value: string) {
+                calls.push({ table, column, value })
+                return { error: null }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await expect(repo.deleteAllOrderHistory('user-1')).resolves.toEqual({
+      data: true,
+      error: null,
+    })
+    expect(calls).toEqual([{ table: 'order_history', column: 'user_id', value: 'user-1' }])
+  })
+
+  it('bulk-deletes all account snapshot rows for a user with no per-id filter', async () => {
+    const calls: { table: string; column: string; value: string }[] = []
+    const client = {
+      from(table: string) {
+        return {
+          delete() {
+            return {
+              async eq(column: string, value: string) {
+                calls.push({ table, column, value })
+                return { error: null }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await expect(repo.deleteAllAccountSnapshots('user-1')).resolves.toEqual({
+      data: true,
+      error: null,
+    })
+    expect(calls).toEqual([{ table: 'account_snapshots', column: 'user_id', value: 'user-1' }])
+  })
+
+  it('returns unavailable errors for bulk delete when Supabase is not configured', async () => {
+    const repo = createAccountRecordsRepository(null)
+
+    await expect(repo.deleteAllOrderHistory('user-1')).resolves.toEqual({
+      data: null,
+      error: 'supabase_not_configured',
+    })
+    await expect(repo.deleteAllAccountSnapshots('user-1')).resolves.toEqual({
+      data: null,
+      error: 'supabase_not_configured',
+    })
+  })
+
+  it('fetchOrderHistoryPage requests limit+1 rows via .range() and reports hasMore=true when exceeded', async () => {
+    const calls: { table: string; from: number; to: number }[] = []
+    const rows = Array.from({ length: 21 }, (_, i) => ({
+      id: `order-${i}`,
+      position_side: 'long',
+      order_contracts: 1,
+      order_price: 100,
+      before_inputs: {},
+      after_inputs: {},
+      before_result: {},
+      after_result: {},
+      created_at: '2026-07-08T00:00:00.000Z',
+    }))
+    const client = {
+      from(table: string) {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  order() {
+                    return {
+                      range(from: number, to: number) {
+                        calls.push({ table, from, to })
+                        return {
+                          returns: () => Promise.resolve({ data: rows, error: null }),
+                        }
+                      },
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchOrderHistoryPage('user-1', 0, 20)
+
+    expect(result.error).toBeNull()
+    expect(result.data?.records).toHaveLength(20)
+    expect(result.data?.hasMore).toBe(true)
+    expect(calls).toEqual([{ table: 'order_history', from: 0, to: 20 }])
+  })
+
+  it('fetchOrderHistoryPage reports hasMore=false when fewer than limit+1 rows come back', async () => {
+    const rows = Array.from({ length: 5 }, (_, i) => ({
+      id: `order-${i}`,
+      position_side: 'long',
+      order_contracts: 1,
+      order_price: 100,
+      before_inputs: {},
+      after_inputs: {},
+      before_result: {},
+      after_result: {},
+      created_at: '2026-07-08T00:00:00.000Z',
+    }))
+    const client = {
+      from() {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  order() {
+                    return {
+                      range() {
+                        return {
+                          returns: () => Promise.resolve({ data: rows, error: null }),
+                        }
+                      },
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchOrderHistoryPage('user-1', 0, 20)
+
+    expect(result.data?.records).toHaveLength(5)
+    expect(result.data?.hasMore).toBe(false)
+  })
+
+  it('fetchAccountSnapshotsPage requests limit+1 rows via .range() and caps records at limit', async () => {
+    const calls: { table: string; from: number; to: number }[] = []
+    const rows = Array.from({ length: 21 }, (_, i) => ({
+      id: `snap-${i}`,
+      title: 'Account snapshot',
+      inputs: {},
+      result: {},
+      created_at: '2026-07-08T00:00:00.000Z',
+    }))
+    const client = {
+      from(table: string) {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  order() {
+                    return {
+                      range(from: number, to: number) {
+                        calls.push({ table, from, to })
+                        return {
+                          returns: () => Promise.resolve({ data: rows, error: null }),
+                        }
+                      },
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchAccountSnapshotsPage('user-1', 20, 20)
+
+    expect(result.data?.records).toHaveLength(20)
+    expect(result.data?.hasMore).toBe(true)
+    expect(calls).toEqual([{ table: 'account_snapshots', from: 20, to: 40 }])
+  })
+
+  it('fetchRecentRecords surfaces hasMoreOrders/hasMoreSnapshots independently for a mixed fixture', async () => {
+    const orderRows = Array.from({ length: 21 }, (_, i) => ({
+      id: `order-${i}`,
+      position_side: 'long',
+      order_contracts: 1,
+      order_price: 100,
+      before_inputs: {},
+      after_inputs: {},
+      before_result: {},
+      after_result: {},
+      created_at: '2026-07-08T00:00:00.000Z',
+    }))
+    const snapshotRows = Array.from({ length: 3 }, (_, i) => ({
+      id: `snap-${i}`,
+      title: 'Account snapshot',
+      inputs: {},
+      result: {},
+      created_at: '2026-07-08T00:00:00.000Z',
+    }))
+    const client = {
+      from(table: string) {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  order() {
+                    return {
+                      range() {
+                        const rows = table === 'order_history' ? orderRows : snapshotRows
+                        return {
+                          returns: () => Promise.resolve({ data: rows, error: null }),
+                        }
+                      },
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchRecentRecords('user-1')
+
+    expect(result.data?.orderHistory).toHaveLength(20)
+    expect(result.data?.accountSnapshots).toHaveLength(3)
+    expect(result.data?.hasMoreOrders).toBe(true)
+    expect(result.data?.hasMoreSnapshots).toBe(false)
+  })
+
+  it('fetchRecentRecords returns available data when only one table fetch fails', async () => {
+    const orderRows = [
+      {
+        id: 'order-1',
+        position_side: 'long',
+        order_contracts: 1,
+        order_price: 100,
+        before_inputs: {},
+        after_inputs: {},
+        before_result: {},
+        after_result: {},
+        created_at: '2026-07-08T00:00:00.000Z',
+      },
+    ]
+    const client = {
+      from(table: string) {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  order() {
+                    return {
+                      range() {
+                        if (table === 'order_history') {
+                          return {
+                            returns: () => Promise.resolve({ data: orderRows, error: null }),
+                          }
+                        }
+                        return {
+                          returns: () =>
+                            Promise.resolve({
+                              data: null,
+                              error: { message: 'column account_snapshots.source does not exist' },
+                            }),
+                        }
+                      },
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchRecentRecords('user-1')
+
+    expect(result.error).toBeNull()
+    expect(result.data?.orderHistory).toHaveLength(1)
+    expect(result.data?.accountSnapshots).toEqual([])
+    expect(result.data?.hasMoreOrders).toBe(false)
+    expect(result.data?.hasMoreSnapshots).toBe(false)
+  })
+
+  it('returns unavailable errors for paginated fetches when Supabase is not configured', async () => {
+    const repo = createAccountRecordsRepository(null)
+
+    await expect(repo.fetchOrderHistoryPage('user-1', 0)).resolves.toEqual({
+      data: null,
+      error: 'supabase_not_configured',
+    })
+    await expect(repo.fetchAccountSnapshotsPage('user-1', 0)).resolves.toEqual({
+      data: null,
+      error: 'supabase_not_configured',
+    })
+  })
+
   it('fetches only record counts for account hub summaries', async () => {
     const calls: string[] = []
     const client = {
@@ -110,5 +428,128 @@ describe('account records repository helpers', () => {
       error: null,
     })
     expect(calls).toEqual(['order_history', 'account_snapshots'])
+  })
+
+  it('saves automatic snapshot settings with a computed next run timestamp', async () => {
+    const upserts: Array<{ table: string; row: Record<string, unknown> }> = []
+    const client = {
+      from(table: string) {
+        return {
+          upsert(row: Record<string, unknown>) {
+            upserts.push({ table, row })
+            return {
+              select() {
+                return {
+                  async single() {
+                    return {
+                      data: {
+                        enabled: true,
+                        label: 'CME close',
+                        time_zone: 'Asia/Seoul',
+                        time_of_day: '15:45',
+                        next_run_at: '2026-07-09T06:45:00.000Z',
+                        last_run_at: null,
+                        last_run_local_date: null,
+                        last_error: null,
+                        created_at: '2026-07-09T00:00:00.000Z',
+                        updated_at: '2026-07-09T00:00:00.000Z',
+                      },
+                      error: null,
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.saveAccountSnapshotSettings(
+      'user-1',
+      {
+        enabled: true,
+        label: ' CME close ',
+        timeZone: 'Asia/Seoul',
+        timeOfDay: '15:45',
+      },
+      new Date('2026-07-09T06:00:00.000Z'),
+    )
+
+    expect(result.data).toMatchObject({
+      enabled: true,
+      label: 'CME close',
+      timeZone: 'Asia/Seoul',
+      timeOfDay: '15:45',
+      nextRunAt: '2026-07-09T06:45:00.000Z',
+    })
+    expect(upserts).toEqual([
+      {
+        table: 'account_snapshot_settings',
+        row: {
+          user_id: 'user-1',
+          enabled: true,
+          label: 'CME close',
+          time_zone: 'Asia/Seoul',
+          time_of_day: '15:45',
+          next_run_at: '2026-07-09T06:45:00.000Z',
+          last_error: null,
+        },
+      },
+    ])
+  })
+
+  it('disables automatic snapshot settings without deleting the user rule', async () => {
+    const updates: Array<{ table: string; row: Record<string, unknown>; userId: string }> = []
+    const client = {
+      from(table: string) {
+        return {
+          update(row: Record<string, unknown>) {
+            return {
+              eq(_column: string, userId: string) {
+                updates.push({ table, row, userId })
+                return {
+                  select() {
+                    return {
+                      async single() {
+                        return {
+                          data: {
+                            enabled: false,
+                            label: 'CME close',
+                            time_zone: 'Asia/Seoul',
+                            time_of_day: '15:45',
+                            next_run_at: null,
+                            last_run_at: null,
+                            last_run_local_date: null,
+                            last_error: null,
+                            created_at: '2026-07-09T00:00:00.000Z',
+                            updated_at: '2026-07-09T00:00:00.000Z',
+                          },
+                          error: null,
+                        }
+                      },
+                    }
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.disableAccountSnapshotSettings('user-1')
+
+    expect(result.data?.enabled).toBe(false)
+    expect(result.data?.nextRunAt).toBeNull()
+    expect(updates).toEqual([
+      {
+        table: 'account_snapshot_settings',
+        row: { enabled: false, next_run_at: null },
+        userId: 'user-1',
+      },
+    ])
   })
 })

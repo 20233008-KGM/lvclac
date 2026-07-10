@@ -1,0 +1,6 @@
+  identityBusy: 'link' | 'unlink' | null
+  identityMessage: string | null
+  storageLoading: boolean
+  storageError: string | null
+  hasCloudInput: boolean
+  supportHref: string

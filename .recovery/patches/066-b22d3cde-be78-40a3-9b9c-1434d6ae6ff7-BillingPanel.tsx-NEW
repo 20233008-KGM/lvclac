@@ -1,0 +1,25 @@
+      {isPro ? (
+        <div className="my-page-billing">
+          <div className="my-page-billing-row">
+            <div className="my-page-billing-row__copy">
+              <p className="my-page-billing-headline">{copy.proHeadline}</p>
+              <p>{copy.proBody}</p>
+              {subscription?.currentPeriodEnd && (
+                <p className="my-page-field-help">
+                  {copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))}
+                </p>
+              )}
+            </div>
+            <div className="my-page-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy !== null}
+                onClick={() => void handleManage()}
+              >
+                {busy === 'portal' ? copy.redirecting : copy.manageAction}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (

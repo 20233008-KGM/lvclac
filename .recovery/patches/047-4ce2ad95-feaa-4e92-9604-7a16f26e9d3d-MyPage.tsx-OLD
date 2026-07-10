@@ -1,0 +1,6 @@
+  const submitPassword = (event: FormEvent) => {
+    event.preventDefault()
+    onSetPasswordSubmit()
+  }
+
+  return (

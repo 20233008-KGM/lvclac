@@ -32,3 +32,22 @@ export function isAccountSetupComplete(inputs: CalculatorInputs): boolean {
   }
   return hasValue(inputs.maintenanceMargin) && hasValue(inputs.entrustedMargin)
 }
+
+const SKIP_GUARD_KEY = 'leverage_account_setting_guard_skip'
+
+export function readSkipAccountSettingGuard(): boolean {
+  try {
+    return localStorage.getItem(SKIP_GUARD_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setSkipAccountSettingGuard(skip: boolean): void {
+  try {
+    if (skip) localStorage.setItem(SKIP_GUARD_KEY, '1')
+    else localStorage.removeItem(SKIP_GUARD_KEY)
+  } catch {
+    // ignore
+  }
+}

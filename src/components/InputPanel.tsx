@@ -3,26 +3,33 @@ import { createPortal } from 'react-dom'
 import type { CalculatorInputs } from '../types'
 import type { FieldCopy } from '../i18n/types'
 import { isPreviewModeActive, type CalculatorInputPatch } from '../calc/mtmLink'
-import { isAccountSetupComplete } from './accountSettingGuard'
+import type { CalculatorHistoryOptions } from '../context/calculatorHistory'
+import {
+  isAccountSetupComplete,
+  readSkipAccountSettingGuard,
+  setSkipAccountSettingGuard,
+} from './accountSettingGuard'
 import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
   ScenarioPriceApplyButton,
 } from './InputCommitButton'
-import { NumberInput, type NumberInputHandle } from './NumberInput'
+import { NumberInput, type NumberInputChangeMeta, type NumberInputHandle } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
 import {
   PRICE_SCRUB_PX_PER_TICK,
 } from './numberStepperScrub'
 import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { SaveDraftToggle } from './SaveDraftToggle'
+import { resolveInputPanelDisplayInputs } from './inputPanelDisplay'
+import { calcPositionTickPnl } from '../calc/positionMetrics'
 import { formatNumberForInput } from '../utils/inputFormat'
 import { formatNumber } from '../utils/format'
 
 interface InputPanelProps {
   inputs: CalculatorInputs
-  onChange: (patch: CalculatorInputPatch) => void
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
 }
 
 const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>(['contractMultiplier'])
@@ -30,6 +37,10 @@ const RATE_FIELDS = new Set<keyof CalculatorInputs>([
   'maintenanceMarginRate',
   'entrustedMarginRate',
 ])
+
+function historyOptions(meta?: NumberInputChangeMeta): CalculatorHistoryOptions | undefined {
+  return meta?.historyGroup ? { historyGroup: meta.historyGroup } : undefined
+}
 
 function Field({
   label,
@@ -77,18 +88,37 @@ function SectionTitle({ children }: { children: string }) {
   return <h3 className="field-section-title">{children}</h3>
 }
 
+function DerivedMetricField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="field field--derived-metric">
+      <span className="field-label-row">
+        <span className="field-label-text">{label}</span>
+      </span>
+      <div className="derived-metric-box" aria-label={`${label}: ${value}`}>
+        <span className="derived-metric-value">{value}</span>
+      </div>
+    </div>
+  )
+}
+
+function formatTickPnl(value: number | null): string {
+  if (value == null) return '-'
+  if (value === 0) return '0'
+  return `±${formatNumber(value)}`
+}
+
 function numField(
   field: FieldCopy,
   key: keyof CalculatorInputs,
   inputs: CalculatorInputs,
-  onChange: (patch: CalculatorInputPatch) => void,
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void,
   optional = false,
   optionalText?: string,
   showTooltip = false,
   tooltipLabel?: string,
   inputProps?: Partial<{
     deferChangeUntilBlur: boolean
-    onCommit: (value: number | undefined) => void
+    onCommit: (value: number | undefined, meta?: NumberInputChangeMeta) => void
     disabled: boolean
     className: string
     guardLocked: boolean
@@ -119,7 +149,11 @@ function numField(
         onCommit={inputProps?.onCommit}
         guardLocked={inputProps?.guardLocked}
         onGuardBlocked={inputProps?.onGuardBlocked}
-        onChange={(v) => onChange({ [key]: v })}
+        onChange={(v, meta) => {
+          const patch = { [key]: v } as CalculatorInputPatch
+          if (key === 'contractAmount') patch.contractAmountRole = 'entryPrice'
+          onChange(patch, historyOptions(meta))
+        }}
       />
     </Field>
   )
@@ -138,7 +172,7 @@ function CurrentPriceField({
   rollPnlOnChange = false,
 }: {
   inputs: CalculatorInputs
-  onChange: (patch: CalculatorInputPatch) => void
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
   field: FieldCopy
   stepUpLabel: string
   stepDownLabel: string
@@ -150,12 +184,21 @@ function CurrentPriceField({
 }) {
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
-  function handleChange(v: number | undefined) {
+  function handleChange(
+    v: number | undefined,
+    meta?: NumberInputChangeMeta & { gestureStart?: boolean },
+  ) {
+    const options = historyOptions(meta)
     if (!rollPnlOnChange) {
-      onChange({ currentPrice: v })
+      onChange({ currentPrice: v }, options)
       return
     }
-    if (v != null) onChange({ applyMarkPrice: v })
+    if (v == null) return
+    const gestureStart = meta?.gestureStart ?? true
+    onChange(
+      { applyMarkPrice: v, preserveMarkPriceUndoSnapshot: gestureStart ? undefined : true },
+      options,
+    )
   }
 
   const fieldProps = {
@@ -220,7 +263,7 @@ export function ScenarioPriceField({
   disabled = false,
 }: {
   inputs: CalculatorInputs
-  onChange: (patch: CalculatorInputPatch) => void
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
   field: FieldCopy
   stepUpLabel: string
   stepDownLabel: string
@@ -239,19 +282,6 @@ export function ScenarioPriceField({
   function clearScenario() {
     setDraftPrice(undefined)
   }
-
-  useEffect(() => {
-    if (!scenarioApplyUndoAvailable) return
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
-      e.preventDefault()
-      onChange({ undoMarkPrice: true })
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [scenarioApplyUndoAvailable, onChange])
 
   function resolveScenarioPrice(): number | undefined {
     if (useStepper) return draftPrice
@@ -458,7 +488,7 @@ function MarginSection({
   onGuardBlocked,
 }: {
   inputs: CalculatorInputs
-  onChange: (patch: CalculatorInputPatch) => void
+  onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
   setupScreen?: boolean
   guardLocked?: boolean
   onGuardBlocked?: () => void
@@ -531,6 +561,9 @@ function AccountSettingChangeModal({
   body,
   confirmLabel,
   cancelLabel,
+  skipLabel,
+  dontShowAgain,
+  onDontShowAgainChange,
   onConfirm,
   onCancel,
 }: {
@@ -538,6 +571,9 @@ function AccountSettingChangeModal({
   body: string
   confirmLabel: string
   cancelLabel: string
+  skipLabel: string
+  dontShowAgain: boolean
+  onDontShowAgainChange: (value: boolean) => void
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -586,6 +622,16 @@ function AccountSettingChangeModal({
             {confirmLabel}
           </button>
         </div>
+        <div className="draft-save-modal-footer">
+          <label className="draft-save-skip">
+            <input
+              type="checkbox"
+              checked={dontShowAgain}
+              onChange={(e) => onDontShowAgainChange(e.target.checked)}
+            />
+            <span>{skipLabel}</span>
+          </label>
+        </div>
       </div>
     </div>
   )
@@ -597,6 +643,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const { t } = useLanguage()
   const f = t.fields
   const scenarioModeActive = isPreviewModeActive(inputs)
+  const displayInputs = resolveInputPanelDisplayInputs(inputs)
+  const tickPnl = calcPositionTickPnl(displayInputs)
   const c = setupCopy(t.lang)
   const setupComplete = isAccountSetupComplete(inputs)
   const frozenFieldClass = setupComplete ? 'field--setup-screen' : ''
@@ -604,13 +652,20 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   // 확인해야 잠금이 풀려 편집할 수 있다. 현재가/틱사이즈는 잠금 대상이 아니다.
   const [settingsUnlocked, setSettingsUnlocked] = useState(false)
   const [unlockModalOpen, setUnlockModalOpen] = useState(false)
+  const [dontShowAgain, setDontShowAgain] = useState(false)
   const guardLocked = setupComplete && !settingsUnlocked
 
   function requestUnlock() {
+    if (readSkipAccountSettingGuard()) {
+      confirmUnlock()
+      return
+    }
+    setDontShowAgain(false)
     setUnlockModalOpen(true)
   }
 
   function confirmUnlock() {
+    if (dontShowAgain) setSkipAccountSettingGuard(true)
     setSettingsUnlocked(true)
     setUnlockModalOpen(false)
   }
@@ -618,19 +673,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   function cancelUnlock() {
     setUnlockModalOpen(false)
   }
-
-  useEffect(() => {
-    if (!inputs.markPriceUndoSnapshot) return
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'z' || e.shiftKey || !(e.ctrlKey || e.metaKey)) return
-      e.preventDefault()
-      onChange({ undoMarkPrice: true })
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [inputs.markPriceUndoSnapshot, onChange])
 
   return (
     <>
@@ -671,18 +713,21 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             className={frozenFieldClass}
           >
             <NumberInput
-              value={inputs.accountEval}
+              value={displayInputs.accountEval}
               allowDecimal={false}
               placeholder={f.accountEquity.placeholder || undefined}
               disabled={scenarioModeActive}
               guardLocked={guardLocked}
               onGuardBlocked={requestUnlock}
-              onChange={(v) =>
-                onChange({ accountEval: v, evalSnapshotSide: inputs.positionSide })
+              onChange={(v, meta) =>
+                onChange(
+                  { accountEval: v, evalSnapshotSide: inputs.positionSide },
+                  historyOptions(meta),
+                )
               }
             />
           </Field>
-          {numField(f.contractAmount, 'contractAmount', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
+          {numField(f.contractAmount, 'contractAmount', displayInputs, onChange, false, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
             className: frozenFieldClass,
             guardLocked,
@@ -696,7 +741,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             className={frozenFieldClass}
           >
             <NumberStepper
-              value={inputs.contracts}
+              value={displayInputs.contracts}
               step={1}
               allowNegative={false}
               placeholder={f.contracts.placeholder || undefined}
@@ -706,8 +751,11 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               disabled={scenarioModeActive}
               guardLocked={guardLocked}
               onGuardBlocked={requestUnlock}
-              onChange={(v) =>
-                onChange({ contracts: v === undefined ? v : Math.max(0, v) })
+              onChange={(v, meta) =>
+                onChange(
+                  { contracts: v === undefined ? v : Math.max(0, v) },
+                  historyOptions(meta),
+                )
               }
             />
           </Field>
@@ -727,7 +775,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             disabled={scenarioModeActive}
             rollPnlOnChange={setupComplete}
           />
-          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, true, t.optional, true, t.fieldTooltipLabel, {
+          {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, false, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
             className: frozenFieldClass,
             guardLocked,
@@ -746,6 +794,10 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               disabled: scenarioModeActive,
             },
           )}
+          <DerivedMetricField
+            label={t.results.tickPnl}
+            value={formatTickPnl(tickPnl)}
+          />
         </div>
 
         <MarginSection
@@ -763,6 +815,9 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
         body={t.accountSettingGuard.body}
         confirmLabel={t.accountSettingGuard.confirm}
         cancelLabel={t.accountSettingGuard.cancel}
+        skipLabel={t.accountSettingGuard.skipModalLabel}
+        dontShowAgain={dontShowAgain}
+        onDontShowAgainChange={setDontShowAgain}
         onConfirm={confirmUnlock}
         onCancel={cancelUnlock}
       />

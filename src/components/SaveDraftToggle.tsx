@@ -1,15 +1,21 @@
-import { useEffect, useState, type ReactNode, type RefObject } from 'react'
+import { useEffect, useId, useRef, useState, type DragEvent, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { useCalculator, type SaveStorageMode } from '../context/CalculatorContext'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
+import { formatSavedAtCompact } from '../utils/format'
 import { TooltipBody } from './TooltipBody'
 
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
+const DRAFT_SLOT_DRAG_TYPE = 'application/x-lvclac-draft-slot'
 
 type ModalKind = 'enable' | 'enable-info' | 'delete-confirm' | null
 
 type SaveSlot = 'off' | SaveStorageMode
+
+function parseDraggedMode(value: string): SaveStorageMode | null {
+  return value === 'local' || value === 'cloud' ? value : null
+}
 
 function skipEnableModalKey(mode: SaveStorageMode): string {
   return `${SKIP_ENABLE_MODAL_KEY}_${mode}`
@@ -139,14 +145,15 @@ export function SaveDraftToggle() {
     storageMode,
     cloudAvailable,
     syncStatus,
-    canMigrateLocalDraft,
     hasLocalDraft,
     hasCloudDraft,
+    localDraftSavedAt,
+    cloudDraftSavedAt,
     setSaveEnabled,
     pauseSaving,
     deleteSavedData,
     setStorageMode,
-    migrateLocalDraftToCloud,
+    copyDraftBetweenStorageModes,
   } = useCalculator()
   const [modal, setModal] = useState<ModalKind>(null)
   const [pendingMode, setPendingMode] = useState<SaveStorageMode | null>(null)
@@ -155,30 +162,33 @@ export function SaveDraftToggle() {
   const [, refreshSkipState] = useState(0)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [draggingMode, setDraggingMode] = useState<SaveStorageMode | null>(null)
+  const [dropTargetMode, setDropTargetMode] = useState<SaveStorageMode | null>(null)
   const isCloud = storageMode === 'cloud'
   const modalMode = pendingMode ?? storageMode
   const modalIsCloud = modalMode === 'cloud'
   const skipActive = readSkipEnableModal(storageMode)
-  const hint = !saveEnabled
-    ? t.draftSave.offHint
-    : isCloud
-      ? t.draftSave.cloudHint
-      : t.draftSave.hint
   const enableTitle = modalIsCloud
     ? t.draftSave.cloudEnableModalTitle
     : t.draftSave.enableModalTitle
   const enableBody = modalIsCloud
     ? t.draftSave.cloudEnableModalBody
     : t.draftSave.enableModalBody
+  const savedAt = isCloud ? cloudDraftSavedAt : localDraftSavedAt
 
+  // 저장 완료(=미커밋 변경 없음)일 때만 체크(✓)를 보인다.
+  const showSavedCheck = syncStatus === 'saved' && Boolean(savedAt)
+  // 시각 텍스트: 저장된 시각이 있으면 항상 그 시각을 유지해 편집 중에도 숫자필드가 흔들리지 않게 한다.
   const statusText =
-    syncStatus === 'loading'
-      ? t.draftSave.statusLoading
-      : syncStatus === 'saving'
-        ? t.draftSave.statusSaving
-        : syncStatus === 'error'
-          ? t.draftSave.statusError
-          : null
+    syncStatus === 'error'
+      ? t.draftSave.statusError
+      : savedAt
+        ? formatSavedAtCompact(savedAt)
+        : syncStatus === 'loading'
+          ? t.draftSave.statusLoading
+          : syncStatus === 'saving'
+            ? t.draftSave.statusSaving
+            : null
 
   const openEnableModal = (mode: SaveStorageMode = storageMode) => {
     setPendingMode(mode === storageMode ? null : mode)
@@ -196,6 +206,20 @@ export function SaveDraftToggle() {
   }
 
   const storedForMode = (mode: SaveStorageMode) => (mode === 'local' ? hasLocalDraft : hasCloudDraft)
+
+  const modeLabelFor = (mode: SaveStorageMode) =>
+    mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode
+
+  const formatCopySuccess = (source: SaveStorageMode, target: SaveStorageMode) =>
+    t.draftSave.copySuccess
+      .replace('{source}', modeLabelFor(source))
+      .replace('{target}', modeLabelFor(target))
+
+  const canDragMode = (mode: SaveStorageMode) =>
+    !busy && syncStatus !== 'loading' && storedForMode(mode)
+
+  const canDropMode = (source: SaveStorageMode | null, target: SaveStorageMode) =>
+    !busy && syncStatus !== 'loading' && source != null && source !== target && storedForMode(source)
 
   const handleModeChange = (mode: SaveStorageMode) => {
     if (mode === storageMode) return
@@ -258,9 +282,13 @@ export function SaveDraftToggle() {
     setModal(null)
   }
 
-  const { anchorRef, anchorHandlers, renderTooltip } = useFloatingTooltip({
+  const helpTooltipId = useId()
+  const slotsRowRef = useRef<HTMLDivElement>(null)
+  const { anchorRef: helpAnchorRef, anchorHandlers: helpAnchorHandlers, focusWithinHandlers: helpFocusWithinHandlers, renderTooltip: renderHelpTooltip } = useFloatingTooltip({
     placement: 'top',
     horizontalAlign: 'right',
+    focusWithin: true,
+    positionAnchorRef: slotsRowRef,
   })
 
   const showGuideAgain = () => {
@@ -269,13 +297,56 @@ export function SaveDraftToggle() {
     setModal('enable-info')
   }
 
-  const handleMigrate = () => {
+  const handleSlotDragStart = (event: DragEvent<HTMLButtonElement>, mode: SaveStorageMode) => {
+    if (!canDragMode(mode)) {
+      event.preventDefault()
+      return
+    }
+    event.dataTransfer.effectAllowed = 'copy'
+    event.dataTransfer.setData(DRAFT_SLOT_DRAG_TYPE, mode)
+    setDraggingMode(mode)
+    setDropTargetMode(null)
+    setNotice(null)
+  }
+
+  const handleSlotDragOver = (event: DragEvent<HTMLButtonElement>, targetMode: SaveStorageMode) => {
+    const sourceMode = draggingMode
+    if (!canDropMode(sourceMode, targetMode)) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    setDropTargetMode(targetMode)
+  }
+
+  const handleSlotDragLeave = (
+    event: DragEvent<HTMLButtonElement>,
+    targetMode: SaveStorageMode,
+  ) => {
+    const relatedTarget = event.relatedTarget
+    if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) return
+    setDropTargetMode((mode) => (mode === targetMode ? null : mode))
+  }
+
+  const handleSlotDrop = (event: DragEvent<HTMLButtonElement>, targetMode: SaveStorageMode) => {
+    event.preventDefault()
+    const sourceMode =
+      parseDraggedMode(event.dataTransfer.getData(DRAFT_SLOT_DRAG_TYPE)) ?? draggingMode
+
+    setDraggingMode(null)
+    setDropTargetMode(null)
+
+    if (!sourceMode || !canDropMode(sourceMode, targetMode)) return
+
     setBusy(true)
     setNotice(null)
-    void migrateLocalDraftToCloud().then((error) => {
-      setNotice(error ? t.draftSave.migrateError : t.draftSave.migrateSuccess)
+    void copyDraftBetweenStorageModes(sourceMode, targetMode).then((error) => {
+      setNotice(error ? t.draftSave.copyError : formatCopySuccess(sourceMode, targetMode))
       setBusy(false)
     })
+  }
+
+  const handleSlotDragEnd = () => {
+    setDraggingMode(null)
+    setDropTargetMode(null)
   }
 
   const handleSlotClick = (slot: SaveSlot) => {
@@ -325,89 +396,113 @@ export function SaveDraftToggle() {
   return (
     <>
       <div className="draft-save">
-        <div
-          ref={anchorRef as RefObject<HTMLDivElement>}
-          className="draft-save-slots draft-save-tooltip-anchor"
-          role="group"
-          aria-label={t.draftSave.storageModeLabel}
-          {...anchorHandlers}
-        >
-          {slots.map((slot) => {
-            if (slot === 'off') {
-              const active = !saveEnabled
+        <div className="draft-save-row">
+          <div
+            ref={slotsRowRef}
+            className="draft-save-slots"
+            role="group"
+            aria-label={t.draftSave.storageModeLabel}
+          >
+            {slots.map((slot) => {
+              if (slot === 'off') {
+                const active = !saveEnabled
+                const className = [
+                  'draft-save-slot',
+                  'draft-save-slot--off',
+                  active ? 'draft-save-slot--active' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+
+                return (
+                  <button
+                    key="off"
+                    type="button"
+                    className={className}
+                    aria-pressed={active}
+                    aria-label={t.draftSave.noSaveMode}
+                    title={t.draftSave.noSaveMode}
+                    disabled={busy || syncStatus === 'loading'}
+                    onClick={() => handleSlotClick('off')}
+                  >
+                    <OffIcon />
+                    <span className="draft-save-slot__sr-label">{t.draftSave.noSaveMode}</span>
+                  </button>
+                )
+              }
+
+              const mode = slot
+              const stored = mode === 'local' ? hasLocalDraft : hasCloudDraft
+              const active = saveEnabled && storageMode === mode
+              const modeLabel = mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode
+              const modeClass =
+                mode === 'local' ? 'draft-save-slot--local' : 'draft-save-slot--cloud'
               const className = [
                 'draft-save-slot',
-                'draft-save-slot--off',
+                modeClass,
+                stored ? 'draft-save-slot--stored' : '',
                 active ? 'draft-save-slot--active' : '',
+                canDragMode(mode) ? 'draft-save-slot--draggable' : '',
+                draggingMode === mode ? 'draft-save-slot--dragging' : '',
+                dropTargetMode === mode ? 'draft-save-slot--drop-target' : '',
               ]
                 .filter(Boolean)
                 .join(' ')
 
               return (
                 <button
-                  key="off"
+                  key={mode}
                   type="button"
                   className={className}
                   aria-pressed={active}
-                  aria-label={t.draftSave.noSaveMode}
-                  title={t.draftSave.noSaveMode}
+                  aria-label={modeLabel}
+                  title={modeLabel}
+                  draggable={canDragMode(mode)}
                   disabled={busy || syncStatus === 'loading'}
-                  onClick={() => handleSlotClick('off')}
+                  onClick={() => handleSlotClick(mode)}
+                  onDragStart={(event) => handleSlotDragStart(event, mode)}
+                  onDragOver={(event) => handleSlotDragOver(event, mode)}
+                  onDragLeave={(event) => handleSlotDragLeave(event, mode)}
+                  onDrop={(event) => handleSlotDrop(event, mode)}
+                  onDragEnd={handleSlotDragEnd}
                 >
-                  <OffIcon />
-                  <span className="draft-save-slot__sr-label">{t.draftSave.noSaveMode}</span>
+                  {mode === 'local' ? <LocalComputerIcon /> : <CloudIcon />}
+                  <span className="draft-save-slot__sr-label">{modeLabel}</span>
                 </button>
               )
-            }
-
-            const mode = slot
-            const stored = mode === 'local' ? hasLocalDraft : hasCloudDraft
-            const active = saveEnabled && storageMode === mode
-            const modeLabel = mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode
-            const modeClass =
-              mode === 'local' ? 'draft-save-slot--local' : 'draft-save-slot--cloud'
-            const className = [
-              'draft-save-slot',
-              modeClass,
-              stored ? 'draft-save-slot--stored' : '',
-              active ? 'draft-save-slot--active' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')
-
-            return (
+            })}
+            <span
+              ref={helpAnchorRef as RefObject<HTMLSpanElement>}
+              className="field-label-tooltip-anchor draft-save-slots__help"
+              {...helpAnchorHandlers}
+              {...helpFocusWithinHandlers}
+            >
               <button
-                key={mode}
                 type="button"
-                className={className}
-                aria-pressed={active}
-                aria-label={modeLabel}
-                title={modeLabel}
-                disabled={busy || syncStatus === 'loading'}
-                onClick={() => handleSlotClick(mode)}
+                className="field-label-tooltip-trigger"
+                aria-label={t.draftSave.helpHintLabel}
+                aria-describedby={helpTooltipId}
+                tabIndex={0}
+                onMouseDown={(e) => e.preventDefault()}
               >
-                {mode === 'local' ? <LocalComputerIcon /> : <CloudIcon />}
-                <span className="draft-save-slot__sr-label">{modeLabel}</span>
+                ?
               </button>
-            )
-          })}
-          {renderTooltip('draft-save-tooltip', <TooltipBody text={hint} />)}
+              {renderHelpTooltip(
+                'draft-save-tooltip',
+                <TooltipBody text={t.draftSave.helpHint} />,
+                { id: helpTooltipId },
+              )}
+            </span>
+          </div>
+          {saveEnabled && statusText && (
+            <span className={`draft-save-status draft-save-status--${syncStatus}`}>
+              <span className="draft-save-status__check" aria-hidden="true">
+                {showSavedCheck ? '✓' : ''}
+              </span>
+              <span className="draft-save-status__time">{statusText}</span>
+            </span>
+          )}
         </div>
-        {saveEnabled && statusText && (
-          <span className={`draft-save-status draft-save-status--${syncStatus}`}>
-            {statusText}
-          </span>
-        )}
-        {canMigrateLocalDraft && (
-          <button
-            type="button"
-            className="link-btn draft-save-migrate"
-            disabled={busy}
-            onClick={handleMigrate}
-          >
-            {t.draftSave.migrateLocalToCloud}
-          </button>
-        )}
         {notice && (
           <span
             className={`draft-save-notice${

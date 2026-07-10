@@ -1,0 +1,8 @@
+.my-page-setting-row__control .btn {
+  min-height: 34px;
+  height: 34px;
+  width: auto;
+  flex: none;
+  padding-inline: var(--space-md);
+  white-space: nowrap;
+}

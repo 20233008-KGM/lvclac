@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import type {
   AccountRecordSummary,
   AccountSnapshotRecord,
   OrderHistoryRecord,
 } from '../db/accountRecords'
 import type { Messages } from '../i18n/types'
-import { formatLeverageValue, formatNumber } from '../utils/format'
+import { formatLeverageValue, formatNumber, formatSavedAt } from '../utils/format'
 
 export type AccountRecordsTab = 'orders' | 'snapshots'
 
@@ -21,16 +22,25 @@ interface AccountRecordsPanelProps {
   orderRecords: OrderHistoryRecord[]
   snapshotRecords: AccountSnapshotRecord[]
   onRetry: () => void
-  onSaveSnapshot: () => void
+  onSaveSnapshot?: () => void
   onDeleteOrder: (id: string) => void
   onDeleteSnapshot: (id: string) => void
   snapshotBusy?: boolean
-}
-
-function formatSavedAt(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleString()
+  onBulkDeleteOrders?: () => void
+  onBulkDeleteSnapshots?: () => void
+  orderBulkBusy?: boolean
+  snapshotBulkBusy?: boolean
+  ordersToolbar?: ReactNode
+  orderShownCount?: number
+  orderTotalCount?: number | null
+  snapshotShownCount?: number
+  snapshotTotalCount?: number | null
+  onLoadMoreOrders?: () => void
+  onLoadMoreSnapshots?: () => void
+  orderLoadingMore?: boolean
+  snapshotLoadingMore?: boolean
+  orderDeleteBusy?: boolean
+  snapshotDeleteBusy?: boolean
 }
 
 function summaryItems(summary: AccountRecordSummary, copy: AccountRecordsCopy) {
@@ -75,10 +85,12 @@ function OrderRecordItem({
   record,
   copy,
   onDelete,
+  deleteDisabled = false,
 }: {
   record: OrderHistoryRecord
   copy: AccountRecordsCopy
   onDelete: (id: string) => void
+  deleteDisabled?: boolean
 }) {
   return (
     <li className="account-record-item">
@@ -87,7 +99,12 @@ function OrderRecordItem({
           <strong>{copy.orderSimulationLabel}</strong>
           <span>{formatSavedAt(record.createdAt)}</span>
         </div>
-        <button type="button" className="link-btn account-record-delete" onClick={() => onDelete(record.id)}>
+        <button
+          type="button"
+          className="link-btn account-record-delete"
+          disabled={deleteDisabled}
+          onClick={() => onDelete(record.id)}
+        >
           {copy.delete}
         </button>
       </div>
@@ -120,10 +137,12 @@ function SnapshotRecordItem({
   record,
   copy,
   onDelete,
+  deleteDisabled = false,
 }: {
   record: AccountSnapshotRecord
   copy: AccountRecordsCopy
   onDelete: (id: string) => void
+  deleteDisabled?: boolean
 }) {
   return (
     <li className="account-record-item">
@@ -132,7 +151,12 @@ function SnapshotRecordItem({
           <strong>{record.title}</strong>
           <span>{formatSavedAt(record.createdAt)}</span>
         </div>
-        <button type="button" className="link-btn account-record-delete" onClick={() => onDelete(record.id)}>
+        <button
+          type="button"
+          className="link-btn account-record-delete"
+          disabled={deleteDisabled}
+          onClick={() => onDelete(record.id)}
+        >
           {copy.delete}
         </button>
       </div>
@@ -156,17 +180,38 @@ export function AccountRecordsPanel({
   onDeleteOrder,
   onDeleteSnapshot,
   snapshotBusy = false,
+  onBulkDeleteOrders,
+  onBulkDeleteSnapshots,
+  orderBulkBusy = false,
+  snapshotBulkBusy = false,
+  ordersToolbar,
+  orderShownCount,
+  orderTotalCount,
+  snapshotShownCount,
+  snapshotTotalCount,
+  onLoadMoreOrders,
+  onLoadMoreSnapshots,
+  orderLoadingMore = false,
+  snapshotLoadingMore = false,
+  orderDeleteBusy = false,
+  snapshotDeleteBusy = false,
 }: AccountRecordsPanelProps) {
   const isOrders = activeTab === 'orders'
+  const orderActionsLocked = orderLoadingMore || orderDeleteBusy || orderBulkBusy
+  const snapshotActionsLocked = snapshotLoadingMore || snapshotDeleteBusy || snapshotBulkBusy
 
   return (
-    <section className="panel account-records-panel" aria-labelledby="account-records-title">
+    <section
+      id="my-page-records"
+      className="my-page-panel account-records-panel"
+      aria-labelledby="account-records-title"
+    >
       <div className="account-records-head">
         <div>
           <h2 id="account-records-title">{copy.title}</h2>
           <p>{copy.privacyNote}</p>
         </div>
-        {signedIn && activeTab === 'snapshots' && (
+        {signedIn && activeTab === 'snapshots' && onSaveSnapshot && (
           <button
             type="button"
             className="btn btn-primary account-record-save"
@@ -203,6 +248,8 @@ export function AccountRecordsPanel({
             </button>
           </div>
 
+          {isOrders && ordersToolbar}
+
           {notice && <p className="account-records-notice" role="status">{notice}</p>}
           {error && (
             <div className="account-records-error" role="alert">
@@ -217,30 +264,98 @@ export function AccountRecordsPanel({
             <p className="account-records-empty" role="status">{copy.loading}</p>
           ) : isOrders ? (
             orderRecords.length > 0 ? (
-              <ul className="account-record-list">
-                {orderRecords.map((record) => (
-                  <OrderRecordItem
-                    key={record.id}
-                    record={record}
-                    copy={copy}
-                    onDelete={onDeleteOrder}
-                  />
-                ))}
-              </ul>
+              <>
+                {(onBulkDeleteOrders || orderTotalCount != null) && (
+                  <div className="account-record-list-toolbar">
+                    <span className="account-record-count">
+                      {orderTotalCount != null
+                        ? copy.shownCount
+                            .replace('{shown}', String(orderShownCount ?? orderRecords.length))
+                            .replace('{total}', String(orderTotalCount))
+                        : null}
+                    </span>
+                    {onBulkDeleteOrders && (
+                      <button
+                        type="button"
+                        className="link-btn link-btn--danger"
+                        disabled={orderActionsLocked}
+                        onClick={onBulkDeleteOrders}
+                      >
+                        {orderBulkBusy ? copy.bulkDeleteBusy : copy.bulkDeleteOrders}
+                      </button>
+                    )}
+                  </div>
+                )}
+                <ul className="account-record-list">
+                  {orderRecords.map((record) => (
+                    <OrderRecordItem
+                      key={record.id}
+                      record={record}
+                      copy={copy}
+                      onDelete={onDeleteOrder}
+                      deleteDisabled={orderActionsLocked}
+                    />
+                  ))}
+                </ul>
+                {onLoadMoreOrders && (
+                  <button
+                    type="button"
+                    className="link-btn account-record-load-more"
+                    disabled={orderActionsLocked}
+                    onClick={onLoadMoreOrders}
+                  >
+                    {orderLoadingMore ? copy.loadingMore : copy.loadMore}
+                  </button>
+                )}
+              </>
             ) : (
               <EmptyState>{copy.orderHistoryEmpty}</EmptyState>
             )
           ) : snapshotRecords.length > 0 ? (
-            <ul className="account-record-list">
-              {snapshotRecords.map((record) => (
-                <SnapshotRecordItem
-                  key={record.id}
-                  record={record}
-                  copy={copy}
-                  onDelete={onDeleteSnapshot}
-                />
-              ))}
-            </ul>
+            <>
+              {(onBulkDeleteSnapshots || snapshotTotalCount != null) && (
+                <div className="account-record-list-toolbar">
+                  <span className="account-record-count">
+                    {snapshotTotalCount != null
+                      ? copy.shownCount
+                          .replace('{shown}', String(snapshotShownCount ?? snapshotRecords.length))
+                          .replace('{total}', String(snapshotTotalCount))
+                      : null}
+                  </span>
+                  {onBulkDeleteSnapshots && (
+                    <button
+                      type="button"
+                      className="link-btn link-btn--danger"
+                      disabled={snapshotActionsLocked}
+                      onClick={onBulkDeleteSnapshots}
+                    >
+                      {snapshotBulkBusy ? copy.bulkDeleteBusy : copy.bulkDeleteSnapshots}
+                    </button>
+                  )}
+                </div>
+              )}
+              <ul className="account-record-list">
+                {snapshotRecords.map((record) => (
+                  <SnapshotRecordItem
+                    key={record.id}
+                    record={record}
+                    copy={copy}
+                    onDelete={onDeleteSnapshot}
+                    deleteDisabled={snapshotActionsLocked}
+                  />
+                ))}
+              </ul>
+              {onLoadMoreSnapshots && (
+                <button
+                  type="button"
+                  className="link-btn account-record-load-more"
+                  disabled={snapshotActionsLocked}
+                  onClick={onLoadMoreSnapshots}
+                >
+                  {snapshotLoadingMore ? copy.loadingMore : copy.loadMore}
+                </button>
+              )}
+            </>
           ) : (
             <EmptyState>{copy.snapshotsEmpty}</EmptyState>
           )}

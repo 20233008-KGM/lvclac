@@ -1,0 +1,6 @@
+        identityBusy={identityBusy}
+        identityMessage={identityMessage}
+        passwordFormOpen={passwordFormOpen}
+        passwordDraft={passwordDraft}
+        passwordConfirmationDraft={passwordConfirmationDraft}
+        supportHref={`mailto:${CONTACT_EMAIL}`}

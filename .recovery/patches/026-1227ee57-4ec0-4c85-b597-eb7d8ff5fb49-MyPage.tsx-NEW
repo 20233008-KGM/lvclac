@@ -1,0 +1,9 @@
+  useEffect(() => {
+    if (!user) {
+      setPasswordFormOpen(false)
+      setPasswordDraft('')
+      setPasswordConfirmationDraft('')
+    }
+  }, [user])
+
+  useEffect(() => {

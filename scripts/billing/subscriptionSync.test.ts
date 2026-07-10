@@ -1,48 +1,47 @@
 import { describe, it, expect } from 'vitest'
-import type Stripe from 'stripe'
 import type { BillingDeps } from './billingConfig'
 import {
   customerIdOf,
   getPeriodEndIso,
-  mapStripeStatus,
+  mapPaddleStatus,
+  type PaddleSubscription,
   syncSubscription,
 } from './subscriptionSync'
 
-describe('mapStripeStatus', () => {
+describe('mapPaddleStatus', () => {
   it('maps allowed statuses through and folds unknown ones to inactive', () => {
-    expect(mapStripeStatus('active')).toBe('active')
-    expect(mapStripeStatus('trialing')).toBe('trialing')
-    expect(mapStripeStatus('past_due')).toBe('past_due')
-    expect(mapStripeStatus('unpaid')).toBe('unpaid')
-    expect(mapStripeStatus('canceled')).toBe('canceled')
-    expect(mapStripeStatus('incomplete')).toBe('inactive')
-    expect(mapStripeStatus('paused')).toBe('inactive')
-    expect(mapStripeStatus(null)).toBe('inactive')
+    expect(mapPaddleStatus('active')).toBe('active')
+    expect(mapPaddleStatus('trialing')).toBe('trialing')
+    expect(mapPaddleStatus('past_due')).toBe('past_due')
+    expect(mapPaddleStatus('unpaid')).toBe('unpaid')
+    expect(mapPaddleStatus('canceled')).toBe('canceled')
+    expect(mapPaddleStatus('paused')).toBe('inactive')
+    expect(mapPaddleStatus(null)).toBe('inactive')
   })
 })
 
 describe('getPeriodEndIso', () => {
-  it('reads top-level current_period_end', () => {
-    const sub = { current_period_end: 1_700_000_000 } as unknown as Stripe.Subscription
-    expect(getPeriodEndIso(sub)).toBe(new Date(1_700_000_000 * 1000).toISOString())
+  it('reads current_billing_period.ends_at', () => {
+    const sub: PaddleSubscription = {
+      current_billing_period: { ends_at: '2023-11-14T22:13:20.000Z' },
+    }
+    expect(getPeriodEndIso(sub)).toBe('2023-11-14T22:13:20.000Z')
   })
 
-  it('falls back to the first item period end', () => {
-    const sub = {
-      items: { data: [{ current_period_end: 1_800_000_000 }] },
-    } as unknown as Stripe.Subscription
-    expect(getPeriodEndIso(sub)).toBe(new Date(1_800_000_000 * 1000).toISOString())
+  it('falls back to next_billed_at', () => {
+    const sub: PaddleSubscription = { next_billed_at: '2027-01-02T03:04:05.000Z' }
+    expect(getPeriodEndIso(sub)).toBe('2027-01-02T03:04:05.000Z')
   })
 
   it('returns null when unavailable', () => {
-    expect(getPeriodEndIso({} as Stripe.Subscription)).toBeNull()
+    expect(getPeriodEndIso({})).toBeNull()
   })
 })
 
 describe('customerIdOf', () => {
-  it('normalizes string and object customers', () => {
-    expect(customerIdOf('cus_1')).toBe('cus_1')
-    expect(customerIdOf({ id: 'cus_2' })).toBe('cus_2')
+  it('normalizes Paddle customer references', () => {
+    expect(customerIdOf({ customer_id: 'ctm_1' })).toBe('ctm_1')
+    expect(customerIdOf({ customer: { id: 'ctm_2' } })).toBe('ctm_2')
     expect(customerIdOf(null)).toBeNull()
   })
 })
@@ -52,7 +51,6 @@ interface FakeState {
   inserts: Record<string, unknown>[]
 }
 
-/** subscriptions upsert만 흉내내는 최소 admin. hint를 주면 resolveUserId가 여기 닿지 않는다. */
 function makeDeps(existingRow: { id: string } | null, state: FakeState): BillingDeps {
   const admin = {
     from() {
@@ -77,17 +75,17 @@ function makeDeps(existingRow: { id: string } | null, state: FakeState): Billing
       }
     },
   }
-  return { admin, stripe: {} } as unknown as BillingDeps
+  return { admin, fetch: async () => ({}) } as unknown as BillingDeps
 }
 
 describe('syncSubscription', () => {
-  const baseSub = {
+  const baseSub: PaddleSubscription = {
     id: 'sub_1',
-    customer: 'cus_1',
+    customer_id: 'ctm_1',
     status: 'active',
-    current_period_end: 1_700_000_000,
-    metadata: {},
-  } as unknown as Stripe.Subscription
+    current_billing_period: { ends_at: '2023-11-14T22:13:20.000Z' },
+    custom_data: {},
+  }
 
   it('inserts a new row when none exists', async () => {
     const state: FakeState = { updates: [], inserts: [] }
@@ -98,8 +96,8 @@ describe('syncSubscription', () => {
     expect(state.inserts).toHaveLength(1)
     expect(state.inserts[0]).toMatchObject({
       user_id: 'user-1',
-      provider: 'stripe',
-      provider_customer_id: 'cus_1',
+      provider: 'paddle',
+      provider_customer_id: 'ctm_1',
       provider_subscription_id: 'sub_1',
       status: 'active',
     })
@@ -112,14 +110,17 @@ describe('syncSubscription', () => {
 
     expect(result.ok).toBe(true)
     expect(state.updates).toHaveLength(1)
-    expect(state.updates[0]).toMatchObject({ status: 'active', provider_subscription_id: 'sub_1' })
+    expect(state.updates[0]).toMatchObject({
+      provider: 'paddle',
+      status: 'active',
+      provider_subscription_id: 'sub_1',
+    })
     expect(state.inserts).toHaveLength(0)
   })
 
   it('skips when user cannot be resolved', async () => {
     const state: FakeState = { updates: [], inserts: [] }
-    // customer 없음 + hint 없음 → resolveUserId가 null
-    const orphan = { ...baseSub, customer: null, metadata: {} } as unknown as Stripe.Subscription
+    const orphan: PaddleSubscription = { ...baseSub, customer_id: null, custom_data: {} }
     const deps = makeDeps(null, state)
     const result = await syncSubscription(deps, orphan, null)
 

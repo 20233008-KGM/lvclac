@@ -1,0 +1,13 @@
+  const submitPassword = (event: FormEvent) => {
+    event.preventDefault()
+    onSetPasswordSubmit()
+  }
+  const activeNavHref = useMyPageNavActive(Boolean(user))
+  const navLabels: Record<(typeof MY_PAGE_NAV_ITEMS)[number]['href'], string> = {
+    '#my-page-profile': copy.navAccount,
+    '#my-page-records-summary': copy.navData,
+    '#my-page-plan': copy.navPlanPreferences,
+    '#my-page-support': copy.navSupport,
+  }
+
+  return (

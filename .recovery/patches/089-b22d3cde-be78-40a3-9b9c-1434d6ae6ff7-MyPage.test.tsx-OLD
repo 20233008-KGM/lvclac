@@ -1,0 +1,30 @@
+  it('renders a side/pill nav linking each category to a real section id', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
+        billingPanel={<div id="my-page-plan">plan stub</div>}
+        recordsSummaryPanel={<section id="my-page-records-summary" className="my-page-panel" />}
+      />,
+    )
+
+    expect(html).toContain('my-page-nav')
+    expect(html).toContain(en.myPage.navAccount)
+    expect(html).toContain(en.myPage.navData)
+    // renderToStaticMarkup HTML-escapes "&" as "&amp;"
+    expect(html).toContain(en.myPage.navPlanPreferences.replace('&', '&amp;'))
+    expect(html).toContain(en.myPage.navSupport)
+
+    expect(html).toContain('href="#my-page-profile"')
+    expect(html).toContain('href="#my-page-records-summary"')
+    expect(html).toContain('href="#my-page-plan"')
+    expect(html).toContain('href="#my-page-support"')
+
+    // each href target must exist as a real section id in the rendered markup
+    expect(html).toContain('id="my-page-profile"')
+    expect(html).toContain('id="my-page-records-summary"')
+    expect(html).toContain('id="my-page-plan"')
+    expect(html).toContain('id="my-page-support"')
+    expect(html).toContain('aria-current="location"')
+    expect(html).toContain('class="is-active"')
+  })

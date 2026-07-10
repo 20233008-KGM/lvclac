@@ -1,0 +1,1 @@
+    expect(html).toContain(en.myPage.billing.statusFree)

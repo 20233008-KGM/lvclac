@@ -1,0 +1,4 @@
+    expect(html).toContain(`>${en.myPage.setPasswordAction}</button>`)
+    // Google-only 사용자는 이메일 수단이 미연동 → '기본' 칩 없음
+    expect(html).toContain('my-page-linked-badge is-unlinked')
+    expect(html).not.toContain(`my-page-linked-chip">${en.myPage.primaryTag}`)

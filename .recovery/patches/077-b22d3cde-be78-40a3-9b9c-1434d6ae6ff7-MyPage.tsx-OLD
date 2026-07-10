@@ -1,0 +1,9 @@
+                <div className="my-page-panel-head">
+                  <div>
+                    <h2 id="my-page-profile-title">{copy.navAccount}</h2>
+                  </div>
+                  <button type="button" className="btn btn-ghost" onClick={onSignOut}>
+                    {copy.signOut}
+                  </button>
+                </div>
+                <form className="my-page-field my-page-nickname-form" onSubmit={submitNickname}>

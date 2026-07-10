@@ -1,0 +1,8 @@
+.my-page-panel h2 {
+  margin: 0;
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-text);
+  font-size: 1.1rem;
+  line-height: 1.3;
+}

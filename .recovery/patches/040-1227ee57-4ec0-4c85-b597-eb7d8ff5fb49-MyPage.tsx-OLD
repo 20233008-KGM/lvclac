@@ -1,0 +1,8 @@
+                    <div className="my-page-linked-body">
+                      <span className="my-page-linked-name">{copy.emailProvider}</span>
+                      <span
+                        className={`my-page-linked-status ${hasEmail ? 'is-linked' : 'is-unlinked'}`}
+                      >
+                        {emailStatusLabel}
+                      </span>
+                    </div>

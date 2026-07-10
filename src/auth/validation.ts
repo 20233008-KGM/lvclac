@@ -24,7 +24,12 @@ export function validateEmail(email: string): string | null {
   return null
 }
 
-export function validatePassword(password: string): string | null {
+export function validateLoginPassword(password: string): string | null {
+  if (!password) return 'password_required'
+  return null
+}
+
+export function validateNewPassword(password: string): string | null {
   if (!password) return 'password_required'
   if (password.length < MIN_PASSWORD_LENGTH) return 'password_too_short'
   if (password.length > MAX_PASSWORD_LENGTH) return 'password_too_long'

@@ -1,0 +1,3 @@
+  const storageLoading = Boolean(user && storageState.userId !== user.id)
+  const storageError = user && storageState.userId === user.id ? storageState.error : null
+  const hasCloudInput = user && storageState.userId === user.id ? storageState.hasCloudInput : false

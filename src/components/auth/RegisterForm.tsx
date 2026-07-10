@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import {
   validateEmail,
+  validateNewPassword,
   validateNickname,
-  validatePassword,
   validatePasswordConfirmation,
   validateTermsAccepted,
 } from '../../auth/validation'
@@ -28,7 +28,7 @@ export function RegisterForm() {
     const validationErr =
       validateNickname(nickname) ??
       validateEmail(email) ??
-      validatePassword(password) ??
+      validateNewPassword(password) ??
       validatePasswordConfirmation(password, passwordConfirmation) ??
       validateTermsAccepted(termsAccepted)
     if (validationErr) {
@@ -49,7 +49,7 @@ export function RegisterForm() {
     setSubmitting(false)
   }
 
-  const pwErr = password ? authErrorMessage(validatePassword(password), t) : null
+  const pwErr = password ? authErrorMessage(validateNewPassword(password), t) : null
   const confirmationErr =
     passwordConfirmation && password
       ? authErrorMessage(validatePasswordConfirmation(password, passwordConfirmation), t)

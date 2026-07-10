@@ -171,6 +171,40 @@ export function calcOrderFillPnl(
   return inputs.positionSide === 'long' ? priceDelta * Q : -priceDelta * Q
 }
 
+function resolveAfterOrderContractAmount(
+  inputs: CalculatorInputs,
+  newContracts: number,
+  orderContracts: number,
+  orderPrice: number | undefined,
+): number | undefined {
+  if (newContracts === 0) {
+    return 0
+  }
+
+  const previousAmount = inputs.contractAmount
+  const heldContracts = inputs.contracts ?? 0
+
+  if (inputs.contractAmountRole !== 'entryPrice') {
+    return previousAmount
+  }
+
+  if (
+    orderPrice == null ||
+    !Number.isFinite(orderPrice) ||
+    orderPrice <= 0 ||
+    orderContracts <= 0 ||
+    newContracts <= 0
+  ) {
+    return previousAmount
+  }
+
+  if (heldContracts <= 0 || previousAmount == null) {
+    return orderPrice
+  }
+
+  return ((previousAmount * heldContracts) + (orderPrice * orderContracts)) / newContracts
+}
+
 export function buildAfterOrderInputs(
   inputs: CalculatorInputs,
   newContracts: number,
@@ -179,10 +213,17 @@ export function buildAfterOrderInputs(
   const orderPrice = resolveOrderPrice(inputs)
   const fillPnl =
     orderPrice != null ? calcOrderFillPnl(inputs, orderContracts, orderPrice) : 0
+  const contractAmount = resolveAfterOrderContractAmount(
+    inputs,
+    newContracts,
+    orderContracts,
+    orderPrice,
+  )
 
   return {
     ...inputs,
     contracts: newContracts,
+    contractAmount,
     accountEval: resolveMarginEquity(inputs) + fillPnl,
     evalSnapshotSide: inputs.positionSide,
   }
@@ -327,6 +368,8 @@ function emptyOrderResult(
 ): OrderResult {
   return {
     positionSide,
+    beforeContractAmount: null,
+    afterContractAmount: null,
     beforeLiquidation: null,
     afterLiquidation: null,
     beforeTolerance: null,
@@ -348,6 +391,7 @@ function emptyOrderResult(
 
 export function captureOrderScenarioBaseline(result: OrderResult): OrderScenarioBaseline {
   return {
+    contractAmount: result.afterContractAmount,
     liquidation: result.afterLiquidation,
     tolerance: result.afterTolerance,
     toleranceDelta: result.afterToleranceDelta,
@@ -364,6 +408,8 @@ function orderInputsFromRevertSnapshot(inputs: CalculatorInputs): CalculatorInpu
     ...inputs,
     accountEval: snap.accountEval,
     contracts: snap.contracts,
+    contractAmount: snap.contractAmount,
+    contractAmountRole: snap.contractAmountRole,
     mtmPriceAnchor: snap.mtmPriceAnchor,
     evalSnapshotSide: snap.evalSnapshotSide,
   }
@@ -417,6 +463,8 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   const afterMargins = rawAfterMargins
     ? withEffectiveAvailableMargin(afterInputs ?? orderCalcBase, rawAfterMargins)
     : null
+  const beforeContractAmount = orderCalcBase.contractAmount ?? null
+  const afterContractAmount = afterInputs?.contractAmount ?? null
 
   const afterTolerance = calcToleranceRate(currentPrice, afterLiquidation, orderCalcBase.positionSide)
   const afterToleranceDelta = calcToleranceDelta(
@@ -442,6 +490,8 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
 
     return {
       positionSide,
+      beforeContractAmount: baseline.contractAmount,
+      afterContractAmount,
       beforeLiquidation,
       afterLiquidation,
       beforeTolerance: baseline.tolerance,
@@ -484,6 +534,8 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
 
   return {
     positionSide,
+    beforeContractAmount,
+    afterContractAmount,
     beforeLiquidation,
     afterLiquidation,
     beforeTolerance,

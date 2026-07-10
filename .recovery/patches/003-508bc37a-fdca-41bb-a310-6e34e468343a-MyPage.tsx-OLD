@@ -1,0 +1,3 @@
+                <a href="#my-page-profile">{copy.navAccount}</a>
+                <a href="#my-page-storage">{copy.navData}</a>
+                <a href="#my-page-plan">{copy.navPlanPreferences}</a>

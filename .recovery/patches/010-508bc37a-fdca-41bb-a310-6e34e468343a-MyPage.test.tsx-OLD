@@ -1,0 +1,13 @@
+  it('renders storage error and auth configuration warning states', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        configured={false}
+        user={null}
+        storageError={en.myPage.storageError}
+      />,
+    )
+
+    expect(html).toContain(en.myPage.configuredWarning)
+    expect(html).not.toContain(en.myPage.storageError)
+  })

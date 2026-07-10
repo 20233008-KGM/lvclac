@@ -1,18 +1,63 @@
 import { next } from '@vercel/functions'
+import {
+  PRICING_PATH,
+  PRIVACY_PATH,
+  PRODUCT_PATH,
+  REFUND_POLICY_PATH,
+  TERMS_PATH,
+} from './src/config/routes'
 
 const NO_INDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
+const PUBLIC_REVIEW_PATHS = [
+  PRODUCT_PATH,
+  PRICING_PATH,
+  TERMS_PATH,
+  PRIVACY_PATH,
+  REFUND_POLICY_PATH,
+]
 
 function allowIndexing(): boolean {
   return process.env.ALLOW_INDEXING === 'true'
 }
 
-function robotsBody(request: Request): string {
-  if (!allowIndexing()) {
-    return 'User-agent: *\nDisallow: /\n'
-  }
+function siteUrlFromRequest(request: Request): string {
   const url = new URL(request.url)
-  const siteUrl = (process.env.VITE_SITE_URL || process.env.SITE_URL || url.origin).replace(/\/$/, '')
+  return (process.env.VITE_SITE_URL || process.env.SITE_URL || url.origin).replace(/\/$/, '')
+}
+
+function normalizePath(pathname: string): string {
+  if (pathname === '/') return pathname
+  return pathname.replace(/\/$/, '')
+}
+
+function isPublicReviewPath(pathname: string): boolean {
+  return PUBLIC_REVIEW_PATHS.includes(normalizePath(pathname))
+}
+
+export function shouldNoIndexPath(pathname: string, indexingAllowed = allowIndexing()): boolean {
+  return !indexingAllowed && !isPublicReviewPath(pathname)
+}
+
+export function robotsBody(request: Request, indexingAllowed = allowIndexing()): string {
+  const siteUrl = siteUrlFromRequest(request)
+  if (!indexingAllowed) {
+    const allowed = PUBLIC_REVIEW_PATHS.map((path) => `Allow: ${path}`).join('\n')
+    return `User-agent: *\n${allowed}\nDisallow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
+  }
   return `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
+}
+
+export function sitemapBody(request: Request, indexingAllowed = allowIndexing()): string {
+  const siteUrl = siteUrlFromRequest(request)
+  const paths = indexingAllowed ? ['/', ...PUBLIC_REVIEW_PATHS] : PUBLIC_REVIEW_PATHS
+  const urls = paths
+    .map((path) => {
+      const loc = path === '/' ? siteUrl : `${siteUrl}${path}`
+      return `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n  </url>`
+    })
+    .join('\n')
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
 }
 
 export const config = {
@@ -28,14 +73,16 @@ export default function middleware(request: Request) {
     })
   }
 
-  if (pathname === '/sitemap.xml' && !allowIndexing()) {
-    return new Response('Not Found', { status: 404 })
+  if (pathname === '/sitemap.xml') {
+    return new Response(sitemapBody(request), {
+      headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+    })
   }
 
   const country = request.headers.get('x-vercel-ip-country') ?? ''
   const extraHeaders: Record<string, string> = {}
 
-  if (!allowIndexing()) {
+  if (shouldNoIndexPath(pathname)) {
     Object.assign(extraHeaders, NO_INDEX_HEADERS)
   }
 

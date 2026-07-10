@@ -1,0 +1,3 @@
+    expect(html).toContain('id="my-page-profile"')
+    expect(html).toContain('id="my-page-records-summary"')
+    expect(html).toContain('id="my-page-plan"')

@@ -1,0 +1,7 @@
+  onLinkGoogle,
+  onUnlinkGoogle,
+  onPasswordFormToggle,
+  onPasswordDraftChange,
+  onPasswordConfirmationDraftChange,
+  onSetPasswordSubmit,
+  onLoginClick,

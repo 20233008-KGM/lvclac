@@ -9,6 +9,7 @@ describe('account setting guard copy', () => {
     expect(ko.accountSettingGuard.cancel).toBe('취소')
     expect(ko.accountSettingGuard.body).toContain('현재가 입력창')
     expect(ko.accountSettingGuard.body).toContain('주문패드')
+    expect(ko.accountSettingGuard.skipModalLabel).toBe('다시 띄우지 않기')
   })
 
   it('provides English confirmation copy', () => {
@@ -17,5 +18,6 @@ describe('account setting guard copy', () => {
     expect(en.accountSettingGuard.cancel).toBe('Cancel')
     expect(en.accountSettingGuard.body).toContain('current-price field')
     expect(en.accountSettingGuard.body).toContain('order pad')
+    expect(en.accountSettingGuard.skipModalLabel).toBe("Don't show this again")
   })
 })

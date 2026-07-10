@@ -1,0 +1,16 @@
+function StorageRow({
+  title,
+  value,
+}: {
+  title: string
+  value: string
+}) {
+  return (
+    <div className="my-page-storage-row">
+      <dt>{title}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+type AccountRecordsCopy = Messages['accountRecords']

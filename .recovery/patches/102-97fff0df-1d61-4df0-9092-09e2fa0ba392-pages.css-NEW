@@ -1,0 +1,52 @@
+@media (max-width: 620px) {
+  .my-page-plans {
+    grid-template-columns: 1fr;
+  }
+
+  .my-page-billing-status-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .my-page-billing-status-card .btn-primary {
+    width: 100%;
+  }
+
+  .my-page-account-section--profile .my-page-nickname-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .my-page-account-section--profile .my-page-nickname-form input {
+    max-width: none;
+    width: 100%;
+  }
+
+  .my-page-account-section--profile .my-page-nickname-form .btn-primary {
+    width: 100%;
+  }
+
+  .my-page-linked-item {
+    grid-template-columns: 20px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+
+  .my-page-linked-name {
+    grid-column: 2;
+  }
+
+  .my-page-linked-status {
+    grid-column: 2;
+  }
+
+  .my-page-linked-action {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .my-page-linked-action .btn {
+    width: 100%;
+  }
+
+  .my-page-setting-row--nickname,

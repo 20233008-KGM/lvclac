@@ -842,9 +842,9 @@ npm run build
 
 Expected: targeted tests and build remain green after each fix.
 
-- [ ] **Step 8: Record final status in work memory if a durable risk remains**
+- [ ] **Step 8: Record final status if a durable risk remains**
 
-If any auth risk remains out of scope, append a short entry to `docs/personas/work-memory.md`:
+If any auth risk remains out of scope, record it in `docs/project-memory.md` or the relevant active feature document. The old repo-internal persona memory is retired and should not receive new active task state.
 
 ```md
 ## 2026-07-05 Auth UI
@@ -862,11 +862,11 @@ Stage only auth files changed after the previous task commits. Use the explicit 
 
 ```bash
 git status --short
-git add src/auth/validation.test.ts src/components/auth/authMessages.test.ts src/components/auth/AuthPage.tsx src/components/auth/LoginForm.tsx src/components/auth/RegisterForm.tsx src/components/auth/GoogleButton.tsx src/components/auth/AuthModal.tsx src/components/auth/AuthButton.tsx src/components/auth/authMessages.ts src/i18n/locales/ko.ts src/i18n/locales/en.ts src/styles/auth-dialog.css src/App.css src/styles/responsive.css docs/personas/work-memory.md
+git add src/auth/validation.test.ts src/components/auth/authMessages.test.ts src/components/auth/AuthPage.tsx src/components/auth/LoginForm.tsx src/components/auth/RegisterForm.tsx src/components/auth/GoogleButton.tsx src/components/auth/AuthModal.tsx src/components/auth/AuthButton.tsx src/components/auth/authMessages.ts src/i18n/locales/ko.ts src/i18n/locales/en.ts src/styles/auth-dialog.css src/App.css src/styles/responsive.css
 git -c user.name="Codex" -c user.email="codex@local" commit -m "chore: verify auth form redesign"
 ```
 
-Expected: commit exists only if verification fixes or work-memory updates were made. If no files changed after verification, do not create an empty commit.
+Expected: commit exists only if verification fixes or active feature-document updates were made. If no files changed after verification, do not create an empty commit.
 
 ---
 

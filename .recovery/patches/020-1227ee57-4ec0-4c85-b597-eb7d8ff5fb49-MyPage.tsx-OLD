@@ -1,0 +1,6 @@
+                    <span className="my-page-linked-action">
+                      {hasEmail && (
+                        <span className="my-page-linked-chip">{copy.primaryTag}</span>
+                      )}
+                    </span>
+                  </li>

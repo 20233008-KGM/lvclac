@@ -1,4 +1,6 @@
 // Launch: unused — auth deferred
+// @deprecated Legacy prototype adapter. Do not use for account authentication.
+// Production accounts must use Supabase Auth, not localStorage password hashes.
 import type { AuthRepository } from '../repositories/authRepository'
 import type { PreferencesRepository } from '../repositories/preferencesRepository'
 import { STORAGE_KEYS, type PreferencesMap, type Session, type User } from '../types'

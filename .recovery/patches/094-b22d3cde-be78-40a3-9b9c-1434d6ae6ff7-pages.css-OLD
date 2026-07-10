@@ -1,0 +1,5 @@
+.my-page-account-settings-meta {
+  display: grid;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}

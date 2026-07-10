@@ -1,0 +1,8 @@
+  for (const item of MY_PAGE_NAV_ITEMS) {
+    if (item.sectionIds.some((sectionId) => `#${sectionId}` === normalized)) {
+      return item.href
+    }
+  }
+
+  return MY_PAGE_NAV_ITEMS[0].href
+}

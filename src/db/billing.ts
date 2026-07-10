@@ -1,6 +1,5 @@
 import { supabase } from './supabaseClient'
 
-/** 구독 플랜(Stripe Price와 매핑). */
 export type BillingPlan = 'monthly' | 'yearly'
 
 export interface SubscriptionRecord {
@@ -10,7 +9,6 @@ export interface SubscriptionRecord {
 
 type BillingResult<T> = { data: T; error: null } | { data: null; error: string }
 
-/** active/trialing이면 Pro로 간주한다(isPro). */
 export function isActiveSubscription(status: string | null | undefined): boolean {
   return status === 'active' || status === 'trialing'
 }
@@ -20,7 +18,6 @@ interface SubscriptionRow {
   current_period_end: string | null
 }
 
-/** 로그인 사용자의 구독 상태를 읽는다(RLS로 본인 행만 조회됨). */
 export async function fetchSubscription(
   userId: string,
 ): Promise<BillingResult<SubscriptionRecord | null>> {
@@ -39,7 +36,6 @@ export async function fetchSubscription(
   }
 }
 
-/** 현재 세션의 access token을 Authorization 헤더로 만든다. */
 async function authHeaders(): Promise<Record<string, string>> {
   if (!supabase) return {}
   const { data } = await supabase.auth.getSession()
@@ -47,12 +43,104 @@ async function authHeaders(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-/** 결제 API 호출 → 반환된 Stripe URL로 리다이렉트. 성공 시 null, 실패 시 에러 코드. */
-async function redirectToStripe(
+interface CheckoutPayload {
+  priceId?: string
+  transactionId?: string
+  customData?: Record<string, unknown>
+  customerEmail?: string | null
+  successUrl?: string
+}
+
+interface PortalPayload {
+  url?: string
+}
+
+type PaddleEnvironment = 'sandbox' | 'live'
+
+interface PaddleCheckoutOptions {
+  settings: {
+    displayMode: 'overlay'
+    successUrl: string
+  }
+  items?: Array<{ priceId: string; quantity: number }>
+  transactionId?: string
+  customData?: Record<string, unknown>
+  customer?: { email: string }
+}
+
+interface PaddleGlobal {
+  Environment?: { set(environment: PaddleEnvironment): void }
+  Initialize(options: { token: string }): void
+  Checkout: { open(options: PaddleCheckoutOptions): void }
+}
+
+declare global {
+  interface Window {
+    Paddle?: PaddleGlobal
+  }
+}
+
+const PADDLE_JS_URL = 'https://cdn.paddle.com/paddle/v2/paddle.js'
+let paddleLoadPromise: Promise<PaddleGlobal> | null = null
+let initializedPaddleKey: string | null = null
+
+function paddleClientConfig(): { token: string; environment: PaddleEnvironment } | null {
+  const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN
+  const environment = import.meta.env.VITE_PADDLE_ENV
+  if (typeof token !== 'string' || !token) return null
+  if (environment !== 'sandbox' && environment !== 'live') return null
+  return { token, environment }
+}
+
+function loadPaddle(): Promise<PaddleGlobal> {
+  if (typeof window === 'undefined') return Promise.reject(new Error('window_unavailable'))
+  if (window.Paddle) return Promise.resolve(window.Paddle)
+  if (paddleLoadPromise) return paddleLoadPromise
+
+  paddleLoadPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src="${PADDLE_JS_URL}"]`,
+    )
+    const script = existing ?? document.createElement('script')
+    script.src = PADDLE_JS_URL
+    script.async = true
+    script.onload = () => {
+      if (window.Paddle) resolve(window.Paddle)
+      else reject(new Error('paddle_unavailable'))
+    }
+    script.onerror = () => reject(new Error('paddle_load_failed'))
+    if (!existing) document.head.appendChild(script)
+  })
+
+  return paddleLoadPromise
+}
+
+async function initializedPaddle(): Promise<{ paddle: PaddleGlobal } | { error: string }> {
+  const config = paddleClientConfig()
+  if (!config) return { error: 'not_configured' }
+
+  let paddle: PaddleGlobal
+  try {
+    paddle = await loadPaddle()
+  } catch {
+    return { error: 'network_error' }
+  }
+
+  const key = `${config.environment}:${config.token}`
+  if (initializedPaddleKey !== key) {
+    if (config.environment === 'sandbox') paddle.Environment?.set('sandbox')
+    paddle.Initialize({ token: config.token })
+    initializedPaddleKey = key
+  }
+
+  return { paddle }
+}
+
+async function postBilling<T>(
   path: string,
   body?: Record<string, unknown>,
-): Promise<string | null> {
-  if (!supabase) return 'not_configured'
+): Promise<BillingResult<T>> {
+  if (!supabase) return { data: null, error: 'not_configured' }
   let res: Response
   try {
     res = await fetch(path, {
@@ -61,20 +149,45 @@ async function redirectToStripe(
       body: JSON.stringify(body ?? {}),
     })
   } catch {
-    return 'network_error'
+    return { data: null, error: 'network_error' }
   }
-  const json = (await res.json().catch(() => null)) as { url?: string; error?: string } | null
-  if (!res.ok || !json?.url) return json?.error || 'request_failed'
-  window.location.href = json.url
-  return null
+  const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null
+  if (!res.ok || !json) return { data: null, error: json?.error || 'request_failed' }
+  return { data: json, error: null }
 }
 
-/** 구독 Checkout으로 이동. 성공 시 브라우저가 Stripe로 리다이렉트된다. */
 export function startCheckout(plan: BillingPlan): Promise<string | null> {
-  return redirectToStripe('/api/stripe/checkout', { plan })
+  return (async () => {
+    const result = await postBilling<CheckoutPayload>('/api/billing/checkout', { plan })
+    if (result.error !== null) return result.error
+
+    const { priceId, transactionId, customData, customerEmail, successUrl } = result.data
+    if (!successUrl) return 'checkout_payload_invalid'
+    if (!priceId && !transactionId) return 'checkout_payload_invalid'
+
+    const paddleReady = await initializedPaddle()
+    if ('error' in paddleReady) return paddleReady.error
+    const paddle = paddleReady.paddle
+
+    const checkout: PaddleCheckoutOptions = {
+      settings: { displayMode: 'overlay', successUrl },
+      customData,
+      ...(transactionId
+        ? { transactionId }
+        : { items: [{ priceId: priceId as string, quantity: 1 }] }),
+      ...(customerEmail ? { customer: { email: customerEmail } } : {}),
+    }
+    paddle.Checkout.open(checkout)
+    return null
+  })()
 }
 
-/** 구독 관리(Customer Portal)로 이동. */
 export function openBillingPortal(): Promise<string | null> {
-  return redirectToStripe('/api/stripe/portal')
+  return (async () => {
+    const result = await postBilling<PortalPayload>('/api/billing/portal')
+    if (result.error !== null) return result.error
+    if (!result.data.url) return 'request_failed'
+    window.location.href = result.data.url
+    return null
+  })()
 }

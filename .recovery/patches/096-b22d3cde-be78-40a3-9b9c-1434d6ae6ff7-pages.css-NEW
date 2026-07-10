@@ -1,0 +1,21 @@
+.my-page-setting-row__control .btn {
+  min-height: 34px;
+  height: 34px;
+  width: auto;
+  flex: none;
+  padding-inline: var(--space-md);
+  white-space: nowrap;
+}
+
+.my-page-nickname-form {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  min-width: 0;
+  width: 100%;
+}
+
+.my-page-setting-row__label label {
+  cursor: pointer;
+}

@@ -1,0 +1,6 @@
+  linkedProviders: string[]
+  identityBusy: 'link' | 'unlink' | 'setPassword' | null
+  identityMessage: string | null
+  passwordFormOpen: boolean
+  passwordDraft: string
+  passwordConfirmationDraft: string

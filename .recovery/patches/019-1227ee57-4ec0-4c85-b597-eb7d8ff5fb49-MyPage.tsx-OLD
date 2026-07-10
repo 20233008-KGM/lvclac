@@ -1,0 +1,7 @@
+  const hasEmail = linkedProviders.includes('email')
+  const hasGoogle = linkedProviders.includes('google')
+  const canUnlinkGoogle = hasGoogle && linkedProviders.length > 1
+  const submitNickname = (event: FormEvent) => {
+    event.preventDefault()
+    onNicknameSubmit()
+  }

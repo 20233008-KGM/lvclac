@@ -1,0 +1,13 @@
+  .my-page-inline-control {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    max-width: none;
+  }
+
+  .my-page-delete-note {
+    padding-left: 0;
+    padding-top: var(--space-md);
+    border-left: 0;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+}

@@ -1,0 +1,7 @@
+    expect(html).toContain('my-page-shell')
+    expect(html).toContain('my-page-console')
+    expect(html).toContain('my-page-identity-card')
+    expect(html).toContain('my-page-identity-info')
+    expect(html).toContain('my-page-identity-meta')
+    expect(html).toContain('my-page-badge')
+    expect(html).toContain(en.myPage.navAccount)

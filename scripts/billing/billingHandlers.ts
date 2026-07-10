@@ -1,22 +1,19 @@
-/**
- * 결제 서버 핸들러 3종(순수 로직).
- *
- * - handleCheckout: 로그인 사용자를 확인하고 Stripe Checkout(구독) 세션 URL을 생성.
- * - handlePortal:   Stripe Customer Portal(구독 관리) 세션 URL을 생성.
- * - handleWebhook:  Stripe 서명을 검증하고 subscriptions 테이블을 동기화.
- *
- * 프레임워크 비의존. Vercel Function과 Vite dev 미들웨어가 얇게 감싸 호출한다.
- * deps(stripe/admin)를 주입받아 단위 테스트가 가능하다.
- */
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { BillingConfig, BillingDeps, BillingPlan } from './billingConfig'
-import { isBillingPlan, resolveBaseUrl } from './billingConfig'
+import { isBillingPlan, paddleApiBaseUrl, resolveBaseUrl } from './billingConfig'
 import { customerIdOf, syncSubscription } from './subscriptionSync'
+
+type JsonObject = Record<string, unknown>
 
 export interface BillingResult {
   status: number
   body: {
     ok: boolean
     url?: string
+    priceId?: string
+    customData?: JsonObject
+    customerEmail?: string | null
+    successUrl?: string
     received?: boolean
     error?: string
   }
@@ -26,7 +23,6 @@ function fail(status: number, error: string): BillingResult {
   return { status, body: { ok: false, error } }
 }
 
-/** access token으로 본인을 확인. 실패 시 에러 결과, 성공 시 user 반환. */
 async function requireUser(
   deps: BillingDeps,
   accessToken: unknown,
@@ -39,43 +35,6 @@ async function requireUser(
     return { error: fail(401, 'invalid_access_token') }
   }
   return { user: { id: data.user.id, email: data.user.email ?? null } }
-}
-
-/** subscriptions 행에 저장된 Stripe customer를 찾고, 없으면 생성해 저장한다. */
-async function ensureCustomer(
-  deps: BillingDeps,
-  userId: string,
-  email: string | null,
-): Promise<{ customerId: string } | { error: BillingResult }> {
-  const existing = await deps.admin
-    .from('subscriptions')
-    .select('id, provider_customer_id')
-    .eq('user_id', userId)
-    .maybeSingle<{ id: string; provider_customer_id: string | null }>()
-
-  if (existing.error) return { error: fail(500, existing.error.message) }
-  if (existing.data?.provider_customer_id) {
-    return { customerId: existing.data.provider_customer_id }
-  }
-
-  const customer = await deps.stripe.customers.create({
-    email: email ?? undefined,
-    metadata: { user_id: userId },
-  })
-
-  const patch = {
-    provider: 'stripe',
-    provider_customer_id: customer.id,
-    updated_at: new Date().toISOString(),
-  }
-  const write = existing.data
-    ? await deps.admin.from('subscriptions').update(patch).eq('id', existing.data.id)
-    : await deps.admin
-        .from('subscriptions')
-        .insert({ user_id: userId, status: 'inactive', ...patch })
-  if (write.error) return { error: fail(500, write.error.message) }
-
-  return { customerId: customer.id }
 }
 
 export interface CheckoutRequest {
@@ -102,22 +61,16 @@ export async function handleCheckout(
   const auth = await requireUser(deps, request.accessToken)
   if ('error' in auth) return auth.error
 
-  const customer = await ensureCustomer(deps, auth.user.id, auth.user.email)
-  if ('error' in customer) return customer.error
-
-  const session = await deps.stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer: customer.customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    client_reference_id: auth.user.id,
-    subscription_data: { metadata: { user_id: auth.user.id } },
-    allow_promotion_codes: true,
-    success_url: `${baseUrl}/my?checkout=success`,
-    cancel_url: `${baseUrl}/my?checkout=cancel`,
-  })
-
-  if (!session.url) return fail(502, 'checkout_session_no_url')
-  return { status: 200, body: { ok: true, url: session.url } }
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      priceId,
+      customData: { user_id: auth.user.id, plan, provider: 'paddle' },
+      customerEmail: auth.user.email,
+      successUrl: `${baseUrl}/my?checkout=success`,
+    },
+  }
 }
 
 export interface PortalRequest {
@@ -132,32 +85,94 @@ export async function handlePortal(
 ): Promise<BillingResult> {
   if (!config) return fail(500, 'billing_not_configured')
 
-  const baseUrl = resolveBaseUrl(config, request.origin)
-  if (!baseUrl) return fail(400, 'missing_origin')
-
   const auth = await requireUser(deps, request.accessToken)
   if ('error' in auth) return auth.error
 
   const row = await deps.admin
     .from('subscriptions')
-    .select('provider_customer_id')
+    .select('provider_customer_id,provider_subscription_id')
     .eq('user_id', auth.user.id)
-    .maybeSingle<{ provider_customer_id: string | null }>()
+    .maybeSingle<{
+      provider_customer_id: string | null
+      provider_subscription_id: string | null
+    }>()
 
   if (row.error) return fail(500, row.error.message)
   const customerId = row.data?.provider_customer_id
   if (!customerId) return fail(400, 'no_customer')
 
-  const session = await deps.stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: `${baseUrl}/my`,
-  })
-  return { status: 200, body: { ok: true, url: session.url } }
+  const subscriptionId = row.data?.provider_subscription_id
+  const response = await deps.fetch(
+    `${paddleApiBaseUrl(config.paddleEnv)}/customers/${encodeURIComponent(
+      customerId,
+    )}/portal-sessions`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${config.paddleApiKey}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(subscriptionId ? { subscription_ids: [subscriptionId] } : {}),
+    },
+  )
+
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) return fail(502, 'portal_request_failed')
+
+  const url = portalSessionUrl(payload)
+  if (!url) return fail(502, 'portal_url_missing')
+  return { status: 200, body: { ok: true, url } }
 }
 
 export interface WebhookRequest {
   rawBody?: unknown
   signature?: unknown
+}
+
+function asRecord(value: unknown): JsonObject | null {
+  return value && typeof value === 'object' ? (value as JsonObject) : null
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value ? value : null
+}
+
+function portalSessionUrl(payload: unknown): string | null {
+  const root = asRecord(payload)
+  const data = asRecord(root?.data)
+  const urls = asRecord(data?.urls)
+  const general = asRecord(urls?.general)
+  return stringValue(general?.overview) ?? stringValue(data?.url) ?? stringValue(root?.url)
+}
+
+function rawBodyBuffer(rawBody: unknown): Buffer | null {
+  if (Buffer.isBuffer(rawBody)) return rawBody
+  if (typeof rawBody === 'string') return Buffer.from(rawBody, 'utf8')
+  return null
+}
+
+function parsePaddleSignature(signature: string): { ts: string; h1: string } | null {
+  const parts = new Map(
+    signature.split(';').map((part) => {
+      const [key, ...rest] = part.trim().split('=')
+      return [key, rest.join('=')]
+    }),
+  )
+  const ts = parts.get('ts')
+  const h1 = parts.get('h1')
+  return ts && h1 ? { ts, h1 } : null
+}
+
+function verifyPaddleSignature(rawBody: Buffer, signature: string, secret: string): boolean {
+  const parsed = parsePaddleSignature(signature)
+  if (!parsed) return false
+  const digest = createHmac('sha256', secret)
+    .update(Buffer.from(`${parsed.ts}:`, 'utf8'))
+    .update(rawBody)
+    .digest('hex')
+  const expected = Buffer.from(digest, 'hex')
+  const received = Buffer.from(parsed.h1, 'hex')
+  return expected.length === received.length && timingSafeEqual(expected, received)
 }
 
 export async function handleWebhook(
@@ -169,49 +184,23 @@ export async function handleWebhook(
   if (typeof request.signature !== 'string' || !request.signature) {
     return fail(400, 'missing_signature')
   }
-  const rawBody = request.rawBody
-  if (typeof rawBody !== 'string' && !Buffer.isBuffer(rawBody)) {
-    return fail(400, 'missing_body')
-  }
-
-  let event
-  try {
-    event = deps.stripe.webhooks.constructEvent(rawBody, request.signature, config.webhookSecret)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'invalid_signature'
-    return fail(400, `invalid_signature: ${message}`)
+  const rawBody = rawBodyBuffer(request.rawBody)
+  if (!rawBody) return fail(400, 'missing_body')
+  if (!verifyPaddleSignature(rawBody, request.signature, config.webhookSecret)) {
+    return fail(400, 'invalid_signature')
   }
 
   try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object
-        if (session.mode === 'subscription' && session.subscription) {
-          const subId =
-            typeof session.subscription === 'string'
-              ? session.subscription
-              : session.subscription.id
-          const sub = await deps.stripe.subscriptions.retrieve(subId)
-          const hint =
-            session.client_reference_id ??
-            (session.metadata as Record<string, string> | null)?.user_id ??
-            null
-          const result = await syncSubscription(deps, sub, hint)
-          if (!result.ok) return fail(500, result.error ?? 'sync_failed')
-        }
-        break
-      }
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const sub = event.data.object
-        const result = await syncSubscription(deps, sub, null)
-        if (!result.ok) return fail(500, result.error ?? 'sync_failed')
-        break
-      }
-      default:
-        // 관심 없는 이벤트는 200으로 무시(Stripe 재전송 방지).
-        break
+    const event = JSON.parse(rawBody.toString('utf8')) as {
+      event_type?: string
+      type?: string
+      data?: JsonObject
+    }
+    const eventType = event.event_type ?? event.type ?? ''
+    if (eventType.startsWith('subscription.') && event.data) {
+      const hint = stringValue(asRecord(event.data.custom_data)?.user_id)
+      const result = await syncSubscription(deps, event.data, hint)
+      if (!result.ok) return fail(500, result.error ?? 'sync_failed')
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'webhook_handler_error'
@@ -221,5 +210,4 @@ export async function handleWebhook(
   return { status: 200, body: { ok: true, received: true } }
 }
 
-// customerIdOf는 어댑터/테스트에서 재사용될 수 있어 재노출한다.
 export { customerIdOf }

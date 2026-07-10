@@ -9,7 +9,13 @@ import {
 } from 'react'
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from '../db/supabaseClient'
-import { ensureProfile, saveNickname, type AuthUser } from '../db/profile'
+import {
+  ensureProfile,
+  fetchIsAdmin,
+  saveAutoSaveOrderHistory,
+  saveNickname,
+  type AuthUser,
+} from '../db/profile'
 import { consumeForcedConsent } from '../db/devFirstLogin'
 import {
   fetchSubscription,
@@ -35,12 +41,16 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<string | null>
   signOut: () => Promise<void>
   updateNickname: (nickname: string) => Promise<string | null>
+  /** 주문 적용 시 order_history 자동 저장 여부를 갱신 */
+  setAutoSaveOrderHistory: (enabled: boolean) => Promise<string | null>
   /** 현재 계정에 연결된 로그인 수단(provider) 목록. 예: ['email', 'google'] */
   linkedProviders: string[]
   /** 로그인 상태에서 Google identity를 현재 계정에 연동. 성공 시 Google로 리다이렉트됨. */
   linkGoogle: () => Promise<string | null>
   /** 현재 계정에서 Google 연동을 해제. 마지막 로그인 수단이면 'last_identity' 반환. */
   unlinkGoogle: () => Promise<string | null>
+  /** OAuth-only 등 이메일 identity가 없는 로그인 계정에 비밀번호를 설정해 이메일 로그인을 추가. */
+  setPasswordForCurrentUser: (password: string) => Promise<string | null>
   /** 현재 구독 상태. 미구독/비로그인이면 null. */
   subscription: SubscriptionRecord | null
   /** 유료(Pro) 여부. active/trialing 구독이면 true. */
@@ -64,8 +74,13 @@ function fallbackNickname(supaUser: SupabaseUser): string {
 
 async function buildUser(supaUser: SupabaseUser): Promise<AuthUser> {
   const email = supaUser.email ?? ''
-  const nickname = await ensureProfile(supaUser.id, email, fallbackNickname(supaUser))
-  return { id: supaUser.id, email, nickname }
+  const { nickname, autoSaveOrderHistory } = await ensureProfile(
+    supaUser.id,
+    email,
+    fallbackNickname(supaUser),
+  )
+  const isAdmin = await fetchIsAdmin(supaUser.id)
+  return { id: supaUser.id, email, nickname, autoSaveOrderHistory, isAdmin }
 }
 
 /** Supabase 에러 메시지를 UI 코드로 매핑. */
@@ -83,12 +98,23 @@ function mapAuthError(message: string | undefined): string {
     return 'identity_already_linked'
   if (msg.includes('at least 1 identity') || msg.includes('single identity'))
     return 'last_identity'
+  if (msg.includes('password') && (msg.includes('weak') || msg.includes('common')))
+    return 'password_too_common'
+  if (msg.includes('password') && msg.includes('at least')) return 'password_too_short'
   return message || 'unknown_error'
 }
 
-/** 세션 user의 identities 배열에서 provider 이름만 추출. */
+/** 세션 user의 identities·app_metadata에서 연결된 provider 목록을 추출. */
 function providersOf(supaUser: SupabaseUser): string[] {
-  return (supaUser.identities ?? []).map((identity) => identity.provider)
+  const fromIdentities = (supaUser.identities ?? []).map((identity) => identity.provider)
+  const appProviders = supaUser.app_metadata?.providers
+  if (!Array.isArray(appProviders)) return fromIdentities
+
+  const merged = new Set(fromIdentities)
+  for (const provider of appProviders) {
+    if (typeof provider === 'string') merged.add(provider)
+  }
+  return [...merged]
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -238,6 +264,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null
   }, [])
 
+  const setPasswordForCurrentUser = useCallback(
+    async (password: string) => {
+      if (!supabase || !user) return 'not_configured'
+      if (!user.email.trim()) return 'email_required'
+
+      const { error } = await supabase.auth.updateUser({ password })
+      if (error) return mapAuthError(error.message)
+
+      const { error: refreshError } = await supabase.auth.refreshSession()
+      if (refreshError) return mapAuthError(refreshError.message)
+
+      const { data: userData, error: getUserError } = await supabase.auth.getUser()
+      if (getUserError) return mapAuthError(getUserError.message)
+      if (userData.user && latestUserId.current === userData.user.id) {
+        setLinkedProviders(providersOf(userData.user))
+      }
+      return null
+    },
+    [user],
+  )
+
   const updateNickname = useCallback(
     async (nickname: string) => {
       if (!supabase || !user) return 'not_configured'
@@ -245,6 +292,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await saveNickname(user.id, trimmed, user.email)
       await supabase.auth.updateUser({ data: { nickname: trimmed } })
       setUser((prev) => (prev ? { ...prev, nickname: trimmed } : prev))
+      return null
+    },
+    [user],
+  )
+
+  const setAutoSaveOrderHistory = useCallback(
+    async (enabled: boolean) => {
+      if (!supabase || !user) return 'not_configured'
+      const error = await saveAutoSaveOrderHistory(user.id, enabled)
+      if (error) return error === 'supabase_not_configured' ? 'not_configured' : 'profile_update_failed'
+      setUser((prev) => (prev ? { ...prev, autoSaveOrderHistory: enabled } : prev))
       return null
     },
     [user],
@@ -261,9 +319,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signOut,
         updateNickname,
+        setAutoSaveOrderHistory,
         linkedProviders,
         linkGoogle,
         unlinkGoogle,
+        setPasswordForCurrentUser,
         subscription,
         isPro: isActiveSubscription(subscription?.status),
         refreshSubscription,

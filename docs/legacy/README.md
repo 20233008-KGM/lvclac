@@ -1,6 +1,22 @@
-# 레거시 문서 목차
+# 레거시 문서
 
-이 폴더의 문서는 참고용이다. 최신 제품 방향은 `../product-core-design.md`, 런칭 일정은 `../launch-schedule.md`, 부서별 작업 기준은 `../personas/`를 우선한다. 레거시 문서는 현재 코드와 일부 다를 수 있다.
+> **이 폴더(`docs/legacy/`) 전체는 과거에 만든 정책 문서, 기능 초안, 자동화 개발 시스템(페르소나·AutoCorp 등) 보존본이다.**
+>
+> **현재 규칙으로 따르지 말고, 맥락 파악용으로만 참고한다.**
+>
+> 현재 기준 문서:
+> - [`docs/project-memory.md`](../project-memory.md) — 장기 메모리
+> - [`docs/product-core-design.md`](../product-core-design.md) — 제품 원칙
+> - [`docs/launch-schedule.md`](../launch-schedule.md) — 런칭 일정
+> - [`docs/bugs.md`](../bugs.md) — 알려진 버그
+
+## 하위 폴더
+
+| 경로 | 내용 |
+|------|------|
+| [automation-retired/](./automation-retired/) | 퇴역 페르소나 자동화, AutoCorp/Codex 워크플로, 업무흐름 다이어그램 |
+| [premium/](./premium/) | 과거 Pro·결제 기능 초안 |
+| (루트 MD 파일들) | 계산기 필드, 로그인 연동, AdSense 등 과거 기능 문서 |
 
 ## 계산·검증
 
@@ -15,8 +31,6 @@
 | 문서 | 내용 |
 |------|------|
 | [ko-tooltip-guide.md](./ko-tooltip-guide.md) | 한국어 툴팁 작성 원칙·마크업·안티패턴 |
-| [../personas/README.md](../personas/README.md) | 회사 부서 페르소나 호출어·역할·공통 기준 |
-| [../personas/user-interface-guide.md](../personas/user-interface-guide.md) | 사용자가 페르소나를 호출하고 업무를 맡기는 방법 |
 
 ## 운영·연동
 

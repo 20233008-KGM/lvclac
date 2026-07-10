@@ -1,0 +1,16 @@
+  it('disables unlink and warns when Google is the only login method', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView
+        {...baseProps}
+        user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
+        linkedProviders={['google']}
+      />,
+    )
+
+    expect(html).toContain(en.myPage.unlinkGoogleAction)
+    expect(html).toContain(en.myPage.lastIdentityNote)
+    expect(html).toContain('disabled=""')
+    // Google-only 사용자는 이메일 수단이 미연동 → '기본' 칩 없음
+    expect(html).toContain('my-page-linked-badge is-unlinked')
+    expect(html).not.toContain(`my-page-linked-chip">${en.myPage.primaryTag}`)
+  })

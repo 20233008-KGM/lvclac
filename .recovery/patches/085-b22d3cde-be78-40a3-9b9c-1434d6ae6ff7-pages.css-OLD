@@ -1,0 +1,3 @@
+.my-page-panel-section > p {
+  margin-top: var(--space-xs);
+}

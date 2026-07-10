@@ -1,0 +1,7 @@
+    onLinkGoogle: vi.fn(),
+    onUnlinkGoogle: vi.fn(),
+    onPasswordFormToggle: vi.fn(),
+    onPasswordDraftChange: vi.fn(),
+    onPasswordConfirmationDraftChange: vi.fn(),
+    onSetPasswordSubmit: vi.fn(),
+    onLoginClick: vi.fn(),

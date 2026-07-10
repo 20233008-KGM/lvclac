@@ -1,0 +1,4 @@
+    expect(adminHtml).toContain(en.myPage.adminFeedbackLink)
+    expect(adminHtml).toContain('href="/admin/feedback"')
+    expect(normalHtml).not.toContain(en.myPage.adminFeedbackLink)
+  })

@@ -1,0 +1,2 @@
+    expect(html).not.toContain(en.myPage.profileTitle)
+    expect(html).not.toContain('my-page-console')

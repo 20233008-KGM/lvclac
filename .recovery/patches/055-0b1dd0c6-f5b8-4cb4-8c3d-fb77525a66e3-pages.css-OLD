@@ -1,0 +1,4 @@
+  .my-page-hero,
+  .my-page-support-grid {
+    grid-template-columns: 1fr;
+  }

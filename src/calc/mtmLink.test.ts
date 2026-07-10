@@ -213,12 +213,23 @@ describe('applyInputPatch', () => {
     expect(rolled.accountEval).toBe(9_999_990)
     expect(rolled.currentPrice).toBe(355)
   })
+
+  it('연속 applyMarkPrice 호출 — 첫 호출 스냅샷만 유지', () => {
+    const t1 = applyInputPatch(base, { applyMarkPrice: 351 })
+    const t2 = applyInputPatch(t1, { applyMarkPrice: 352, preserveMarkPriceUndoSnapshot: true })
+    const t3 = applyInputPatch(t2, { applyMarkPrice: 355, preserveMarkPriceUndoSnapshot: true })
+    expect(t3.markPriceUndoSnapshot?.currentPrice).toBe(350)
+
+    const undone = applyInputPatch(t3, { undoMarkPrice: true })
+    expect(undone.currentPrice).toBe(350)
+  })
 })
 
 const orderBase: CalculatorInputs = {
   ...sampleInputs,
   tickSize: 5,
   contractAmount: 320_500,
+  contractAmountRole: 'entryPrice',
   currentPrice: 320_500,
   contracts: 58,
   contractMultiplier: 10,
@@ -227,6 +238,38 @@ const orderBase: CalculatorInputs = {
   accountEval: 73_511_744,
   orderContracts: 1,
   orderPrice: 320_000,
+}
+
+const repricingOrderBase: CalculatorInputs = {
+  mode: 'order',
+  positionSide: 'long',
+  accountEval: 1_000_000_000,
+  maintenanceMarginRate: 0.05,
+  entrustedMarginRate: 0.1,
+  contracts: 58,
+  contractAmount: 309_931,
+  contractAmountRole: 'entryPrice',
+  contractMultiplier: 1,
+  currentPrice: 295_500,
+  orderContracts: 5,
+  orderPrice: 295_500,
+}
+
+const repricedContractAmount = (309_931 * 58 + 295_500 * 5) / 63
+
+const flatOrderBase: CalculatorInputs = {
+  mode: 'order',
+  positionSide: 'long',
+  accountEval: 1_000_000,
+  maintenanceMarginRate: 0.05,
+  entrustedMarginRate: 0.1,
+  contracts: 2,
+  contractAmount: 100,
+  contractAmountRole: 'entryPrice',
+  contractMultiplier: 1,
+  currentPrice: 105,
+  orderContracts: -2,
+  orderPrice: 110,
 }
 
 describe('주문 시나리오', () => {
@@ -240,9 +283,65 @@ describe('주문 시나리오', () => {
     expect(next.contracts).toBe(orderBase.contracts)
     expect(next.accountEval).toBe(orderBase.accountEval)
     expect(resolveEvaluationInputs(next).contracts).toBe(59)
+    expect(resolveEvaluationInputs(next).contractAmount).toBeCloseTo(320_491.525423729, 6)
     const after = calculateEvaluate(next)
     expect(after.liquidationPrice).not.toBeNull()
     expect(after.margins?.maintenanceExcess).not.toBe(before.margins?.maintenanceExcess)
+  })
+
+  it('keeps raw contract amount in preview and applies repriced amount on confirmation', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(repricingOrderBase))
+    const preview = applyInputPatch(repricingOrderBase, { commitOrderScenario: baseline })
+    const previewResult = calculateOrder(preview)
+
+    expect(preview.contractAmount).toBe(309_931)
+    expect(previewResult.beforeContractAmount).toBeCloseTo(repricedContractAmount, 8)
+    expect(previewResult.afterContractAmount).toBeCloseTo(repricedContractAmount, 8)
+    expect(resolveEvaluationInputs(preview).contractAmount).toBeCloseTo(
+      repricedContractAmount,
+      8,
+    )
+
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+    expect(isOrderScenarioModeActive(applied)).toBe(false)
+    expect(applied.contracts).toBe(63)
+    expect(applied.contractAmount).toBeCloseTo(repricedContractAmount, 8)
+  })
+
+  it('preserves contract amount on confirmation without entry price role', () => {
+    for (const contractAmountRole of [undefined, 'fixedSpec' as const]) {
+      const inputs = { ...repricingOrderBase, contractAmountRole }
+      const baseline = captureOrderScenarioBaseline(calculateOrder(inputs))
+      const preview = applyInputPatch(inputs, { commitOrderScenario: baseline })
+      const applied = applyInputPatch(preview, { applyOrderScenario: true })
+
+      expect(applied.contracts).toBe(63)
+      expect(applied.contractAmount).toBe(309_931)
+    }
+  })
+
+  it('전량 청산 주문은 미리보기와 확정 상태의 약정가격을 0으로 초기화하고 undo로 복원', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(flatOrderBase))
+    const preview = applyInputPatch(flatOrderBase, { commitOrderScenario: baseline })
+    const previewInputs = resolveEvaluationInputs(preview)
+
+    expect(preview.contractAmount).toBe(flatOrderBase.contractAmount)
+    expect(previewInputs.contracts).toBe(0)
+    expect(previewInputs.contractAmount).toBe(0)
+
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+    expect(isOrderScenarioModeActive(applied)).toBe(false)
+    expect(applied.contracts).toBe(0)
+    expect(applied.contractAmount).toBe(0)
+    const appliedEvaluate = calculateEvaluate(applied)
+    expect(appliedEvaluate.margins?.perContractEntrusted).toBeCloseTo(10.5, 5)
+    expect(appliedEvaluate.margins?.perContractMaintenance).toBeCloseTo(5.25, 5)
+    expect(appliedEvaluate.maxBuyable).toBe(95_239)
+
+    const undone = applyInputPatch(applied, { undoOrderApply: true })
+    expect(isOrderScenarioModeActive(undone)).toBe(true)
+    expect(undone.contracts).toBe(flatOrderBase.contracts)
+    expect(undone.contractAmount).toBe(flatOrderBase.contractAmount)
   })
 
   it('진입 시 baseline = 진입 직전 after 지표', () => {
@@ -290,6 +389,7 @@ describe('주문 시나리오', () => {
 
     expect(isOrderScenarioModeActive(applied)).toBe(false)
     expect(applied.contracts).toBe(59)
+    expect(applied.contractAmount).toBeCloseTo(320_491.525423729, 6)
     expect(applied.accountEval).toBeGreaterThan(orderBase.accountEval!)
     expect(applied.orderContracts).toBeUndefined()
     expect(applied.orderPrice).toBeUndefined()
@@ -303,6 +403,7 @@ describe('주문 시나리오', () => {
 
     expect(isOrderScenarioModeActive(undone)).toBe(true)
     expect(undone.contracts).toBe(orderBase.contracts)
+    expect(undone.contractAmount).toBe(orderBase.contractAmount)
     expect(undone.orderContracts).toBe(1)
     expect(undone.orderApplyUndoSnapshot).toBeUndefined()
   })

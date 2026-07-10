@@ -1,0 +1,6 @@
+        identityBusy={identityBusy}
+        identityMessage={identityMessage}
+        storageLoading={storageLoading}
+        storageError={storageError}
+        hasCloudInput={hasCloudInput}
+        supportHref={`mailto:${CONTACT_EMAIL}`}

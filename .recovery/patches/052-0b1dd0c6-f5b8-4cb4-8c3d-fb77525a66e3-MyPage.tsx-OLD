@@ -1,0 +1,32 @@
+              <section
+                id="my-page-support"
+                className="my-page-panel"
+                aria-labelledby="my-page-support-title"
+              >
+                <div className="my-page-support-grid">
+                  <div>
+                    <h2 id="my-page-support-title">{copy.supportTitle}</h2>
+                    <p>{copy.supportBody}</p>
+                    <div className="my-page-actions">
+                      <a className="btn btn-ghost" href={suggestionsHref}>
+                        {copy.suggestionsLink}
+                      </a>
+                      {adminFeedbackHref && (
+                        <a className="btn btn-ghost" href={adminFeedbackHref}>
+                          {copy.adminFeedbackLink}
+                        </a>
+                      )}
+                      <a className="btn btn-ghost" href={supportHref}>
+                        {copy.emailLink}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="my-page-delete-note">
+                    <h3>{copy.deleteAccountTitle}</h3>
+                    <p>{copy.deleteAccountBody}</p>
+                    <a className="link-btn" href={supportHref}>
+                      {copy.contactSupport}
+                    </a>
+                  </div>
+                </div>
+              </section>

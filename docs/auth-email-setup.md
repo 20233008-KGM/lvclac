@@ -8,10 +8,45 @@
 관련 파일:
 
 - HTML 템플릿: [`emails/supabase/`](../emails/supabase/)
-- 제목 문구: [`emails/supabase/subjects.md`](../emails/supabase/subjects.md)
+- 문구 원본(한/영): [`emails/build.mjs`](../emails/build.mjs)
+- 제목 문구(생성물): [`emails/supabase/subjects.json`](../emails/supabase/subjects.json)
 - 미리보기: [`emails/preview/confirm-signup-preview.html`](../emails/preview/confirm-signup-preview.html) (브라우저에서 열기)
 
 예상 소요: **2~4시간** (도메인 DNS 전파 포함)
+
+## 현재 상태 (2026-07-10 완료)
+
+1~5단계가 모두 끝났습니다. 인증 메일은 `"Futures Calculator" <auth@farfield.software>` 로 나가고, **가입자 언어에 따라 한국어/영어 본문이 갈립니다.**
+
+- 도메인 `farfield.software` — Porkbun 등록(2027-07-10 만료), 네임서버는 Porkbun 기본
+- Resend 도메인 상태 `Verified` (DKIM / SPF / 반송 MX 3개 레코드 반영)
+- Supabase Custom SMTP — Resend×Supabase 원클릭 연동으로 활성
+- 템플릿 4종 업로드 완료, 실제 발송 테스트로 한/영 분기 확인
+
+남은 것: `Site URL` 이 비어 있고 Redirect URL 이 `localhost` 뿐입니다. 운영 도메인 배포 시 3단계를 적용하세요.
+
+### 언어 분기 구조
+
+Supabase Auth 는 Go 템플릿으로 본문을 렌더링합니다. 가입 시 `user_metadata.language` 를 저장해 두고 템플릿에서 갈라 씁니다.
+
+- 저장: [`src/context/AuthContext.tsx`](../src/context/AuthContext.tsx) 의 `signUp` → `options.data.language`
+- 분기: `{{ if eq .Data.language "en" }}…{{ else }}…{{ end }}`
+- 값이 없는 기존 사용자는 `else` 로 떨어져 한국어를 받습니다.
+
+**발신자 이름은 SMTP 설정값이라 언어별로 갈라지지 않습니다.** 영어 `Futures Calculator` 하나로 고정입니다.
+
+### 템플릿 수정 방법
+
+`emails/supabase/*.html` 을 직접 고치지 마세요. 생성물입니다.
+
+```sh
+node emails/build.mjs              # 문구표 → HTML 4종 + subjects.json
+node scripts/push-email-templates.mjs   # 관리 API로 업로드 (SUPABASE_ACCESS_TOKEN 필요)
+```
+
+문구는 [`emails/build.mjs`](../emails/build.mjs) 상단의 `templates` 객체에서 한/영 쌍으로 관리합니다.
+
+업로드 직후 `GET /config/auth` 는 옛 값을 돌려줄 때가 있습니다. 검증은 PATCH 응답 본문으로 합니다. 되돌리려면 대시보드에서 각 템플릿을 비우면 Supabase 기본값으로 돌아갑니다.
 
 ---
 
@@ -19,7 +54,7 @@
 
 | 항목 | Supabase 기본 | Resend + 커스텀 템플릿 |
 | --- | --- | --- |
-| 발신 주소 | `mail.app.supabase.io` | `noreply@farfield.software` |
+| 발신 주소 | `mail.app.supabase.io` | `auth@farfield.software` |
 | 디자인 | 기본 HTML | 앱과 맞는 SaaS 스타일 |
 | 도달률 | 개발/테스트용 수준 | SPF/DKIM/DMARC로 프로덕션 적합 |
 | 한도 | 매우 낮음 | SMTP 연동 후 Rate Limit 조정 가능 |
@@ -37,7 +72,7 @@
 
 | 용도 | 주소 |
 | --- | --- |
-| Auth 트랜잭션 | `noreply@farfield.software` |
+| Auth 트랜잭션 | `auth@farfield.software` |
 | 고객 문의(기존) | `contact@farfield.software` |
 
 Auth 메일과 마케팅 메일은 서브도메인을 나누면 도달률 관리에 유리합니다. 초기에는 루트 도메인 하나로 시작해도 됩니다.
@@ -63,7 +98,7 @@ Supabase → **Authentication** → **Email** → **SMTP Settings**
 | Port | `465` |
 | Username | `resend` |
 | Password | Resend API 키 (`re_...`) |
-| Sender email | `noreply@farfield.software` |
+| Sender email | `auth@farfield.software` |
 | Sender name | `선물 계산기` |
 
 저장 후 **Authentication → Rate Limits** 에서 이메일 시간당 한도를 늘립니다. 기본 30/h은 런칭 이벤트에 부족할 수 있습니다. (예: 100~200/h)
@@ -91,7 +126,7 @@ Supabase → **Authentication** → **URL Configuration**
 
 Supabase → **Authentication** → **Email Templates**
 
-각 행의 **Subject** 는 [`emails/supabase/subjects.md`](../emails/supabase/subjects.md) 를 복사하고, **Body (HTML)** 에는 아래 파일 **전체**를 붙여넣습니다.
+보통은 `node scripts/push-email-templates.mjs` 로 한 번에 올립니다. 손으로 넣어야 한다면, 각 행의 **Subject** 는 [`emails/supabase/subjects.json`](../emails/supabase/subjects.json) 의 값을, **Body (HTML)** 에는 아래 파일 **전체**를 붙여넣습니다.
 
 | Supabase 메뉴 | Body 파일 |
 | --- | --- |

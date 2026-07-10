@@ -17,6 +17,7 @@ import {
   type AuthUser,
 } from '../db/profile'
 import { consumeForcedConsent } from '../db/devFirstLogin'
+import { detectInitialLocale } from '../i18n/detectLocale'
 import {
   fetchSubscription,
   isActiveSubscription,
@@ -187,7 +188,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: email.trim(),
         password,
         options: {
-          data: { nickname: nickname.trim() },
+          // language는 인증 메일 템플릿의 언어 분기({{ .Data.language }})에 쓰인다.
+          data: { nickname: nickname.trim(), language: detectInitialLocale() },
           emailRedirectTo: window.location.origin,
         },
       })

@@ -13,6 +13,7 @@ import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
 import { AuthButton } from './components/auth/AuthButton'
+import { useAuth } from './context/AuthContext'
 import { HowToUseButton } from './components/HowToUseButton'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
@@ -71,6 +72,11 @@ const PricingReviewPage = lazy(() =>
 )
 const PublicLegalPage = lazy(() =>
   import('./components/PaddleReviewPages').then((mod) => ({ default: mod.PublicLegalPage })),
+)
+const ResetPasswordScreen = lazy(() =>
+  import('./components/auth/ResetPasswordScreen').then((mod) => ({
+    default: mod.ResetPasswordScreen,
+  })),
 )
 
 type CalculatorHistoryCopy = Messages['calculatorHistory']
@@ -511,9 +517,16 @@ function AppRouter() {
 }
 
 function App() {
+  const { recoveryMode } = useAuth()
   return (
     <DisclaimerProvider>
-      <AppRouter />
+      {recoveryMode ? (
+        <Suspense fallback={null}>
+          <ResetPasswordScreen />
+        </Suspense>
+      ) : (
+        <AppRouter />
+      )}
     </DisclaimerProvider>
   )
 }

@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { LegalLinks } from '../ServiceDisclaimer'
 import { authErrorMessage } from './authMessages'
+import { PasswordStrengthMeter } from './PasswordStrengthMeter'
 
 export function RegisterForm() {
   const { t } = useLanguage()
@@ -86,6 +87,7 @@ export function RegisterForm() {
           autoComplete="new-password"
           required
         />
+        <PasswordStrengthMeter password={password} />
         {pwErr && <span className="hint hint-warn">{pwErr}</span>}
       </label>
       <label className="field">

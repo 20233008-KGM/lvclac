@@ -52,6 +52,12 @@ interface AuthContextValue {
   unlinkGoogle: () => Promise<string | null>
   /** OAuth-only 등 이메일 identity가 없는 로그인 계정에 비밀번호를 설정해 이메일 로그인을 추가. */
   setPasswordForCurrentUser: (password: string) => Promise<string | null>
+  /** 비밀번호 재설정 링크를 이메일로 발송. 열거 방지를 위해 결과와 무관하게 동일 안내를 권장. */
+  sendPasswordReset: (email: string) => Promise<string | null>
+  /** 재설정 링크로 진입해 PASSWORD_RECOVERY 세션이 잡힌 상태인지. true면 새 비번 설정 화면을 표시. */
+  recoveryMode: boolean
+  /** 재설정 완료/취소 시 복구 모드를 해제. */
+  clearRecoveryMode: () => void
   /** 현재 구독 상태. 미구독/비로그인이면 null. */
   subscription: SubscriptionRecord | null
   /** 유료(Pro) 여부. active/trialing 구독이면 true. */
@@ -123,6 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [linkedProviders, setLinkedProviders] = useState<string[]>([])
   const [subscription, setSubscription] = useState<SubscriptionRecord | null>(null)
   const [loading, setLoading] = useState(isSupabaseConfigured)
+  // 재설정 링크로 진입하면 Supabase가 PASSWORD_RECOVERY 이벤트를 발생시킨다.
+  const [recoveryMode, setRecoveryMode] = useState(false)
   // 동시에 도착하는 auth 이벤트가 오래된 사용자로 덮어쓰지 않도록 최신 세션만 반영
   const latestUserId = useRef<string | null>(null)
 
@@ -162,7 +170,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) setLoading(false)
       })
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // 재설정 링크로 들어오면 복구 세션이 잡히며 이 이벤트가 발생한다.
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
       void syncFromSession(session)
     })
 
@@ -228,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setLinkedProviders([])
     setSubscription(null)
+    setRecoveryMode(false)
   }, [])
 
   const refreshSubscription = useCallback(async () => {
@@ -287,6 +298,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user],
   )
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    if (!supabase) return 'not_configured'
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    return error ? mapAuthError(error.message) : null
+  }, [])
+
+  const clearRecoveryMode = useCallback(() => setRecoveryMode(false), [])
+
   const updateNickname = useCallback(
     async (nickname: string) => {
       if (!supabase || !user) return 'not_configured'
@@ -326,6 +347,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         linkGoogle,
         unlinkGoogle,
         setPasswordForCurrentUser,
+        sendPasswordReset,
+        recoveryMode,
+        clearRecoveryMode,
         subscription,
         isPro: isActiveSubscription(subscription?.status),
         refreshSubscription,

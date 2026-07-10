@@ -25,6 +25,7 @@ export function authErrorMessage(
     password_too_short: t.auth.passwordTooShort,
     password_too_long: t.auth.passwordTooLong,
     password_too_common: t.auth.passwordTooCommon,
+    password_missing_char_types: t.auth.passwordMissingCharTypes,
     password_confirmation_required: t.auth.passwordConfirmationRequired,
     password_mismatch: t.auth.passwordMismatch,
     nickname_too_short: t.auth.nicknameTooShort,

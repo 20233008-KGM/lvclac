@@ -1058,12 +1058,13 @@ html[data-zone='about'] body {
 .my-page-avatar {
   flex: none;
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   place-items: center;
   border-radius: 50%;
   background: var(--color-primary-muted);
   color: var(--color-text);
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
@@ -1159,16 +1160,16 @@ html[data-zone='about'] body {
 /* Single-column stack of section cards. */
 .my-page-console {
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-lg);
   min-width: 0;
 }
 
 .my-page-panel {
-  padding: var(--space-md);
-  border: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius);
   background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
   scroll-margin-top: var(--space-lg);
 }
 
@@ -1195,21 +1196,37 @@ html[data-zone='about'] body {
 
 .my-page-account-hub {
   display: grid;
-  gap: var(--space-sm);
+  gap: 0;
 }
 
+/* 신원 헤더: 아래 설정 목록과 구분선으로 분리해 "누구"와 "설정"의 위계를 만든다. */
 .my-page-account-hub__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
+  padding-bottom: var(--space-md);
+}
+
+/* 로그아웃: 파괴적이지 않은 보조 동작이라 조용한 톤으로 낮춘다. */
+.my-page-signout.btn {
+  width: auto;
+  min-height: 34px;
+  padding: 0 var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.my-page-signout.btn:hover,
+.my-page-signout.btn:focus-visible {
+  color: var(--color-text);
 }
 
 .my-page-account-hub__identity {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   min-width: 0;
 }
 
@@ -1229,17 +1246,19 @@ html[data-zone='about'] body {
 
 .my-page-account-hub__grid {
   display: grid;
-  grid-template-columns: minmax(14rem, 0.9fr) minmax(16rem, 1.35fr);
-  gap: var(--space-sm);
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
 
+/*
+ * 설정 행: 개별 카드(테두리+배경) 대신, 공통 왼쪽 정렬선을 공유하는
+ * 구분선 리스트로 만든다. "각자 flex 박스에 대충 넣은" 인상을 없애는 핵심.
+ */
 .my-page-account-hub__block {
   min-width: 0;
-  padding: var(--space-sm);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--color-border-subtle);
+  background: transparent;
 }
 
 .my-page-account-hub__block h3 {
@@ -1255,18 +1274,23 @@ html[data-zone='about'] body {
 
 .my-page-account-hub .my-page-nickname-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* legacy .my-page-nickname-form의 flex-end(우측 정렬)를 덮어써 왼쪽 정렬로 되돌린다. */
+  justify-items: start;
+  justify-content: stretch;
   align-content: start;
-  gap: var(--space-xs);
-  width: auto;
+  gap: var(--space-sm);
+  width: 100%;
 }
 
 .my-page-account-hub .my-page-nickname-form .my-page-inline-control {
-  width: min(100%, 19rem);
+  width: 100%;
+  max-width: 24rem;
 }
 
 .my-page-account-hub .my-page-nickname-form input {
-  flex: 0 1 13.5rem;
-  max-width: 13.5rem;
+  flex: 1 1 auto;
+  max-width: none;
 }
 
 .my-page-account-hub__billing .my-page-billing-status-card {
@@ -1295,9 +1319,16 @@ html[data-zone='about'] body {
 }
 
 .my-page-account-hub__logins .my-page-linked-row {
-  grid-template-columns: 20px minmax(0, 1fr) 5.5rem 7rem;
-  min-height: 42px;
-  padding: 8px 10px;
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+  gap: var(--space-sm) var(--space-md);
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface-2);
+}
+
+/* 상태 텍스트를 액션 버튼 바로 옆(오른쪽)에 붙여 정보와 동작을 한 묶음으로 만든다. */
+.my-page-account-hub__logins .my-page-linked-status {
+  justify-self: end;
 }
 
 .my-page-panel-head {
@@ -1895,9 +1926,8 @@ html[data-zone='about'] body {
   gap: var(--space-sm) var(--space-md);
   min-height: 48px;
   padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
+  background: var(--color-surface);
 }
 
 .my-page-linked-icon {
@@ -2190,7 +2220,7 @@ html[data-zone='about'] body {
 }
 
 .my-page-panel > .my-page-preference-block:first-of-type {
-  margin-top: var(--space-sm);
+  margin-top: var(--space-md);
   padding-top: 0;
   border-top: 0;
 }
@@ -2217,10 +2247,9 @@ html[data-zone='about'] body {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-xs) var(--space-sm);
   align-items: center;
-  padding: var(--space-sm);
-  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-md);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
+  background: var(--color-surface-2);
 }
 
 .my-page-number-set-usage-card span {
@@ -2242,7 +2271,7 @@ html[data-zone='about'] body {
 
 .my-page-number-set-list {
   display: grid;
-  gap: 7px;
+  gap: var(--space-sm);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -2253,15 +2282,14 @@ html[data-zone='about'] body {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: var(--space-sm);
   align-items: center;
-  padding: 8px;
-  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
-  background: var(--color-bg);
+  background: var(--color-surface-2);
 }
 
 .my-page-number-set-main {
   display: grid;
-  gap: 3px;
+  gap: var(--space-xs);
   min-width: 0;
 }
 

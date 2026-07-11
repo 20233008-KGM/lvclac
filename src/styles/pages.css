@@ -1282,6 +1282,18 @@ html[data-zone='about'] body {
   padding-left: var(--space-lg);
 }
 
+/*
+ * 2단의 오른쪽 열은 좁아서, 전체폭용 고정폭 행(20px 12rem 5.5rem 7rem)이 열을 넘친다.
+ * 2단이 실제로 켜지는 폭(>700px)에서만 이름 칸을 유연(1fr)하게 줄여 열 폭에 맞춘다.
+ * (좁은 화면에선 2단이 세로로 접히므로 전체폭용 고정폭 규칙을 그대로 쓴다.)
+ */
+@media (min-width: 701px) {
+  .my-page-account-hub--split .my-page-account-hub__logins .my-page-linked-row {
+    grid-template-columns: 20px minmax(0, 1fr) auto auto;
+    justify-content: normal;
+  }
+}
+
 /* 좁은 화면에서는 2단을 다시 세로 스택으로 접는다(가로 구분선 복원). */
 @media (max-width: 700px) {
   .my-page-account-hub--split {

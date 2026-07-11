@@ -1551,9 +1551,35 @@ html[data-zone='about'] body {
 
 .records-archive-panel {
   --records-action-column: clamp(4.75rem, 7vw, 6.75rem);
+  --records-select-column: 1.5rem;
   display: grid;
   gap: var(--space-md);
   overflow: hidden;
+}
+
+.records-selection-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.records-selection-bar-count {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.records-selection-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .records-timeline-toolbar,
@@ -1599,10 +1625,14 @@ html[data-zone='about'] body {
 
 .records-timeline-lane-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--records-action-column);
+  grid-template-columns: var(--records-select-column) minmax(0, 1fr) var(--records-action-column);
   align-items: end;
   gap: 6px;
   min-width: 0;
+}
+
+.records-timeline-head-select {
+  min-height: 1px;
 }
 
 .records-timeline-head-fields {
@@ -1680,7 +1710,7 @@ html[data-zone='about'] body {
 
 .records-timeline-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--records-action-column);
+  grid-template-columns: var(--records-select-column) minmax(0, 1fr) var(--records-action-column);
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
@@ -1688,6 +1718,42 @@ html[data-zone='about'] body {
   border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
   color: var(--color-text);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.records-timeline-card:hover {
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--color-bg-elevated));
+}
+
+.records-timeline-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.records-timeline-card--selected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-elevated));
+}
+
+.records-timeline-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.records-timeline-select input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.records-timeline-select input:disabled {
+  cursor: default;
 }
 
 .records-timeline-card--snapshot {
@@ -2919,8 +2985,17 @@ html[data-zone='about'] body {
     margin-left: 0;
   }
 
-  .records-timeline-card,
   .records-timeline-fields {
     grid-template-columns: 1fr;
+  }
+
+  .records-timeline-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .records-timeline-card-actions {
+    grid-column: 2;
+    justify-content: flex-start;
   }
 }

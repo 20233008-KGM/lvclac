@@ -482,6 +482,40 @@ export function createAccountRecordsRepository(
       return { data: true, error: null }
     },
 
+    async deleteOrderHistoryMany(
+      userId: string,
+      ids: string[],
+    ): Promise<AccountRecordResult<true>> {
+      if (!client) return unavailable()
+      if (ids.length === 0) return { data: true, error: null }
+
+      const { error } = await client
+        .from('order_history')
+        .delete()
+        .in('id', ids)
+        .eq('user_id', userId)
+
+      if (error) return { data: null, error: mapError(error) }
+      return { data: true, error: null }
+    },
+
+    async deleteAccountSnapshotsMany(
+      userId: string,
+      ids: string[],
+    ): Promise<AccountRecordResult<true>> {
+      if (!client) return unavailable()
+      if (ids.length === 0) return { data: true, error: null }
+
+      const { error } = await client
+        .from('account_snapshots')
+        .delete()
+        .in('id', ids)
+        .eq('user_id', userId)
+
+      if (error) return { data: null, error: mapError(error) }
+      return { data: true, error: null }
+    },
+
     async deleteAllOrderHistory(userId: string): Promise<AccountRecordResult<true>> {
       if (!client) return unavailable()
       const { error } = await client.from('order_history').delete().eq('user_id', userId)

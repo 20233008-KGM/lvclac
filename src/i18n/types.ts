@@ -218,6 +218,12 @@ export interface Messages {
     archiveOrderContracts: string
     archiveOrderPrice: string
     detail: string
+    selectRecord: string
+    selectedCount: string
+    selectAllShown: string
+    deleteSelected: string
+    clearSelection: string
+    bulkDeleteConfirmSelectedWithCount: string
   }
   myPage: {
     title: string

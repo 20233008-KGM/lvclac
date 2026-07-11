@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { MY_PAGE_PATH } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -33,6 +34,14 @@ type DetailSelection =
   | { type: 'order'; record: OrderHistoryRecord }
   | { type: 'snapshot'; record: AccountSnapshotRecord }
   | null
+
+type ActivationEvent = ReactMouseEvent<HTMLElement> | ReactKeyboardEvent<HTMLElement>
+
+const EMPTY_SELECTION: Set<string> = new Set()
+
+function timelineKey(entry: TimelineRecord): string {
+  return `${entry.type}:${entry.id}`
+}
 
 function timestamp(value: string): number {
   const time = new Date(value).getTime()
@@ -165,35 +174,83 @@ function RecordsDetailPanel({
   )
 }
 
+function RecordSelectBox({
+  selected,
+  disabled,
+  label,
+  onToggle,
+}: {
+  selected: boolean
+  disabled: boolean
+  label: string
+  onToggle: () => void
+}) {
+  return (
+    <label className="records-timeline-select" onClick={(event) => event.stopPropagation()}>
+      <input
+        type="checkbox"
+        checked={selected}
+        disabled={disabled}
+        aria-label={label}
+        onChange={onToggle}
+      />
+    </label>
+  )
+}
+
+function handleCardKeyDown(event: ReactKeyboardEvent<HTMLElement>, onActivate: (event: ActivationEvent) => void) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    onActivate(event)
+  }
+}
+
 function SnapshotTimelineCard({
   copy,
   disabled,
   record,
+  selected,
   onDelete,
-  onOpenDetail,
+  onToggleSelect,
+  onActivate,
 }: {
   copy: AccountRecordsCopy
   disabled: boolean
   record: AccountSnapshotRecord
+  selected: boolean
   onDelete: (id: string) => void
-  onOpenDetail: (record: AccountSnapshotRecord) => void
+  onToggleSelect: () => void
+  onActivate: (event: ActivationEvent) => void
 }) {
   return (
-    <article className="records-timeline-card records-timeline-card--snapshot">
+    <article
+      className={`records-timeline-card records-timeline-card--snapshot${selected ? ' records-timeline-card--selected' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label={copy.detail}
+      onClick={onActivate}
+      onKeyDown={(event) => handleCardKeyDown(event, onActivate)}
+    >
+      <RecordSelectBox
+        selected={selected}
+        disabled={disabled}
+        label={copy.selectRecord}
+        onToggle={onToggleSelect}
+      />
       <dl className="records-timeline-fields">
         <TimelineValue value={formatNumber(record.inputs.accountEval ?? null)} />
         <TimelineValue value={formatPercent(record.result.toleranceRate)} />
         <TimelineValue value={formatLeverageValue(record.result.leverageRatio)} />
       </dl>
       <div className="records-timeline-card-actions">
-        <button type="button" className="link-btn" onClick={() => onOpenDetail(record)}>
-          {copy.detail}
-        </button>
         <button
           type="button"
           className="link-btn account-record-delete"
           disabled={disabled}
-          onClick={() => onDelete(record.id)}
+          onClick={(event) => {
+            event.stopPropagation()
+            onDelete(record.id)
+          }}
         >
           {copy.delete}
         </button>
@@ -206,31 +263,48 @@ function OrderTimelineCard({
   copy,
   disabled,
   record,
+  selected,
   onDelete,
-  onOpenDetail,
+  onToggleSelect,
+  onActivate,
 }: {
   copy: AccountRecordsCopy
   disabled: boolean
   record: OrderHistoryRecord
+  selected: boolean
   onDelete: (id: string) => void
-  onOpenDetail: (record: OrderHistoryRecord) => void
+  onToggleSelect: () => void
+  onActivate: (event: ActivationEvent) => void
 }) {
   return (
-    <article className="records-timeline-card records-timeline-card--order">
+    <article
+      className={`records-timeline-card records-timeline-card--order${selected ? ' records-timeline-card--selected' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label={copy.detail}
+      onClick={onActivate}
+      onKeyDown={(event) => handleCardKeyDown(event, onActivate)}
+    >
+      <RecordSelectBox
+        selected={selected}
+        disabled={disabled}
+        label={copy.selectRecord}
+        onToggle={onToggleSelect}
+      />
       <dl className="records-timeline-fields">
         <TimelineValue value={record.positionSide} />
         <TimelineValue value={formatNumber(record.orderContracts)} />
         <TimelineValue value={formatNumber(record.orderPrice)} />
       </dl>
       <div className="records-timeline-card-actions">
-        <button type="button" className="link-btn" onClick={() => onOpenDetail(record)}>
-          {copy.detail}
-        </button>
         <button
           type="button"
           className="link-btn account-record-delete"
           disabled={disabled}
-          onClick={() => onDelete(record.id)}
+          onClick={(event) => {
+            event.stopPropagation()
+            onDelete(record.id)
+          }}
         >
           {copy.delete}
         </button>
@@ -268,6 +342,10 @@ export function RecordsArchiveView({
   onOpenSnapshotDetail,
   detail = null,
   onCloseDetail,
+  selectedKeys = EMPTY_SELECTION,
+  onSelectedKeysChange,
+  onDeleteSelected,
+  selectionBusy = false,
 }: {
   copy: AccountRecordsCopy
   backLabel?: string
@@ -297,11 +375,65 @@ export function RecordsArchiveView({
   onOpenSnapshotDetail: (record: AccountSnapshotRecord) => void
   detail?: DetailSelection
   onCloseDetail?: () => void
+  selectedKeys?: Set<string>
+  onSelectedKeysChange?: (next: Set<string>) => void
+  onDeleteSelected?: () => void
+  selectionBusy?: boolean
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
   const hasRecords = timelineRecords.length > 0
   const orderActionsLocked = loadingOlderRecords || orderDeleteBusy || orderBulkBusy
   const snapshotActionsLocked = loadingOlderRecords || snapshotDeleteBusy || snapshotBulkBusy
+  const selectedCount = selectedKeys.size
+  const [anchorKey, setAnchorKey] = useState<string | null>(null)
+
+  const emitSelection = (next: Set<string>) => onSelectedKeysChange?.(next)
+
+  const toggleAt = (index: number) => {
+    const key = timelineKey(timelineRecords[index])
+    const next = new Set(selectedKeys)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    setAnchorKey(key)
+    emitSelection(next)
+  }
+
+  const selectRangeTo = (index: number) => {
+    const anchorIndex = anchorKey == null ? -1 : timelineRecords.findIndex((entry) => timelineKey(entry) === anchorKey)
+    if (anchorIndex < 0) {
+      toggleAt(index)
+      return
+    }
+    const [start, end] = anchorIndex <= index ? [anchorIndex, index] : [index, anchorIndex]
+    const next = new Set(selectedKeys)
+    for (let i = start; i <= end; i += 1) {
+      next.add(timelineKey(timelineRecords[i]))
+    }
+    setAnchorKey(timelineKey(timelineRecords[index]))
+    emitSelection(next)
+  }
+
+  const activateAt = (entry: TimelineRecord, index: number, event: ActivationEvent) => {
+    if (event.metaKey || event.ctrlKey) {
+      toggleAt(index)
+      return
+    }
+    if (event.shiftKey) {
+      selectRangeTo(index)
+      return
+    }
+    if (entry.type === 'snapshot') onOpenSnapshotDetail(entry.record)
+    else onOpenOrderDetail(entry.record)
+  }
+
+  const selectAllShown = () => {
+    emitSelection(new Set(timelineRecords.map(timelineKey)))
+  }
+
+  const clearSelection = () => {
+    setAnchorKey(null)
+    emitSelection(new Set())
+  }
 
   return (
     <div className="my-page-shell records-archive-page">
@@ -357,6 +489,40 @@ export function RecordsArchiveView({
                   </div>
                 </div>
 
+                {selectedCount > 0 && (
+                  <div className="records-selection-bar" role="status">
+                    <span className="records-selection-bar-count">
+                      {copy.selectedCount.replace('{count}', String(selectedCount))}
+                    </span>
+                    <div className="records-selection-bar-actions">
+                      <button
+                        type="button"
+                        className="link-btn"
+                        onClick={selectAllShown}
+                        disabled={selectionBusy}
+                      >
+                        {copy.selectAllShown}
+                      </button>
+                      <button
+                        type="button"
+                        className="link-btn"
+                        onClick={clearSelection}
+                        disabled={selectionBusy}
+                      >
+                        {copy.clearSelection}
+                      </button>
+                      <button
+                        type="button"
+                        className="link-btn link-btn--danger"
+                        onClick={onDeleteSelected}
+                        disabled={selectionBusy}
+                      >
+                        {selectionBusy ? copy.bulkDeleteBusy : copy.deleteSelected}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {notice && <p className="account-records-notice" role="status">{notice}</p>}
                 {error && (
                   <div className="account-records-error" role="alert">
@@ -373,6 +539,7 @@ export function RecordsArchiveView({
                   <>
                     <div className="records-timeline-head" aria-hidden="true">
                       <div className="records-timeline-lane-head records-timeline-lane-head--snapshots">
+                        <span className="records-timeline-head-select" aria-hidden="true" />
                         <div className="records-timeline-head-fields records-timeline-head-fields--snapshots">
                           <span>{copy.summaryAccountEquity}</span>
                           <span>{copy.summaryLiquidationBuffer}</span>
@@ -382,6 +549,7 @@ export function RecordsArchiveView({
                       </div>
                       <span className="records-timeline-head-time" aria-hidden="true" />
                       <div className="records-timeline-lane-head records-timeline-lane-head--orders">
+                        <span className="records-timeline-head-select" aria-hidden="true" />
                         <div className="records-timeline-head-fields records-timeline-head-fields--orders">
                           <span>{copy.side}</span>
                           <span>{copy.archiveOrderContracts}</span>
@@ -391,49 +559,56 @@ export function RecordsArchiveView({
                       </div>
                     </div>
                     <div className="records-timeline-grid">
-                      {timelineRecords.map((entry) => (
-                        <div
-                          key={`${entry.type}-${entry.id}`}
-                          className={`records-timeline-row records-timeline-row--${entry.type}`}
-                          data-record-type={entry.type}
-                        >
-                          {entry.type === 'snapshot' ? (
-                            <div className="records-timeline-cell records-timeline-cell--snapshots">
-                              <SnapshotTimelineCard
-                                copy={copy}
-                                disabled={snapshotActionsLocked}
-                                record={entry.record}
-                                onDelete={onDeleteSnapshot}
-                                onOpenDetail={onOpenSnapshotDetail}
+                      {timelineRecords.map((entry, index) => {
+                        const selected = selectedKeys.has(timelineKey(entry))
+                        return (
+                          <div
+                            key={`${entry.type}-${entry.id}`}
+                            className={`records-timeline-row records-timeline-row--${entry.type}`}
+                            data-record-type={entry.type}
+                          >
+                            {entry.type === 'snapshot' ? (
+                              <div className="records-timeline-cell records-timeline-cell--snapshots">
+                                <SnapshotTimelineCard
+                                  copy={copy}
+                                  disabled={snapshotActionsLocked || selectionBusy}
+                                  record={entry.record}
+                                  selected={selected}
+                                  onDelete={onDeleteSnapshot}
+                                  onToggleSelect={() => toggleAt(index)}
+                                  onActivate={(event) => activateAt(entry, index, event)}
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                className="records-timeline-cell records-timeline-cell--snapshots records-timeline-cell--empty"
+                                aria-hidden="true"
                               />
-                            </div>
-                          ) : (
-                            <div
-                              className="records-timeline-cell records-timeline-cell--snapshots records-timeline-cell--empty"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <time className="records-timeline-time" dateTime={entry.createdAt}>
-                            {formatSavedAtCompact(entry.createdAt)}
-                          </time>
-                          {entry.type === 'order' ? (
-                            <div className="records-timeline-cell records-timeline-cell--orders">
-                              <OrderTimelineCard
-                                copy={copy}
-                                disabled={orderActionsLocked}
-                                record={entry.record}
-                                onDelete={onDeleteOrder}
-                                onOpenDetail={onOpenOrderDetail}
+                            )}
+                            <time className="records-timeline-time" dateTime={entry.createdAt}>
+                              {formatSavedAtCompact(entry.createdAt)}
+                            </time>
+                            {entry.type === 'order' ? (
+                              <div className="records-timeline-cell records-timeline-cell--orders">
+                                <OrderTimelineCard
+                                  copy={copy}
+                                  disabled={orderActionsLocked || selectionBusy}
+                                  record={entry.record}
+                                  selected={selected}
+                                  onDelete={onDeleteOrder}
+                                  onToggleSelect={() => toggleAt(index)}
+                                  onActivate={(event) => activateAt(entry, index, event)}
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                className="records-timeline-cell records-timeline-cell--orders records-timeline-cell--empty"
+                                aria-hidden="true"
                               />
-                            </div>
-                          ) : (
-                            <div
-                              className="records-timeline-cell records-timeline-cell--orders records-timeline-cell--empty"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                     {onLoadOlderRecords && (
                       <button
@@ -488,6 +663,9 @@ export function RecordsArchivePage() {
   const [orderLoadingMore, setOrderLoadingMore] = useState(false)
   const [snapshotLoadingMore, setSnapshotLoadingMore] = useState(false)
   const [detail, setDetail] = useState<DetailSelection>(null)
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set())
+  const [selectionBusy, setSelectionBusy] = useState(false)
+  const [selectionDeleteConfirm, setSelectionDeleteConfirm] = useState(false)
   const recordsRequestIdRef = useRef(0)
   const activeRecordsUserIdRef = useRef(user?.id ?? null)
 
@@ -509,6 +687,7 @@ export function RecordsArchivePage() {
       setOrderTotal(null)
       setSnapshotTotal(null)
       setDetail(null)
+      setSelectedKeys(new Set())
       return
     }
 
@@ -537,6 +716,7 @@ export function RecordsArchivePage() {
     setSnapshotHasMore(bundleResult.data.hasMoreSnapshots)
     setOrderTotal(countsResult.error === null ? countsResult.data.orderHistoryCount : null)
     setSnapshotTotal(countsResult.error === null ? countsResult.data.accountSnapshotCount : null)
+    setSelectedKeys(new Set())
     setLoading(false)
   }, [recordsRepository, t.accountRecords.loadError, user?.id])
 
@@ -608,6 +788,13 @@ export function RecordsArchivePage() {
         setOrderOffset((prev) => Math.max(0, prev - 1))
         setOrderTotal((prev) => (prev == null ? prev : Math.max(0, prev - 1)))
         setDetail((prev) => (prev?.type === 'order' && prev.record.id === id ? null : prev))
+        setSelectedKeys((prev) => {
+          const key = `order:${id}`
+          if (!prev.has(key)) return prev
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
       })
     },
     [recordsRepository, t.accountRecords.deleteError, user?.id],
@@ -630,6 +817,13 @@ export function RecordsArchivePage() {
         setSnapshotOffset((prev) => Math.max(0, prev - 1))
         setSnapshotTotal((prev) => (prev == null ? prev : Math.max(0, prev - 1)))
         setDetail((prev) => (prev?.type === 'snapshot' && prev.record.id === id ? null : prev))
+        setSelectedKeys((prev) => {
+          const key = `snapshot:${id}`
+          if (!prev.has(key)) return prev
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
       })
     },
     [recordsRepository, t.accountRecords.deleteError, user?.id],
@@ -662,8 +856,54 @@ export function RecordsArchivePage() {
       setSnapshotTotal(0)
       setDetail((prev) => (prev?.type === 'snapshot' ? null : prev))
     }
+    const prunedPrefix = isOrders ? 'order:' : 'snapshot:'
+    setSelectedKeys((prev) => new Set([...prev].filter((key) => !key.startsWith(prunedPrefix))))
     setBulkDeleteConfirm(null)
   }, [bulkDeleteConfirm, recordsRepository, t.accountRecords.bulkDeleteError, user])
+
+  const confirmSelectionDelete = useCallback(async () => {
+    const userId = user?.id ?? null
+    if (!userId || selectedKeys.size === 0) return
+    const orderIds = [...selectedKeys]
+      .filter((key) => key.startsWith('order:'))
+      .map((key) => key.slice('order:'.length))
+    const snapshotIds = [...selectedKeys]
+      .filter((key) => key.startsWith('snapshot:'))
+      .map((key) => key.slice('snapshot:'.length))
+
+    setSelectionBusy(true)
+    setNotice(null)
+    const [ordersResult, snapshotsResult] = await Promise.all([
+      orderIds.length > 0 ? recordsRepository.deleteOrderHistoryMany(userId, orderIds) : Promise.resolve(null),
+      snapshotIds.length > 0
+        ? recordsRepository.deleteAccountSnapshotsMany(userId, snapshotIds)
+        : Promise.resolve(null),
+    ])
+    setSelectionBusy(false)
+    if (activeRecordsUserIdRef.current !== userId) return
+
+    if ((ordersResult && ordersResult.error !== null) || (snapshotsResult && snapshotsResult.error !== null)) {
+      setNotice(t.accountRecords.bulkDeleteError)
+      return
+    }
+
+    const orderIdSet = new Set(orderIds)
+    const snapshotIdSet = new Set(snapshotIds)
+    setOrderRecords((prev) => prev.filter((record) => !orderIdSet.has(record.id)))
+    setSnapshotRecords((prev) => prev.filter((record) => !snapshotIdSet.has(record.id)))
+    setOrderOffset((prev) => Math.max(0, prev - orderIds.length))
+    setSnapshotOffset((prev) => Math.max(0, prev - snapshotIds.length))
+    setOrderTotal((prev) => (prev == null ? prev : Math.max(0, prev - orderIds.length)))
+    setSnapshotTotal((prev) => (prev == null ? prev : Math.max(0, prev - snapshotIds.length)))
+    setDetail((prev) => {
+      if (!prev) return prev
+      if (prev.type === 'order' && orderIdSet.has(prev.record.id)) return null
+      if (prev.type === 'snapshot' && snapshotIdSet.has(prev.record.id)) return null
+      return prev
+    })
+    setSelectedKeys(new Set())
+    setSelectionDeleteConfirm(false)
+  }, [recordsRepository, selectedKeys, t.accountRecords.bulkDeleteError, user?.id])
 
   useEffect(() => {
     activeRecordsUserIdRef.current = user?.id ?? null
@@ -709,6 +949,10 @@ export function RecordsArchivePage() {
         onOpenSnapshotDetail={(record) => setDetail({ type: 'snapshot', record })}
         detail={detail}
         onCloseDetail={() => setDetail(null)}
+        selectedKeys={selectedKeys}
+        onSelectedKeysChange={setSelectedKeys}
+        onDeleteSelected={selectedKeys.size > 0 ? () => setSelectionDeleteConfirm(true) : undefined}
+        selectionBusy={selectionBusy}
       />
       <SiteFooter />
       {bulkDeleteConfirm && (
@@ -741,6 +985,26 @@ export function RecordsArchivePage() {
             busy={bulkDeleteConfirm === 'orders' ? orderBulkBusy : snapshotBulkBusy}
             onClose={() => setBulkDeleteConfirm(null)}
             onConfirm={() => void confirmBulkDelete()}
+          />
+        </Suspense>
+      )}
+      {selectionDeleteConfirm && (
+        <Suspense fallback={null}>
+          <BulkDeleteConfirmModal
+            copy={{
+              title: t.accountRecords.deleteSelected,
+              body: t.accountRecords.bulkDeleteConfirmSelectedWithCount.replace(
+                '{count}',
+                String(selectedKeys.size),
+              ),
+              confirm: t.accountRecords.bulkDeleteConfirmButton,
+              confirmBusy: t.accountRecords.bulkDeleteBusy,
+              cancel: t.accountRecords.bulkDeleteCancel,
+              close: t.close,
+            }}
+            busy={selectionBusy}
+            onClose={() => setSelectionDeleteConfirm(false)}
+            onConfirm={() => void confirmSelectionDelete()}
           />
         </Suspense>
       )}

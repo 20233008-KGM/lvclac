@@ -198,6 +198,42 @@ describe('RecordsArchiveView', () => {
     expect(html).toContain(en.accountRecords.bulkDeleteOrders)
     expect(html).toContain(en.accountRecords.bulkDeleteSnapshots)
     expect(html).toContain(en.accountRecords.loadOlderRecords)
-    expect(html).toContain(en.accountRecords.detail)
+  })
+
+  it('turns each record card into an activatable button and drops the standalone detail button', () => {
+    const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+    const buttonCards = html.match(/<article class="records-timeline-card[^"]*" role="button"/g) ?? []
+
+    expect(buttonCards).toHaveLength(2)
+    expect(html).toContain(`aria-label="${en.accountRecords.detail}"`)
+    expect(html).not.toContain(`>${en.accountRecords.detail}</button>`)
+  })
+
+  it('renders a selection checkbox on every record card', () => {
+    const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+    const checkboxes = html.match(/type="checkbox"/g) ?? []
+
+    expect(checkboxes).toHaveLength(2)
+    expect(html).toContain(`aria-label="${en.accountRecords.selectRecord}"`)
+  })
+
+  it('hides the selection action bar when nothing is selected', () => {
+    const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+
+    expect(html).not.toContain('records-selection-bar')
+    expect(html).not.toContain('records-timeline-card--selected')
+  })
+
+  it('shows the selection action bar and marks selected cards when keys are selected', () => {
+    const html = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} selectedKeys={new Set(['snapshot:snapshot-1'])} />,
+    )
+
+    expect(html).toContain('records-selection-bar')
+    expect(html).toContain('records-timeline-card--selected')
+    expect(html).toContain(en.accountRecords.selectedCount.replace('{count}', '1'))
+    expect(html).toContain(en.accountRecords.selectAllShown)
+    expect(html).toContain(en.accountRecords.clearSelection)
+    expect(html).toContain(en.accountRecords.deleteSelected)
   })
 })

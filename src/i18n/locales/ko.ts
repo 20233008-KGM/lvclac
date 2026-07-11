@@ -213,6 +213,12 @@ export const ko: Messages = {
     archiveOrderContracts: '주문계약수',
     archiveOrderPrice: '주문가격',
     detail: '상세',
+    selectRecord: '이 기록 선택',
+    selectedCount: '{count}개 선택됨',
+    selectAllShown: '전체 선택',
+    deleteSelected: '선택 삭제',
+    clearSelection: '선택 해제',
+    bulkDeleteConfirmSelectedWithCount: '선택한 기록 {count}개를 삭제합니다. 되돌릴 수 없습니다.',
   },
   myPage: {
     title: '마이페이지',

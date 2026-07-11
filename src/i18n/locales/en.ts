@@ -219,6 +219,12 @@ export const en: Messages = {
     archiveOrderContracts: 'Order contracts',
     archiveOrderPrice: 'Order price',
     detail: 'Details',
+    selectRecord: 'Select record',
+    selectedCount: '{count} selected',
+    selectAllShown: 'Select all',
+    deleteSelected: 'Delete selected',
+    clearSelection: 'Clear selection',
+    bulkDeleteConfirmSelectedWithCount: 'This will delete the {count} selected records. This cannot be undone.',
   },
   myPage: {
     title: 'My page',

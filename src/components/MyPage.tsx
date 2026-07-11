@@ -4,8 +4,10 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
+  type MouseEvent,
   type ReactNode,
 } from 'react'
 import { boardPath } from '../config/boards'
@@ -83,6 +85,18 @@ function resolveMyPageNavHref(hash: string): MyPageNavHref {
   return MY_PAGE_NAV_ITEMS[0].href
 }
 
+/** 각 내비 항목에 대응하는, 현재 문서에 실재하는 첫 섹션 엘리먼트를 문서 순서대로 모은다. */
+function collectNavSections(): { href: MyPageNavHref; element: HTMLElement }[] {
+  const sections: { href: MyPageNavHref; element: HTMLElement }[] = []
+  for (const item of MY_PAGE_NAV_ITEMS) {
+    const element = item.sectionIds
+      .map((sectionId) => document.getElementById(sectionId))
+      .find((node): node is HTMLElement => node != null)
+    if (element) sections.push({ href: item.href, element })
+  }
+  return sections
+}
+
 function useMyPageNavActive(enabled: boolean) {
   const [activeHref, setActiveHref] = useState(() =>
     typeof window === 'undefined' ? MY_PAGE_NAV_ITEMS[0].href : resolveMyPageNavHref(window.location.hash),
@@ -91,67 +105,77 @@ function useMyPageNavActive(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return
 
-    const sectionToNav = new Map<string, MyPageNavHref>()
-    for (const item of MY_PAGE_NAV_ITEMS) {
-      for (const sectionId of item.sectionIds) {
-        sectionToNav.set(sectionId, item.href)
-      }
-    }
+    // 섹션 높이 편차가 커서(환경설정 패널은 매우 김) 화면 점유 "비율"로 현재 섹션을
+    // 고르면 큰 섹션이 늘 손해를 본다. 대신 뷰포트 상단 30% 지점의 기준선을 넘어선
+    // 마지막 섹션을 현재 섹션으로 본다 — 높이와 무관하게 스크롤 위치를 그대로 반영한다.
+    let frame = 0
 
-    const sections = [...sectionToNav.keys()]
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => element != null)
+    const computeActive = () => {
+      frame = 0
+      const sections = collectNavSections()
+      if (sections.length === 0) return
 
-    if (sections.length === 0) return
-
-    const visibleRatios = new Map<string, number>()
-
-    const syncActiveFromVisible = () => {
-      let bestSectionId = sections[0].id
-      let bestRatio = visibleRatios.get(bestSectionId) ?? 0
-
-      for (const section of sections.slice(1)) {
-        const ratio = visibleRatios.get(section.id) ?? 0
-        if (ratio > bestRatio) {
-          bestRatio = ratio
-          bestSectionId = section.id
-        }
+      const line = window.innerHeight * 0.3
+      let current = sections[0].href
+      for (const { href, element } of sections) {
+        if (element.getBoundingClientRect().top <= line) current = href
+        else break
       }
 
-      const href = sectionToNav.get(bestSectionId)
-      if (href) setActiveHref(href)
+      // 페이지 맨 아래에 닿으면 마지막 섹션이 기준선까지 못 올라와도 활성화한다.
+      const reachedBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
+      if (reachedBottom) current = sections[sections.length - 1].href
+
+      setActiveHref((prev) => (prev === current ? prev : current))
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          visibleRatios.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0)
-        }
-        syncActiveFromVisible()
-      },
-      {
-        root: null,
-        rootMargin: '-20% 0px -55% 0px',
-        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
-      },
-    )
-
-    for (const section of sections) {
-      observer.observe(section)
+    const requestCompute = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(computeActive)
     }
 
     const onHashChange = () => {
       setActiveHref(resolveMyPageNavHref(window.location.hash))
     }
 
+    computeActive()
+    window.addEventListener('scroll', requestCompute, { passive: true })
+    window.addEventListener('resize', requestCompute)
     window.addEventListener('hashchange', onHashChange)
     return () => {
-      observer.disconnect()
+      if (frame) window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', requestCompute)
+      window.removeEventListener('resize', requestCompute)
       window.removeEventListener('hashchange', onHashChange)
     }
   }, [enabled])
 
-  return activeHref
+  const onNavClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, href: MyPageNavHref) => {
+      // 새 탭/보조 클릭 등은 브라우저 기본 동작에 맡긴다.
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+      }
+      const target = MY_PAGE_NAV_ITEMS.find((item) => item.href === href)
+      const element = target?.sectionIds
+        .map((sectionId) => document.getElementById(sectionId))
+        .find((node): node is HTMLElement => node != null)
+      if (!element) return
+
+      event.preventDefault()
+      setActiveHref(href)
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      element.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
+      // 스크롤을 다시 튀게 하지 않으면서 주소창 해시만 맞춰 둔다.
+      if (window.location.hash !== href) {
+        window.history.replaceState(null, '', href)
+      }
+    },
+    [],
+  )
+
+  return { activeHref, onNavClick }
 }
 
 interface MyPageViewProps {
@@ -179,7 +203,9 @@ interface MyPageViewProps {
   /** 개발 전용 계정 초기화 패널. 프로덕션에서는 null. */
   devResetPanel?: ReactNode
   onNicknameChange: (value: string) => void
-  onNicknameSubmit: () => void
+  /** 닉네임 저장. 성공하면 true를 반환해 인라인 편집을 닫는다. */
+  onNicknameSubmit: () => Promise<boolean>
+
   onLinkGoogle: () => void
   onUnlinkGoogle: () => void
   onPasswordFormToggle: () => void
@@ -699,6 +725,26 @@ function NumberSetPreferencesPanel({
   )
 }
 
+/** 닉네임 인라인 편집 진입용 연필 아이콘. */
+function PencilIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="15"
+      height="15"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
+  )
+}
+
 export function MyPageView({
   copy,
   authLoading,
@@ -740,15 +786,29 @@ export function MyPageView({
     ? `${copy.providerLinked} · ${copy.primaryTag}`
     : copy.providerNotLinked
   const googleStatusLabel = hasGoogle ? copy.providerLinked : copy.providerNotLinked
-  const submitNickname = (event: FormEvent) => {
+  const [editingNickname, setEditingNickname] = useState(false)
+  const nicknameInputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (editingNickname) nicknameInputRef.current?.focus()
+  }, [editingNickname])
+  const startNicknameEdit = () => {
+    if (user) onNicknameChange(user.nickname)
+    setEditingNickname(true)
+  }
+  const cancelNicknameEdit = () => {
+    if (user) onNicknameChange(user.nickname)
+    setEditingNickname(false)
+  }
+  const submitNickname = async (event: FormEvent) => {
     event.preventDefault()
-    onNicknameSubmit()
+    const ok = await onNicknameSubmit()
+    if (ok) setEditingNickname(false)
   }
   const submitPassword = (event: FormEvent) => {
     event.preventDefault()
     onSetPasswordSubmit()
   }
-  const activeNavHref = useMyPageNavActive(Boolean(user))
+  const { activeHref: activeNavHref, onNavClick } = useMyPageNavActive(Boolean(user))
   const navLabels: Record<(typeof MY_PAGE_NAV_ITEMS)[number]['href'], string> = {
     '#my-page-profile': copy.navAccount,
     '#my-page-records-summary': copy.navData,
@@ -801,6 +861,7 @@ export function MyPageView({
                       href={item.href}
                       className={isActive ? 'is-active' : undefined}
                       aria-current={isActive ? 'location' : undefined}
+                      onClick={(event) => onNavClick(event, item.href)}
                     >
                       {navLabels[item.href]}
                     </a>
@@ -823,14 +884,66 @@ export function MyPageView({
                       {user.nickname.trim().charAt(0).toUpperCase() || '?'}
                     </span>
                     <div className="my-page-account-hub__identity-copy">
-                      <div className="my-page-account-hub__name-row">
-                        <strong className="my-page-account-hub__name" title={user.nickname}>
-                          {user.nickname}
-                        </strong>
-                        <span className={`my-page-badge${isPro ? '' : ' my-page-badge--muted'}`}>
-                          {isPro ? copy.billing.statusPro : copy.billing.statusFree}
-                        </span>
-                      </div>
+                      {editingNickname ? (
+                        <form className="my-page-nickname-edit" onSubmit={submitNickname}>
+                          <label htmlFor="my-page-nickname" className="my-page-sr-only">
+                            {copy.nicknameLabel}
+                          </label>
+                          <div className="my-page-inline-control">
+                            <input
+                              id="my-page-nickname"
+                              ref={nicknameInputRef}
+                              value={nicknameDraft}
+                              placeholder={copy.nicknamePlaceholder}
+                              disabled={nicknameBusy}
+                              onChange={(event) => onNicknameChange(event.currentTarget.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Escape') cancelNicknameEdit()
+                              }}
+                            />
+                            <button
+                              type="submit"
+                              className="btn btn-primary"
+                              disabled={nicknameBusy}
+                            >
+                              {nicknameBusy ? copy.savingNickname : copy.saveNickname}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-ghost"
+                              onClick={cancelNicknameEdit}
+                              disabled={nicknameBusy}
+                            >
+                              {copy.cancelEdit}
+                            </button>
+                          </div>
+                          {nicknameMessage && (
+                            <p className="my-page-form-message" role="status">
+                              {nicknameMessage}
+                            </p>
+                          )}
+                        </form>
+                      ) : (
+                        <div className="my-page-account-hub__name-row">
+                          <strong className="my-page-account-hub__name" title={user.nickname}>
+                            {user.nickname}
+                          </strong>
+                          <button
+                            type="button"
+                            className="my-page-nickname-edit-btn"
+                            onClick={startNicknameEdit}
+                            aria-label={copy.editNickname}
+                            title={copy.editNickname}
+                          >
+                            <PencilIcon />
+                          </button>
+                          <span
+                            className={`my-page-badge${isPro ? '' : ' my-page-badge--muted'}`}
+                          >
+                            {isPro ? copy.billing.statusPro : copy.billing.statusFree}
+                          </span>
+                        </div>
+                      )}
                       <span className="my-page-identity-meta" title={user.email}>
                         {user.email}
                       </span>
@@ -846,30 +959,6 @@ export function MyPageView({
                 </div>
 
                 <div className="my-page-account-hub__grid">
-                  <form
-                    className="my-page-account-hub__block my-page-field my-page-nickname-form"
-                    onSubmit={submitNickname}
-                  >
-                    <label htmlFor="my-page-nickname">{copy.nicknameLabel}</label>
-                    <div className="my-page-inline-control">
-                      <input
-                        id="my-page-nickname"
-                        value={nicknameDraft}
-                        placeholder={copy.nicknamePlaceholder}
-                        disabled={nicknameBusy}
-                        onChange={(event) => onNicknameChange(event.currentTarget.value)}
-                      />
-                      <button type="submit" className="btn btn-primary" disabled={nicknameBusy}>
-                        {nicknameBusy ? copy.savingNickname : copy.saveNickname}
-                      </button>
-                    </div>
-                    <p className="my-page-field-help">{copy.nicknameHelp}</p>
-                    {nicknameMessage && (
-                      <p className="my-page-form-message" role="status">
-                        {nicknameMessage}
-                      </p>
-                    )}
-                  </form>
                   {billingPanel && (
                     <div className="my-page-account-hub__block my-page-account-hub__billing">
                       {billingPanel}
@@ -1075,11 +1164,9 @@ export function MyPageView({
                       )}
                     </div>
                   </div>
-                  <div className="my-page-delete-note">
-                    <h3>{copy.deleteAccountTitle}</h3>
-                    <p>{copy.deleteAccountBody}</p>
-                    <a className="link-btn" href={supportHref}>
-                      {copy.contactSupport}
+                  <div className="my-page-delete-row">
+                    <a className="my-page-delete-btn" href={supportHref}>
+                      {copy.deleteAccountTitle}
                     </a>
                   </div>
                 </div>
@@ -1322,12 +1409,12 @@ export function MyPage() {
     }
   }, [recordsRepository, t.myPage.autoSnapshotError, user])
 
-  const submitNickname = useCallback(async () => {
-    if (!user || nicknameBusy) return
+  const submitNickname = useCallback(async (): Promise<boolean> => {
+    if (!user || nicknameBusy) return false
     const trimmed = nicknameDraft.trim()
     if (!trimmed) {
       setNicknameMessageState({ userId: user.id, value: t.myPage.nicknameRequired })
-      return
+      return false
     }
 
     setNicknameBusy(true)
@@ -1338,6 +1425,7 @@ export function MyPage() {
       userId: user.id,
       value: error ? t.myPage.nicknameError : t.myPage.nicknameSaved,
     })
+    return !error
   }, [nicknameBusy, nicknameDraft, t.myPage, updateNickname, user])
 
   const handleLinkGoogle = useCallback(async () => {

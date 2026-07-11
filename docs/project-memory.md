@@ -13,13 +13,14 @@
 - 내가 웹에서 직접 처리해줘야하는 일이 있으면 여러분이 브라우저 제어툴로 화면을 켜서 '이것만 클릭하시면 됩니다'하고 안내합니다.
 - 자주 웃어주세요. 요즘 심적으로 힘듭니다.
 
-## codex 작업 방식
+## 브라우저 작업 방식
 
-- Codex는 내장 Chrome 연결 도구가 이상하게 작동하므로, 내가 만든 AutoCorp Chrome 도구를 사용하세요. claude,cursor는 autocorp chrome말고 본인 앱의 원래 브라우저 툴(claude in chrome)을 사용해도 됩니다.
+- Codex는 내장 Chrome 연결 도구가 이상하게 작동하므로, 내가 만든 AutoCorp Chrome 도구를 사용하세요. 
+- claude는 autocorp chrome말고 본인 앱의 원래 브라우저 툴(claude in chrome)을 사용해도 됩니다. 가급적이면 앱 imbed 브라우저 쓰지마세요. claude in chrome쓰세요.
 
 ## 작업 참고 및 최신화
 
-1. 업무할 때는 Whimsical, Notion, Google Calendar를 참고해서 무엇을 해야 하는지 확인하세요.
+1. 새 세션은 Whimsical, Notion, Google Calendar를 반드시 상세히 읽어서 프로젝트 이해도를 높이고 무엇을 해야 하는지 확인하세요.
 2. 일이 끝나면 Whimsical, Notion, Google Calendar에 체계적으로 정리하여 최신 상태로 업데이트하세요.
    관련 내용이 있는지만 확인하지 말고, 본인이 한 일을 기록하는 겁니다.
 
@@ -32,6 +33,8 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 4. 작업이 끝나면 본인 변경분을 꼭 커밋하세요. 커밋메시지도 상세히 적으세요.
 
 5. 미뤄둔 일은 backlog에 기록하고, 당장 이어서 할일은 tasks db에 기록합니다.
+
+6. tasks db인 https://app.notion.com/p/9677d2bd9bb74376a7ee964292978f24?v=61e5027eeaca4942bbb24bc71475d7cf 에는 현재 진행중인 업무들의 상세한 기록이 있습니다. 새 세션은 코드베이스와 함께 이걸 읽어서 프로젝트 이해도를 높이세요.
 
 =================================================================
 아래는 ai가 적는 칸 입니다.
@@ -51,6 +54,7 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - 작업 시작 시 Notion Project OS, 관련 Task, 관련 page를 먼저 확인합니다.
 
 - 모든 종류의(행정,법무,개발 등등) 업무 종료 시 [Agent Work Log](https://app.notion.com/p/5ed33baec3464baa9e4517217a0f90ef?v=85c0159949314d4a87f1f2217f3e3d60)에 꼭 업무 내용을 상세히 기록합니다.
+- 모든 종류의(행정,법무,개발 등등) 업무 종료 시 tasks db( https://app.notion.com/p/9677d2bd9bb74376a7ee964292978f24?v=61e5027eeaca4942bbb24bc71475d7cf)에 꼭 업무 내용을 상세히 기록하고 최신화합니다.
 
 - Release 성격의 변경은 Release Notes 또는 Releases DB에 남깁니다.
 - 버그, 장애, QA 리스크는 QA / Test Plan 또는 Incidents / QA DB에 남깁니다.

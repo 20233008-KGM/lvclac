@@ -232,6 +232,8 @@ export interface Messages {
     nicknameLabel: string
     nicknamePlaceholder: string
     nicknameHelp: string
+    editNickname: string
+    cancelEdit: string
     saveNickname: string
     savingNickname: string
     nicknameSaved: string

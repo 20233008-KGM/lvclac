@@ -234,6 +234,8 @@ export const en: Messages = {
     nicknameLabel: 'Nickname',
     nicknamePlaceholder: 'Display name',
     nicknameHelp: 'This name is shown on your profile.',
+    editNickname: 'Edit nickname',
+    cancelEdit: 'Cancel',
     saveNickname: 'Save',
     savingNickname: 'Saving',
     nicknameSaved: 'Nickname saved.',
@@ -330,7 +332,7 @@ export const en: Messages = {
       'Paddle Checkout, subscription management, and Pro access are being connected in order. Live billing starts after sandbox verification.',
     billing: {
       statusFree: 'Free',
-      statusPro: 'Pro active',
+      statusPro: 'Pro',
       statusTrial: 'Trial',
       statusPastDue: 'Payment failed',
       statusCanceled: 'Cancels soon',
@@ -344,7 +346,7 @@ export const en: Messages = {
       yearlyNote: '2 months free vs monthly',
       choosePlan: 'Subscribe to this plan',
       redirecting: 'Redirecting to checkout…',
-      proHeadline: 'Pro active',
+      proHeadline: 'Subscription',
       proBody:
         'Thanks for subscribing. Update your payment method, view receipts, or cancel from the customer portal.',
       renewsOn: 'Next billing date: {date}',

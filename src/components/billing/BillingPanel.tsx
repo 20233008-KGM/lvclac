@@ -154,25 +154,27 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
             className="my-page-billing-status-card"
             aria-labelledby="my-page-plan-title"
           >
-            <div className="my-page-billing-status-card__copy">
-              <p className="my-page-billing-status-card__headline" id="my-page-plan-title">
-                {copy.proHeadline}
-              </p>
+            <p className="my-page-billing-status-card__headline" id="my-page-plan-title">
+              {copy.proHeadline}
+            </p>
+            <div className="my-page-billing-status-card__row">
               {subscription?.currentPeriodEnd && (
-                <p className="my-page-field-help">
-                  {copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))}
+                <p className="my-page-billing-status-card__renews">
+                  {copy.renewsOn.replace(
+                    '{date}',
+                    formatDate(subscription.currentPeriodEnd, t.lang),
+                  )}
                 </p>
               )}
-              <p className="my-page-field-help">{copy.proBody}</p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy !== null}
+                onClick={() => void handleManage()}
+              >
+                {busy === 'portal' ? copy.redirecting : copy.manageAction}
+              </button>
             </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={busy !== null}
-              onClick={() => void handleManage()}
-            >
-              {busy === 'portal' ? copy.redirecting : copy.manageAction}
-            </button>
           </div>
           {messageNode}
         </>

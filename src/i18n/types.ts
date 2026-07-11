@@ -224,6 +224,11 @@ export interface Messages {
     deleteSelected: string
     clearSelection: string
     bulkDeleteConfirmSelectedWithCount: string
+    contextMenuLabel: string
+    contextViewDetail: string
+    contextSelect: string
+    contextDeselect: string
+    contextDeleteSelected: string
   }
   myPage: {
     title: string

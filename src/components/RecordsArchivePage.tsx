@@ -9,6 +9,7 @@ import {
   type OrderHistoryRecord,
 } from '../db/accountRecords'
 import { useLanguage } from '../i18n'
+import { RecordsContextMenu, type RecordsContextMenuItem } from './RecordsContextMenu'
 import type { Messages } from '../i18n/types'
 import {
   formatLeverageValue,
@@ -213,25 +214,30 @@ function SnapshotTimelineCard({
   disabled,
   record,
   selected,
+  contextActive,
   onDelete,
   onToggleSelect,
   onActivate,
+  onContextMenu,
 }: {
   copy: AccountRecordsCopy
   disabled: boolean
   record: AccountSnapshotRecord
   selected: boolean
+  contextActive: boolean
   onDelete: (id: string) => void
   onToggleSelect: () => void
   onActivate: (event: ActivationEvent) => void
+  onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void
 }) {
   return (
     <article
-      className={`records-timeline-card records-timeline-card--snapshot${selected ? ' records-timeline-card--selected' : ''}`}
+      className={`records-timeline-card records-timeline-card--snapshot${selected ? ' records-timeline-card--selected' : ''}${contextActive ? ' records-timeline-card--context' : ''}`}
       role="button"
       tabIndex={0}
       aria-label={copy.detail}
       onClick={onActivate}
+      onContextMenu={onContextMenu}
       onKeyDown={(event) => handleCardKeyDown(event, onActivate)}
     >
       <RecordSelectBox
@@ -267,25 +273,30 @@ function OrderTimelineCard({
   disabled,
   record,
   selected,
+  contextActive,
   onDelete,
   onToggleSelect,
   onActivate,
+  onContextMenu,
 }: {
   copy: AccountRecordsCopy
   disabled: boolean
   record: OrderHistoryRecord
   selected: boolean
+  contextActive: boolean
   onDelete: (id: string) => void
   onToggleSelect: () => void
   onActivate: (event: ActivationEvent) => void
+  onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void
 }) {
   return (
     <article
-      className={`records-timeline-card records-timeline-card--order${selected ? ' records-timeline-card--selected' : ''}`}
+      className={`records-timeline-card records-timeline-card--order${selected ? ' records-timeline-card--selected' : ''}${contextActive ? ' records-timeline-card--context' : ''}`}
       role="button"
       tabIndex={0}
       aria-label={copy.detail}
       onClick={onActivate}
+      onContextMenu={onContextMenu}
       onKeyDown={(event) => handleCardKeyDown(event, onActivate)}
     >
       <RecordSelectBox
@@ -389,16 +400,20 @@ export function RecordsArchiveView({
   const snapshotActionsLocked = loadingOlderRecords || snapshotDeleteBusy || snapshotBulkBusy
   const selectedCount = selectedKeys.size
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
+  const [menu, setMenu] = useState<{ x: number; y: number; entry: TimelineRecord } | null>(null)
 
   const emitSelection = (next: Set<string>) => onSelectedKeysChange?.(next)
 
-  const toggleAt = (index: number) => {
-    const key = timelineKey(timelineRecords[index])
+  const toggleKey = (key: string) => {
     const next = new Set(selectedKeys)
     if (next.has(key)) next.delete(key)
     else next.add(key)
     setAnchorKey(key)
     emitSelection(next)
+  }
+
+  const toggleAt = (index: number) => {
+    toggleKey(timelineKey(timelineRecords[index]))
   }
 
   const selectRangeTo = (index: number) => {
@@ -416,6 +431,16 @@ export function RecordsArchiveView({
     emitSelection(next)
   }
 
+  const openDetail = (entry: TimelineRecord) => {
+    if (entry.type === 'snapshot') onOpenSnapshotDetail(entry.record)
+    else onOpenOrderDetail(entry.record)
+  }
+
+  const deleteEntry = (entry: TimelineRecord) => {
+    if (entry.type === 'snapshot') onDeleteSnapshot(entry.record.id)
+    else onDeleteOrder(entry.record.id)
+  }
+
   const activateAt = (entry: TimelineRecord, index: number, event: ActivationEvent) => {
     if (event.metaKey || event.ctrlKey) {
       toggleAt(index)
@@ -425,8 +450,7 @@ export function RecordsArchiveView({
       selectRangeTo(index)
       return
     }
-    if (entry.type === 'snapshot') onOpenSnapshotDetail(entry.record)
-    else onOpenOrderDetail(entry.record)
+    openDetail(entry)
   }
 
   const selectAllShown = () => {
@@ -436,6 +460,34 @@ export function RecordsArchiveView({
   const clearSelection = () => {
     setAnchorKey(null)
     emitSelection(new Set())
+  }
+
+  const openContextMenu = (event: ReactMouseEvent<HTMLElement>, entry: TimelineRecord) => {
+    event.preventDefault()
+    setMenu({ x: event.clientX, y: event.clientY, entry })
+  }
+
+  const buildMenuItems = (entry: TimelineRecord): RecordsContextMenuItem[] => {
+    const key = timelineKey(entry)
+    const isSelected = selectedKeys.has(key)
+    const items: RecordsContextMenuItem[] = [
+      { key: 'detail', label: copy.contextViewDetail, onSelect: () => openDetail(entry) },
+      {
+        key: 'select',
+        label: isSelected ? copy.contextDeselect : copy.contextSelect,
+        onSelect: () => toggleKey(key),
+      },
+      { key: 'delete', label: copy.delete, danger: true, onSelect: () => deleteEntry(entry) },
+    ]
+    if (selectedCount > 0 && onDeleteSelected) {
+      items.push({
+        key: 'delete-selected',
+        label: copy.contextDeleteSelected.replace('{count}', String(selectedCount)),
+        danger: true,
+        onSelect: onDeleteSelected,
+      })
+    }
+    return items
   }
 
   return (
@@ -563,7 +615,9 @@ export function RecordsArchiveView({
                     </div>
                     <div className="records-timeline-grid">
                       {timelineRecords.map((entry, index) => {
-                        const selected = selectedKeys.has(timelineKey(entry))
+                        const entryKey = timelineKey(entry)
+                        const selected = selectedKeys.has(entryKey)
+                        const contextActive = menu != null && timelineKey(menu.entry) === entryKey
                         return (
                           <div
                             key={`${entry.type}-${entry.id}`}
@@ -577,9 +631,11 @@ export function RecordsArchiveView({
                                   disabled={snapshotActionsLocked || selectionBusy}
                                   record={entry.record}
                                   selected={selected}
+                                  contextActive={contextActive}
                                   onDelete={onDeleteSnapshot}
                                   onToggleSelect={() => toggleAt(index)}
                                   onActivate={(event) => activateAt(entry, index, event)}
+                                  onContextMenu={(event) => openContextMenu(event, entry)}
                                 />
                               </div>
                             ) : (
@@ -598,9 +654,11 @@ export function RecordsArchiveView({
                                   disabled={orderActionsLocked || selectionBusy}
                                   record={entry.record}
                                   selected={selected}
+                                  contextActive={contextActive}
                                   onDelete={onDeleteOrder}
                                   onToggleSelect={() => toggleAt(index)}
                                   onActivate={(event) => activateAt(entry, index, event)}
+                                  onContextMenu={(event) => openContextMenu(event, entry)}
                                 />
                               </div>
                             ) : (
@@ -639,6 +697,15 @@ export function RecordsArchiveView({
           />
         </main>
       </div>
+      {menu && (
+        <RecordsContextMenu
+          x={menu.x}
+          y={menu.y}
+          ariaLabel={copy.contextMenuLabel}
+          items={buildMenuItems(menu.entry)}
+          onClose={() => setMenu(null)}
+        />
+      )}
     </div>
   )
 }

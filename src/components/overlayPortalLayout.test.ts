@@ -23,3 +23,27 @@ describe('calculator modal overlays', () => {
     expect(text).toContain('return createPortal(modal, document.body)')
   })
 })
+
+describe('records context menu', () => {
+  it('renders the ledger right-click menu through the document body portal', () => {
+    const text = source('src/components/RecordsContextMenu.tsx')
+
+    expect(text).toContain("import { createPortal } from 'react-dom'")
+    expect(text).toContain('return createPortal(menu, document.body)')
+    expect(text).toContain('role="menu"')
+    expect(text).toContain('role="menuitem"')
+    // Closes on outside interaction, escape, scroll, and resize.
+    expect(text).toContain("window.addEventListener('pointerdown'")
+    expect(text).toContain("event.key === 'Escape'")
+    expect(text).toContain("window.addEventListener('scroll'")
+  })
+
+  it('wires right-click on ledger cards to open the context menu', () => {
+    const text = source('src/components/RecordsArchivePage.tsx')
+
+    expect(text).toContain('onContextMenu={onContextMenu}')
+    expect(text).toContain('const openContextMenu =')
+    expect(text).toContain('event.preventDefault()')
+    expect(text).toContain('buildMenuItems')
+  })
+})

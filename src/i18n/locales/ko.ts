@@ -219,6 +219,11 @@ export const ko: Messages = {
     deleteSelected: '선택 삭제',
     clearSelection: '선택 해제',
     bulkDeleteConfirmSelectedWithCount: '선택한 기록 {count}개를 삭제합니다. 되돌릴 수 없습니다.',
+    contextMenuLabel: '기록 작업 메뉴',
+    contextViewDetail: '상세 보기',
+    contextSelect: '선택',
+    contextDeselect: '선택 취소',
+    contextDeleteSelected: '선택한 {count}개 삭제',
   },
   myPage: {
     title: '마이페이지',

@@ -225,6 +225,11 @@ export const en: Messages = {
     deleteSelected: 'Delete selected',
     clearSelection: 'Clear selection',
     bulkDeleteConfirmSelectedWithCount: 'This will delete the {count} selected records. This cannot be undone.',
+    contextMenuLabel: 'Record actions',
+    contextViewDetail: 'View details',
+    contextSelect: 'Select',
+    contextDeselect: 'Deselect',
+    contextDeleteSelected: 'Delete selected ({count})',
   },
   myPage: {
     title: 'My page',

@@ -224,6 +224,7 @@ export const ko: Messages = {
     contextSelect: '선택',
     contextDeselect: '선택 취소',
     contextDeleteSelected: '선택한 {count}개 삭제',
+    moreActions: '더 많은 작업',
   },
   myPage: {
     title: '마이페이지',

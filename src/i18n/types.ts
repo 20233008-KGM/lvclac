@@ -229,6 +229,7 @@ export interface Messages {
     contextSelect: string
     contextDeselect: string
     contextDeleteSelected: string
+    moreActions: string
   }
   myPage: {
     title: string

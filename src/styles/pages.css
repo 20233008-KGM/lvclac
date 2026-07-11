@@ -1550,7 +1550,6 @@ html[data-zone='about'] body {
 }
 
 .records-archive-panel {
-  --records-action-column: clamp(4.75rem, 7vw, 6.75rem);
   --records-select-column: 1.5rem;
   display: grid;
   gap: var(--space-md);
@@ -1584,11 +1583,38 @@ html[data-zone='about'] body {
 
 .records-timeline-toolbar,
 .records-timeline-actions,
-.records-timeline-counts,
-.records-timeline-card-actions {
+.records-timeline-counts {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+}
+
+.records-timeline-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.records-timeline-more:hover:not(:disabled),
+.records-timeline-more:focus-visible {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.records-timeline-more:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .records-timeline-toolbar {
@@ -1625,7 +1651,7 @@ html[data-zone='about'] body {
 
 .records-timeline-lane-head {
   display: grid;
-  grid-template-columns: var(--records-select-column) minmax(0, 1fr) var(--records-action-column);
+  grid-template-columns: var(--records-select-column) minmax(0, 1fr);
   align-items: end;
   gap: 6px;
   min-width: 0;
@@ -1710,7 +1736,7 @@ html[data-zone='about'] body {
 
 .records-timeline-card {
   display: grid;
-  grid-template-columns: var(--records-select-column) minmax(0, 1fr) var(--records-action-column);
+  grid-template-columns: var(--records-select-column) minmax(0, 1fr);
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
@@ -1802,6 +1828,23 @@ html[data-zone='about'] body {
   cursor: default;
 }
 
+/* 마우스 기기: 평소엔 체크박스를 숨겨 카드가 데이터만 보이게 하고, 카드에 호버하거나
+   선택 모드일 때(선택된 카드/하나라도 선택됨/키보드 포커스)만 드러낸다. 터치 기기는
+   호버가 없으므로 기본값(항상 표시)을 유지한다. */
+@media (hover: hover) {
+  .records-timeline-select {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+
+  .records-timeline-card:hover .records-timeline-select,
+  .records-timeline-card--selected .records-timeline-select,
+  .records-timeline-grid--selecting .records-timeline-select,
+  .records-timeline-select:focus-within {
+    opacity: 1;
+  }
+}
+
 .records-timeline-card--snapshot {
   margin-right: 4px;
   border-left: 3px solid var(--color-success);
@@ -1830,17 +1873,6 @@ html[data-zone='about'] body {
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.records-timeline-card-actions {
-  justify-content: flex-end;
-  flex-wrap: nowrap;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.records-timeline-card-actions .link-btn {
-  line-height: 1.2;
 }
 
 .records-timeline-load-more {
@@ -3038,10 +3070,5 @@ html[data-zone='about'] body {
   .records-timeline-card {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-  }
-
-  .records-timeline-card-actions {
-    grid-column: 2;
-    justify-content: flex-start;
   }
 }

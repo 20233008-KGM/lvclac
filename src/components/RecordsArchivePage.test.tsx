@@ -154,7 +154,7 @@ describe('RecordsArchiveView', () => {
 
   it('moves repeated field labels into the shared timeline header', () => {
     const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
-    const header = firstMatch(html, /<div class="records-timeline-head"[\s\S]*?<\/div><\/div>/)
+    const header = firstMatch(html, /<div class="records-timeline-head"[\s\S]*?<\/div><\/div><\/div>/)
     const snapshotCard = firstMatch(html, /<article class="records-timeline-card records-timeline-card--snapshot"[\s\S]*?<\/article>/)
     const orderCard = firstMatch(html, /<article class="records-timeline-card records-timeline-card--order"[\s\S]*?<\/article>/)
 
@@ -183,20 +183,22 @@ describe('RecordsArchiveView', () => {
     expect(html).toContain('<time class="records-timeline-time"')
   })
 
-  it('reserves an action column in lane headers so row values align with detail and delete actions', () => {
+  it('drops the per-card action column now that delete lives in menus', () => {
     const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
-    const actionSpacerCount = (html.match(/records-timeline-head-actions/g) ?? []).length
 
-    expect(actionSpacerCount).toBe(2)
+    expect(html).not.toContain('records-timeline-head-actions')
+    expect(html).not.toContain('records-timeline-card-actions')
     expect(html).toContain('records-timeline-lane-head')
-    expect(html).toContain('records-timeline-card-actions')
   })
 
-  it('keeps destructive actions and a single older-records loader on the archive page', () => {
+  it('moves bulk delete behind a toolbar overflow menu and keeps the older-records loader', () => {
     const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
 
-    expect(html).toContain(en.accountRecords.bulkDeleteOrders)
-    expect(html).toContain(en.accountRecords.bulkDeleteSnapshots)
+    expect(html).toContain('records-timeline-more')
+    expect(html).toContain(`aria-label="${en.accountRecords.moreActions}"`)
+    // Bulk-delete labels live inside the (closed) overflow menu, not the default toolbar.
+    expect(html).not.toContain(en.accountRecords.bulkDeleteOrders)
+    expect(html).not.toContain(en.accountRecords.bulkDeleteSnapshots)
     expect(html).toContain(en.accountRecords.loadOlderRecords)
   })
 
@@ -235,5 +237,15 @@ describe('RecordsArchiveView', () => {
     expect(html).toContain(en.accountRecords.selectAllShown)
     expect(html).toContain(en.accountRecords.clearSelection)
     expect(html).toContain(en.accountRecords.deleteSelected)
+  })
+
+  it('flags the grid as selecting so hidden checkboxes reveal while a selection is active', () => {
+    const idle = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+    expect(idle).not.toContain('records-timeline-grid--selecting')
+
+    const selecting = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} selectedKeys={new Set(['order:order-1'])} />,
+    )
+    expect(selecting).toContain('records-timeline-grid--selecting')
   })
 })

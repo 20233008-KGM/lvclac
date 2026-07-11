@@ -230,6 +230,7 @@ export const en: Messages = {
     contextSelect: 'Select',
     contextDeselect: 'Deselect',
     contextDeleteSelected: 'Delete selected ({count})',
+    moreActions: 'More actions',
   },
   myPage: {
     title: 'My page',

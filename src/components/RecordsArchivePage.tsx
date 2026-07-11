@@ -215,7 +215,6 @@ function SnapshotTimelineCard({
   record,
   selected,
   contextActive,
-  onDelete,
   onToggleSelect,
   onActivate,
   onContextMenu,
@@ -225,7 +224,6 @@ function SnapshotTimelineCard({
   record: AccountSnapshotRecord
   selected: boolean
   contextActive: boolean
-  onDelete: (id: string) => void
   onToggleSelect: () => void
   onActivate: (event: ActivationEvent) => void
   onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void
@@ -251,19 +249,6 @@ function SnapshotTimelineCard({
         <TimelineValue value={formatPercent(record.result.toleranceRate)} />
         <TimelineValue value={formatLeverageValue(record.result.leverageRatio)} />
       </dl>
-      <div className="records-timeline-card-actions">
-        <button
-          type="button"
-          className="link-btn account-record-delete"
-          disabled={disabled}
-          onClick={(event) => {
-            event.stopPropagation()
-            onDelete(record.id)
-          }}
-        >
-          {copy.delete}
-        </button>
-      </div>
     </article>
   )
 }
@@ -274,7 +259,6 @@ function OrderTimelineCard({
   record,
   selected,
   contextActive,
-  onDelete,
   onToggleSelect,
   onActivate,
   onContextMenu,
@@ -284,7 +268,6 @@ function OrderTimelineCard({
   record: OrderHistoryRecord
   selected: boolean
   contextActive: boolean
-  onDelete: (id: string) => void
   onToggleSelect: () => void
   onActivate: (event: ActivationEvent) => void
   onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void
@@ -310,19 +293,6 @@ function OrderTimelineCard({
         <TimelineValue value={formatNumber(record.orderContracts)} />
         <TimelineValue value={formatNumber(record.orderPrice)} />
       </dl>
-      <div className="records-timeline-card-actions">
-        <button
-          type="button"
-          className="link-btn account-record-delete"
-          disabled={disabled}
-          onClick={(event) => {
-            event.stopPropagation()
-            onDelete(record.id)
-          }}
-        >
-          {copy.delete}
-        </button>
-      </div>
     </article>
   )
 }
@@ -401,6 +371,7 @@ export function RecordsArchiveView({
   const selectedCount = selectedKeys.size
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; entry: TimelineRecord } | null>(null)
+  const [toolbarMenu, setToolbarMenu] = useState<{ x: number; y: number } | null>(null)
 
   const emitSelection = (next: Set<string>) => onSelectedKeysChange?.(next)
 
@@ -490,6 +461,29 @@ export function RecordsArchiveView({
     return items
   }
 
+  const openToolbarMenu = (event: ReactMouseEvent<HTMLElement>) => {
+    setToolbarMenu({ x: event.clientX, y: event.clientY })
+  }
+
+  const toolbarMenuItems: RecordsContextMenuItem[] = []
+  if (onBulkDeleteOrders) {
+    toolbarMenuItems.push({
+      key: 'bulk-orders',
+      label: copy.bulkDeleteOrders,
+      danger: true,
+      onSelect: onBulkDeleteOrders,
+    })
+  }
+  if (onBulkDeleteSnapshots) {
+    toolbarMenuItems.push({
+      key: 'bulk-snapshots',
+      label: copy.bulkDeleteSnapshots,
+      danger: true,
+      onSelect: onBulkDeleteSnapshots,
+    })
+  }
+  const hasToolbarMenu = toolbarMenuItems.length > 0
+
   return (
     <div className="my-page-shell records-archive-page">
       <div className="my-page records-archive">
@@ -521,24 +515,16 @@ export function RecordsArchiveView({
                     </span>
                   </div>
                   <div className="records-timeline-actions">
-                    {onBulkDeleteSnapshots && (
+                    {hasToolbarMenu && (
                       <button
                         type="button"
-                        className="link-btn link-btn--danger"
-                        disabled={snapshotActionsLocked}
-                        onClick={onBulkDeleteSnapshots}
+                        className="records-timeline-more"
+                        aria-haspopup="menu"
+                        aria-label={copy.moreActions}
+                        disabled={orderActionsLocked || snapshotActionsLocked}
+                        onClick={openToolbarMenu}
                       >
-                        {snapshotBulkBusy ? copy.bulkDeleteBusy : copy.bulkDeleteSnapshots}
-                      </button>
-                    )}
-                    {onBulkDeleteOrders && (
-                      <button
-                        type="button"
-                        className="link-btn link-btn--danger"
-                        disabled={orderActionsLocked}
-                        onClick={onBulkDeleteOrders}
-                      >
-                        {orderBulkBusy ? copy.bulkDeleteBusy : copy.bulkDeleteOrders}
+                        <span aria-hidden="true">⋯</span>
                       </button>
                     )}
                   </div>
@@ -600,7 +586,6 @@ export function RecordsArchiveView({
                           <span>{copy.summaryLiquidationBuffer}</span>
                           <span>{copy.summaryLeverage}</span>
                         </div>
-                        <span className="records-timeline-head-actions" />
                       </div>
                       <span className="records-timeline-head-time" aria-hidden="true" />
                       <div className="records-timeline-lane-head records-timeline-lane-head--orders">
@@ -610,10 +595,11 @@ export function RecordsArchiveView({
                           <span>{copy.archiveOrderContracts}</span>
                           <span>{copy.archiveOrderPrice}</span>
                         </div>
-                        <span className="records-timeline-head-actions" />
                       </div>
                     </div>
-                    <div className="records-timeline-grid">
+                    <div
+                      className={`records-timeline-grid${selectedCount > 0 ? ' records-timeline-grid--selecting' : ''}`}
+                    >
                       {timelineRecords.map((entry, index) => {
                         const entryKey = timelineKey(entry)
                         const selected = selectedKeys.has(entryKey)
@@ -632,7 +618,6 @@ export function RecordsArchiveView({
                                   record={entry.record}
                                   selected={selected}
                                   contextActive={contextActive}
-                                  onDelete={onDeleteSnapshot}
                                   onToggleSelect={() => toggleAt(index)}
                                   onActivate={(event) => activateAt(entry, index, event)}
                                   onContextMenu={(event) => openContextMenu(event, entry)}
@@ -655,7 +640,6 @@ export function RecordsArchiveView({
                                   record={entry.record}
                                   selected={selected}
                                   contextActive={contextActive}
-                                  onDelete={onDeleteOrder}
                                   onToggleSelect={() => toggleAt(index)}
                                   onActivate={(event) => activateAt(entry, index, event)}
                                   onContextMenu={(event) => openContextMenu(event, entry)}
@@ -704,6 +688,15 @@ export function RecordsArchiveView({
           ariaLabel={copy.contextMenuLabel}
           items={buildMenuItems(menu.entry)}
           onClose={() => setMenu(null)}
+        />
+      )}
+      {toolbarMenu && hasToolbarMenu && (
+        <RecordsContextMenu
+          x={toolbarMenu.x}
+          y={toolbarMenu.y}
+          ariaLabel={copy.moreActions}
+          items={toolbarMenuItems}
+          onClose={() => setToolbarMenu(null)}
         />
       )}
     </div>

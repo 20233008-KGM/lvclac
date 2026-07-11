@@ -27,6 +27,14 @@ import { supabase } from './supabaseClient'
 const DEFAULT_SNAPSHOT_TITLE = 'Account snapshot'
 const DEFAULT_RECORD_LIMIT = 20
 
+// 장부 슬롯 필터: 전체(all) / 미분류(unassigned = number_set_id is null) / 특정 슬롯(slot)
+export type NumberSetFilter =
+  | { kind: 'all' }
+  | { kind: 'unassigned' }
+  | { kind: 'slot'; id: string }
+
+const ALL_FILTER: NumberSetFilter = { kind: 'all' }
+
 export {
   buildAccountSnapshotPayload,
   buildOrderHistoryPayload,
@@ -51,6 +59,7 @@ export interface OrderHistoryRow {
   after_inputs: unknown
   before_result: unknown
   after_result: unknown
+  number_set_id?: string | null
   created_at: string
 }
 
@@ -61,6 +70,7 @@ export interface AccountSnapshotRow {
   result: unknown
   source?: unknown
   source_local_date?: string | null
+  number_set_id?: string | null
   created_at: string
 }
 
@@ -86,6 +96,7 @@ export interface OrderHistoryRecord {
   afterInputs: CalculatorInputs
   beforeResult: AccountRecordSummary
   afterResult: AccountRecordSummary
+  numberSetId?: string | null
   createdAt: string
 }
 
@@ -96,6 +107,7 @@ export interface AccountSnapshotRecord {
   result: AccountRecordSummary
   source?: AccountSnapshotSource
   sourceLocalDate?: string | null
+  numberSetId?: string | null
   createdAt: string
 }
 
@@ -173,6 +185,7 @@ export function rowToOrderHistoryRecord(row: OrderHistoryRow): OrderHistoryRecor
     afterInputs: toStoredInputs(row.after_inputs),
     beforeResult: summaryFromUnknown(row.before_result),
     afterResult: summaryFromUnknown(row.after_result),
+    numberSetId: row.number_set_id ?? null,
     createdAt: row.created_at,
   }
 }
@@ -186,6 +199,7 @@ export function rowToAccountSnapshotRecord(row: AccountSnapshotRow): AccountSnap
     result: summaryFromUnknown(row.result),
     source,
     sourceLocalDate: row.source_local_date ?? null,
+    numberSetId: row.number_set_id ?? null,
     createdAt: row.created_at,
   }
 }
@@ -217,6 +231,7 @@ function orderPayloadToInsert(userId: string, payload: OrderHistoryPayload) {
     after_inputs: payload.afterInputs,
     before_result: payload.beforeResult,
     after_result: payload.afterResult,
+    number_set_id: payload.numberSetId ?? null,
   }
 }
 
@@ -228,6 +243,7 @@ function snapshotPayloadToInsert(userId: string, payload: AccountSnapshotPayload
     result: payload.result,
     source: payload.source,
     source_local_date: payload.sourceLocalDate,
+    number_set_id: payload.numberSetId ?? null,
   }
 }
 
@@ -258,15 +274,20 @@ export function createAccountRecordsRepository(
       userId: string,
       offset: number,
       limit = DEFAULT_RECORD_LIMIT,
+      filter: NumberSetFilter = ALL_FILTER,
     ): Promise<AccountRecordResult<PaginatedRecords<OrderHistoryRecord>>> {
       if (!client) return unavailable()
 
-      const { data, error } = await client
+      let query = client
         .from('order_history')
         .select(
-          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,created_at',
+          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,created_at',
         )
         .eq('user_id', userId)
+      if (filter.kind === 'slot') query = query.eq('number_set_id', filter.id)
+      else if (filter.kind === 'unassigned') query = query.is('number_set_id', null)
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .range(offset, offset + limit)
         .returns<OrderHistoryRow[]>()
@@ -286,13 +307,18 @@ export function createAccountRecordsRepository(
       userId: string,
       offset: number,
       limit = DEFAULT_RECORD_LIMIT,
+      filter: NumberSetFilter = ALL_FILTER,
     ): Promise<AccountRecordResult<PaginatedRecords<AccountSnapshotRecord>>> {
       if (!client) return unavailable()
 
-      const { data, error } = await client
+      let query = client
         .from('account_snapshots')
-        .select('id,title,inputs,result,source,source_local_date,created_at')
+        .select('id,title,inputs,result,source,source_local_date,number_set_id,created_at')
         .eq('user_id', userId)
+      if (filter.kind === 'slot') query = query.eq('number_set_id', filter.id)
+      else if (filter.kind === 'unassigned') query = query.is('number_set_id', null)
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .range(offset, offset + limit)
         .returns<AccountSnapshotRow[]>()
@@ -311,12 +337,13 @@ export function createAccountRecordsRepository(
     async fetchRecentRecords(
       userId: string,
       limit = DEFAULT_RECORD_LIMIT,
+      filter: NumberSetFilter = ALL_FILTER,
     ): Promise<AccountRecordResult<AccountRecordsBundle>> {
       if (!client) return unavailable()
 
       const [ordersResult, snapshotsResult] = await Promise.all([
-        this.fetchOrderHistoryPage(userId, 0, limit),
-        this.fetchAccountSnapshotsPage(userId, 0, limit),
+        this.fetchOrderHistoryPage(userId, 0, limit, filter),
+        this.fetchAccountSnapshotsPage(userId, 0, limit, filter),
       ])
 
       const ordersFailed = ordersResult.error !== null
@@ -336,19 +363,29 @@ export function createAccountRecordsRepository(
       }
     },
 
-    async fetchRecordCounts(userId: string): Promise<AccountRecordResult<AccountRecordCounts>> {
+    async fetchRecordCounts(
+      userId: string,
+      filter: NumberSetFilter = ALL_FILTER,
+    ): Promise<AccountRecordResult<AccountRecordCounts>> {
       if (!client) return unavailable()
 
-      const [ordersResult, snapshotsResult] = await Promise.all([
-        client
-          .from('order_history')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId),
-        client
-          .from('account_snapshots')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId),
-      ])
+      let ordersQuery = client
+        .from('order_history')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+      let snapshotsQuery = client
+        .from('account_snapshots')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+      if (filter.kind === 'slot') {
+        ordersQuery = ordersQuery.eq('number_set_id', filter.id)
+        snapshotsQuery = snapshotsQuery.eq('number_set_id', filter.id)
+      } else if (filter.kind === 'unassigned') {
+        ordersQuery = ordersQuery.is('number_set_id', null)
+        snapshotsQuery = snapshotsQuery.is('number_set_id', null)
+      }
+
+      const [ordersResult, snapshotsResult] = await Promise.all([ordersQuery, snapshotsQuery])
 
       if (ordersResult.error) return { data: null, error: mapError(ordersResult.error) }
       if (snapshotsResult.error) return { data: null, error: mapError(snapshotsResult.error) }
@@ -372,7 +409,7 @@ export function createAccountRecordsRepository(
         .from('order_history')
         .insert(orderPayloadToInsert(userId, payload))
         .select(
-          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,created_at',
+          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,created_at',
         )
         .single<OrderHistoryRow>()
 
@@ -389,7 +426,7 @@ export function createAccountRecordsRepository(
       const { data, error } = await client
         .from('account_snapshots')
         .insert(snapshotPayloadToInsert(userId, payload))
-        .select('id,title,inputs,result,source,source_local_date,created_at')
+        .select('id,title,inputs,result,source,source_local_date,number_set_id,created_at')
         .single<AccountSnapshotRow>()
 
       if (error) return { data: null, error: mapError(error) }

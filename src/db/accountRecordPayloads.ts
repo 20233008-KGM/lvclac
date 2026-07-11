@@ -27,6 +27,8 @@ export interface OrderHistoryPayload {
   afterInputs: CalculatorInputs
   beforeResult: AccountRecordSummary
   afterResult: AccountRecordSummary
+  // 이 기록을 만든 저장 슬롯(number_sets.id). 클라우드 슬롯이 아니면 null('미분류').
+  numberSetId: string | null
 }
 
 export interface AccountSnapshotPayload {
@@ -35,6 +37,8 @@ export interface AccountSnapshotPayload {
   result: AccountRecordSummary
   source: AccountSnapshotSource
   sourceLocalDate: string | null
+  // 이 스냅샷을 만든 저장 슬롯(number_sets.id). 클라우드 슬롯이 아니면 null('미분류').
+  numberSetId: string | null
 }
 
 function cloneInputs(inputs: CalculatorInputs): CalculatorInputs {
@@ -84,6 +88,7 @@ export function buildAccountSnapshotPayload(
   options: {
     source?: AccountSnapshotSource
     sourceLocalDate?: string | null
+    numberSetId?: string | null
   } = {},
 ): AccountSnapshotPayload {
   return {
@@ -92,6 +97,7 @@ export function buildAccountSnapshotPayload(
     result: summarizeEvaluateResult(result),
     source: options.source ?? 'manual',
     sourceLocalDate: options.sourceLocalDate ?? null,
+    numberSetId: options.numberSetId ?? null,
   }
 }
 
@@ -99,6 +105,7 @@ export function buildOrderHistoryPayload(
   beforeInputs: CalculatorInputs,
   afterInputs: CalculatorInputs,
   orderResult: OrderResult,
+  numberSetId: string | null = null,
 ): OrderHistoryPayload {
   return {
     positionSide: beforeInputs.positionSide,
@@ -108,5 +115,6 @@ export function buildOrderHistoryPayload(
     afterInputs: cloneInputs(afterInputs),
     beforeResult: summarizeOrderBeforeResult(orderResult),
     afterResult: summarizeOrderAfterResult(orderResult),
+    numberSetId,
   }
 }

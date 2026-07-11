@@ -2205,10 +2205,6 @@ html[data-zone='about'] body {
   background: var(--color-bg-elevated);
 }
 
-.records-summary-table--snapshot {
-  align-content: center;
-}
-
 .records-summary-row {
   display: grid;
   align-items: center;

@@ -1251,6 +1251,57 @@ html[data-zone='about'] body {
 }
 
 /*
+ * Pro 사용자는 '구독'이 [구독 관리] 버튼 하나뿐이라 세로로 쌓으면 카드 오른쪽에
+ * 큰 여백이 남는다. 프로필+구독을 왼쪽 열, 연동 로그인을 오른쪽 열로 묶어 두 열
+ * 높이를 맞추고 가로 폭을 채운다. Free 사용자는 '구독' 자리에 요금제 카드(가로 2열)
+ * 업그레이드 패널이 떠서 폭을 다 써야 하므로 이 2단을 적용하지 않고 세로를 유지한다.
+ */
+.my-page-account-hub--split {
+  grid-template-columns: 1fr 1.15fr;
+  grid-template-areas:
+    'identity logins'
+    'billing  logins';
+  column-gap: var(--space-lg);
+  align-items: start;
+}
+
+.my-page-account-hub--split .my-page-account-hub__head {
+  grid-area: identity;
+}
+
+.my-page-account-hub--split .my-page-account-hub__billing {
+  grid-area: billing;
+}
+
+.my-page-account-hub--split .my-page-account-hub__logins {
+  grid-area: logins;
+  /* 세로 스택용 위쪽 구분선 대신, 두 열 사이 세로 구분선으로 바꾼다. */
+  border-top: 0;
+  border-left: 1px solid var(--color-border-subtle);
+  padding-top: 0;
+  padding-left: var(--space-lg);
+}
+
+/* 좁은 화면에서는 2단을 다시 세로 스택으로 접는다(가로 구분선 복원). */
+@media (max-width: 700px) {
+  .my-page-account-hub--split {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'identity'
+      'billing'
+      'logins';
+    column-gap: 0;
+  }
+
+  .my-page-account-hub--split .my-page-account-hub__logins {
+    border-top: 1px solid var(--color-border-subtle);
+    border-left: 0;
+    padding-top: var(--space-md);
+    padding-left: 0;
+  }
+}
+
+/*
  * 설정 행: 개별 카드(테두리+배경) 대신, 공통 왼쪽 정렬선을 공유하는
  * 구분선 리스트로 만든다. "각자 flex 박스에 대충 넣은" 인상을 없애는 핵심.
  */

@@ -872,7 +872,9 @@ export function MyPageView({
               <main className="my-page-console">
               <section
                 id="my-page-profile"
-                className="my-page-panel my-page-account-hub"
+                className={`my-page-panel my-page-account-hub${
+                  isPro ? ' my-page-account-hub--split' : ''
+                }`}
                 aria-labelledby="my-page-profile-title"
               >
                 <h2 id="my-page-profile-title" className="my-page-sr-only">
@@ -958,19 +960,16 @@ export function MyPageView({
                   </button>
                 </div>
 
-                <div className="my-page-account-hub__grid">
-                  {billingPanel && (
-                    <div className="my-page-account-hub__block my-page-account-hub__billing">
-                      {billingPanel}
-                    </div>
-                  )}
-                </div>
+                {billingPanel && (
+                  <div className="my-page-account-hub__block my-page-account-hub__billing">
+                    {billingPanel}
+                  </div>
+                )}
                 <div
                   className="my-page-account-hub__block my-page-account-hub__logins"
                   aria-labelledby="my-page-linked-logins-title"
                 >
                   <h3 id="my-page-linked-logins-title">{copy.linkedLoginTitle}</h3>
-                  <p className="my-page-linked-logins-note">{copy.linkedLoginBody}</p>
                   <ul className="my-page-linked-list">
                   <li className="my-page-linked-row">
                     <span className="my-page-linked-icon" aria-hidden="true">

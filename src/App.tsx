@@ -12,6 +12,13 @@ import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
+import { FieldHintBanner } from './components/FieldHintBanner'
+import {
+  fieldHintActive,
+  readFieldHintDismissed,
+  readTraderStage,
+  writeFieldHintDismissed,
+} from './components/fieldHint'
 import { AuthButton } from './components/auth/AuthButton'
 import { useAuth } from './context/AuthContext'
 import { HowToUseButton } from './components/HowToUseButton'
@@ -349,6 +356,11 @@ function CalculatorApp() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [canRedo, canUndo, redoInputs, undoInputs])
 
+  // 온보딩에서 고른 거래 상태 기반 필드 인디케이터(첫 세션, X로 닫으면 영구 해제).
+  const traderStage = useMemo(() => readTraderStage(), [])
+  const [fieldHintDismissed, setFieldHintDismissed] = useState(readFieldHintDismissed)
+  const fieldHintOn = fieldHintActive(traderStage, fieldHintDismissed)
+
   return (
     <LayoutProvider layoutMode={layoutMode} fitScale={fitScale}>
       <PageShell>
@@ -393,9 +405,19 @@ function CalculatorApp() {
                   <AuthButton variant="header" />
                 </div>
               </header>
+              {fieldHintOn && traderStage && (
+                <FieldHintBanner
+                  stage={traderStage}
+                  onDismiss={() => {
+                    writeFieldHintDismissed()
+                    setFieldHintDismissed(true)
+                  }}
+                />
+              )}
               <main
                 className={`calc-grid${gridScanning ? ' calc-grid--scan' : ''}`}
                 data-scan-gen={gridScanning ? scanGeneration : undefined}
+                data-field-hint={fieldHintOn && traderStage ? traderStage : undefined}
                 ref={containerRef}
                 style={gridStyle}
               >

@@ -2,6 +2,7 @@ import { useEffect, useReducer, useRef } from 'react'
 import { GUIDE_PATH } from '../config/routes'
 import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
+import { writeTraderStage } from './fieldHint'
 import {
   WELCOME_LAST_STEP,
   WELCOME_STEP_COUNT,
@@ -77,8 +78,22 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
     if (!draft.ackChecked) return
     writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))
     setPreset(draft.instrument)
+    if (draft.stage) writeTraderStage(draft.stage)
     onComplete()
   }
+
+  const stageCards: { id: TraderStage; title: string; desc: string }[] = [
+    { id: 'firstTrade', title: c.stageFirst, desc: c.stageFirstDesc },
+    { id: 'noPosition', title: c.stageNone, desc: c.stageNoneDesc },
+    { id: 'hasPosition', title: c.stageHasPosition, desc: c.stageHasPositionDesc },
+  ]
+
+  const usageBody =
+    draft.stage === 'hasPosition'
+      ? c.usageHasPositionBody
+      : draft.stage === 'noPosition'
+        ? c.usageNoneBody
+        : c.usageFirstBody
 
   const isLast = draft.step === WELCOME_LAST_STEP
   const nextDisabled = draft.step === 3 && draft.stage === null
@@ -145,24 +160,18 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
             <>
               <p className="disclaimer-modal-text">{c.stageBody}</p>
               <div className="welcome-options" role="group" aria-label={c.stageTitle}>
-                <button
-                  type="button"
-                  className={`welcome-option welcome-option--card ${draft.stage === 'firstTrade' ? 'welcome-option--active' : ''}`}
-                  aria-pressed={draft.stage === 'firstTrade'}
-                  onClick={() => chooseStage('firstTrade')}
-                >
-                  <span className="welcome-option__title">{c.stageFirst}</span>
-                  <span className="welcome-option__desc">{c.stageFirstDesc}</span>
-                </button>
-                <button
-                  type="button"
-                  className={`welcome-option welcome-option--card ${draft.stage === 'hasPosition' ? 'welcome-option--active' : ''}`}
-                  aria-pressed={draft.stage === 'hasPosition'}
-                  onClick={() => chooseStage('hasPosition')}
-                >
-                  <span className="welcome-option__title">{c.stageHasPosition}</span>
-                  <span className="welcome-option__desc">{c.stageHasPositionDesc}</span>
-                </button>
+                {stageCards.map((card) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    className={`welcome-option welcome-option--card ${draft.stage === card.id ? 'welcome-option--active' : ''}`}
+                    aria-pressed={draft.stage === card.id}
+                    onClick={() => chooseStage(card.id)}
+                  >
+                    <span className="welcome-option__title">{card.title}</span>
+                    <span className="welcome-option__desc">{card.desc}</span>
+                  </button>
+                ))}
               </div>
             </>
           )}
@@ -170,11 +179,9 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
           {draft.step === 4 && (
             <>
               <ul className="welcome-usage-list">
-                {(draft.stage === 'hasPosition' ? c.usageHasPositionBody : c.usageFirstBody).map(
-                  (line, i) => (
-                    <li key={i}>{line}</li>
-                  ),
-                )}
+                {usageBody.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
               </ul>
               <a
                 className="link-btn welcome-flow__guide"

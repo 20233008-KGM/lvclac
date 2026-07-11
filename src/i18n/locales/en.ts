@@ -462,26 +462,42 @@ export const en: Messages = {
     instrumentTitle: 'What do you mainly trade?',
     instrumentBody: 'On-screen terms switch to match. The math is identical across instruments.',
     stageTitle: "What's your situation?",
-    stageBody: "We'll show you which fields to fill first.",
-    stageFirst: "Haven't placed my first order",
-    stageFirstDesc: 'No position yet — planning an entry.',
-    stageHasPosition: 'I already hold a position',
+    stageBody: "We'll highlight which fields to fill first, right on the screen.",
+    stageFirst: "It's my first trade",
+    stageFirstDesc: "No trading experience yet. Show me what to fill in.",
+    stageNone: 'No open position',
+    stageNoneDesc: "I've traded before, but hold nothing right now. Planning an entry.",
+    stageHasPosition: 'I hold a position',
     stageHasPositionDesc: 'I have an open position and want to check my liquidation price.',
     usageTitle: "Here's how to use it",
     usageFirstBody: [
       "You don't need to fill in every field.",
-      'Just enter your planned entry price, contracts, margin rate, and contract multiplier — the liquidation price appears right away.',
+      'Just enter account equity, mark price, contracts, contract multiplier, and margin — the liquidation price appears right away.',
       'Leave the "Order" fields blank for now — those are for adding to a position you already hold.',
+    ],
+    usageNoneBody: [
+      'Enter your planned values to preview your liquidation price.',
+      'Fill in account equity, mark price, contracts, contract multiplier, and margin.',
+      'Add an entry price to also see leverage and notional. You can leave "Order" blank.',
     ],
     usageHasPositionBody: [
       'Enter your holdings to see your current liquidation price.',
-      'Fill in account equity, open contracts, entry price, and margin.',
+      'Fill in account equity, open contracts, entry price, mark price, and margin.',
       'Use "Order" to preview how averaging in or out shifts your liquidation price.',
     ],
     guideLink: 'See the full guide',
     disclaimerStepTitle: 'Before you start',
     disclaimerStepBody:
       'This calculator is for reference only. Trading futures and derivatives carries risk of loss exceeding your principal, and liquidation rules vary by broker and exchange.',
+  },
+  fieldHint: {
+    dismiss: 'Dismiss',
+    firstTrade:
+      'New to this? Fill just the highlighted fields (equity, mark price, contracts, multiplier, margin) and your liquidation price appears. The dimmed fields can wait.',
+    noPosition:
+      'Enter your planned values in the highlighted fields to preview your liquidation price. You can leave "Order" blank.',
+    hasPosition:
+      'Fill the highlighted fields with your holdings to see your current liquidation price. Use "Order" to preview averaging in.',
   },
   fields: {
     accountEquity: {

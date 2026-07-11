@@ -502,7 +502,7 @@ function MarginSection({
   const tooltipLabel = t.fieldTooltipLabel
   const guardProps = {
     disabled: scenarioModeActive,
-    className: setupScreen ? 'field--setup-screen' : '',
+    className: `${setupScreen ? 'field--setup-screen' : ''} fh-margin`.trim(),
     guardLocked,
     onGuardBlocked,
   }
@@ -710,7 +710,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             tooltipLabel={t.fieldTooltipLabel}
             tooltipGuideHref={GUIDE_PATH}
             tooltipGuideLinkLabel={t.tooltipGuideLink}
-            className={frozenFieldClass}
+            className={`${frozenFieldClass} fh-equity`.trim()}
           >
             <NumberInput
               value={displayInputs.accountEval}
@@ -729,7 +729,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           </Field>
           {numField(f.contractAmount, 'contractAmount', displayInputs, onChange, false, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
-            className: frozenFieldClass,
+            className: `${frozenFieldClass} fh-entry`.trim(),
             guardLocked,
             onGuardBlocked: requestUnlock,
           })}
@@ -738,7 +738,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             labelId="contracts-label"
             tooltip={f.contracts.hint}
             tooltipLabel={t.fieldTooltipLabel}
-            className={frozenFieldClass}
+            className={`${frozenFieldClass} fh-contracts`.trim()}
           >
             <NumberStepper
               value={displayInputs.contracts}
@@ -763,21 +763,23 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
 
         <div className="field-section">
           <SectionTitle>{t.sections.instrument}</SectionTitle>
-          <CurrentPriceField
-            inputs={inputs}
-            onChange={onChange}
-            field={setupComplete ? { ...f.currentPrice, hint: c.updateHint } : f.currentPrice}
-            stepUpLabel={t.stepUp}
-            stepDownLabel={t.stepDown}
-            tooltipLabel={t.fieldTooltipLabel}
-            tooltipGuideHref={GUIDE_PATH}
-            tooltipGuideLinkLabel={t.tooltipGuideLink}
-            disabled={scenarioModeActive}
-            rollPnlOnChange={setupComplete}
-          />
+          <div className="fh-mark">
+            <CurrentPriceField
+              inputs={inputs}
+              onChange={onChange}
+              field={setupComplete ? { ...f.currentPrice, hint: c.updateHint } : f.currentPrice}
+              stepUpLabel={t.stepUp}
+              stepDownLabel={t.stepDown}
+              tooltipLabel={t.fieldTooltipLabel}
+              tooltipGuideHref={GUIDE_PATH}
+              tooltipGuideLinkLabel={t.tooltipGuideLink}
+              disabled={scenarioModeActive}
+              rollPnlOnChange={setupComplete}
+            />
+          </div>
           {numField(f.contractMultiplier, 'contractMultiplier', inputs, onChange, false, t.optional, true, t.fieldTooltipLabel, {
             disabled: scenarioModeActive,
-            className: frozenFieldClass,
+            className: `${frozenFieldClass} fh-mult`.trim(),
             guardLocked,
             onGuardBlocked: requestUnlock,
           })}

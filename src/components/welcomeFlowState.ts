@@ -1,8 +1,15 @@
 import type { PresetId } from '../i18n'
 import type { WelcomeRegion } from './welcomePreferences'
 
-/** 거래 상태: 첫 주문 전(포지션 없음) vs 이미 포지션 보유. 안내 문구만 가른다(계산기 불변). */
-export type TraderStage = 'firstTrade' | 'hasPosition'
+/**
+ * 거래 상태(3단계). 계산기 로직은 불변, 어느 칸부터 채우면 되는지 시각 안내만 가른다.
+ * - firstTrade: 첫 거래(계좌에 포지션 없음, 진입 계획)
+ * - noPosition: 첫 거래는 아니지만 계좌에 상품 없음(경험자 진입 계획)
+ * - hasPosition: 계좌에 상품 보유(현재 청산가 모니터링)
+ */
+export type TraderStage = 'firstTrade' | 'noPosition' | 'hasPosition'
+
+export const TRADER_STAGES: readonly TraderStage[] = ['firstTrade', 'noPosition', 'hasPosition']
 
 /** 단계: 0 환영 · 1 지역 · 2 거래종목 · 3 거래상태 · 4 사용법 · 5 면책동의 */
 export const WELCOME_STEP_COUNT = 6

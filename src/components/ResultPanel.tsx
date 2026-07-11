@@ -522,7 +522,7 @@ function OrderInputs({
 
   return (
     <div
-      className={`result-order-fields${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
+      className={`result-order-fields fh-order${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
     >
       <div className="field result-order-field result-order-field--contracts">
         <span className="result-order-field__label field-label-row" id="order-contracts-label">

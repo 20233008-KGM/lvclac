@@ -5365,6 +5365,91 @@ a.site-footer__link:hover {
   align-self: center;
 }
 
+/* 거래 상태별 필드 인디케이터 (코치 배너 + 강조/흐림) */
+.field-hint-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.field-hint-banner__icon {
+  font-size: 1.1rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.field-hint-banner__text {
+  flex: 1;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.field-hint-banner__close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.field-hint-banner__close:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.fh-equity,
+.fh-entry,
+.fh-contracts,
+.fh-mult,
+.fh-margin,
+.fh-mark,
+.fh-order {
+  transition: opacity 0.2s ease, outline-color 0.2s ease;
+}
+
+/* 상황별 강조: 청산가에 필요한 핵심 칸 (+ 상황에 따라 진입가·추가주문) */
+[data-field-hint='firstTrade'] .fh-equity,
+[data-field-hint='firstTrade'] .fh-mark,
+[data-field-hint='firstTrade'] .fh-contracts,
+[data-field-hint='firstTrade'] .fh-mult,
+[data-field-hint='firstTrade'] .fh-margin,
+[data-field-hint='noPosition'] .fh-equity,
+[data-field-hint='noPosition'] .fh-mark,
+[data-field-hint='noPosition'] .fh-contracts,
+[data-field-hint='noPosition'] .fh-mult,
+[data-field-hint='noPosition'] .fh-margin,
+[data-field-hint='noPosition'] .fh-entry,
+[data-field-hint='hasPosition'] .fh-equity,
+[data-field-hint='hasPosition'] .fh-mark,
+[data-field-hint='hasPosition'] .fh-contracts,
+[data-field-hint='hasPosition'] .fh-mult,
+[data-field-hint='hasPosition'] .fh-margin,
+[data-field-hint='hasPosition'] .fh-entry,
+[data-field-hint='hasPosition'] .fh-order {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-md);
+}
+
+/* 상황별 흐림: 지금 안 채워도 되는 칸 */
+[data-field-hint='firstTrade'] .fh-entry,
+[data-field-hint='firstTrade'] .fh-order,
+[data-field-hint='noPosition'] .fh-order {
+  opacity: 0.4;
+}
+
 @media (min-width: 1024px) {
   .calc-grid__banner {
     grid-column: 2 / 5;

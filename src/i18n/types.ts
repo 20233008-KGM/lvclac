@@ -452,14 +452,24 @@ export interface Messages {
     stageBody: string
     stageFirst: string
     stageFirstDesc: string
+    stageNone: string
+    stageNoneDesc: string
     stageHasPosition: string
     stageHasPositionDesc: string
     usageTitle: string
     usageFirstBody: string[]
+    usageNoneBody: string[]
     usageHasPositionBody: string[]
     guideLink: string
     disclaimerStepTitle: string
     disclaimerStepBody: string
+  }
+  /** 계산기 필드 인디케이터(거래 상태별 '이 칸부터') 코치 배너 카피 */
+  fieldHint: {
+    dismiss: string
+    firstTrade: string
+    noPosition: string
+    hasPosition: string
   }
   fields: {
     accountEquity: FieldCopy

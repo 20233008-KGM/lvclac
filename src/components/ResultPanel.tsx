@@ -32,6 +32,7 @@ import { FORMULAS_PATH, GUIDE_PATH, MY_PAGE_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useAuth } from '../context/AuthContext'
+import { useCalculator } from '../context/CalculatorContext'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
@@ -731,6 +732,10 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
   const userId = user?.id ?? null
+  const { storageMode, activeNumberSetId } = useCalculator()
+  // 기록을 어느 슬롯에서 만들었는지 태그. 클라우드 슬롯일 때만 실제 number_sets.id이고,
+  // 로컬 모드/미선택이면 null('미분류'). FK 위반 방지를 위해 로컬 id는 태그하지 않는다.
+  const activeCloudNumberSetId = storageMode === 'cloud' ? activeNumberSetId : null
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [snapshotBusy, setSnapshotBusy] = useState(false)
   const [snapshotSavedModalOpen, setSnapshotSavedModalOpen] = useState(false)
@@ -765,6 +770,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       inputs,
       evaluateResult,
       t.accountRecords.snapshotsTab,
+      { numberSetId: activeCloudNumberSetId },
     )
     const result = await recordsRepository.createAccountSnapshot(userId, payload)
     if (activeRecordsUserIdRef.current !== userId) {
@@ -779,13 +785,13 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
 
     setSnapshotSavedModalOpen(true)
     setSnapshotBusy(false)
-  }, [evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
+  }, [activeCloudNumberSetId, evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
 
   const saveOrderRecord = useCallback<OrderApplyHandler>(
     (beforeInputs, afterInputs, result) => {
       if (!userId || !user?.autoSaveOrderHistory) return
 
-      const payload = buildOrderHistoryPayload(beforeInputs, afterInputs, result)
+      const payload = buildOrderHistoryPayload(beforeInputs, afterInputs, result, activeCloudNumberSetId)
       const saveGeneration = beginOrderHistorySave()
       setOrderSaveNotice(null)
       void recordsRepository.createOrderHistory(userId, payload).then((created) => {
@@ -802,7 +808,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         }
       })
     },
-    [recordsRepository, t.accountRecords.orderSaveError, user?.autoSaveOrderHistory, userId],
+    [activeCloudNumberSetId, recordsRepository, t.accountRecords.orderSaveError, user?.autoSaveOrderHistory, userId],
   )
 
   useEffect(() => {

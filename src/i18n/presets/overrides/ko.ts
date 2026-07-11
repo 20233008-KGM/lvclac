@@ -30,19 +30,25 @@ const futuresBase: PresetOverride = {
 }
 
 export const koPresetOverrides: Record<NamedPreset, PresetOverride> = {
-  // 지수선물: 진입값이 지수 포인트라 진입 라벨만 조정
+  // 지수선물: 진입값은 지수 포인트, 승수는 KRX식 '거래승수'
   index: mergeOverride(futuresBase, {
-    fields: { contractAmount: { label: '진입 지수·가격' } },
+    fields: {
+      contractAmount: { label: '진입 지수·가격' },
+      contractMultiplier: { label: '거래승수' },
+    },
   }),
-  // 종목선물: 주당 가격
+  // 종목선물: 주당 가격 + 1계약당 주식 수(거래승수)
   stock: mergeOverride(futuresBase, {
-    fields: { contractAmount: { label: '진입 가격(주당)' } },
+    fields: {
+      contractAmount: { label: '진입 가격(주당)' },
+      contractMultiplier: { label: '거래승수(주식수)' },
+    },
   }),
-  // 원자재선물: 계약크기 단위(배럴 등) 강조
+  // 원자재선물: 1계약 단위 크기(배럴·톤 등)
   commodity: mergeOverride(futuresBase, {
     fields: {
       contractAmount: { label: '진입 가격' },
-      contractMultiplier: { label: '계약크기(배럴·단위)' },
+      contractMultiplier: { label: '계약단위(계약크기)' },
     },
   }),
   // 외환(FX): 랏 단위 + 필요증거금 어휘

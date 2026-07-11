@@ -9,8 +9,12 @@ type NamedPreset = Exclude<PresetId, 'default'>
  * (ko처럼 canonical 전체를 강제하지 않음 — 무결성 테스트에서 en은 느슨하게 검증).
  */
 export const enPresetOverrides: Record<NamedPreset, PresetOverride> = {
-  index: {},
-  stock: {},
+  index: {
+    fields: { contractMultiplier: { label: 'Index multiplier' } },
+  },
+  stock: {
+    fields: { contractMultiplier: { label: 'Shares per contract' } },
+  },
   commodity: {
     fields: { contractMultiplier: { label: 'Contract size (unit)' } },
   },
@@ -29,6 +33,7 @@ export const enPresetOverrides: Record<NamedPreset, PresetOverride> = {
   cfd: {
     fields: {
       contracts: { label: 'Position size (units)' },
+      contractMultiplier: { label: 'Contract size' },
     },
   },
 }

@@ -6,6 +6,10 @@
     "whimsical": {
       "url": "https://mcp.whimsical.com/mcp"
     },
+    "linear": {
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp"
+    },
     "google-calendar": {
       "command": "npx",
       "args": ["-y", "@cocal/google-calendar-mcp"],

@@ -552,4 +552,100 @@ describe('account records repository helpers', () => {
       },
     ])
   })
+
+  it('fetchAccountSnapshotsPage applies a slot filter via .eq(number_set_id)', async () => {
+    const filterCalls: { method: string; column: string; value: unknown }[] = []
+    const makeChain = () => {
+      const chain = {
+        eq(column: string, value: unknown) {
+          filterCalls.push({ method: 'eq', column, value })
+          return chain
+        },
+        is(column: string, value: unknown) {
+          filterCalls.push({ method: 'is', column, value })
+          return chain
+        },
+        order() {
+          return {
+            range() {
+              return { returns: () => Promise.resolve({ data: [], error: null }) }
+            },
+          }
+        },
+      }
+      return chain
+    }
+    const client = { from: () => ({ select: () => makeChain() }) }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await repo.fetchAccountSnapshotsPage('user-1', 0, 20, { kind: 'slot', id: 'slot-9' })
+
+    expect(filterCalls).toEqual([
+      { method: 'eq', column: 'user_id', value: 'user-1' },
+      { method: 'eq', column: 'number_set_id', value: 'slot-9' },
+    ])
+  })
+
+  it('fetchOrderHistoryPage applies the unassigned filter via .is(number_set_id, null)', async () => {
+    const filterCalls: { method: string; column: string; value: unknown }[] = []
+    const makeChain = () => {
+      const chain = {
+        eq(column: string, value: unknown) {
+          filterCalls.push({ method: 'eq', column, value })
+          return chain
+        },
+        is(column: string, value: unknown) {
+          filterCalls.push({ method: 'is', column, value })
+          return chain
+        },
+        order() {
+          return {
+            range() {
+              return { returns: () => Promise.resolve({ data: [], error: null }) }
+            },
+          }
+        },
+      }
+      return chain
+    }
+    const client = { from: () => ({ select: () => makeChain() }) }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await repo.fetchOrderHistoryPage('user-1', 0, 20, { kind: 'unassigned' })
+
+    expect(filterCalls).toEqual([
+      { method: 'eq', column: 'user_id', value: 'user-1' },
+      { method: 'is', column: 'number_set_id', value: null },
+    ])
+  })
+
+  it('fetchAccountSnapshotsPage with the default (all) filter adds no number_set_id constraint', async () => {
+    const filterCalls: { method: string; column: string }[] = []
+    const makeChain = () => {
+      const chain = {
+        eq(column: string) {
+          filterCalls.push({ method: 'eq', column })
+          return chain
+        },
+        is(column: string) {
+          filterCalls.push({ method: 'is', column })
+          return chain
+        },
+        order() {
+          return {
+            range() {
+              return { returns: () => Promise.resolve({ data: [], error: null }) }
+            },
+          }
+        },
+      }
+      return chain
+    }
+    const client = { from: () => ({ select: () => makeChain() }) }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await repo.fetchAccountSnapshotsPage('user-1', 0, 20)
+
+    expect(filterCalls).toEqual([{ method: 'eq', column: 'user_id' }])
+  })
 })

@@ -62,7 +62,9 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 - Release 성격의 변경은 Release Notes 또는 Releases DB에 남깁니다.
 - 버그, 장애, QA 리스크는 QA / Test Plan 또는 Incidents / QA DB에 남깁니다.
-- **되돌리기 어려운 제품/기술 결정·설계 결정·타당성 조사(ADR 성격)는 Notion [`Decision Log / ADR`](https://app.notion.com/p/39826e6d586f81eea2b7d189f74426b2)에 요약을 기록**합니다. 상세 기술 스펙·조사 원본은 repo `docs/superpowers/specs/`에 두고 Decision Log에서 링크합니다.
+
+- **되돌리기 어려운 제품/기술·UX 결정·설계·타당성 조사(ADR 성격)는 Notion [`Design & Decision Log`](https://app.notion.com/p/c97c38480a8249baaf18c43591d47281) DB에 행으로 기록**합니다(맥락·대안·근거·영향을 속성+본문에, Type = ADR·결정 / Design·UX / Spec·설계). repo·Work Log에 별도 설계/결정 문서로 두지 않습니다.
+
 - 오래된 Notion의 `휴지통/레거시`는 참고전용입니다.
 - repo의 `docs/legacy/`또한 레거시 문서로서 참고 전용으로 봅니다.
 

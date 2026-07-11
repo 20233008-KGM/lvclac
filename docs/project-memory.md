@@ -55,11 +55,14 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 - 모든 종류의(행정,법무,개발 등등) 업무 종료 시 [Work Log](https://app.notion.com/p/5ed33baec3464baa9e4517217a0f90ef?v=85c0159949314d4a87f1f2217f3e3d60)에 꼭 업무 내용을 상세히 기록합니다.
 - **Work Log의 `Date`(날짜) 속성은 날짜만 찍지 말고 반드시 시·분까지 포함**해서 기록합니다(시간 포함 = datetime). 같은 날 여러 건이 쌓여도 순서가 정확히 잡히고, 최근순 정렬이 제대로 동작합니다. 기본 표 뷰(Default view)는 `Date` 내림차순(최근이 맨 위)으로 고정되어 있습니다.
+
 - **Work Log 페이지를 만들 때는 작업 성격에 맞는 이모지 아이콘을 꼭 답니다**(`notion-create-pages`의 `icon` 파라미터). 리스트가 한눈에 보기 좋아집니다. 권장 매핑: ✨신규 · 🐛버그수정 · 🔧수정/개선 · 📝문서/규칙 · ✅QA/검증 · 🚀릴리즈 · 🎨UI/스타일 · 🏷️이름/라벨 · ♻️리팩터 · 🔒보안/인증 · 🗂️데이터/DB (애매하면 📝).
+
 - 모든 종류의(행정,법무,개발 등등) 업무 종료 시 tasks db( https://app.notion.com/p/9677d2bd9bb74376a7ee964292978f24?v=61e5027eeaca4942bbb24bc71475d7cf)에 꼭 업무 내용을 상세히 기록하고 최신화합니다.
 
 - Release 성격의 변경은 Release Notes 또는 Releases DB에 남깁니다.
 - 버그, 장애, QA 리스크는 QA / Test Plan 또는 Incidents / QA DB에 남깁니다.
+- **되돌리기 어려운 제품/기술 결정·설계 결정·타당성 조사(ADR 성격)는 Notion [`Decision Log / ADR`](https://app.notion.com/p/39826e6d586f81eea2b7d189f74426b2)에 요약을 기록**합니다. 상세 기술 스펙·조사 원본은 repo `docs/superpowers/specs/`에 두고 Decision Log에서 링크합니다.
 - 오래된 Notion의 `휴지통/레거시`는 참고전용입니다.
 - repo의 `docs/legacy/`또한 레거시 문서로서 참고 전용으로 봅니다.
 

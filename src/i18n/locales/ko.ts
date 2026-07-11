@@ -579,7 +579,7 @@ export const ko: Messages = {
     emailRequired: '이메일을 입력해 주세요.',
     emailInvalid: '올바른 이메일 형식이 아닙니다.',
     passwordRequired: '비밀번호를 입력해 주세요.',
-    passwordTooShort: '비밀번호는 12자 이상이어야 합니다.',
+    passwordTooShort: '비밀번호는 8자 이상이어야 합니다.',
     passwordTooLong: '비밀번호는 128자 이하로 입력해 주세요.',
     passwordTooCommon: '너무 흔한 비밀번호입니다. 다른 비밀번호를 사용해 주세요.',
     passwordMissingCharTypes: '영문·숫자·특수문자를 각각 최소 1자 포함해 주세요.',

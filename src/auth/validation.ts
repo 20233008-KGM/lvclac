@@ -2,9 +2,9 @@ import { COMMON_PASSWORDS } from './commonPasswords'
 
 const MAX_NICKNAME_LENGTH = 20
 const MIN_NICKNAME_LENGTH = 2
-const MIN_PASSWORD_LENGTH = 12
+const MIN_PASSWORD_LENGTH = 8
 const MAX_PASSWORD_LENGTH = 128
-// 최소 12자. Supabase 대시보드 Auth 최소 길이도 동일하게 맞춰 클라이언트 우회를 막는다.
+// 최소 8자. Supabase 대시보드 Auth 최소 길이도 동일하게 맞춰 클라이언트 우회를 막는다.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // 영문(대소문자 무관) / 숫자 / 특수문자 각 최소 1자 포함 요건 검사용.

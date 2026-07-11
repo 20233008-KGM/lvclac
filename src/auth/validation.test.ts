@@ -17,8 +17,8 @@ describe('auth validation', () => {
 
   it('rejects missing, short, long, common, and low-variety new passwords', () => {
     expect(validateNewPassword('')).toBe('password_required')
-    // 11자 — 최소 12자 미만
-    expect(validateNewPassword('aB3$aB3$aB3')).toBe('password_too_short')
+    // 7자 — 최소 8자 미만
+    expect(validateNewPassword('aB3$xyz')).toBe('password_too_short')
     expect(validateNewPassword('a1!'.repeat(43))).toBe('password_too_long') // 129자
     // 흔한 비밀번호는 조합 검사보다 먼저 걸러진다
     expect(validateNewPassword('passwordpassword')).toBe('password_too_common')

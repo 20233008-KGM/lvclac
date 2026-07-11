@@ -592,7 +592,7 @@ export const en: Messages = {
     emailRequired: 'Please enter your email.',
     emailInvalid: 'Please enter a valid email address.',
     passwordRequired: 'Please enter your password.',
-    passwordTooShort: 'Password must be at least 12 characters.',
+    passwordTooShort: 'Password must be at least 8 characters.',
     passwordTooLong: 'Password must be 128 characters or fewer.',
     passwordTooCommon: 'This password is too common. Choose another password.',
     passwordMissingCharTypes: 'Include at least one letter, one number, and one symbol.',

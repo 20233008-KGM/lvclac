@@ -6,7 +6,7 @@ import { COMMON_PASSWORDS } from './commonPasswords'
  */
 export type PasswordStrength = 'weak' | 'fair' | 'strong'
 
-const MIN_STRONG_BASELINE = 12
+const MIN_STRONG_BASELINE = 8
 
 /** 포함된 문자 종류 수(소문자·대문자·숫자·특수문자) 0~4. */
 function countCharClasses(password: string): number {

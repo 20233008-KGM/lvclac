@@ -3,6 +3,10 @@ import type { CalcMessageCode } from './calcMessages'
 
 export type Locale = 'ko' | 'en'
 
+/** 용어 프리셋 식별자. 'default'는 미선택(현재 국내선물 어휘), 나머지는 상품군별. */
+export const PRESET_IDS = ['default', 'index', 'stock', 'commodity', 'fx', 'cfd'] as const
+export type PresetId = (typeof PRESET_IDS)[number]
+
 export interface FieldCopy {
   label: string
   hint: string
@@ -319,6 +323,8 @@ export interface Messages {
     navPlanPreferences: string
     navSupport: string
     preferencesTitle: string
+    glossaryPresetTitle: string
+    glossaryPresetBody: string
     accountSettingGuardToggleLabel: string
     accountSettingGuardToggleHint: string
     numberSetsTitle: string
@@ -422,6 +428,11 @@ export interface Messages {
     totalHint: string
     /** 증거금 입력 방식 토글 ? 툴팁 본문 */
     tooltip: string
+  }
+  /** 용어 프리셋 선택기(상단 상시 셀렉터·마이페이지 공용) 카피 */
+  glossaryPreset: {
+    label: string
+    options: Record<PresetId, string>
   }
   fields: {
     accountEquity: FieldCopy

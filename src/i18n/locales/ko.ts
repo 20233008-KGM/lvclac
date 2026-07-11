@@ -317,6 +317,9 @@ export const ko: Messages = {
     navPlanPreferences: '구독·환경설정',
     navSupport: '지원',
     preferencesTitle: '환경설정',
+    glossaryPresetTitle: '거래 종목 · 용어',
+    glossaryPresetBody:
+      '자주 쓰는 상품군을 고르면 화면 용어가 그 어휘로 바뀝니다. 계산 방식은 그대로예요.',
     accountSettingGuardToggleLabel: '계좌 세팅 변경 시 경고모달 띄우기',
     accountSettingGuardToggleHint: '이 기기에서만 적용됩니다. 계정에는 저장되지 않습니다.',
     numberSetsTitle: '숫자세트',
@@ -420,6 +423,17 @@ export const ko: Messages = {
     totalHint: 'HTS·MTS에 표시된 총 증거금을 그대로 입력합니다.',
     tooltip:
       '# 증거금 입력 방식\n비율·계약당·총액 중 종목에 맞는 방식을 선택하세요.\n\n────────\n\n[비율]\n\n국내 선물 약정가치 대비 비율입니다.\n\n────────\n\n[계약당]\n\n해외 선물 1계약당 고정 금액입니다. 총액 = 계약당 × 계약수\n\n────────\n\n[총액]\n\nHTS·MTS에 표시된 총 증거금을 그대로 입력합니다.',
+  },
+  glossaryPreset: {
+    label: '거래 종목',
+    options: {
+      default: '표준(국내 선물)',
+      index: '지수선물',
+      stock: '종목선물',
+      commodity: '원자재선물',
+      fx: '외환(FX)',
+      cfd: 'CFD',
+    },
   },
   fields: {
     accountEquity: {

@@ -16,11 +16,20 @@ import {
   STORAGE_KEY,
 } from './detectLocale'
 import { isCalcMessageCode, type CalcMessageCode } from './calcMessages'
-import type { Locale, Messages } from './types'
+import {
+  applyPreset,
+  detectInitialPreset,
+  getPresetOverride,
+  persistPreset,
+} from './presets'
+import type { Locale, Messages, PresetId } from './types'
 
 interface LanguageContextValue {
   locale: Locale
   setLocale: (locale: Locale) => void
+  /** 활성 용어 프리셋(상품군 어휘). 'default' = 현재 국내선물 어휘 */
+  preset: PresetId
+  setPreset: (preset: PresetId) => void
   t: Messages
   translateCalcMessage: (code: string | null | undefined) => string | null
 }
@@ -34,6 +43,7 @@ const localeLoaders: Record<Locale, () => Promise<Messages>> = {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(detectInitialLocale)
+  const [preset, setPresetState] = useState<PresetId>(detectInitialPreset)
   const [messages, setMessages] = useState<Messages | null>(null)
   const cacheRef = useRef<Partial<Record<Locale, Messages>>>({})
 
@@ -76,7 +86,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, next)
   }, [])
 
-  const t = messages
+  const setPreset = useCallback((next: PresetId) => {
+    setPresetState(next)
+    persistPreset(next)
+  }, [])
+
+  // 로드된 로케일 위에 프리셋 오버라이드를 얕게 병합(로더/캐시 바깥에서만).
+  // 프리셋은 언어와 직교하므로 로케일 로딩 로직은 전혀 건드리지 않는다.
+  const t = useMemo(
+    () => (messages ? applyPreset(messages, getPresetOverride(locale, preset)) : null),
+    [messages, locale, preset],
+  )
 
   useEffect(() => {
     if (!t) return
@@ -112,8 +132,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => {
     if (!t) return null
-    return { locale, setLocale, t, translateCalcMessage }
-  }, [locale, setLocale, t, translateCalcMessage])
+    return { locale, setLocale, preset, setPreset, t, translateCalcMessage }
+  }, [locale, setLocale, preset, setPreset, t, translateCalcMessage])
 
   if (!value) return null
 

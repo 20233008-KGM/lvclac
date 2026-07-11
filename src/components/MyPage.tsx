@@ -42,6 +42,7 @@ import { authErrorMessage } from './auth/authMessages'
 import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
 import { BillingPanel } from './billing/BillingPanel'
+import { PresetSelect } from './PresetSelect'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
 
@@ -1647,6 +1648,11 @@ export function MyPage() {
               aria-labelledby="my-page-preferences-title"
             >
               <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
+              <div className="my-page-preference-block">
+                <h3>{t.myPage.glossaryPresetTitle}</h3>
+                <p>{t.myPage.glossaryPresetBody}</p>
+                <PresetSelect variant="inline" />
+              </div>
               <NumberSetPreferencesPanel
                 copy={t.myPage}
                 localNumberSets={localNumberSets}

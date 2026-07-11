@@ -5222,6 +5222,51 @@ a.site-footer__link:hover {
   background: var(--color-surface-2);
 }
 
+/* 용어 프리셋(거래 종목) 선택기 */
+.preset-select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.preset-select__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.preset-select__control {
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.preset-select__control:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* 언어 토글 바로 아래 좌상단에 고정, 페이지 레이아웃과 분리 */
+.preset-select--fixed {
+  position: fixed;
+  top: calc(var(--space-sm) + 48px);
+  left: var(--space-sm);
+  z-index: 900;
+  padding: 2px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.preset-select--fixed .preset-select__control {
+  border-color: transparent;
+}
+
 @media (min-width: 1024px) {
   .calc-grid__banner {
     grid-column: 2 / 5;

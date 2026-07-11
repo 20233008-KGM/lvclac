@@ -324,6 +324,9 @@ export const en: Messages = {
     navPlanPreferences: 'Plan & preferences',
     navSupport: 'Support',
     preferencesTitle: 'Preferences',
+    glossaryPresetTitle: 'Instrument · Terminology',
+    glossaryPresetBody:
+      'Pick the instrument you trade and the on-screen terms switch to that vocabulary. The math stays the same.',
     accountSettingGuardToggleLabel: 'Show warning when changing account setup',
     accountSettingGuardToggleHint: 'Applies to this device only — not synced to your account.',
     numberSetsTitle: 'Number sets',
@@ -431,6 +434,17 @@ export const en: Messages = {
     totalHint: 'Enter the total margin shown in your broker app as-is.',
     tooltip:
       '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nMargin as a ratio of notional (domestic futures).\n\n────────\n\n[Per contract]\n\nFixed margin per contract. Total = per-contract × contracts (overseas).\n\n────────\n\n[Total]\n\nEnter the total margin shown in your broker app as-is.',
+  },
+  glossaryPreset: {
+    label: 'Instrument',
+    options: {
+      default: 'Standard',
+      index: 'Index futures',
+      stock: 'Stock futures',
+      commodity: 'Commodity futures',
+      fx: 'Forex (FX)',
+      cfd: 'CFD',
+    },
   },
   fields: {
     accountEquity: {

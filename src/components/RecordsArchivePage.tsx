@@ -6,8 +6,10 @@ import {
   createAccountRecordsRepository,
   type AccountRecordSummary,
   type AccountSnapshotRecord,
+  type NumberSetFilter,
   type OrderHistoryRecord,
 } from '../db/accountRecords'
+import { fetchNumberSets } from '../db/numberSets'
 import { useLanguage } from '../i18n'
 import { RecordsContextMenu, type RecordsContextMenuItem } from './RecordsContextMenu'
 import type { Messages } from '../i18n/types'
@@ -330,6 +332,9 @@ export function RecordsArchiveView({
   onSelectedKeysChange,
   onDeleteSelected,
   selectionBusy = false,
+  slots = [],
+  slotFilter = { kind: 'all' },
+  onSlotFilterChange,
 }: {
   copy: AccountRecordsCopy
   backLabel?: string
@@ -363,6 +368,9 @@ export function RecordsArchiveView({
   onSelectedKeysChange?: (next: Set<string>) => void
   onDeleteSelected?: () => void
   selectionBusy?: boolean
+  slots?: { id: string; title: string }[]
+  slotFilter?: NumberSetFilter
+  onSlotFilterChange?: (filter: NumberSetFilter) => void
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
   const hasRecords = timelineRecords.length > 0
@@ -372,6 +380,7 @@ export function RecordsArchiveView({
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; entry: TimelineRecord } | null>(null)
   const [toolbarMenu, setToolbarMenu] = useState<{ x: number; y: number } | null>(null)
+  const [slotMenu, setSlotMenu] = useState<{ x: number; y: number } | null>(null)
 
   const emitSelection = (next: Set<string>) => onSelectedKeysChange?.(next)
 
@@ -484,6 +493,28 @@ export function RecordsArchiveView({
   }
   const hasToolbarMenu = toolbarMenuItems.length > 0
 
+  const slotFilterValueLabel =
+    slotFilter.kind === 'all'
+      ? copy.slotFilterAll
+      : slotFilter.kind === 'unassigned'
+        ? copy.slotFilterUnassigned
+        : (slots.find((slot) => slot.id === slotFilter.id)?.title ?? copy.slotFilterLabel)
+  const slotMenuItems: RecordsContextMenuItem[] = onSlotFilterChange
+    ? [
+        { key: 'all', label: copy.slotFilterAll, onSelect: () => onSlotFilterChange({ kind: 'all' }) },
+        {
+          key: 'unassigned',
+          label: copy.slotFilterUnassigned,
+          onSelect: () => onSlotFilterChange({ kind: 'unassigned' }),
+        },
+        ...slots.map((slot) => ({
+          key: `slot:${slot.id}`,
+          label: slot.title,
+          onSelect: () => onSlotFilterChange({ kind: 'slot', id: slot.id }),
+        })),
+      ]
+    : []
+
   return (
     <div className="my-page-shell records-archive-page">
       <div className="my-page records-archive">
@@ -515,6 +546,19 @@ export function RecordsArchiveView({
                     </span>
                   </div>
                   <div className="records-timeline-actions">
+                    {onSlotFilterChange && slotMenuItems.length > 0 && (
+                      <button
+                        type="button"
+                        className="records-slot-filter"
+                        aria-haspopup="menu"
+                        aria-label={copy.slotFilterAria}
+                        onClick={(event) => setSlotMenu({ x: event.clientX, y: event.clientY })}
+                      >
+                        <span className="records-slot-filter-label">{copy.slotFilterLabel}</span>
+                        <span className="records-slot-filter-value">{slotFilterValueLabel}</span>
+                        <span aria-hidden="true">▾</span>
+                      </button>
+                    )}
                     {hasToolbarMenu && (
                       <button
                         type="button"
@@ -699,6 +743,15 @@ export function RecordsArchiveView({
           onClose={() => setToolbarMenu(null)}
         />
       )}
+      {slotMenu && slotMenuItems.length > 0 && (
+        <RecordsContextMenu
+          x={slotMenu.x}
+          y={slotMenu.y}
+          ariaLabel={copy.slotFilterAria}
+          items={slotMenuItems}
+          onClose={() => setSlotMenu(null)}
+        />
+      )}
     </div>
   )
 }
@@ -731,6 +784,8 @@ export function RecordsArchivePage() {
   const [selectionDeleteConfirm, setSelectionDeleteConfirm] = useState(false)
   const recordsRequestIdRef = useRef(0)
   const activeRecordsUserIdRef = useRef(user?.id ?? null)
+  const [numberSetFilter, setNumberSetFilter] = useState<NumberSetFilter>({ kind: 'all' })
+  const [slots, setSlots] = useState<{ id: string; title: string }[]>([])
 
   const loadRecords = useCallback(async () => {
     const requestId = recordsRequestIdRef.current + 1
@@ -757,8 +812,8 @@ export function RecordsArchivePage() {
     setLoading(true)
     setError(null)
     const [bundleResult, countsResult] = await Promise.all([
-      recordsRepository.fetchRecentRecords(userId),
-      recordsRepository.fetchRecordCounts(userId),
+      recordsRepository.fetchRecentRecords(userId, undefined, numberSetFilter),
+      recordsRepository.fetchRecordCounts(userId, numberSetFilter),
     ])
 
     if (recordsRequestIdRef.current !== requestId || activeRecordsUserIdRef.current !== userId) {
@@ -781,7 +836,7 @@ export function RecordsArchivePage() {
     setSnapshotTotal(countsResult.error === null ? countsResult.data.accountSnapshotCount : null)
     setSelectedKeys(new Set())
     setLoading(false)
-  }, [recordsRepository, t.accountRecords.loadError, user?.id])
+  }, [numberSetFilter, recordsRepository, t.accountRecords.loadError, user?.id])
 
   const loadOlderRecords = useCallback(async () => {
     const userId = user?.id ?? null
@@ -794,8 +849,12 @@ export function RecordsArchivePage() {
     setSnapshotLoadingMore(snapshotHasMore)
 
     const [ordersResult, snapshotsResult] = await Promise.all([
-      orderHasMore ? recordsRepository.fetchOrderHistoryPage(userId, orderOffset) : Promise.resolve(null),
-      snapshotHasMore ? recordsRepository.fetchAccountSnapshotsPage(userId, snapshotOffset) : Promise.resolve(null),
+      orderHasMore
+        ? recordsRepository.fetchOrderHistoryPage(userId, orderOffset, undefined, numberSetFilter)
+        : Promise.resolve(null),
+      snapshotHasMore
+        ? recordsRepository.fetchAccountSnapshotsPage(userId, snapshotOffset, undefined, numberSetFilter)
+        : Promise.resolve(null),
     ])
 
     setOrderLoadingMore(false)
@@ -830,6 +889,7 @@ export function RecordsArchivePage() {
     snapshotHasMore,
     snapshotLoadingMore,
     snapshotOffset,
+    numberSetFilter,
     t.accountRecords.loadMoreError,
     user?.id,
   ])
@@ -976,6 +1036,24 @@ export function RecordsArchivePage() {
     void loadRecords()
   }, [loadRecords])
 
+  useEffect(() => {
+    const userId = user?.id ?? null
+    if (!userId) {
+      setSlots([])
+      return
+    }
+    let cancelled = false
+    void fetchNumberSets(userId).then((result) => {
+      if (cancelled) return
+      if (result.error === null) {
+        setSlots(result.data.map((set) => ({ id: set.id, title: set.title })))
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id])
+
   const hasOlderRecords = orderHasMore || snapshotHasMore
   const loadingOlderRecords = orderLoadingMore || snapshotLoadingMore
 
@@ -1016,6 +1094,12 @@ export function RecordsArchivePage() {
         onSelectedKeysChange={setSelectedKeys}
         onDeleteSelected={selectedKeys.size > 0 ? () => setSelectionDeleteConfirm(true) : undefined}
         selectionBusy={selectionBusy}
+        slots={slots}
+        slotFilter={numberSetFilter}
+        onSlotFilterChange={(filter) => {
+          setNumberSetFilter(filter)
+          setDetail(null)
+        }}
       />
       <SiteFooter />
       {bulkDeleteConfirm && (

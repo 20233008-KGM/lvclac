@@ -231,6 +231,10 @@ export const en: Messages = {
     contextDeselect: 'Deselect',
     contextDeleteSelected: 'Delete selected ({count})',
     moreActions: 'More actions',
+    slotFilterLabel: 'Slot',
+    slotFilterAll: 'All slots',
+    slotFilterUnassigned: 'Unassigned',
+    slotFilterAria: 'Filter records by slot',
   },
   myPage: {
     title: 'My page',

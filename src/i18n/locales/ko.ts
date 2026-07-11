@@ -225,6 +225,10 @@ export const ko: Messages = {
     contextDeselect: '선택 취소',
     contextDeleteSelected: '선택한 {count}개 삭제',
     moreActions: '더 많은 작업',
+    slotFilterLabel: '슬롯',
+    slotFilterAll: '전체 슬롯',
+    slotFilterUnassigned: '미분류',
+    slotFilterAria: '슬롯별로 기록 보기',
   },
   myPage: {
     title: '마이페이지',

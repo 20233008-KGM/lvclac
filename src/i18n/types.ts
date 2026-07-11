@@ -230,6 +230,10 @@ export interface Messages {
     contextDeselect: string
     contextDeleteSelected: string
     moreActions: string
+    slotFilterLabel: string
+    slotFilterAll: string
+    slotFilterUnassigned: string
+    slotFilterAria: string
   }
   myPage: {
     title: string

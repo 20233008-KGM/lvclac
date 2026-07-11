@@ -67,4 +67,16 @@
   --cursor-scrub-vertical: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cg fill='none' stroke='%23e8eaed' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3 V13'/%3E%3Cpath d='M5.5 5 L8 2.5 L10.5 5'/%3E%3Cpath d='M5.5 11 L8 13.5 L10.5 11'/%3E%3C/g%3E%3C/svg%3E")
     8 8,
     ns-resize;
+
+  /* MyPage 레이아웃 시스템: 수직 리듬 + 폭 전략 */
+  --sec-gap: var(--space-lg);
+  --sec-pad: var(--space-lg);
+  --head-gap: 20px;
+  --block-gap: 20px;
+  --field-gap: var(--space-md);
+  --label-gap: 6px;
+  --ctrl-h: 34px;
+  --row-min: 48px;
+  --mypage-panel-max: 720px;
+  --mypage-row-max: 520px;
 }

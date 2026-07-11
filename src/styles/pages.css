@@ -3107,3 +3107,25 @@ html[data-zone='about'] body {
     align-items: center;
   }
 }
+
+/* MyPage 폭 전략: ② 패널 측정 폭 캡, ③ 액션 행 밴드 캡 */
+.my-page-console > .my-page-panel {
+  max-width: var(--mypage-panel-max);
+}
+.my-page-console > .my-page-panel:has(.my-page-account-hub--split),
+.my-page-console > .my-page-panel:has(.my-page-plans) {
+  max-width: none;
+}
+.my-page-linked-row,
+.my-page-number-set-row,
+.my-page-storage-row {
+  max-width: var(--mypage-row-max);
+}
+.my-page-automation-form:has(.my-page-field) {
+  max-width: var(--mypage-panel-max);
+}
+@media (min-width: 701px) {
+  .my-page-account-hub--split .my-page-account-hub__logins .my-page-linked-row {
+    max-width: none;
+  }
+}

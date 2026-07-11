@@ -897,7 +897,7 @@ export function MyPageView({
                       {!hasEmail && canSetPassword ? (
                         <button
                           type="button"
-                          className="btn btn-ghost my-page-linked-btn my-page-linked-btn--setup"
+                          className="btn btn-primary my-page-linked-btn my-page-linked-btn--setup"
                           disabled={identityBusy !== null}
                           aria-expanded={passwordFormOpen}
                           aria-controls="my-page-set-password-form"
@@ -933,7 +933,7 @@ export function MyPageView({
                       ) : (
                         <button
                           type="button"
-                          className="btn btn-ghost my-page-linked-btn my-page-linked-btn--setup"
+                          className="btn btn-primary my-page-linked-btn my-page-linked-btn--setup"
                           disabled={identityBusy !== null}
                           onClick={onLinkGoogle}
                         >

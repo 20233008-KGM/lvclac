@@ -30,11 +30,11 @@ const futuresBase: PresetOverride = {
 }
 
 export const koPresetOverrides: Record<NamedPreset, PresetOverride> = {
-  // 지수선물: 진입값은 지수 포인트, 승수는 KRX식 '거래승수'
+  // 지수선물: 진입값은 지수 포인트, 승수는 '지수승수'
   index: mergeOverride(futuresBase, {
     fields: {
       contractAmount: { label: '진입 지수·가격' },
-      contractMultiplier: { label: '거래승수' },
+      contractMultiplier: { label: '지수승수' },
     },
   }),
   // 종목선물: 주당 가격 + 1계약당 주식 수(거래승수)

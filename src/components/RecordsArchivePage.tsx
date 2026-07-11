@@ -199,6 +199,9 @@ function RecordSelectBox({
 }
 
 function handleCardKeyDown(event: ReactKeyboardEvent<HTMLElement>, onActivate: (event: ActivationEvent) => void) {
+  // Only react to keys on the card itself — ignore keydown bubbling up from the
+  // inner checkbox or delete button (otherwise Space/Enter there would also open detail).
+  if (event.target !== event.currentTarget) return
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault()
     onActivate(event)

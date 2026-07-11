@@ -1289,7 +1289,9 @@ html[data-zone='about'] body {
  */
 @media (min-width: 701px) {
   .my-page-account-hub--split .my-page-account-hub__logins .my-page-linked-row {
-    grid-template-columns: 20px minmax(0, 1fr) auto auto;
+    /* 이름만 유연(1fr)하게 줄이고 상태·버튼은 고정폭으로 둔다. 고정폭이라야
+       두 행의 상태·버튼 칸이 같은 열 위치에 와서 세로축 정렬이 유지된다. */
+    grid-template-columns: 20px minmax(0, 1fr) 5.5rem 7rem;
     justify-content: normal;
   }
 }

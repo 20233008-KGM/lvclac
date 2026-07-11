@@ -43,6 +43,7 @@ import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
 import { BillingPanel } from './billing/BillingPanel'
 import { PresetSelect } from './PresetSelect'
+import { readPreferredSnapshotTimeZone } from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
 
@@ -1256,7 +1257,10 @@ export function MyPage() {
   const [automationNotice, setAutomationNotice] = useState<string | null>(null)
   const [numberSetBusy, setNumberSetBusy] = useState(false)
   const [numberSetNotice, setNumberSetNotice] = useState<string | null>(null)
-  const browserTimeZone = useMemo(() => suggestedBrowserTimeZone(), [])
+  const browserTimeZone = useMemo(
+    () => readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
+    [],
+  )
   const automationPanelKey = [
     automationSettings?.updatedAt ?? 'new',
     automationSettings?.label ?? t.myPage.autoSnapshotDefaultLabel,

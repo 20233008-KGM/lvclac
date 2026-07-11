@@ -435,6 +435,42 @@ export const ko: Messages = {
       cfd: 'CFD',
     },
   },
+  welcome: {
+    stepLabel: '{current} / {total}',
+    next: '다음',
+    back: '이전',
+    start: '동의하고 시작',
+    skip: '건너뛰기',
+    greetingTitle: '선물 청산 계산기에 오신 걸 환영해요',
+    greetingBody: '몇 가지만 고르면 화면 용어와 안내를 당신에게 맞춰 드릴게요. 30초면 끝나요.',
+    regionTitle: '어디에서 거래하시나요?',
+    regionBody:
+      '화면 언어와 자동 스냅샷 시간대 기본값을 맞추는 데 써요. 나중에 언제든 바꿀 수 있어요.',
+    regions: { KR: '한국', US: '미국', EU: '유럽', JP: '일본', OTHER: '기타' },
+    instrumentTitle: '주로 어떤 상품을 거래하세요?',
+    instrumentBody: '고른 상품에 맞춰 화면 용어가 바뀝니다. 계산 방식은 어느 상품이든 똑같아요.',
+    stageTitle: '지금 상황을 알려주세요',
+    stageBody: '상황에 맞게 어디부터 채우면 되는지 안내해 드릴게요.',
+    stageFirst: '아직 첫 주문 전이에요',
+    stageFirstDesc: '계좌에 아직 포지션이 없어요. 진입을 계획 중이에요.',
+    stageHasPosition: '이미 포지션이 있어요',
+    stageHasPositionDesc: '계좌에 보유 중인 상품이 있고, 청산가를 확인하고 싶어요.',
+    usageTitle: '이렇게 쓰면 돼요',
+    usageFirstBody: [
+      '모든 칸을 채울 필요 없어요.',
+      '예정 진입가 · 계약수 · 증거금률 · 계약승수만 넣으면 청산가가 바로 나와요.',
+      '“추가 주문” 칸은 지금은 비워 두세요 — 이미 가진 포지션에 더할 때 쓰는 곳이에요.',
+    ],
+    usageHasPositionBody: [
+      '보유 내역을 넣어 지금 청산가를 확인하세요.',
+      '계좌 평가금 · 보유 계약수 · 진입가 · 증거금을 채우면 돼요.',
+      '“추가 주문”으로 물타기·불타기 시 청산가가 어떻게 변하는지도 미리 볼 수 있어요.',
+    ],
+    guideLink: '자세한 사용법 보기',
+    disclaimerStepTitle: '시작하기 전에',
+    disclaimerStepBody:
+      '이 계산기는 참고용이에요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있고, 증권사·거래소마다 청산 규정이 다를 수 있어요.',
+  },
   fields: {
     accountEquity: {
       label: '계좌 평가금액',

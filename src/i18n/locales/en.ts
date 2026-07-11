@@ -446,6 +446,43 @@ export const en: Messages = {
       cfd: 'CFD',
     },
   },
+  welcome: {
+    stepLabel: '{current} / {total}',
+    next: 'Next',
+    back: 'Back',
+    start: 'Agree & start',
+    skip: 'Skip',
+    greetingTitle: 'Welcome to the futures liquidation calculator',
+    greetingBody:
+      "Pick a few things and we'll tailor the on-screen terms and tips to you. Takes about 30 seconds.",
+    regionTitle: 'Where do you trade?',
+    regionBody:
+      'Used to set your display language and default auto-snapshot time zone. You can change it anytime.',
+    regions: { KR: 'Korea', US: 'United States', EU: 'Europe', JP: 'Japan', OTHER: 'Other' },
+    instrumentTitle: 'What do you mainly trade?',
+    instrumentBody: 'On-screen terms switch to match. The math is identical across instruments.',
+    stageTitle: "What's your situation?",
+    stageBody: "We'll show you which fields to fill first.",
+    stageFirst: "Haven't placed my first order",
+    stageFirstDesc: 'No position yet — planning an entry.',
+    stageHasPosition: 'I already hold a position',
+    stageHasPositionDesc: 'I have an open position and want to check my liquidation price.',
+    usageTitle: "Here's how to use it",
+    usageFirstBody: [
+      "You don't need to fill in every field.",
+      'Just enter your planned entry price, contracts, margin rate, and contract multiplier — the liquidation price appears right away.',
+      'Leave the "Order" fields blank for now — those are for adding to a position you already hold.',
+    ],
+    usageHasPositionBody: [
+      'Enter your holdings to see your current liquidation price.',
+      'Fill in account equity, open contracts, entry price, and margin.',
+      'Use "Order" to preview how averaging in or out shifts your liquidation price.',
+    ],
+    guideLink: 'See the full guide',
+    disclaimerStepTitle: 'Before you start',
+    disclaimerStepBody:
+      'This calculator is for reference only. Trading futures and derivatives carries risk of loss exceeding your principal, and liquidation rules vary by broker and exchange.',
+  },
   fields: {
     accountEquity: {
       label: 'Account equity',

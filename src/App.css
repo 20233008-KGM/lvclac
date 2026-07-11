@@ -5267,6 +5267,104 @@ a.site-footer__link:hover {
   border-color: transparent;
 }
 
+/* 첫 진입 환영 온보딩 플로우 (면책 모달 골격 재사용) */
+.welcome-flow__step {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.welcome-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.welcome-options--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.welcome-option {
+  min-height: var(--touch-min);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.welcome-option:hover {
+  background: var(--color-surface-2);
+}
+
+.welcome-option--active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-2);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.welcome-option--card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-md);
+}
+
+.welcome-option__title {
+  font-weight: 600;
+}
+
+.welcome-option__desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.welcome-usage-list {
+  margin: var(--space-md) 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  color: var(--color-text);
+}
+
+.welcome-flow__guide {
+  display: inline-block;
+  margin-top: var(--space-sm);
+}
+
+.welcome-flow__foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.welcome-flow__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.welcome-flow__nav .btn {
+  width: auto;
+  min-width: 96px;
+}
+
+.welcome-flow__step-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.welcome-flow__skip {
+  align-self: center;
+}
+
 @media (min-width: 1024px) {
   .calc-grid__banner {
     grid-column: 2 / 5;

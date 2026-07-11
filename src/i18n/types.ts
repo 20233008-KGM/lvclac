@@ -434,6 +434,33 @@ export interface Messages {
     label: string
     options: Record<PresetId, string>
   }
+  /** 첫 진입 환영 온보딩 플로우 카피 */
+  welcome: {
+    stepLabel: string
+    next: string
+    back: string
+    start: string
+    skip: string
+    greetingTitle: string
+    greetingBody: string
+    regionTitle: string
+    regionBody: string
+    regions: Record<'KR' | 'US' | 'EU' | 'JP' | 'OTHER', string>
+    instrumentTitle: string
+    instrumentBody: string
+    stageTitle: string
+    stageBody: string
+    stageFirst: string
+    stageFirstDesc: string
+    stageHasPosition: string
+    stageHasPositionDesc: string
+    usageTitle: string
+    usageFirstBody: string[]
+    usageHasPositionBody: string[]
+    guideLink: string
+    disclaimerStepTitle: string
+    disclaimerStepBody: string
+  }
   fields: {
     accountEquity: FieldCopy
     maintenanceMarginRate: FieldCopy

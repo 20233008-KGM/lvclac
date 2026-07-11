@@ -13,11 +13,13 @@ import {
 import { usePathname } from '../hooks/usePathname'
 import { useLanguage, type Locale } from '../i18n'
 import {
-  DISCLAIMER_ACK_KEY,
-  DISCLAIMER_SKIP_KEY,
   readDisclaimerSkip,
   shouldAutoShowDisclaimer,
+  writeDisclaimerAck,
+  writeDisclaimerSkip,
 } from './serviceDisclaimerLogic'
+import { shouldShowWelcome, writeWelcomeCompleted } from './welcomeFlowLogic'
+import { WelcomeFlow } from './WelcomeFlow'
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
@@ -33,23 +35,6 @@ type DisclaimerContextValue = {
 }
 
 const DisclaimerContext = createContext<DisclaimerContextValue | null>(null)
-
-function setDisclaimerSkip(skip: boolean): void {
-  try {
-    if (skip) localStorage.setItem(DISCLAIMER_SKIP_KEY, '1')
-    else localStorage.removeItem(DISCLAIMER_SKIP_KEY)
-  } catch {
-    // ignore
-  }
-}
-
-function setDisclaimerAck(): void {
-  try {
-    sessionStorage.setItem(DISCLAIMER_ACK_KEY, '1')
-  } catch {
-    // ignore
-  }
-}
 
 export function LegalEmphasis({ children }: { children: ReactNode }) {
   return <span className="legal-emphasis">{children}</span>
@@ -140,8 +125,14 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
 
 export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const [open, setOpen] = useState(() =>
-    shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
+  // 신규 방문자는 환영 플로우가 유일한 첫 관문. 환영이 뜨는 동안 면책 모달은 배타적으로 숨긴다.
+  const [welcomeOpen, setWelcomeOpen] = useState(() =>
+    shouldShowWelcome(pathname, localStorage, sessionStorage),
+  )
+  const [open, setOpen] = useState(
+    () =>
+      !shouldShowWelcome(pathname, localStorage, sessionStorage) &&
+      shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
   )
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
@@ -151,22 +142,35 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
     setOpen(true)
   }
 
+  // 환영 플로우 완료: 면책 ack/skip + 온보딩 완료 플래그를 한 번에 커밋한 뒤 UI 상태 반영.
+  const handleWelcomeComplete = () => {
+    writeDisclaimerAck(sessionStorage)
+    writeDisclaimerSkip(localStorage, true)
+    writeWelcomeCompleted(localStorage)
+    setSkipActive(true)
+    setWelcomeOpen(false)
+  }
+
   return (
     <DisclaimerContext.Provider value={{ skipActive, showAgain }}>
       {children}
-      {open && (
-        <DisclaimerModalContent
-          mode={mode}
-          onClose={() => setOpen(false)}
-          onAcknowledge={(dontShowAgain) => {
-            setDisclaimerAck()
-            if (dontShowAgain) {
-              setDisclaimerSkip(true)
-              setSkipActive(true)
-            }
-            setOpen(false)
-          }}
-        />
+      {welcomeOpen ? (
+        <WelcomeFlow onComplete={handleWelcomeComplete} />
+      ) : (
+        open && (
+          <DisclaimerModalContent
+            mode={mode}
+            onClose={() => setOpen(false)}
+            onAcknowledge={(dontShowAgain) => {
+              writeDisclaimerAck(sessionStorage)
+              if (dontShowAgain) {
+                writeDisclaimerSkip(localStorage, true)
+                setSkipActive(true)
+              }
+              setOpen(false)
+            }}
+          />
+        )
       )}
     </DisclaimerContext.Provider>
   )

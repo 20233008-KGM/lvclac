@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  normalizeRegion,
   regionToLocale,
   regionToSuggestedPreset,
   regionToTimeZone,
@@ -32,5 +33,17 @@ describe('welcomePreferences', () => {
 
   it('WELCOME_REGIONS는 5종', () => {
     expect(WELCOME_REGIONS).toEqual(['KR', 'US', 'EU', 'JP', 'OTHER'])
+  })
+
+  it('normalizeRegion: 유효 지역만 통과, 나머지는 null(미선택)', () => {
+    expect(normalizeRegion('KR')).toBe('KR')
+    expect(normalizeRegion('JP')).toBe('JP')
+    expect(normalizeRegion('OTHER')).toBe('OTHER')
+    // 알 수 없는/빈/누락 값은 모두 null
+    expect(normalizeRegion('XX')).toBe(null)
+    expect(normalizeRegion('kr')).toBe(null) // 대소문자 구분
+    expect(normalizeRegion('')).toBe(null)
+    expect(normalizeRegion(null)).toBe(null)
+    expect(normalizeRegion(undefined)).toBe(null)
   })
 })

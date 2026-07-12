@@ -325,6 +325,9 @@ export interface Messages {
     preferencesTitle: string
     glossaryPresetTitle: string
     glossaryPresetBody: string
+    regionTitle: string
+    regionBody: string
+    regionPlaceholder: string
     accountSettingGuardToggleLabel: string
     accountSettingGuardToggleHint: string
     numberSetsTitle: string

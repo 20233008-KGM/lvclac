@@ -42,7 +42,15 @@ import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
 import { BillingPanel } from './billing/BillingPanel'
 import { PresetSelect } from './PresetSelect'
-import { readPreferredSnapshotTimeZone } from './welcomePreferences'
+import {
+  readPreferredSnapshotTimeZone,
+  readPreferredRegion,
+  writePreferredRegion,
+  writePreferredSnapshotTimeZone,
+  regionToTimeZone,
+  WELCOME_REGIONS,
+  type WelcomeRegion,
+} from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
 
@@ -702,6 +710,47 @@ function PencilIcon() {
   )
 }
 
+/** 지역 선택 블록. 지역을 바꾸면 자동저장 스냅샷 시간대 기본값만 그 지역으로 맞춘다. */
+function RegionPreferenceBlock({
+  copy,
+  regions,
+  region,
+  onChange,
+}: {
+  copy: MyPageCopy
+  regions: Record<WelcomeRegion, string>
+  region: WelcomeRegion | null
+  onChange: (region: WelcomeRegion) => void
+}) {
+  const selectId = 'my-page-region-select'
+  return (
+    <div className="my-page-preference-block">
+      <h3>{copy.regionTitle}</h3>
+      <p>{copy.regionBody}</p>
+      <label className="my-page-sr-only" htmlFor={selectId}>
+        {copy.regionTitle}
+      </label>
+      <select
+        id={selectId}
+        className="preset-select__control"
+        value={region ?? ''}
+        onChange={(event) => onChange(event.target.value as WelcomeRegion)}
+      >
+        {region == null && (
+          <option value="" disabled>
+            {copy.regionPlaceholder}
+          </option>
+        )}
+        {WELCOME_REGIONS.map((id) => (
+          <option key={id} value={id}>
+            {regions[id]}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 export function MyPageView({
   copy,
   authLoading,
@@ -1149,10 +1198,20 @@ export function MyPage() {
   const [automationNotice, setAutomationNotice] = useState<string | null>(null)
   const [numberSetBusy, setNumberSetBusy] = useState(false)
   const [numberSetNotice, setNumberSetNotice] = useState<string | null>(null)
+  const [region, setRegion] = useState<WelcomeRegion | null>(() => readPreferredRegion())
+  // 지역을 바꾸면 자동저장 스냅샷 시간대 기본값만 그 지역으로 맞춘다(언어·용어는 불변).
   const browserTimeZone = useMemo(
-    () => readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
-    [],
+    () =>
+      region
+        ? regionToTimeZone(region)
+        : readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
+    [region],
   )
+  const handleRegionChange = useCallback((next: WelcomeRegion) => {
+    setRegion(next)
+    writePreferredRegion(next)
+    writePreferredSnapshotTimeZone(regionToTimeZone(next))
+  }, [])
   const automationPanelKey = [
     automationSettings?.updatedAt ?? 'new',
     automationSettings?.label ?? t.myPage.autoSnapshotDefaultLabel,
@@ -1542,6 +1601,12 @@ export function MyPage() {
               aria-labelledby="my-page-preferences-title"
             >
               <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
+              <RegionPreferenceBlock
+                copy={t.myPage}
+                regions={t.welcome.regions}
+                region={region}
+                onChange={handleRegionChange}
+              />
               <div className="my-page-preference-block">
                 <h3>{t.myPage.glossaryPresetTitle}</h3>
                 <p>{t.myPage.glossaryPresetBody}</p>

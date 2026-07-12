@@ -327,6 +327,10 @@ export const en: Messages = {
     glossaryPresetTitle: 'Instrument · Terminology',
     glossaryPresetBody:
       'Pick the instrument you trade and the on-screen terms switch to that vocabulary. The math stays the same.',
+    regionTitle: 'Region',
+    regionBody:
+      'Sets the default time zone for auto-saved snapshots based on your region. Screen language and terms are left unchanged.',
+    regionPlaceholder: 'Select a region',
     accountSettingGuardToggleLabel: 'Show warning when changing account setup',
     accountSettingGuardToggleHint: 'Applies to this device only — not synced to your account.',
     numberSetsTitle: 'Number sets',

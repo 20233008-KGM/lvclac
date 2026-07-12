@@ -320,6 +320,10 @@ export const ko: Messages = {
     glossaryPresetTitle: '거래 종목 · 용어',
     glossaryPresetBody:
       '자주 쓰는 상품군을 고르면 화면 용어가 그 어휘로 바뀝니다. 계산 방식은 그대로예요.',
+    regionTitle: '지역',
+    regionBody:
+      '자동 저장(스냅샷) 시간대의 기본값을 지역에 맞춰 정해요. 화면 언어와 용어는 바뀌지 않아요.',
+    regionPlaceholder: '지역을 선택하세요',
     accountSettingGuardToggleLabel: '계좌 세팅 변경 시 경고모달 띄우기',
     accountSettingGuardToggleHint: '이 기기에서만 적용됩니다. 계정에는 저장되지 않습니다.',
     numberSetsTitle: '숫자세트',

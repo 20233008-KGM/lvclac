@@ -18,6 +18,7 @@ import {
   regionToLocale,
   regionToSuggestedPreset,
   regionToTimeZone,
+  writePreferredRegion,
   writePreferredSnapshotTimeZone,
   type WelcomeRegion,
 } from './welcomePreferences'
@@ -94,6 +95,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
     const persist = draft.saveLocal !== false
     setPreset(draft.instrument)
     if (persist) {
+      writePreferredRegion(draft.region)
       writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))
       if (draft.stage) writeTraderStage(draft.stage)
     }

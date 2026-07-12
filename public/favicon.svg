@@ -1,15 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
   <title>LiqGuard</title>
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b8def" />
+      <stop offset="0.72" stop-color="#5b8def" />
+      <stop offset="1" stop-color="#de5a52" />
+    </linearGradient>
+  </defs>
   <path
-    fill="#5b8def"
-    d="M5 4 Q3 4 3 6 L3 16.5 C3 24 8.5 29 16 31.5 C23.5 29 29 24 29 16.5 L29 6 Q29 4 27 4 Z"
+    fill="url(#lg)"
+    d="M4.5 3 Q2 3 2 5.5 L2 17 C2 24.5 8 30 16 31.8 C24 30 30 24.5 30 17 L30 5.5 Q30 3 27.5 3 Z"
   />
   <path
     fill="none"
     stroke="#f5f7fa"
-    stroke-width="3.4"
+    stroke-width="3.6"
     stroke-linecap="round"
     stroke-linejoin="round"
-    d="M9.5 16.5 L14.5 21.5 L23 10.5"
+    d="M9 16.8 L14.5 22 L23.5 10.5"
   />
 </svg>

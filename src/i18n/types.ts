@@ -477,6 +477,7 @@ export interface Messages {
     usageNoneBody: string[]
     usageHasPositionBody: string[]
     guideLink: string
+    mathLink: string
     saveTitle: string
     saveBody: string
     saveYes: string

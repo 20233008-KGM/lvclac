@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react'
-import { GUIDE_PATH } from '../config/routes'
+import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
 import { useCalculator } from '../context/CalculatorContext'
 import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
@@ -131,9 +131,9 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
 
   const isLast = draft.step === WELCOME_LAST_STEP
   const nextDisabled =
-    (draft.step === 3 && draft.marginMode === null) ||
-    (draft.step === 4 && draft.stage === null) ||
-    (draft.step === 6 && draft.saveLocal === null)
+    (draft.step === 1 && draft.marginMode === null) ||
+    (draft.step === 2 && draft.stage === null) ||
+    (draft.step === 3 && draft.saveLocal === null)
 
   return (
     <div className="disclaimer-overlay" role="presentation">
@@ -153,11 +153,10 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             {stepTitle(draft.step, c)}
           </h2>
 
-          {draft.step === 0 && <p className="disclaimer-modal-text">{c.greetingBody}</p>}
-
-          {draft.step === 1 && (
+          {draft.step === 0 && (
             <>
-              <p className="disclaimer-modal-text">{c.regionBody}</p>
+              <p className="disclaimer-modal-text">{c.greetingBody}</p>
+              <p className="welcome-sub-title">{c.regionTitle}</p>
               <div className="welcome-options welcome-options--grid" role="group" aria-label={c.regionTitle}>
                 {WELCOME_REGIONS.map((region) => (
                   <button
@@ -174,7 +173,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             </>
           )}
 
-          {draft.step === 2 && (
+          {draft.step === 1 && (
             <>
               <p className="disclaimer-modal-text">{c.instrumentBody}</p>
               <div className="welcome-options welcome-options--grid" role="group" aria-label={c.instrumentTitle}>
@@ -190,12 +189,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                   </button>
                 ))}
               </div>
-            </>
-          )}
-
-          {draft.step === 3 && (
-            <>
-              <p className="disclaimer-modal-text">{c.marginBody}</p>
+              <p className="welcome-sub-title">{c.marginTitle}</p>
               <div className="welcome-options" role="group" aria-label={c.marginTitle}>
                 {marginCards.map((card) => (
                   <button
@@ -213,7 +207,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             </>
           )}
 
-          {draft.step === 4 && (
+          {draft.step === 2 && (
             <>
               <p className="disclaimer-modal-text">{c.stageBody}</p>
               <div className="welcome-options" role="group" aria-label={c.stageTitle}>
@@ -230,28 +224,35 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                   </button>
                 ))}
               </div>
+              {draft.stage && (
+                <ul className="welcome-usage-list">
+                  {usageBody.map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              )}
+              <div className="welcome-flow__links">
+                <a
+                  className="link-btn welcome-flow__guide"
+                  href={GUIDE_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {c.guideLink}
+                </a>
+                <a
+                  className="link-btn welcome-flow__guide"
+                  href={FORMULAS_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {c.mathLink}
+                </a>
+              </div>
             </>
           )}
 
-          {draft.step === 5 && (
-            <>
-              <ul className="welcome-usage-list">
-                {usageBody.map((line, i) => (
-                  <li key={i}>{line}</li>
-                ))}
-              </ul>
-              <a
-                className="link-btn welcome-flow__guide"
-                href={GUIDE_PATH}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {c.guideLink}
-              </a>
-            </>
-          )}
-
-          {draft.step === 6 && (
+          {draft.step === 3 && (
             <>
               <p className="disclaimer-modal-text">{c.saveBody}</p>
               <div className="welcome-options" role="group" aria-label={c.saveTitle}>
@@ -277,7 +278,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             </>
           )}
 
-          {draft.step === 7 && (
+          {draft.step === 4 && (
             <>
               <p className="disclaimer-modal-text">{c.disclaimerStepBody}</p>
               <div className="disclaimer-sections">
@@ -357,16 +358,10 @@ function stepTitle(step: number, c: import('../i18n').Messages['welcome']): stri
     case 0:
       return c.greetingTitle
     case 1:
-      return c.regionTitle
-    case 2:
       return c.instrumentTitle
-    case 3:
-      return c.marginTitle
-    case 4:
+    case 2:
       return c.stageTitle
-    case 5:
-      return c.usageTitle
-    case 6:
+    case 3:
       return c.saveTitle
     default:
       return c.disclaimerStepTitle

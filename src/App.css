@@ -5337,6 +5337,21 @@ a.site-footer__link:hover {
   margin-top: var(--space-sm);
 }
 
+/* 합쳐진 단계 안의 소제목(예: 지역, 증거금 방식) */
+.welcome-sub-title {
+  margin: var(--space-lg) 0 var(--space-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.welcome-flow__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
 .welcome-flow__foot {
   display: flex;
   flex-direction: column;

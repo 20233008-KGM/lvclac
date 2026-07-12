@@ -502,6 +502,7 @@ export const en: Messages = {
       'Use "Order" to preview how averaging in or out shifts your liquidation price.',
     ],
     guideLink: 'See the full guide',
+    mathLink: 'Curious about the math? See the formulas',
     saveTitle: 'Save your inputs on this device?',
     saveBody: "Saved values stay inside this browser and never leave it. You can change this anytime in My Page or the margin section.",
     saveYes: 'Save on this device',

@@ -5409,13 +5409,13 @@ a.site-footer__link:hover {
   color: var(--color-text);
 }
 
-.fh-equity :is(.numeric-field, .number-stepper),
-.fh-entry :is(.numeric-field, .number-stepper),
-.fh-contracts :is(.numeric-field, .number-stepper),
-.fh-mult :is(.numeric-field, .number-stepper),
-.fh-margin :is(.numeric-field, .number-stepper),
-.fh-mark :is(.numeric-field, .number-stepper),
-.fh-order :is(.numeric-field, .number-stepper) {
+.fh-equity :is(.numeric-field, .number-stepper, .result-order-price-row),
+.fh-entry :is(.numeric-field, .number-stepper, .result-order-price-row),
+.fh-contracts :is(.numeric-field, .number-stepper, .result-order-price-row),
+.fh-mult :is(.numeric-field, .number-stepper, .result-order-price-row),
+.fh-margin :is(.numeric-field, .number-stepper, .result-order-price-row),
+.fh-mark :is(.numeric-field, .number-stepper, .result-order-price-row),
+.fh-order :is(.numeric-field, .number-stepper, .result-order-price-row) {
   transition: box-shadow 0.2s ease;
 }
 
@@ -5427,9 +5427,9 @@ a.site-footer__link:hover {
 
 /* 은은한 glow — 라벨 박스가 아니라 입력 컨트롤(.numeric-field / .number-stepper)에만,
    focus 링(솔리드 3px)과 구분되는 부드러운 새 효과 */
-[data-field-hint='firstTrade'] :is(.fh-equity, .fh-mult, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper),
-[data-field-hint='noPosition'] :is(.fh-equity, .fh-mult, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper),
-[data-field-hint='hasPosition'] :is(.fh-equity, .fh-contracts, .fh-entry, .fh-mark, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper) {
+[data-field-hint='firstTrade'] :is(.fh-equity, .fh-mult, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper, .result-order-price-row),
+[data-field-hint='noPosition'] :is(.fh-equity, .fh-mult, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper, .result-order-price-row),
+[data-field-hint='hasPosition'] :is(.fh-equity, .fh-contracts, .fh-entry, .fh-mark, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper, .result-order-price-row) {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-primary) 70%, transparent),
     0 0 10px 1px color-mix(in srgb, var(--color-primary) 30%, transparent);

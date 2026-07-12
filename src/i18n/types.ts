@@ -448,6 +448,8 @@ export interface Messages {
     regions: Record<'KR' | 'US' | 'EU' | 'JP' | 'OTHER', string>
     instrumentTitle: string
     instrumentBody: string
+    marginTitle: string
+    marginBody: string
     stageTitle: string
     stageBody: string
     stageFirst: string

@@ -5,10 +5,12 @@ import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 import { writeTraderStage } from './fieldHint'
 import {
+  MARGIN_MODE_IDS,
   WELCOME_LAST_STEP,
   WELCOME_STEP_COUNT,
   makeInitialDraft,
   welcomeReducer,
+  type MarginMode,
   type TraderStage,
 } from './welcomeFlowState'
 import {
@@ -30,7 +32,7 @@ const INSTRUMENT_IDS = PRESET_IDS.filter((id): id is Exclude<PresetId, 'default'
  */
 export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => void }) {
   const { t, locale, preset, setLocale, setPreset } = useLanguage()
-  const { setSaveEnabled } = useCalculator()
+  const { setSaveEnabled, updateInputs } = useCalculator()
   useModalFocusRestore()
 
   const initialRegion: WelcomeRegion = locale === 'ko' ? 'KR' : 'US'
@@ -72,6 +74,11 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
     setPreset(instrument) // 뒤 계산기 라벨을 실시간 반영 + 영속
   }
 
+  function chooseMargin(marginMode: MarginMode) {
+    dispatch({ type: 'setMargin', marginMode })
+    updateInputs({ marginInputMode: marginMode }) // 계산기 증거금 섹션에 즉시 반영
+  }
+
   function chooseStage(stage: TraderStage) {
     dispatch({ type: 'setStage', stage })
   }
@@ -94,6 +101,19 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
     onComplete(persist)
   }
 
+  const marginCards: { id: MarginMode; title: string; desc: string }[] = MARGIN_MODE_IDS.map(
+    (id) => ({
+      id,
+      title: t.marginMode[id],
+      desc:
+        id === 'rate'
+          ? t.marginMode.rateHint
+          : id === 'perContract'
+            ? t.marginMode.perContractHint
+            : t.marginMode.totalHint,
+    }),
+  )
+
   const stageCards: { id: TraderStage; title: string; desc: string }[] = [
     { id: 'firstTrade', title: c.stageFirst, desc: c.stageFirstDesc },
     { id: 'noPosition', title: c.stageNone, desc: c.stageNoneDesc },
@@ -109,7 +129,9 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
 
   const isLast = draft.step === WELCOME_LAST_STEP
   const nextDisabled =
-    (draft.step === 3 && draft.stage === null) || (draft.step === 5 && draft.saveLocal === null)
+    (draft.step === 3 && draft.marginMode === null) ||
+    (draft.step === 4 && draft.stage === null) ||
+    (draft.step === 6 && draft.saveLocal === null)
 
   return (
     <div className="disclaimer-overlay" role="presentation">
@@ -171,6 +193,26 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
 
           {draft.step === 3 && (
             <>
+              <p className="disclaimer-modal-text">{c.marginBody}</p>
+              <div className="welcome-options" role="group" aria-label={c.marginTitle}>
+                {marginCards.map((card) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    className={`welcome-option welcome-option--card ${draft.marginMode === card.id ? 'welcome-option--active' : ''}`}
+                    aria-pressed={draft.marginMode === card.id}
+                    onClick={() => chooseMargin(card.id)}
+                  >
+                    <span className="welcome-option__title">{card.title}</span>
+                    <span className="welcome-option__desc">{card.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {draft.step === 4 && (
+            <>
               <p className="disclaimer-modal-text">{c.stageBody}</p>
               <div className="welcome-options" role="group" aria-label={c.stageTitle}>
                 {stageCards.map((card) => (
@@ -189,7 +231,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             </>
           )}
 
-          {draft.step === 4 && (
+          {draft.step === 5 && (
             <>
               <ul className="welcome-usage-list">
                 {usageBody.map((line, i) => (
@@ -207,7 +249,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             </>
           )}
 
-          {draft.step === 5 && (
+          {draft.step === 6 && (
             <>
               <p className="disclaimer-modal-text">{c.saveBody}</p>
               <div className="welcome-options" role="group" aria-label={c.saveTitle}>
@@ -233,7 +275,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
             </>
           )}
 
-          {draft.step === 6 && (
+          {draft.step === 7 && (
             <>
               <p className="disclaimer-modal-text">{c.disclaimerStepBody}</p>
               <div className="disclaimer-sections">
@@ -317,10 +359,12 @@ function stepTitle(step: number, c: import('../i18n').Messages['welcome']): stri
     case 2:
       return c.instrumentTitle
     case 3:
-      return c.stageTitle
+      return c.marginTitle
     case 4:
-      return c.usageTitle
+      return c.stageTitle
     case 5:
+      return c.usageTitle
+    case 6:
       return c.saveTitle
     default:
       return c.disclaimerStepTitle

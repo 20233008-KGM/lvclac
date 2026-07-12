@@ -449,6 +449,8 @@ export const ko: Messages = {
     regions: { KR: '한국', US: '미국', EU: '유럽', JP: '일본', OTHER: '기타' },
     instrumentTitle: '주로 어떤 상품을 거래하세요?',
     instrumentBody: '고른 상품에 맞춰 화면 용어가 바뀝니다. 계산 방식은 어느 상품이든 똑같아요.',
+    marginTitle: '증거금은 어떻게 입력하세요?',
+    marginBody: '증권사·상품에 따라 증거금을 비율·계약당·총액 중 하나로 넣어요. 나중에 증거금 섹션에서 언제든 바꿀 수 있어요.',
     stageTitle: '지금 상황을 알려주세요',
     stageBody: '상황에 맞게 어느 칸부터 채우면 되는지 화면에 표시해 드릴게요.',
     stageFirst: '첫 거래예요',

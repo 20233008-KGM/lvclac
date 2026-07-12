@@ -461,6 +461,8 @@ export const en: Messages = {
     regions: { KR: 'Korea', US: 'United States', EU: 'Europe', JP: 'Japan', OTHER: 'Other' },
     instrumentTitle: 'What do you mainly trade?',
     instrumentBody: 'On-screen terms switch to match. The math is identical across instruments.',
+    marginTitle: 'How do you enter margin?',
+    marginBody: 'Depending on your broker and instrument, enter margin as a rate, per-contract amount, or total. You can change this anytime in the margin section.',
     stageTitle: "What's your situation?",
     stageBody: "We'll highlight which fields to fill first, right on the screen.",
     stageFirst: "It's my first trade",

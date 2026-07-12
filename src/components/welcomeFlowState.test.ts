@@ -9,9 +9,9 @@ import {
 const init = () => makeInitialDraft('KR', 'index')
 
 describe('welcomeReducer', () => {
-  it('WELCOME_STEP_COUNT는 7, LAST는 6', () => {
-    expect(WELCOME_STEP_COUNT).toBe(7)
-    expect(WELCOME_LAST_STEP).toBe(6)
+  it('WELCOME_STEP_COUNT는 8, LAST는 7', () => {
+    expect(WELCOME_STEP_COUNT).toBe(8)
+    expect(WELCOME_LAST_STEP).toBe(7)
   })
 
   it('next는 마지막 단계에서 clamp', () => {
@@ -34,6 +34,7 @@ describe('welcomeReducer', () => {
     let s = init()
     s = welcomeReducer(s, { type: 'setRegion', region: 'US' })
     s = welcomeReducer(s, { type: 'setInstrument', instrument: 'fx' })
+    s = welcomeReducer(s, { type: 'setMargin', marginMode: 'perContract' })
     s = welcomeReducer(s, { type: 'setStage', stage: 'hasPosition' })
     s = welcomeReducer(s, { type: 'setSave', saveLocal: true })
     s = welcomeReducer(s, { type: 'setAck', ack: true })
@@ -41,6 +42,7 @@ describe('welcomeReducer', () => {
       step: 0,
       region: 'US',
       instrument: 'fx',
+      marginMode: 'perContract',
       stage: 'hasPosition',
       saveLocal: true,
       ackChecked: true,
@@ -57,6 +59,7 @@ describe('welcomeReducer', () => {
       step: 0,
       region: 'US',
       instrument: 'default',
+      marginMode: null,
       stage: null,
       saveLocal: null,
       ackChecked: false,

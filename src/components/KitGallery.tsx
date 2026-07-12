@@ -17,15 +17,16 @@ import { AccountRecordsSummaryPanel, AccountSnapshotAutomationPanel } from './My
 import { BillingPanel } from './billing/BillingPanel'
 
 /**
- * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 나열한다(개발/Figma export 전용).
- * 배경은 투명 + 섹션별 카드로 묶어 격자처럼 촘촘하게 배치(거대한 단일 검은 패널 제거).
- * onChange류는 시각 전용 no-op — 컴포넌트는 초기 prop값 그대로 렌더된다.
- * ?lang=en / ?lang=ko 쿼리로 언어 강제(EN/KO 두 벌 export 지원).
+ * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 나열(개발/Figma export 전용).
+ * '납작한(flat)' 구조: 컴포넌트마다 라벨 붙은 카드 하나가 kit-root의 직속 자식.
+ * → Figma import 후 겉프레임 하나만 벗기면(ungroup) 각 컴포넌트가 낱개 프레임으로 분리된다.
+ * 페이지 배경은 밝은 회색(#f5f5f5, Figma 캔버스색) → import 시 '검은 패널'이 생기지 않는다.
+ * onChange류는 시각 전용 no-op. ?lang=en / ?lang=ko 로 언어 강제.
  */
 
 const noop = () => {}
 
-/** 컴포넌트 하나를 라벨과 함께 감싼다 — Figma에서 프레임으로 분리된다. */
+/** 컴포넌트 하나 = 라벨 붙은 낱개 카드(Figma에서 프레임 하나로 분리). */
 function KitItem({
   name,
   note,
@@ -50,16 +51,6 @@ function KitItem({
   )
 }
 
-/** 관련 컴포넌트를 한 카드(섹션)로 묶는다. */
-function KitSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="kit-section">
-      <h2 className="kit-section__title">{title}</h2>
-      <div className="kit-row">{children}</div>
-    </section>
-  )
-}
-
 export function KitGallery() {
   const { setLocale, locale, t } = useLanguage()
   const [inputs] = useState<CalculatorInputs>(() => ({
@@ -73,12 +64,13 @@ export function KitGallery() {
     if (lang === 'en' || lang === 'ko') setLocale(lang)
   }, [setLocale])
 
-  // 큰 배경 검은 패널 제거 — 페이지 배경을 투명으로. 각 섹션 카드가 자체 어두운 배경을 가진다.
+  // 밝은 배경 — Figma import 시 프레임이 캔버스색과 같아져 '검은 배경 패널'이 생기지 않는다.
+  // 각 컴포넌트 카드는 자체 어두운 배경을 가지므로 컴포넌트는 정상적으로 보인다.
   useEffect(() => {
     const prevBody = document.body.style.background
     const prevHtml = document.documentElement.style.background
-    document.body.style.background = 'transparent'
-    document.documentElement.style.background = 'transparent'
+    document.body.style.background = '#f5f5f5'
+    document.documentElement.style.background = '#f5f5f5'
     return () => {
       document.body.style.background = prevBody
       document.documentElement.style.background = prevHtml
@@ -90,87 +82,72 @@ export function KitGallery() {
       <div className="kit-root" data-locale={locale}>
         <style>{KIT_STYLES}</style>
 
-        <header className="kit-head">
-          <h1 className="kit-head__title">LiqGuard UI Kit</h1>
-          <p className="kit-head__sub">
-            컴포넌트 전시장 · {locale.toUpperCase()} · 편집용 스냅샷
-          </p>
-        </header>
+        <KitItem name="LanguageToggle">
+          <LanguageToggle variant="default" />
+        </KitItem>
+        <KitItem name="PresetSelect">
+          <PresetSelect variant="inline" />
+        </KitItem>
+        <KitItem name="HowToUseButton">
+          <HowToUseButton />
+        </KitItem>
+        <KitItem name="AuthButton" note="header">
+          <AuthButton variant="header" />
+        </KitItem>
+        <KitItem name="NumberInput" width={200}>
+          <NumberInput value={350} onChange={noop} />
+        </KitItem>
+        <KitItem name="NumberStepper" width={220}>
+          <NumberStepper value={2} onChange={noop} step={1} stepUpLabel="+1" stepDownLabel="-1" />
+        </KitItem>
+        <KitItem name="ClearAllInputsButton">
+          <ClearAllInputsButton />
+        </KitItem>
+        <KitItem name="SaveDraftToggle">
+          <SaveDraftToggle />
+        </KitItem>
 
-        <KitSection title="헤더 · 입력 컨트롤">
-          <KitItem name="LanguageToggle">
-            <LanguageToggle variant="default" />
-          </KitItem>
-          <KitItem name="PresetSelect">
-            <PresetSelect variant="inline" />
-          </KitItem>
-          <KitItem name="HowToUseButton">
-            <HowToUseButton />
-          </KitItem>
-          <KitItem name="AuthButton" note="header">
-            <AuthButton variant="header" />
-          </KitItem>
-          <KitItem name="NumberInput" width={180}>
-            <NumberInput value={350} onChange={noop} />
-          </KitItem>
-          <KitItem name="NumberStepper" width={200}>
-            <NumberStepper value={2} onChange={noop} step={1} stepUpLabel="+1" stepDownLabel="-1" />
-          </KitItem>
-          <KitItem name="ClearAllInputsButton">
-            <ClearAllInputsButton />
-          </KitItem>
-          <KitItem name="SaveDraftToggle">
-            <SaveDraftToggle />
-          </KitItem>
-        </KitSection>
+        <KitItem name="InputPanel" note="inputs·onChange" width={440}>
+          <InputPanel inputs={inputs} onChange={noop} />
+        </KitItem>
+        <KitItem name="ResultPanel" note="inputs·onChange" width={480}>
+          <ResultPanel inputs={inputs} onChange={noop} />
+        </KitItem>
 
-        <KitSection title="계산기 패널">
-          <KitItem name="InputPanel" note="inputs·onChange" width={420}>
-            <InputPanel inputs={inputs} onChange={noop} />
-          </KitItem>
-          <KitItem name="ResultPanel" note="inputs·onChange" width={460}>
-            <ResultPanel inputs={inputs} onChange={noop} />
-          </KitItem>
-        </KitSection>
+        <KitItem name="AccountRecordsSummaryPanel" width={540}>
+          <AccountRecordsSummaryPanel
+            copy={t.myPage}
+            recordsCopy={t.accountRecords}
+            loading={false}
+            error={null}
+            notice={null}
+            latestSnapshot={null}
+            recentOrders={[]}
+            archiveHref="#"
+            autoSaveEnabled
+            autoSaveBusy={false}
+            onAutoSaveChange={noop}
+            onRetry={noop}
+          />
+        </KitItem>
+        <KitItem name="AccountSnapshotAutomationPanel" width={540}>
+          <AccountSnapshotAutomationPanel
+            copy={t.myPage}
+            isPro
+            hasCloudInput
+            settings={null}
+            browserTimeZone="Asia/Seoul"
+            onSave={noop}
+            onDisable={noop}
+          />
+        </KitItem>
+        <KitItem name="BillingPanel" width={540}>
+          <BillingPanel embedded />
+        </KitItem>
 
-        <KitSection title="마이페이지 패널">
-          <KitItem name="AccountRecordsSummaryPanel" width={520}>
-            <AccountRecordsSummaryPanel
-              copy={t.myPage}
-              recordsCopy={t.accountRecords}
-              loading={false}
-              error={null}
-              notice={null}
-              latestSnapshot={null}
-              recentOrders={[]}
-              archiveHref="#"
-              autoSaveEnabled
-              autoSaveBusy={false}
-              onAutoSaveChange={noop}
-              onRetry={noop}
-            />
-          </KitItem>
-          <KitItem name="AccountSnapshotAutomationPanel" width={520}>
-            <AccountSnapshotAutomationPanel
-              copy={t.myPage}
-              isPro
-              hasCloudInput
-              settings={null}
-              browserTimeZone="Asia/Seoul"
-              onSave={noop}
-              onDisable={noop}
-            />
-          </KitItem>
-          <KitItem name="BillingPanel" width={520}>
-            <BillingPanel embedded />
-          </KitItem>
-        </KitSection>
-
-        <KitSection title="푸터">
-          <KitItem name="SiteFooter" width={900}>
-            <SiteFooter />
-          </KitItem>
-        </KitSection>
+        <KitItem name="SiteFooter" width={900}>
+          <SiteFooter />
+        </KitItem>
       </div>
     </LayoutProvider>
   )
@@ -182,38 +159,19 @@ const KIT_STYLES = `
   padding: 32px;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: flex-start;
-}
-.kit-head {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 12px;
-  padding: 16px 20px;
-}
-.kit-head__title { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--color-text); letter-spacing: -0.01em; }
-.kit-head__sub { margin: 0; color: var(--color-text-muted); font-size: 13px; }
-.kit-section {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 12px;
-  padding: 20px 24px;
-}
-.kit-section__title {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-dim);
-  margin: 0 0 16px;
-}
-.kit-row {
-  display: flex;
   flex-wrap: wrap;
   gap: 24px;
   align-items: flex-start;
 }
-.kit-item { display: inline-flex; flex-direction: column; gap: 8px; }
+.kit-item {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 16px;
+}
 .kit-item__meta { display: flex; align-items: baseline; gap: 8px; }
 .kit-item__name { font-family: var(--font-mono); font-size: 11px; color: var(--color-primary); }
 .kit-item__note { font-size: 10px; color: var(--color-text-dim); }

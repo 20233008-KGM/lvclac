@@ -486,6 +486,12 @@ export const en: Messages = {
       'Use "Order" to preview how averaging in or out shifts your liquidation price.',
     ],
     guideLink: 'See the full guide',
+    saveTitle: 'Save your inputs on this device?',
+    saveBody: "Saved values stay inside this browser and never leave it. You can change this anytime in My Page or the margin section.",
+    saveYes: 'Save on this device',
+    saveYesDesc: 'Your inputs are still here when you come back.',
+    saveNo: "Don't save",
+    saveNoDesc: 'Nothing is kept. A refresh starts you fresh from the top.',
     disclaimerStepTitle: 'Before you start',
     disclaimerStepBody:
       'This calculator is for reference only. Trading futures and derivatives carries risk of loss exceeding your principal, and liquidation rules vary by broker and exchange.',

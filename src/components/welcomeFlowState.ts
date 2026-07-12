@@ -11,8 +11,8 @@ export type TraderStage = 'firstTrade' | 'noPosition' | 'hasPosition'
 
 export const TRADER_STAGES: readonly TraderStage[] = ['firstTrade', 'noPosition', 'hasPosition']
 
-/** 단계: 0 환영 · 1 지역 · 2 거래종목 · 3 거래상태 · 4 사용법 · 5 면책동의 */
-export const WELCOME_STEP_COUNT = 6
+/** 단계: 0 환영 · 1 지역 · 2 거래종목 · 3 거래상태 · 4 사용법 · 5 저장 · 6 면책동의 */
+export const WELCOME_STEP_COUNT = 7
 export const WELCOME_LAST_STEP = WELCOME_STEP_COUNT - 1
 
 export interface WelcomeDraft {
@@ -20,6 +20,8 @@ export interface WelcomeDraft {
   region: WelcomeRegion
   instrument: PresetId
   stage: TraderStage | null
+  /** 이 기기에 입력값을 저장할지. null=미선택(건너뜀 시 저장하되 입력은 안 켬), true=저장, false=매번 fresh */
+  saveLocal: boolean | null
   ackChecked: boolean
 }
 
@@ -30,10 +32,11 @@ export type WelcomeAction =
   | { type: 'setRegion'; region: WelcomeRegion }
   | { type: 'setInstrument'; instrument: PresetId }
   | { type: 'setStage'; stage: TraderStage }
+  | { type: 'setSave'; saveLocal: boolean }
   | { type: 'setAck'; ack: boolean }
 
 export function makeInitialDraft(region: WelcomeRegion, instrument: PresetId): WelcomeDraft {
-  return { step: 0, region, instrument, stage: null, ackChecked: false }
+  return { step: 0, region, instrument, stage: null, saveLocal: null, ackChecked: false }
 }
 
 function clampStep(step: number): number {
@@ -56,6 +59,8 @@ export function welcomeReducer(state: WelcomeDraft, action: WelcomeAction): Welc
       return { ...state, instrument: action.instrument }
     case 'setStage':
       return { ...state, stage: action.stage }
+    case 'setSave':
+      return { ...state, saveLocal: action.saveLocal }
     case 'setAck':
       return { ...state, ackChecked: action.ack }
     default:

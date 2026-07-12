@@ -9,9 +9,9 @@ import {
 const init = () => makeInitialDraft('KR', 'index')
 
 describe('welcomeReducer', () => {
-  it('WELCOME_STEP_COUNT는 6, LAST는 5', () => {
-    expect(WELCOME_STEP_COUNT).toBe(6)
-    expect(WELCOME_LAST_STEP).toBe(5)
+  it('WELCOME_STEP_COUNT는 7, LAST는 6', () => {
+    expect(WELCOME_STEP_COUNT).toBe(7)
+    expect(WELCOME_LAST_STEP).toBe(6)
   })
 
   it('next는 마지막 단계에서 clamp', () => {
@@ -35,22 +35,30 @@ describe('welcomeReducer', () => {
     s = welcomeReducer(s, { type: 'setRegion', region: 'US' })
     s = welcomeReducer(s, { type: 'setInstrument', instrument: 'fx' })
     s = welcomeReducer(s, { type: 'setStage', stage: 'hasPosition' })
+    s = welcomeReducer(s, { type: 'setSave', saveLocal: true })
     s = welcomeReducer(s, { type: 'setAck', ack: true })
     expect(s).toMatchObject({
       step: 0,
       region: 'US',
       instrument: 'fx',
       stage: 'hasPosition',
+      saveLocal: true,
       ackChecked: true,
     })
   })
 
-  it('초기 draft', () => {
+  it('setSave: true/false 반영', () => {
+    expect(welcomeReducer(init(), { type: 'setSave', saveLocal: false }).saveLocal).toBe(false)
+    expect(welcomeReducer(init(), { type: 'setSave', saveLocal: true }).saveLocal).toBe(true)
+  })
+
+  it('초기 draft(saveLocal=null 미선택)', () => {
     expect(makeInitialDraft('US', 'default')).toEqual({
       step: 0,
       region: 'US',
       instrument: 'default',
       stage: null,
+      saveLocal: null,
       ackChecked: false,
     })
   })

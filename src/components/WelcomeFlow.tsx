@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef } from 'react'
 import { GUIDE_PATH } from '../config/routes'
+import { useCalculator } from '../context/CalculatorContext'
 import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 import { writeTraderStage } from './fieldHint'
@@ -27,8 +28,9 @@ const INSTRUMENT_IDS = PRESET_IDS.filter((id): id is Exclude<PresetId, 'default'
  * 면책 ack/skip + 온보딩 완료 플래그 커밋은 부모(DisclaimerProvider)가 onComplete에서 수행하고,
  * 여기서는 언어·프리셋(라이브)·자동스냅샷 시간대만 반영한다.
  */
-export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
+export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => void }) {
   const { t, locale, preset, setLocale, setPreset } = useLanguage()
+  const { setSaveEnabled } = useCalculator()
   useModalFocusRestore()
 
   const initialRegion: WelcomeRegion = locale === 'ko' ? 'KR' : 'US'
@@ -74,12 +76,22 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
     dispatch({ type: 'setStage', stage })
   }
 
+  function chooseSave(saveLocal: boolean) {
+    dispatch({ type: 'setSave', saveLocal })
+  }
+
   function complete() {
     if (!draft.ackChecked) return
-    writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))
+    // 명시적으로 '저장 안 함'을 고른 경우에만 아무것도 남기지 않는다(=매 새로고침 fresh).
+    // 미선택(건너뜀)은 온보딩 상태는 기억하되 입력값 저장은 켜지 않는다.
+    const persist = draft.saveLocal !== false
     setPreset(draft.instrument)
-    if (draft.stage) writeTraderStage(draft.stage)
-    onComplete()
+    if (persist) {
+      writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))
+      if (draft.stage) writeTraderStage(draft.stage)
+    }
+    if (draft.saveLocal === true) void setSaveEnabled(true, 'local')
+    onComplete(persist)
   }
 
   const stageCards: { id: TraderStage; title: string; desc: string }[] = [
@@ -96,7 +108,8 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
         : c.usageFirstBody
 
   const isLast = draft.step === WELCOME_LAST_STEP
-  const nextDisabled = draft.step === 3 && draft.stage === null
+  const nextDisabled =
+    (draft.step === 3 && draft.stage === null) || (draft.step === 5 && draft.saveLocal === null)
 
   return (
     <div className="disclaimer-overlay" role="presentation">
@@ -196,6 +209,32 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
 
           {draft.step === 5 && (
             <>
+              <p className="disclaimer-modal-text">{c.saveBody}</p>
+              <div className="welcome-options" role="group" aria-label={c.saveTitle}>
+                <button
+                  type="button"
+                  className={`welcome-option welcome-option--card ${draft.saveLocal === true ? 'welcome-option--active' : ''}`}
+                  aria-pressed={draft.saveLocal === true}
+                  onClick={() => chooseSave(true)}
+                >
+                  <span className="welcome-option__title">{c.saveYes}</span>
+                  <span className="welcome-option__desc">{c.saveYesDesc}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`welcome-option welcome-option--card ${draft.saveLocal === false ? 'welcome-option--active' : ''}`}
+                  aria-pressed={draft.saveLocal === false}
+                  onClick={() => chooseSave(false)}
+                >
+                  <span className="welcome-option__title">{c.saveNo}</span>
+                  <span className="welcome-option__desc">{c.saveNoDesc}</span>
+                </button>
+              </div>
+            </>
+          )}
+
+          {draft.step === 6 && (
+            <>
               <p className="disclaimer-modal-text">{c.disclaimerStepBody}</p>
               <div className="disclaimer-sections">
                 {t.legal.sections.map((section) => (
@@ -281,6 +320,8 @@ function stepTitle(step: number, c: import('../i18n').Messages['welcome']): stri
       return c.stageTitle
     case 4:
       return c.usageTitle
+    case 5:
+      return c.saveTitle
     default:
       return c.disclaimerStepTitle
   }

@@ -461,6 +461,12 @@ export interface Messages {
     usageNoneBody: string[]
     usageHasPositionBody: string[]
     guideLink: string
+    saveTitle: string
+    saveBody: string
+    saveYes: string
+    saveYesDesc: string
+    saveNo: string
+    saveNoDesc: string
     disclaimerStepTitle: string
     disclaimerStepBody: string
   }

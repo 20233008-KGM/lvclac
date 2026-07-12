@@ -142,12 +142,15 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
     setOpen(true)
   }
 
-  // 환영 플로우 완료: 면책 ack/skip + 온보딩 완료 플래그를 한 번에 커밋한 뒤 UI 상태 반영.
-  const handleWelcomeComplete = () => {
-    writeDisclaimerAck(sessionStorage)
-    writeDisclaimerSkip(localStorage, true)
-    writeWelcomeCompleted(localStorage)
-    setSkipActive(true)
+  // 환영 플로우 완료. persist=true면 면책 ack/skip + 온보딩 완료 플래그를 남겨 다시 안 뜨게 한다.
+  // persist=false('저장 안 함' 선택)면 아무 억제 플래그도 남기지 않아 다음 새로고침에 환영이 다시 뜬다.
+  const handleWelcomeComplete = (persist: boolean) => {
+    if (persist) {
+      writeDisclaimerAck(sessionStorage)
+      writeDisclaimerSkip(localStorage, true)
+      writeWelcomeCompleted(localStorage)
+      setSkipActive(true)
+    }
     setWelcomeOpen(false)
   }
 

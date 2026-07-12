@@ -453,7 +453,10 @@ function AppRouter() {
   const boardId = parseBoardPath(pathname)
   const legalKind = isLegalPath(pathname)
 
-  if (import.meta.env.DEV && isKitPath(pathname)) {
+  // 컴포넌트 전시장(UI 키트) — Figma export용. 미링크·noindex라 일반 사용자에겐 노출되지 않지만,
+  // 배포본 URL로 html.to.design가 가져올 수 있도록 프로덕션에서도 라우팅한다.
+  // TODO: 정식 공개(런칭) 전 제거 또는 재게이팅.
+  if (isKitPath(pathname)) {
     return (
       <Suspense fallback={null}>
         <KitGallery />

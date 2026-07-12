@@ -20,6 +20,7 @@ import {
 } from './serviceDisclaimerLogic'
 import { shouldShowWelcome, writeWelcomeCompleted } from './welcomeFlowLogic'
 import { WelcomeFlow } from './WelcomeFlow'
+import { isKitPath } from '../config/routes'
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
@@ -125,12 +126,15 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
 
 export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  // 컴포넌트 전시장(/kit, 개발·export 전용)에선 온보딩·면책 오버레이를 띄우지 않는다.
+  const suppressOverlays = isKitPath(pathname)
   // 신규 방문자는 환영 플로우가 유일한 첫 관문. 환영이 뜨는 동안 면책 모달은 배타적으로 숨긴다.
   const [welcomeOpen, setWelcomeOpen] = useState(() =>
-    shouldShowWelcome(pathname, localStorage, sessionStorage),
+    !suppressOverlays && shouldShowWelcome(pathname, localStorage, sessionStorage),
   )
   const [open, setOpen] = useState(
     () =>
+      !suppressOverlays &&
       !shouldShowWelcome(pathname, localStorage, sessionStorage) &&
       shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
   )

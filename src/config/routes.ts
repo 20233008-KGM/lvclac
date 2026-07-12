@@ -55,7 +55,7 @@ export function isLegalPath(pathname: string): LegalPageKind | null {
   return null
 }
 
-/** 개발 전용 컴포넌트 전시장(UI 키트) — Figma export용. import.meta.env.DEV에서만 라우팅됨. */
+/** 컴포넌트 전시장(UI 키트) — Figma export용. 미링크·noindex, 정식 공개 전 제거/재게이팅 예정. */
 export const KIT_PATH = '/kit'
 
 export function isKitPath(pathname: string): boolean {

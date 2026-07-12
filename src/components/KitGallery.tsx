@@ -13,107 +13,19 @@ import { SaveDraftToggle } from './SaveDraftToggle'
 import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { NumberInput } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
-import {
-  MyPageView,
-  AccountRecordsSummaryPanel,
-  AccountSnapshotAutomationPanel,
-} from './MyPage'
+import { AccountRecordsSummaryPanel, AccountSnapshotAutomationPanel } from './MyPage'
 import { BillingPanel } from './billing/BillingPanel'
-import type { AuthUser } from '../db/profile'
 
 /**
- * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 한 화면에 나열한다.
- * Figma로 통째로 가져와(html.to.design 등) 컴포넌트별로 분리·편집하기 위한 개발 전용 페이지.
- * 라우팅은 App.tsx에서 import.meta.env.DEV에서만 연결되므로 프로덕션엔 노출되지 않는다.
- * onChange류는 시각 전용이라 no-op — 컴포넌트는 초기 prop값 그대로 렌더된다.
+ * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 나열한다(개발/Figma export 전용).
+ * 배경은 투명 + 섹션별 카드로 묶어 격자처럼 촘촘하게 배치(거대한 단일 검은 패널 제거).
+ * onChange류는 시각 전용 no-op — 컴포넌트는 초기 prop값 그대로 렌더된다.
+ * ?lang=en / ?lang=ko 쿼리로 언어 강제(EN/KO 두 벌 export 지원).
  */
 
 const noop = () => {}
-const noopAsyncFalse = async () => false
 
-/** 마이페이지 전시용 가짜 로그인 사용자 — 실제 인증/데이터 없이 화면만 그린다. */
-const mockUser: AuthUser = {
-  id: 'kit-demo',
-  email: 'demo@liqguard.com',
-  nickname: '데모 사용자',
-  autoSaveOrderHistory: true,
-  isAdmin: false,
-}
-
-/** MyPageView(순수 표현 컴포넌트)를 가짜 사용자·no-op 콜백으로 감싼 전시용 래퍼. */
-function MyPageDemo() {
-  const { t } = useLanguage()
-  const recordsPanel = (
-    <AccountRecordsSummaryPanel
-      copy={t.myPage}
-      recordsCopy={t.accountRecords}
-      loading={false}
-      error={null}
-      notice={null}
-      latestSnapshot={null}
-      recentOrders={[]}
-      archiveHref="#"
-      autoSaveEnabled
-      autoSaveBusy={false}
-      onAutoSaveChange={noop}
-      onRetry={noop}
-    />
-  )
-  const preferencesPanel = (
-    <section className="my-page-panel" aria-labelledby="kit-prefs-title">
-      <h2 id="kit-prefs-title">{t.myPage.preferencesTitle}</h2>
-      <div className="my-page-preference-block">
-        <h3>{t.myPage.glossaryPresetTitle}</h3>
-        <p>{t.myPage.glossaryPresetBody}</p>
-        <PresetSelect variant="inline" />
-      </div>
-      <AccountSnapshotAutomationPanel
-        copy={t.myPage}
-        isPro
-        hasCloudInput
-        settings={null}
-        browserTimeZone="Asia/Seoul"
-        onSave={noop}
-        onDisable={noop}
-      />
-    </section>
-  )
-  return (
-    <MyPageView
-      copy={t.myPage}
-      authLoading={false}
-      configured
-      user={mockUser}
-      isPro={false}
-      nicknameDraft={mockUser.nickname}
-      nicknameBusy={false}
-      nicknameMessage={null}
-      linkedProviders={['email', 'google']}
-      identityBusy={null}
-      identityMessage={null}
-      passwordFormOpen={false}
-      passwordDraft=""
-      passwordConfirmationDraft=""
-      supportHref="mailto:support@liqguard.com"
-      recordsSummaryPanel={recordsPanel}
-      preferencesPanel={preferencesPanel}
-      billingPanel={<BillingPanel embedded />}
-      devResetPanel={null}
-      onNicknameChange={noop}
-      onNicknameSubmit={noopAsyncFalse}
-      onLinkGoogle={noop}
-      onUnlinkGoogle={noop}
-      onPasswordFormToggle={noop}
-      onPasswordDraftChange={noop}
-      onPasswordConfirmationDraftChange={noop}
-      onSetPasswordSubmit={noop}
-      onLoginClick={noop}
-      onSignOut={noop}
-    />
-  )
-}
-
-/** 컴포넌트 하나를 라벨과 함께 감싼 카드 — Figma에서 프레임 하나로 분리된다. */
+/** 컴포넌트 하나를 라벨과 함께 감싼다 — Figma에서 프레임으로 분리된다. */
 function KitItem({
   name,
   note,
@@ -126,14 +38,24 @@ function KitItem({
   children: ReactNode
 }) {
   return (
-    <section className="kit-item">
-      <header className="kit-item__meta">
+    <div className="kit-item">
+      <div className="kit-item__meta">
         <span className="kit-item__name">{name}</span>
         {note ? <span className="kit-item__note">{note}</span> : null}
-      </header>
+      </div>
       <div className="kit-item__stage" style={width ? { width } : undefined}>
         {children}
       </div>
+    </div>
+  )
+}
+
+/** 관련 컴포넌트를 한 카드(섹션)로 묶는다. */
+function KitSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="kit-section">
+      <h2 className="kit-section__title">{title}</h2>
+      <div className="kit-row">{children}</div>
     </section>
   )
 }
@@ -145,11 +67,23 @@ export function KitGallery() {
     orderPrice: sampleInputs.currentPrice,
   }))
 
-  // URL의 ?lang=en / ?lang=ko 로 언어를 강제 — EN/KO 두 번 export할 때 결정적으로 쓴다.
+  // URL의 ?lang=en / ?lang=ko 로 언어를 강제.
   useEffect(() => {
     const lang = new URLSearchParams(window.location.search).get('lang')
     if (lang === 'en' || lang === 'ko') setLocale(lang)
   }, [setLocale])
+
+  // 큰 배경 검은 패널 제거 — 페이지 배경을 투명으로. 각 섹션 카드가 자체 어두운 배경을 가진다.
+  useEffect(() => {
+    const prevBody = document.body.style.background
+    const prevHtml = document.documentElement.style.background
+    document.body.style.background = 'transparent'
+    document.documentElement.style.background = 'transparent'
+    return () => {
+      document.body.style.background = prevBody
+      document.documentElement.style.background = prevHtml
+    }
+  }, [])
 
   return (
     <LayoutProvider layoutMode="auto" fitScale={1}>
@@ -159,117 +93,84 @@ export function KitGallery() {
         <header className="kit-head">
           <h1 className="kit-head__title">LiqGuard UI Kit</h1>
           <p className="kit-head__sub">
-            컴포넌트 전시장 · 현재 언어: <strong>{locale.toUpperCase()}</strong> · 편집용 스냅샷
+            컴포넌트 전시장 · {locale.toUpperCase()} · 편집용 스냅샷
           </p>
         </header>
 
-        <section className="kit-section">
-          <h2 className="kit-section__title">헤더 컨트롤</h2>
-          <div className="kit-row">
-            <KitItem name="LanguageToggle">
-              <LanguageToggle variant="default" />
-            </KitItem>
-            <KitItem name="PresetSelect">
-              <PresetSelect variant="inline" />
-            </KitItem>
-            <KitItem name="HowToUseButton">
-              <HowToUseButton />
-            </KitItem>
-            <KitItem name="AuthButton" note="variant=header">
-              <AuthButton variant="header" />
-            </KitItem>
-          </div>
-        </section>
+        <KitSection title="헤더 · 입력 컨트롤">
+          <KitItem name="LanguageToggle">
+            <LanguageToggle variant="default" />
+          </KitItem>
+          <KitItem name="PresetSelect">
+            <PresetSelect variant="inline" />
+          </KitItem>
+          <KitItem name="HowToUseButton">
+            <HowToUseButton />
+          </KitItem>
+          <KitItem name="AuthButton" note="header">
+            <AuthButton variant="header" />
+          </KitItem>
+          <KitItem name="NumberInput" width={180}>
+            <NumberInput value={350} onChange={noop} />
+          </KitItem>
+          <KitItem name="NumberStepper" width={200}>
+            <NumberStepper value={2} onChange={noop} step={1} stepUpLabel="+1" stepDownLabel="-1" />
+          </KitItem>
+          <KitItem name="ClearAllInputsButton">
+            <ClearAllInputsButton />
+          </KitItem>
+          <KitItem name="SaveDraftToggle">
+            <SaveDraftToggle />
+          </KitItem>
+        </KitSection>
 
-        <section className="kit-section">
-          <h2 className="kit-section__title">개별 입력 컨트롤</h2>
-          <div className="kit-row">
-            <KitItem name="NumberInput" width={200}>
-              <NumberInput value={350} onChange={noop} />
-            </KitItem>
-            <KitItem name="NumberStepper" width={220}>
-              <NumberStepper
-                value={2}
-                onChange={noop}
-                step={1}
-                stepUpLabel="+1"
-                stepDownLabel="-1"
-              />
-            </KitItem>
-            <KitItem name="ClearAllInputsButton">
-              <ClearAllInputsButton />
-            </KitItem>
-            <KitItem name="SaveDraftToggle">
-              <SaveDraftToggle />
-            </KitItem>
-          </div>
-        </section>
+        <KitSection title="계산기 패널">
+          <KitItem name="InputPanel" note="inputs·onChange" width={420}>
+            <InputPanel inputs={inputs} onChange={noop} />
+          </KitItem>
+          <KitItem name="ResultPanel" note="inputs·onChange" width={460}>
+            <ResultPanel inputs={inputs} onChange={noop} />
+          </KitItem>
+        </KitSection>
 
-        <section className="kit-section">
-          <h2 className="kit-section__title">패널</h2>
-          <div className="kit-row kit-row--panels">
-            <KitItem name="InputPanel" note="inputs · onChange" width={440}>
-              <InputPanel inputs={inputs} onChange={noop} />
-            </KitItem>
-            <KitItem name="ResultPanel" note="inputs · onChange" width={480}>
-              <ResultPanel inputs={inputs} onChange={noop} />
-            </KitItem>
-          </div>
-        </section>
+        <KitSection title="마이페이지 패널">
+          <KitItem name="AccountRecordsSummaryPanel" width={520}>
+            <AccountRecordsSummaryPanel
+              copy={t.myPage}
+              recordsCopy={t.accountRecords}
+              loading={false}
+              error={null}
+              notice={null}
+              latestSnapshot={null}
+              recentOrders={[]}
+              archiveHref="#"
+              autoSaveEnabled
+              autoSaveBusy={false}
+              onAutoSaveChange={noop}
+              onRetry={noop}
+            />
+          </KitItem>
+          <KitItem name="AccountSnapshotAutomationPanel" width={520}>
+            <AccountSnapshotAutomationPanel
+              copy={t.myPage}
+              isPro
+              hasCloudInput
+              settings={null}
+              browserTimeZone="Asia/Seoul"
+              onSave={noop}
+              onDisable={noop}
+            />
+          </KitItem>
+          <KitItem name="BillingPanel" width={520}>
+            <BillingPanel embedded />
+          </KitItem>
+        </KitSection>
 
-        <section className="kit-section">
-          <h2 className="kit-section__title">마이페이지 — 하위 패널</h2>
-          <div className="kit-row kit-row--panels">
-            <KitItem name="AccountRecordsSummaryPanel" note="계좌 기록 요약" width={560}>
-              <AccountRecordsSummaryPanel
-                copy={t.myPage}
-                recordsCopy={t.accountRecords}
-                loading={false}
-                error={null}
-                notice={null}
-                latestSnapshot={null}
-                recentOrders={[]}
-                archiveHref="#"
-                autoSaveEnabled
-                autoSaveBusy={false}
-                onAutoSaveChange={noop}
-                onRetry={noop}
-              />
-            </KitItem>
-            <KitItem name="AccountSnapshotAutomationPanel" note="자동 스냅샷" width={560}>
-              <AccountSnapshotAutomationPanel
-                copy={t.myPage}
-                isPro
-                hasCloudInput
-                settings={null}
-                browserTimeZone="Asia/Seoul"
-                onSave={noop}
-                onDisable={noop}
-              />
-            </KitItem>
-            <KitItem name="BillingPanel" note="구독 결제" width={560}>
-              <BillingPanel embedded />
-            </KitItem>
-          </div>
-        </section>
-
-        <section className="kit-section">
-          <h2 className="kit-section__title">마이페이지 — 전체 화면</h2>
-          <div className="kit-row">
-            <KitItem name="MyPageView" note="mock 로그인 상태" width={1040}>
-              <MyPageDemo />
-            </KitItem>
-          </div>
-        </section>
-
-        <section className="kit-section">
-          <h2 className="kit-section__title">푸터</h2>
-          <div className="kit-row">
-            <KitItem name="SiteFooter" width={900}>
-              <SiteFooter />
-            </KitItem>
-          </div>
-        </section>
+        <KitSection title="푸터">
+          <KitItem name="SiteFooter" width={900}>
+            <SiteFooter />
+          </KitItem>
+        </KitSection>
       </div>
     </LayoutProvider>
   )
@@ -277,47 +178,44 @@ export function KitGallery() {
 
 const KIT_STYLES = `
 .kit-root {
-  min-height: 100vh;
-  background: var(--color-bg);
-  color: var(--color-text);
-  padding: 40px 48px 80px;
+  background: transparent;
+  padding: 32px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
 }
-.kit-head { margin-bottom: 40px; }
-.kit-head__title { font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
-.kit-head__sub { margin: 0; color: var(--color-text-muted); font-size: 14px; }
-.kit-section { margin-bottom: 48px; }
+.kit-head {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.kit-head__title { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--color-text); letter-spacing: -0.01em; }
+.kit-head__sub { margin: 0; color: var(--color-text-muted); font-size: 13px; }
+.kit-section {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
 .kit-section__title {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-dim);
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: 8px;
-  margin: 0 0 24px;
+  margin: 0 0 16px;
 }
 .kit-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 28px;
+  gap: 24px;
   align-items: flex-start;
 }
-.kit-row--panels { gap: 40px; }
-.kit-item {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-.kit-item__meta { display: flex; align-items: baseline; gap: 10px; }
-.kit-item__name {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-primary);
-}
-.kit-item__note { font-size: 11px; color: var(--color-text-dim); }
+.kit-item { display: inline-flex; flex-direction: column; gap: 8px; }
+.kit-item__meta { display: flex; align-items: baseline; gap: 8px; }
+.kit-item__name { font-family: var(--font-mono); font-size: 11px; color: var(--color-primary); }
+.kit-item__note { font-size: 10px; color: var(--color-text-dim); }
 .kit-item__stage { position: relative; }
 `

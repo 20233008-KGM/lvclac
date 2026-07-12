@@ -5409,44 +5409,35 @@ a.site-footer__link:hover {
   color: var(--color-text);
 }
 
-.fh-equity,
+.fh-equity :is(.numeric-field, .number-stepper),
+.fh-entry :is(.numeric-field, .number-stepper),
+.fh-contracts :is(.numeric-field, .number-stepper),
+.fh-mult :is(.numeric-field, .number-stepper),
+.fh-margin :is(.numeric-field, .number-stepper),
+.fh-mark :is(.numeric-field, .number-stepper),
+.fh-order :is(.numeric-field, .number-stepper) {
+  transition: box-shadow 0.2s ease;
+}
+
 .fh-entry,
 .fh-contracts,
-.fh-mult,
-.fh-margin,
-.fh-mark,
-.fh-order {
-  transition: opacity 0.2s ease, outline-color 0.2s ease;
+.fh-mark {
+  transition: opacity 0.2s ease;
 }
 
-/* 상황별 강조: 청산가에 필요한 핵심 칸 (+ 상황에 따라 진입가·추가주문) */
-[data-field-hint='firstTrade'] .fh-equity,
-[data-field-hint='firstTrade'] .fh-mark,
-[data-field-hint='firstTrade'] .fh-contracts,
-[data-field-hint='firstTrade'] .fh-mult,
-[data-field-hint='firstTrade'] .fh-margin,
-[data-field-hint='noPosition'] .fh-equity,
-[data-field-hint='noPosition'] .fh-mark,
-[data-field-hint='noPosition'] .fh-contracts,
-[data-field-hint='noPosition'] .fh-mult,
-[data-field-hint='noPosition'] .fh-margin,
-[data-field-hint='noPosition'] .fh-entry,
-[data-field-hint='hasPosition'] .fh-equity,
-[data-field-hint='hasPosition'] .fh-mark,
-[data-field-hint='hasPosition'] .fh-contracts,
-[data-field-hint='hasPosition'] .fh-mult,
-[data-field-hint='hasPosition'] .fh-margin,
-[data-field-hint='hasPosition'] .fh-entry,
-[data-field-hint='hasPosition'] .fh-order {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-  border-radius: var(--radius-md);
+/* 은은한 glow — 라벨 박스가 아니라 입력 컨트롤(.numeric-field / .number-stepper)에만,
+   focus 링(솔리드 3px)과 구분되는 부드러운 새 효과 */
+[data-field-hint='firstTrade'] :is(.fh-equity, .fh-mult, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper),
+[data-field-hint='noPosition'] :is(.fh-equity, .fh-mult, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper),
+[data-field-hint='hasPosition'] :is(.fh-equity, .fh-contracts, .fh-entry, .fh-mark, .fh-margin, .fh-order) :is(.numeric-field, .number-stepper) {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 70%, transparent),
+    0 0 10px 1px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
-/* 상황별 흐림: 지금 안 채워도 되는 칸 */
-[data-field-hint='firstTrade'] .fh-entry,
-[data-field-hint='firstTrade'] .fh-order,
-[data-field-hint='noPosition'] .fh-order {
+/* 주문 전(첫 거래·무포지션): 현재가·보유계약수·약정가격은 지금 안 채움 → 흐림 */
+[data-field-hint='firstTrade'] :is(.fh-mark, .fh-contracts, .fh-entry),
+[data-field-hint='noPosition'] :is(.fh-mark, .fh-contracts, .fh-entry) {
   opacity: 0.4;
 }
 

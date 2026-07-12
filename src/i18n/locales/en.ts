@@ -472,13 +472,13 @@ export const en: Messages = {
     usageTitle: "Here's how to use it",
     usageFirstBody: [
       "You don't need to fill in every field.",
-      'Just enter account equity, mark price, contracts, contract multiplier, and margin — the liquidation price appears right away.',
-      'Leave the "Order" fields blank for now — those are for adding to a position you already hold.',
+      'Fill just account equity, contract multiplier, and the margin rates.',
+      'Then enter order size and price in the "Order" fields — your liquidation price appears. Mark price and open contracts can wait.',
     ],
     usageNoneBody: [
-      'Enter your planned values to preview your liquidation price.',
-      'Fill in account equity, mark price, contracts, contract multiplier, and margin.',
-      'Add an entry price to also see leverage and notional. You can leave "Order" blank.',
+      'No position yet? Start with your account values.',
+      'Account equity, contract multiplier, and the margin rates.',
+      'Then place an entry in the "Order" fields to preview your liquidation price. You can leave mark price blank.',
     ],
     usageHasPositionBody: [
       'Enter your holdings to see your current liquidation price.',
@@ -499,9 +499,9 @@ export const en: Messages = {
   fieldHint: {
     dismiss: 'Dismiss',
     firstTrade:
-      'New to this? Fill just the highlighted fields (equity, mark price, contracts, multiplier, margin) and your liquidation price appears. The dimmed fields can wait.',
+      'Fill just account equity, contract multiplier, and margin rates, then enter an order in the highlighted "Order" fields — your liquidation price appears. Mark price and open contracts can wait.',
     noPosition:
-      'Enter your planned values in the highlighted fields to preview your liquidation price. You can leave "Order" blank.',
+      'Fill your account values (equity, multiplier, margin rates), then place an entry in the highlighted "Order" fields to preview your liquidation price. You can leave mark price blank.',
     hasPosition:
       'Fill the highlighted fields with your holdings to see your current liquidation price. Use "Order" to preview averaging in.',
   },

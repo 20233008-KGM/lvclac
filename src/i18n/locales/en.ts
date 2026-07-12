@@ -435,6 +435,16 @@ export const en: Messages = {
     tooltip:
       '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nMargin as a ratio of notional (domestic futures).\n\n────────\n\n[Per contract]\n\nFixed margin per contract. Total = per-contract × contracts (overseas).\n\n────────\n\n[Total]\n\nEnter the total margin shown in your broker app as-is.',
   },
+  marginKindAsk: {
+    title: 'Margin recalculated after the order',
+    body: 'Since you entered a total amount, the app back-calculated total initial/maintenance margin for the increased contracts. By default it assumes a price-proportional method (domestic futures).',
+    question: 'Is this margin a fixed per-contract amount?',
+    proportional: 'It scales with price',
+    proportionalHint: 'Like domestic futures — margin grows with notional value.',
+    fixed: 'Fixed per contract',
+    fixedHint: 'Like overseas futures — a set amount per contract.',
+    skipLabel: "Don't ask again",
+  },
   glossaryPreset: {
     label: 'Instrument',
     options: {

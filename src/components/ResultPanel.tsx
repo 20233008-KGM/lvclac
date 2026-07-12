@@ -26,7 +26,7 @@ import {
   buildOrderHistoryPayload,
   createAccountRecordsRepository,
 } from '../db/accountRecords'
-import type { CalculatorInputs, EvaluateResult, OrderResult } from '../types'
+import type { CalculatorInputs, EvaluateResult, OrderResult, TotalMarginKind } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
 import { FORMULAS_PATH, GUIDE_PATH, MY_PAGE_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
@@ -35,6 +35,11 @@ import { useAuth } from '../context/AuthContext'
 import { useCalculator } from '../context/CalculatorContext'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
+import {
+  isMarginKindAskCandidate,
+  readSkipMarginKindAsk,
+  setSkipMarginKindAsk,
+} from './marginKindAskPref'
 import {
   CommitButtonSlot,
   ScenarioPriceApplyButton,
@@ -63,6 +68,10 @@ import {
 
 const SnapshotSavedModal = lazy(() =>
   import('./SnapshotSavedModal').then((mod) => ({ default: mod.SnapshotSavedModal })),
+)
+
+const MarginKindAskModal = lazy(() =>
+  import('./MarginKindAskModal').then((mod) => ({ default: mod.MarginKindAskModal })),
 )
 
 interface ResultPanelProps {
@@ -741,6 +750,8 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const [snapshotSavedModalOpen, setSnapshotSavedModalOpen] = useState(false)
   const [snapshotSaveNotice, setSnapshotSaveNotice] = useState<string | null>(null)
   const [orderSaveNotice, setOrderSaveNotice] = useState<string | null>(null)
+  const [marginKindModalOpen, setMarginKindModalOpen] = useState(false)
+  const [dontShowAgainMarginKind, setDontShowAgainMarginKind] = useState(false)
   const snapshotButtonRef = useRef<HTMLButtonElement>(null)
   const activeRecordsUserIdRef = useRef(userId)
 
@@ -810,6 +821,35 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     },
     [activeCloudNumberSetId, recordsRepository, t.accountRecords.orderSaveError, user?.autoSaveOrderHistory, userId],
   )
+
+  // 주문 미리보기(Enter)로 진입하는 순간, 총액 모드이고 증거금 성격이 아직
+  // 확정되지 않았으면 역산 안내 모달을 띄운다. 실시간 타이핑 중엔 뜨지 않는다.
+  const handleOrderChange = useCallback(
+    (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => {
+      if (
+        'commitOrderScenario' in patch &&
+        isMarginKindAskCandidate(inputs) &&
+        !readSkipMarginKindAsk()
+      ) {
+        setDontShowAgainMarginKind(false)
+        setMarginKindModalOpen(true)
+      }
+      onChange(patch, options)
+    },
+    [inputs, onChange],
+  )
+
+  function handleMarginKindSelect(kind: TotalMarginKind) {
+    if (dontShowAgainMarginKind) setSkipMarginKindAsk(true)
+    onChange({ totalMarginKind: kind })
+    setMarginKindModalOpen(false)
+  }
+
+  function handleMarginKindClose() {
+    // 닫기/ESC = 기본(가격 비례) 유지. 다시 안 보기 선택은 존중한다.
+    if (dontShowAgainMarginKind) setSkipMarginKindAsk(true)
+    setMarginKindModalOpen(false)
+  }
 
   useEffect(() => {
     if (!orderScenarioActive) return
@@ -900,7 +940,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         </div>
         <OrderInputs
           inputs={inputs}
-          onChange={onChange}
+          onChange={handleOrderChange}
           orderResult={orderResult}
           contractsField={f.orderContracts}
           priceField={f.orderPrice}
@@ -944,6 +984,27 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
               setSnapshotSavedModalOpen(false)
               navigate(MY_PAGE_PATH)
             }}
+          />
+        </Suspense>
+      )}
+
+      {marginKindModalOpen && (
+        <Suspense fallback={null}>
+          <MarginKindAskModal
+            copy={{
+              title: t.marginKindAsk.title,
+              body: t.marginKindAsk.body,
+              question: t.marginKindAsk.question,
+              proportional: t.marginKindAsk.proportional,
+              proportionalHint: t.marginKindAsk.proportionalHint,
+              fixed: t.marginKindAsk.fixed,
+              fixedHint: t.marginKindAsk.fixedHint,
+              skipLabel: t.marginKindAsk.skipLabel,
+            }}
+            dontShowAgain={dontShowAgainMarginKind}
+            onDontShowAgainChange={setDontShowAgainMarginKind}
+            onSelect={handleMarginKindSelect}
+            onClose={handleMarginKindClose}
           />
         </Suspense>
       )}

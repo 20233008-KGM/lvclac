@@ -401,6 +401,8 @@ function sanitizePatchForScenarioLock(
     const allowed: Partial<CalculatorInputs> = {}
     if ('orderContracts' in inputPatch) allowed.orderContracts = inputPatch.orderContracts
     if ('orderPrice' in inputPatch) allowed.orderPrice = inputPatch.orderPrice
+    // 총액 증거금 성격(비례/고정)은 주문 미리보기 중 모달에서 바꿀 수 있어야 함
+    if ('totalMarginKind' in inputPatch) allowed.totalMarginKind = inputPatch.totalMarginKind
     return allowed
   }
   return inputPatch

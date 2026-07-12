@@ -429,6 +429,17 @@ export interface Messages {
     /** 증거금 입력 방식 토글 ? 툴팁 본문 */
     tooltip: string
   }
+  /** 총액 모드 주문 시뮬 시 증거금 성격(비례/고정) 확인 모달 */
+  marginKindAsk: {
+    title: string
+    body: string
+    question: string
+    proportional: string
+    proportionalHint: string
+    fixed: string
+    fixedHint: string
+    skipLabel: string
+  }
   /** 용어 프리셋 선택기(상단 상시 셀렉터·마이페이지 공용) 카피 */
   glossaryPreset: {
     label: string

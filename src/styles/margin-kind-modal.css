@@ -1,0 +1,49 @@
+.margin-kind-ask-question {
+  margin: var(--space-md) 0 var(--space-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.margin-kind-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.margin-kind-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-md);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.margin-kind-option:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-3);
+}
+
+/* 기본 선택(가격 비례)을 은은하게 강조 */
+.margin-kind-option--primary {
+  border-color: var(--color-primary);
+  background: var(--color-primary-muted);
+}
+
+.margin-kind-option__label {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+}
+
+.margin-kind-option__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

@@ -55,6 +55,40 @@ describe('총액 모드 주문 시뮬 증거금 역산', () => {
   })
 })
 
+describe('총액 모드 — 계약당 고정(fixed) 성격 선택 시', () => {
+  const base: CalculatorInputs = {
+    mode: 'order',
+    marginInputMode: 'total',
+    totalMarginKind: 'fixed',
+    accountEval: 1_000_000,
+    maintenanceMargin: 4_000,
+    entrustedMargin: 12_000,
+    contracts: 2,
+    contractAmount: 5_000,
+    contractAmountRole: 'entryPrice',
+    contractMultiplier: 1,
+    currentPrice: 5_000,
+    positionSide: 'long',
+    orderContracts: 2,
+    orderPrice: 6_000, // 진입가와 다름 — 비례/고정이 갈리는 조건
+  }
+
+  it('주문가가 진입가와 달라도 계약수 비례만 (명목 변화 무시)', () => {
+    // fixed: 2계약→4계약 = 2배. 개시 24000, 유지 8000 (proportional이면 26400/8800)
+    const r = calculateOrder(base)
+    expect(r.afterMargins?.entrustedMargin).toBe(24_000)
+    expect(r.afterMargins?.maintenanceMargin).toBe(8_000)
+  })
+
+  it('proportional(기본)과 값이 갈림을 확인', () => {
+    const proportional = calculateOrder({ ...base, totalMarginKind: 'proportional' })
+    expect(proportional.afterMargins?.entrustedMargin).toBeCloseTo(26_400, 6)
+    // fixed는 24000 → 두 방식이 실제로 다름
+    const fixed = calculateOrder(base)
+    expect(fixed.afterMargins?.entrustedMargin).toBe(24_000)
+  })
+})
+
 describe('다른 증거금 모드 회귀 — 주문 시뮬 정상 유지', () => {
   const common: CalculatorInputs = {
     mode: 'order',

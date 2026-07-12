@@ -14,10 +14,20 @@ export type ContractAmountRole = 'entryPrice' | 'fixedSpec'
  */
 export type MarginInputMode = 'rate' | 'perContract' | 'total'
 
+/**
+ * 총액(total) 모드 증거금의 가격 민감도 — 주문 시뮬 역산 방식을 가른다.
+ * - proportional(기본): 약정금액(명목가치)에 비례 (국내 선물식). 명목 비율로 역산.
+ * - fixed: 계약당 고정 (해외선물식). 계약수 비율로 역산.
+ * 미설정(undefined) = 아직 사용자에게 안 물어봄 → proportional로 계산하되 주문 시 모달로 확인.
+ */
+export type TotalMarginKind = 'proportional' | 'fixed'
+
 export interface CalculatorInputs {
   mode: CalculatorMode
   /** 증거금 입력 방식 — 미설정 시 비율(rate)로 간주 */
   marginInputMode?: MarginInputMode
+  /** 총액 모드 증거금의 가격 민감도 — 미설정 시 가격 비례로 계산하되 주문 시 모달 확인 */
+  totalMarginKind?: TotalMarginKind
   accountEval?: number
   maintenanceMarginRate?: number
   /** 증권사 앱에서 직접 가져온 유지증거금 총액 (total 모드) */

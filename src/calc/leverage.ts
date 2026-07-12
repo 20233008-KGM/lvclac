@@ -247,9 +247,9 @@ export function buildAfterOrderInputs(
  * 실제 산정(약정금액 × 증거금률)과 동일한 원리이며, 주문가격이 진입가와
  * 달라 평균단가가 바뀌는 경우까지 반영한다.
  *
- * 한계: total 모드는 이 증거금이 "가격 비례"인지 "계약당 고정"인지 구분
- * 정보를 갖지 못하므로 항상 가격 비례로 가정한다. 계약당 고정 증거금은
- * perContract 모드가 정확하다.
+ * 성격: base.totalMarginKind === 'fixed'면 계약당 고정(해외선물식)으로 보아
+ * 계약수 비율로 역산하고, 그 외(가격 비례·미설정)는 약정금액 비율로 역산한다.
+ * 미설정 상태는 가격 비례로 계산하되 UI에서 주문 시 모달로 성격을 확인한다.
  */
 function withRescaledTotalMargins(
   base: CalculatorInputs,
@@ -263,11 +263,17 @@ function withRescaledTotalMargins(
   const entrustedIsTotal = entrustedMarginMode(base) === 'total'
   if (!maintenanceIsTotal && !entrustedIsTotal) return next
 
-  const beforeNotional = calcPositionNotional(base, beforeContracts)
-  const afterNotional = calcPositionNotional(next, newContracts)
-  if (beforeNotional <= 0 || afterNotional <= 0) return next
-
-  const ratio = afterNotional / beforeNotional
+  let ratio: number
+  if (base.totalMarginKind === 'fixed') {
+    // 계약당 고정: 약정금액과 무관하게 계약수에만 비례
+    ratio = newContracts / beforeContracts
+  } else {
+    // 가격 비례(기본·미설정): 주문 전/후 약정금액 비율
+    const beforeNotional = calcPositionNotional(base, beforeContracts)
+    const afterNotional = calcPositionNotional(next, newContracts)
+    if (beforeNotional <= 0 || afterNotional <= 0) return next
+    ratio = afterNotional / beforeNotional
+  }
   if (!Number.isFinite(ratio) || ratio <= 0) return next
 
   const rescaled = { ...next }

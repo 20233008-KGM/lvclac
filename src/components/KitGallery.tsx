@@ -337,6 +337,7 @@ const KIT_STYLES = `
   background: transparent;
   padding: 32px;
   box-sizing: border-box;
+  width: 5200px;            /* 넓은 폭 → 카드가 가로로 흐르며 landscape 그리드가 된다 */
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
@@ -366,8 +367,9 @@ const KIT_STYLES = `
   max-width: none !important;
   background: transparent !important;
   padding: 0 !important;
-  display: block !important;
-  margin: 24px 0 0 32px !important;
+  display: inline-block !important;
+  vertical-align: top !important;
+  margin: 24px 24px 0 32px !important;
 }
 /* 모달의 body overflow:hidden(스크롤 잠금) 부작용을 무효화 — 전체 캡처 위해. */
 body { overflow: visible !important; }

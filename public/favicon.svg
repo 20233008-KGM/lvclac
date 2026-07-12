@@ -5,8 +5,8 @@
       <stop offset="0" stop-color="#6fa4ff" />
       <stop offset="0.5" stop-color="#4184f2" />
       <stop offset="0.72" stop-color="#4184f2" />
-      <stop offset="0.9" stop-color="#ff6252" />
-      <stop offset="1" stop-color="#ff2418" />
+      <stop offset="0.9" stop-color="#ff4a2e" />
+      <stop offset="1" stop-color="#ff1005" />
     </linearGradient>
   </defs>
   <path

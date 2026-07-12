@@ -14,8 +14,11 @@ import {
 } from './mtmLink'
 import {
   calcMargins,
+  calcPositionNotional,
+  entrustedMarginMode,
   inputsReadyForEvaluate,
   inputsReadyForOrderSim,
+  maintenanceMarginMode,
   withReferencePrice,
   validateLiquidationInputs,
   validateMarginRates,
@@ -220,13 +223,61 @@ export function buildAfterOrderInputs(
     orderPrice,
   )
 
-  return {
+  const next: CalculatorInputs = {
     ...inputs,
     contracts: newContracts,
     contractAmount,
     accountEval: resolveMarginEquity(inputs) + fillPnl,
     evalSnapshotSide: inputs.positionSide,
   }
+
+  return withRescaledTotalMargins(inputs, next, newContracts)
+}
+
+/**
+ * 총액(total) 직접 입력 증거금을 주문 후 값으로 역산해 재설정한다.
+ *
+ * 배경: total 모드의 계약수 비례(scaleDirectMargin)는 기준 계약수를
+ * inputs.contracts에서 읽는데, 주문 경로에서는 이미 newContracts로 덮인 뒤라
+ * (기준 = 목표)가 되어 비례가 무력화된다. 그 결과 계약이 늘어도 총 증거금이
+ * 그대로 남는 버그가 생긴다.
+ *
+ * 해결: total 입력값은 "그 순간 약정금액에 어떤 증거금률을 곱한 값"이므로,
+ * 주문 전/후 약정금액(명목가치) 비율로 되돌려 곱한다. 이는 국내 선물의
+ * 실제 산정(약정금액 × 증거금률)과 동일한 원리이며, 주문가격이 진입가와
+ * 달라 평균단가가 바뀌는 경우까지 반영한다.
+ *
+ * 한계: total 모드는 이 증거금이 "가격 비례"인지 "계약당 고정"인지 구분
+ * 정보를 갖지 못하므로 항상 가격 비례로 가정한다. 계약당 고정 증거금은
+ * perContract 모드가 정확하다.
+ */
+function withRescaledTotalMargins(
+  base: CalculatorInputs,
+  next: CalculatorInputs,
+  newContracts: number,
+): CalculatorInputs {
+  const beforeContracts = base.contracts ?? 0
+  if (beforeContracts <= 0 || newContracts <= 0) return next
+
+  const maintenanceIsTotal = maintenanceMarginMode(base) === 'total'
+  const entrustedIsTotal = entrustedMarginMode(base) === 'total'
+  if (!maintenanceIsTotal && !entrustedIsTotal) return next
+
+  const beforeNotional = calcPositionNotional(base, beforeContracts)
+  const afterNotional = calcPositionNotional(next, newContracts)
+  if (beforeNotional <= 0 || afterNotional <= 0) return next
+
+  const ratio = afterNotional / beforeNotional
+  if (!Number.isFinite(ratio) || ratio <= 0) return next
+
+  const rescaled = { ...next }
+  if (maintenanceIsTotal && base.maintenanceMargin != null) {
+    rescaled.maintenanceMargin = base.maintenanceMargin * ratio
+  }
+  if (entrustedIsTotal && base.entrustedMargin != null) {
+    rescaled.entrustedMargin = base.entrustedMargin * ratio
+  }
+  return rescaled
 }
 
 function calcAfterOrderLiquidation(

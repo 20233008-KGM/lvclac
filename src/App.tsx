@@ -31,6 +31,7 @@ import {
   isFormulasPath,
   isGuidePath,
   isLegalPath,
+  isKitPath,
   isMyPagePath,
   isPricingPath,
   isProductPath,
@@ -84,6 +85,9 @@ const ResetPasswordScreen = lazy(() =>
   import('./components/auth/ResetPasswordScreen').then((mod) => ({
     default: mod.ResetPasswordScreen,
   })),
+)
+const KitGallery = lazy(() =>
+  import('./components/KitGallery').then((mod) => ({ default: mod.KitGallery })),
 )
 
 type CalculatorHistoryCopy = Messages['calculatorHistory']
@@ -449,6 +453,13 @@ function AppRouter() {
   const boardId = parseBoardPath(pathname)
   const legalKind = isLegalPath(pathname)
 
+  if (import.meta.env.DEV && isKitPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <KitGallery />
+      </Suspense>
+    )
+  }
   if (isAdminFeedbackPath(pathname)) {
     return (
       <Suspense fallback={null}>

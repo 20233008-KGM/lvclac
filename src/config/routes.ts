@@ -54,3 +54,10 @@ export function isLegalPath(pathname: string): LegalPageKind | null {
   if (matchesPath(pathname, REFUND_POLICY_PATH)) return 'refund'
   return null
 }
+
+/** 개발 전용 컴포넌트 전시장(UI 키트) — Figma export용. import.meta.env.DEV에서만 라우팅됨. */
+export const KIT_PATH = '/kit'
+
+export function isKitPath(pathname: string): boolean {
+  return matchesPath(pathname, KIT_PATH)
+}

@@ -3,8 +3,8 @@
   <defs>
     <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#5b8def" />
-      <stop offset="0.72" stop-color="#5b8def" />
-      <stop offset="1" stop-color="#de5a52" />
+      <stop offset="0.5" stop-color="#5b8def" />
+      <stop offset="1" stop-color="#e5483d" />
     </linearGradient>
   </defs>
   <path

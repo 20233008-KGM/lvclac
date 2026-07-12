@@ -18,8 +18,19 @@ export function localeFromBrowserLanguage(language: string): Locale {
   return language.startsWith('ko') ? 'ko' : 'en'
 }
 
+/** URL 쿼리 ?lang=en|ko 로 명시된 언어. UI 키트 export 등에서 언어를 결정적으로 고정할 때 사용. */
+export function localeFromUrlParam(): Locale | null {
+  if (typeof window === 'undefined') return null
+  const lang = new URLSearchParams(window.location.search).get('lang')
+  return lang === 'en' || lang === 'ko' ? lang : null
+}
+
 export function detectInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'ko'
+
+  // ?lang이 있으면 최우선(동기) — geo/브라우저 자동감지보다 앞선다.
+  const fromUrl = localeFromUrlParam()
+  if (fromUrl) return fromUrl
 
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored === 'en' || stored === 'ko') return stored
@@ -39,6 +50,7 @@ export function detectInitialLocale(): Locale {
 
 export function shouldFetchGeo(): boolean {
   if (typeof window === 'undefined') return false
+  if (localeFromUrlParam()) return false // ?lang 명시 시 geo 자동감지가 덮어쓰지 않도록
   if (localStorage.getItem(STORAGE_KEY)) return false
   if (getCookie(GEO_COOKIE)) return false
   if (sessionStorage.getItem(SESSION_DETECTED_KEY)) return false

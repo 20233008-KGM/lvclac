@@ -52,17 +52,14 @@ function KitItem({
 }
 
 export function KitGallery() {
-  const { setLocale, locale, t } = useLanguage()
+  const { locale, t } = useLanguage()
   const [inputs] = useState<CalculatorInputs>(() => ({
     ...sampleInputs,
     orderPrice: sampleInputs.currentPrice,
   }))
 
-  // URL의 ?lang=en / ?lang=ko 로 언어를 강제.
-  useEffect(() => {
-    const lang = new URLSearchParams(window.location.search).get('lang')
-    if (lang === 'en' || lang === 'ko') setLocale(lang)
-  }, [setLocale])
+  // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 읽어 확정한다.
+  // (geo/브라우저 자동감지가 덮어쓰지 못하도록 shouldFetchGeo도 ?lang 시 skip)
 
   // 밝은 배경 — Figma import 시 프레임이 캔버스색과 같아져 '검은 배경 패널'이 생기지 않는다.
   // 각 컴포넌트 카드는 자체 어두운 배경을 가지므로 컴포넌트는 정상적으로 보인다.

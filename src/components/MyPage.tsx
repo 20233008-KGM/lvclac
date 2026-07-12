@@ -603,7 +603,7 @@ function NumberSetRow({
   )
 }
 
-function NumberSetPreferencesPanel({
+export function NumberSetPreferencesPanel({
   copy,
   localNumberSets,
   cloudNumberSets,
@@ -711,7 +711,7 @@ function PencilIcon() {
 }
 
 /** 지역 선택 블록. 지역을 바꾸면 자동저장 스냅샷 시간대 기본값만 그 지역으로 맞춘다. */
-function RegionPreferenceBlock({
+export function RegionPreferenceBlock({
   copy,
   regions,
   region,

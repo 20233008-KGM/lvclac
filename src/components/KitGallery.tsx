@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { LayoutProvider } from '../context/LayoutContext'
 import { useLanguage } from '../i18n'
 import { sampleInputs, type CalculatorInputs } from '../types'
+import type { CalculatorNumberSet } from '../context/CalculatorContext'
+import type { AuthUser } from '../db/profile'
 import { InputPanel } from './InputPanel'
 import { ResultPanel } from './ResultPanel'
 import { SiteFooter } from './SiteFooter'
@@ -13,18 +15,41 @@ import { SaveDraftToggle } from './SaveDraftToggle'
 import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { NumberInput } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
-import { AccountRecordsSummaryPanel, AccountSnapshotAutomationPanel } from './MyPage'
+import {
+  MyPageView,
+  AccountRecordsSummaryPanel,
+  AccountSnapshotAutomationPanel,
+  RegionPreferenceBlock,
+  NumberSetPreferencesPanel,
+} from './MyPage'
 import { BillingPanel } from './billing/BillingPanel'
 
 /**
  * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 나열(개발/Figma export 전용).
  * '납작한(flat)' 구조: 컴포넌트마다 라벨 붙은 카드 하나가 kit-root의 직속 자식.
- * → Figma import 후 겉프레임 하나만 벗기면(ungroup) 각 컴포넌트가 낱개 프레임으로 분리된다.
- * 페이지 배경은 밝은 회색(#f5f5f5, Figma 캔버스색) → import 시 '검은 패널'이 생기지 않는다.
- * onChange류는 시각 전용 no-op. ?lang=en / ?lang=ko 로 언어 강제.
+ * 페이지 배경은 밝은 회색(#f5f5f5) → import 시 '검은 패널'이 생기지 않는다.
+ * onChange류는 시각 전용 no-op. ?lang은 detectInitialLocale에서 최우선 처리.
  */
 
 const noop = () => {}
+const noopAsyncFalse = async () => false
+
+/** 마이페이지 전시용 가짜 로그인 사용자(Pro). */
+const mockUser: AuthUser = {
+  id: 'kit-demo',
+  email: 'demo@liqguard.com',
+  nickname: '데모 사용자',
+  autoSaveOrderHistory: true,
+  isAdmin: false,
+}
+
+/** 숫자세트 전시용 목 클라우드 세트(캡처처럼 3개). */
+const mockCloudSets: CalculatorNumberSet[] = [
+  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud' },
+  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud' },
+  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud' },
+]
+const numberSetLimits: Record<'local' | 'cloud', number> = { local: 10, cloud: 10 }
 
 /** 컴포넌트 하나 = 라벨 붙은 낱개 카드(Figma에서 프레임 하나로 분리). */
 function KitItem({
@@ -51,6 +76,97 @@ function KitItem({
   )
 }
 
+/** 지역/거래종목/숫자세트/자동스냅샷을 실제 마이페이지처럼 조립한 환경설정 패널. */
+function PreferencesPanelDemo() {
+  const { t } = useLanguage()
+  return (
+    <section className="my-page-panel" aria-labelledby="kit-prefs-title">
+      <h2 id="kit-prefs-title">{t.myPage.preferencesTitle}</h2>
+      <RegionPreferenceBlock copy={t.myPage} regions={t.welcome.regions} region="KR" onChange={noop} />
+      <div className="my-page-preference-block">
+        <h3>{t.myPage.glossaryPresetTitle}</h3>
+        <p>{t.myPage.glossaryPresetBody}</p>
+        <PresetSelect variant="inline" />
+      </div>
+      <NumberSetPreferencesPanel
+        copy={t.myPage}
+        localNumberSets={[]}
+        cloudNumberSets={mockCloudSets}
+        activeNumberSetId="set-2"
+        numberSetLimits={numberSetLimits}
+        busy={false}
+        notice={null}
+        onCreateNumberSet={noop}
+        onRenameNumberSet={noop}
+        onDeleteNumberSet={noop}
+        onSelectNumberSet={noop}
+      />
+      <AccountSnapshotAutomationPanel
+        copy={t.myPage}
+        isPro
+        hasCloudInput
+        settings={null}
+        browserTimeZone="Asia/Seoul"
+        onSave={noop}
+        onDisable={noop}
+      />
+    </section>
+  )
+}
+
+/** MyPageView(순수 표현) 전체 — 계정 허브·연동 로그인·구독·기록·환경설정 조립본. */
+function MyPageDemo() {
+  const { t } = useLanguage()
+  return (
+    <MyPageView
+      copy={t.myPage}
+      authLoading={false}
+      configured
+      user={mockUser}
+      isPro
+      nicknameDraft={mockUser.nickname}
+      nicknameBusy={false}
+      nicknameMessage={null}
+      linkedProviders={['email', 'google']}
+      identityBusy={null}
+      identityMessage={null}
+      passwordFormOpen={false}
+      passwordDraft=""
+      passwordConfirmationDraft=""
+      supportHref="mailto:support@liqguard.com"
+      recordsSummaryPanel={
+        <AccountRecordsSummaryPanel
+          copy={t.myPage}
+          recordsCopy={t.accountRecords}
+          loading={false}
+          error={null}
+          notice={null}
+          latestSnapshot={null}
+          recentOrders={[]}
+          archiveHref="#"
+          autoSaveEnabled
+          autoSaveBusy={false}
+          onAutoSaveChange={noop}
+          onRetry={noop}
+        />
+      }
+      preferencesPanel={<PreferencesPanelDemo />}
+      billingPanel={<BillingPanel embedded />}
+      devResetPanel={null}
+      onNicknameChange={noop}
+      onNicknameSubmit={noopAsyncFalse}
+      onLinkGoogle={noop}
+      onUnlinkGoogle={noop}
+      onPasswordFormToggle={noop}
+      onPasswordDraftChange={noop}
+      onPasswordConfirmationDraftChange={noop}
+      onSetPasswordSubmit={noop}
+      onLoginClick={noop}
+      onSignOut={noop}
+    />
+  )
+}
+
 export function KitGallery() {
   const { locale, t } = useLanguage()
   const [inputs] = useState<CalculatorInputs>(() => ({
@@ -58,11 +174,9 @@ export function KitGallery() {
     orderPrice: sampleInputs.currentPrice,
   }))
 
-  // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 읽어 확정한다.
-  // (geo/브라우저 자동감지가 덮어쓰지 못하도록 shouldFetchGeo도 ?lang 시 skip)
+  // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 확정한다.
 
-  // 밝은 배경 — Figma import 시 프레임이 캔버스색과 같아져 '검은 배경 패널'이 생기지 않는다.
-  // 각 컴포넌트 카드는 자체 어두운 배경을 가지므로 컴포넌트는 정상적으로 보인다.
+  // 밝은 배경 — Figma import 시 프레임이 캔버스색과 같아져 '검은 배경 패널'이 안 생긴다.
   useEffect(() => {
     const prevBody = document.body.style.background
     const prevHtml = document.documentElement.style.background
@@ -111,7 +225,7 @@ export function KitGallery() {
           <ResultPanel inputs={inputs} onChange={noop} />
         </KitItem>
 
-        <KitItem name="AccountRecordsSummaryPanel" width={540}>
+        <KitItem name="AccountRecordsSummaryPanel" note="마이페이지" width={540}>
           <AccountRecordsSummaryPanel
             copy={t.myPage}
             recordsCopy={t.accountRecords}
@@ -127,7 +241,25 @@ export function KitGallery() {
             onRetry={noop}
           />
         </KitItem>
-        <KitItem name="AccountSnapshotAutomationPanel" width={540}>
+        <KitItem name="RegionPreferenceBlock" note="환경설정·지역" width={420}>
+          <RegionPreferenceBlock copy={t.myPage} regions={t.welcome.regions} region="KR" onChange={noop} />
+        </KitItem>
+        <KitItem name="NumberSetPreferencesPanel" note="환경설정·숫자세트" width={560}>
+          <NumberSetPreferencesPanel
+            copy={t.myPage}
+            localNumberSets={[]}
+            cloudNumberSets={mockCloudSets}
+            activeNumberSetId="set-2"
+            numberSetLimits={numberSetLimits}
+            busy={false}
+            notice={null}
+            onCreateNumberSet={noop}
+            onRenameNumberSet={noop}
+            onDeleteNumberSet={noop}
+            onSelectNumberSet={noop}
+          />
+        </KitItem>
+        <KitItem name="AccountSnapshotAutomationPanel" note="마이페이지" width={540}>
           <AccountSnapshotAutomationPanel
             copy={t.myPage}
             isPro
@@ -138,8 +270,11 @@ export function KitGallery() {
             onDisable={noop}
           />
         </KitItem>
-        <KitItem name="BillingPanel" width={540}>
+        <KitItem name="BillingPanel" note="구독 결제" width={540}>
           <BillingPanel embedded />
+        </KitItem>
+        <KitItem name="MyPageView" note="계정 허브·연동 로그인 포함 전체" width={1080}>
+          <MyPageDemo />
         </KitItem>
 
         <KitItem name="SiteFooter" width={900}>

@@ -81,7 +81,6 @@ describe('MyPageView', () => {
     passwordDraft: '',
     passwordConfirmationDraft: '',
     supportHref: 'mailto:support@example.com',
-    suggestionsHref: '/boards/suggestions',
     recordsSummaryPanel: (
       <section id="my-page-records-summary">
         <h2>{en.myPage.recordsSummaryTitle}</h2>

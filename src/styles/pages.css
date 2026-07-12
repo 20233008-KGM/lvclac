@@ -2691,18 +2691,11 @@ html[data-zone='about'] body {
   margin-top: var(--space-xs);
 }
 
-.my-page-support-grid {
-  display: grid;
-  gap: var(--space-md);
-}
-
-/* 회원 탈퇴: 파괴적 행동이라 눈에 안 띄게 — 작은 텍스트 버튼 + 아주 작은 도움말 */
-.my-page-delete-row {
+/* 회원 탈퇴: 요즘 앱들처럼 페이지 맨 아래 작고 조용하게 — 파괴적 행동이라 눈에 안 띄게 */
+.my-page-account-footer {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  padding-top: var(--space-md);
+  justify-content: center;
+  padding-top: var(--space-lg);
   border-top: 1px solid var(--color-border-subtle);
 }
 
@@ -2890,66 +2883,6 @@ html[data-zone='about'] body {
   }
 }
 
-.my-page-support-channels {
-  display: grid;
-  gap: var(--space-xs);
-  margin-top: var(--space-md);
-}
-
-.my-page-support-channel {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-sm) var(--space-md);
-  padding: 10px 12px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
-  color: inherit;
-  text-decoration: none;
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast);
-}
-
-.my-page-support-channel:hover,
-.my-page-support-channel:focus-visible {
-  border-color: var(--color-border);
-  background: var(--color-surface-2);
-}
-
-.my-page-support-channel__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-}
-
-.my-page-support-channel__body {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.my-page-support-channel__title {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text);
-  line-height: 1.35;
-}
-
-.my-page-support-channel__desc {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
-
-.my-page-support-channel__arrow {
-  color: var(--color-text-dim);
-  font-size: var(--font-size-sm);
-  line-height: 1;
-}
-
 @media (max-width: 1023px) {
   .my-page {
     padding: calc(var(--space-lg) + 36px) var(--space-sm) var(--space-lg);
@@ -3012,8 +2945,7 @@ html[data-zone='about'] body {
 
   .my-page-automation-form,
   .my-page-number-set-usage,
-  .my-page-number-set-row,
-  .my-page-support-grid {
+  .my-page-number-set-row {
     grid-template-columns: 1fr;
   }
 

@@ -10,8 +10,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
-import { boardPath } from '../config/boards'
-import { ADMIN_FEEDBACK_PATH, RECORDS_PATH } from '../config/routes'
+import { RECORDS_PATH } from '../config/routes'
 import { CONTACT_EMAIL } from '../config/site'
 import {
   useCalculator,
@@ -62,7 +61,6 @@ const MY_PAGE_NAV_ITEMS = [
   { href: '#my-page-profile', sectionIds: ['my-page-profile'] as const },
   { href: '#my-page-records-summary', sectionIds: ['my-page-records-summary'] as const },
   { href: '#my-page-preferences', sectionIds: ['my-page-preferences'] as const },
-  { href: '#my-page-support', sectionIds: ['my-page-support'] as const },
 ] as const
 
 type MyPageNavHref = (typeof MY_PAGE_NAV_ITEMS)[number]['href']
@@ -196,8 +194,6 @@ interface MyPageViewProps {
   passwordDraft: string
   passwordConfirmationDraft: string
   supportHref: string
-  suggestionsHref: string
-  adminFeedbackHref?: string
   recordsSummaryPanel?: ReactNode
   preferencesPanel?: ReactNode
   /** 구독 결제 패널. 로그인 사용자에게만 주입된다. */
@@ -235,47 +231,6 @@ function MailIcon() {
     >
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <path d="m3 7 9 6 9-6" />
-    </svg>
-  )
-}
-
-function LightbulbIcon() {
-  return (
-    <svg
-      className="my-page-support-channel__svg"
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 18h6" />
-      <path d="M10 22h4" />
-      <path d="M12 2a7 7 0 0 0-4 12.74V17h8v-2.26A7 7 0 0 0 12 2z" />
-    </svg>
-  )
-}
-
-function InboxIcon() {
-  return (
-    <svg
-      className="my-page-support-channel__svg"
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
     </svg>
   )
 }
@@ -763,8 +718,6 @@ export function MyPageView({
   passwordDraft,
   passwordConfirmationDraft,
   supportHref,
-  suggestionsHref,
-  adminFeedbackHref,
   recordsSummaryPanel,
   preferencesPanel,
   billingPanel,
@@ -815,7 +768,6 @@ export function MyPageView({
     '#my-page-profile': copy.navAccount,
     '#my-page-records-summary': copy.navData,
     '#my-page-preferences': copy.preferencesTitle,
-    '#my-page-support': copy.navSupport,
   }
 
   return (
@@ -1107,73 +1059,13 @@ export function MyPageView({
 
               {preferencesPanel}
 
-              <section
-                id="my-page-support"
-                className="my-page-panel"
-                aria-labelledby="my-page-support-title"
-              >
-                <div className="my-page-support-grid">
-                  <div>
-                    <h2 id="my-page-support-title">{copy.supportTitle}</h2>
-                    <p>{copy.supportBody}</p>
-                    <div className="my-page-support-channels">
-                      <a className="my-page-support-channel" href={suggestionsHref}>
-                        <span className="my-page-support-channel__icon" aria-hidden="true">
-                          <LightbulbIcon />
-                        </span>
-                        <span className="my-page-support-channel__body">
-                          <span className="my-page-support-channel__title">
-                            {copy.suggestionsLink}
-                          </span>
-                          <span className="my-page-support-channel__desc">
-                            {copy.suggestionsDesc}
-                          </span>
-                        </span>
-                        <span className="my-page-support-channel__arrow" aria-hidden="true">
-                          →
-                        </span>
-                      </a>
-                      <a className="my-page-support-channel" href={supportHref}>
-                        <span className="my-page-support-channel__icon" aria-hidden="true">
-                          <MailIcon />
-                        </span>
-                        <span className="my-page-support-channel__body">
-                          <span className="my-page-support-channel__title">{copy.emailLink}</span>
-                          <span className="my-page-support-channel__desc">{copy.emailDesc}</span>
-                        </span>
-                        <span className="my-page-support-channel__arrow" aria-hidden="true">
-                          →
-                        </span>
-                      </a>
-                      {adminFeedbackHref && (
-                        <a className="my-page-support-channel" href={adminFeedbackHref}>
-                          <span className="my-page-support-channel__icon" aria-hidden="true">
-                            <InboxIcon />
-                          </span>
-                          <span className="my-page-support-channel__body">
-                            <span className="my-page-support-channel__title">
-                              {copy.adminFeedbackLink}
-                            </span>
-                            <span className="my-page-support-channel__desc">
-                              {copy.adminFeedbackDesc}
-                            </span>
-                          </span>
-                          <span className="my-page-support-channel__arrow" aria-hidden="true">
-                            →
-                          </span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                  <div className="my-page-delete-row">
-                    <a className="my-page-delete-btn" href={supportHref}>
-                      {copy.deleteAccountTitle}
-                    </a>
-                  </div>
-                </div>
-              </section>
-
               {devResetPanel}
+
+              <div className="my-page-account-footer">
+                <a className="my-page-delete-btn" href={supportHref}>
+                  {copy.deleteAccountTitle}
+                </a>
+              </div>
               </main>
             </div>
           </>
@@ -1624,8 +1516,6 @@ export function MyPage() {
         passwordDraft={passwordDraft}
         passwordConfirmationDraft={passwordConfirmationDraft}
         supportHref={`mailto:${CONTACT_EMAIL}`}
-        suggestionsHref={boardPath('suggestions')}
-        adminFeedbackHref={user?.isAdmin ? ADMIN_FEEDBACK_PATH : undefined}
         recordsSummaryPanel={
           user ? (
             <AccountRecordsSummaryPanel
@@ -1682,14 +1572,6 @@ export function MyPage() {
                 onSave={(settings) => void handleAutomationSave(settings)}
                 onDisable={() => void handleAutomationDisable()}
               />
-              <div className="my-page-preference-block">
-                <h3>{t.myPage.privacyTitle}</h3>
-                <p>{t.myPage.privacyBody}</p>
-                <ul className="my-page-note-list">
-                  <li>{t.myPage.localStorageNote}</li>
-                  <li>{t.myPage.cloudStorageNote}</li>
-                </ul>
-              </div>
             </section>
           ) : null
         }

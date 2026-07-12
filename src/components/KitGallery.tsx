@@ -13,6 +13,13 @@ import { SaveDraftToggle } from './SaveDraftToggle'
 import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { NumberInput } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
+import {
+  MyPageView,
+  AccountRecordsSummaryPanel,
+  AccountSnapshotAutomationPanel,
+} from './MyPage'
+import { BillingPanel } from './billing/BillingPanel'
+import type { AuthUser } from '../db/profile'
 
 /**
  * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 한 화면에 나열한다.
@@ -22,6 +29,89 @@ import { NumberStepper } from './NumberStepper'
  */
 
 const noop = () => {}
+const noopAsyncFalse = async () => false
+
+/** 마이페이지 전시용 가짜 로그인 사용자 — 실제 인증/데이터 없이 화면만 그린다. */
+const mockUser: AuthUser = {
+  id: 'kit-demo',
+  email: 'demo@liqguard.com',
+  nickname: '데모 사용자',
+  autoSaveOrderHistory: true,
+  isAdmin: false,
+}
+
+/** MyPageView(순수 표현 컴포넌트)를 가짜 사용자·no-op 콜백으로 감싼 전시용 래퍼. */
+function MyPageDemo() {
+  const { t } = useLanguage()
+  const recordsPanel = (
+    <AccountRecordsSummaryPanel
+      copy={t.myPage}
+      recordsCopy={t.accountRecords}
+      loading={false}
+      error={null}
+      notice={null}
+      latestSnapshot={null}
+      recentOrders={[]}
+      archiveHref="#"
+      autoSaveEnabled
+      autoSaveBusy={false}
+      onAutoSaveChange={noop}
+      onRetry={noop}
+    />
+  )
+  const preferencesPanel = (
+    <section className="my-page-panel" aria-labelledby="kit-prefs-title">
+      <h2 id="kit-prefs-title">{t.myPage.preferencesTitle}</h2>
+      <div className="my-page-preference-block">
+        <h3>{t.myPage.glossaryPresetTitle}</h3>
+        <p>{t.myPage.glossaryPresetBody}</p>
+        <PresetSelect variant="inline" />
+      </div>
+      <AccountSnapshotAutomationPanel
+        copy={t.myPage}
+        isPro
+        hasCloudInput
+        settings={null}
+        browserTimeZone="Asia/Seoul"
+        onSave={noop}
+        onDisable={noop}
+      />
+    </section>
+  )
+  return (
+    <MyPageView
+      copy={t.myPage}
+      authLoading={false}
+      configured
+      user={mockUser}
+      isPro={false}
+      nicknameDraft={mockUser.nickname}
+      nicknameBusy={false}
+      nicknameMessage={null}
+      linkedProviders={['email', 'google']}
+      identityBusy={null}
+      identityMessage={null}
+      passwordFormOpen={false}
+      passwordDraft=""
+      passwordConfirmationDraft=""
+      supportHref="mailto:support@liqguard.com"
+      recordsSummaryPanel={recordsPanel}
+      preferencesPanel={preferencesPanel}
+      billingPanel={<BillingPanel embedded />}
+      devResetPanel={null}
+      onNicknameChange={noop}
+      onNicknameSubmit={noopAsyncFalse}
+      onLinkGoogle={noop}
+      onUnlinkGoogle={noop}
+      onPasswordFormToggle={noop}
+      onPasswordDraftChange={noop}
+      onPasswordConfirmationDraftChange={noop}
+      onSetPasswordSubmit={noop}
+      onLoginClick={noop}
+      onSignOut={noop}
+    />
+  )
+}
 
 /** 컴포넌트 하나를 라벨과 함께 감싼 카드 — Figma에서 프레임 하나로 분리된다. */
 function KitItem({
@@ -49,7 +139,7 @@ function KitItem({
 }
 
 export function KitGallery() {
-  const { setLocale, locale } = useLanguage()
+  const { setLocale, locale, t } = useLanguage()
   const [inputs] = useState<CalculatorInputs>(() => ({
     ...sampleInputs,
     orderPrice: sampleInputs.currentPrice,
@@ -123,6 +213,51 @@ export function KitGallery() {
             </KitItem>
             <KitItem name="ResultPanel" note="inputs · onChange" width={480}>
               <ResultPanel inputs={inputs} onChange={noop} />
+            </KitItem>
+          </div>
+        </section>
+
+        <section className="kit-section">
+          <h2 className="kit-section__title">마이페이지 — 하위 패널</h2>
+          <div className="kit-row kit-row--panels">
+            <KitItem name="AccountRecordsSummaryPanel" note="계좌 기록 요약" width={560}>
+              <AccountRecordsSummaryPanel
+                copy={t.myPage}
+                recordsCopy={t.accountRecords}
+                loading={false}
+                error={null}
+                notice={null}
+                latestSnapshot={null}
+                recentOrders={[]}
+                archiveHref="#"
+                autoSaveEnabled
+                autoSaveBusy={false}
+                onAutoSaveChange={noop}
+                onRetry={noop}
+              />
+            </KitItem>
+            <KitItem name="AccountSnapshotAutomationPanel" note="자동 스냅샷" width={560}>
+              <AccountSnapshotAutomationPanel
+                copy={t.myPage}
+                isPro
+                hasCloudInput
+                settings={null}
+                browserTimeZone="Asia/Seoul"
+                onSave={noop}
+                onDisable={noop}
+              />
+            </KitItem>
+            <KitItem name="BillingPanel" note="구독 결제" width={560}>
+              <BillingPanel embedded />
+            </KitItem>
+          </div>
+        </section>
+
+        <section className="kit-section">
+          <h2 className="kit-section__title">마이페이지 — 전체 화면</h2>
+          <div className="kit-row">
+            <KitItem name="MyPageView" note="mock 로그인 상태" width={1040}>
+              <MyPageDemo />
             </KitItem>
           </div>
         </section>

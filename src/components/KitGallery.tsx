@@ -23,6 +23,10 @@ import {
   NumberSetPreferencesPanel,
 } from './MyPage'
 import { BillingPanel } from './billing/BillingPanel'
+import { AuthModal } from './auth/AuthModal'
+import { BulkDeleteConfirmModal } from './BulkDeleteConfirmModal'
+import { SnapshotSavedModal } from './SnapshotSavedModal'
+import { MarginKindAskModal } from './MarginKindAskModal'
 
 /**
  * UI 키트 전시장 — 실제 컴포넌트를 채워진 샘플값으로 나열(개발/Figma export 전용).
@@ -280,6 +284,49 @@ export function KitGallery() {
         <KitItem name="SiteFooter" width={900}>
           <SiteFooter />
         </KitItem>
+
+        {/* 모달들 — 각자 document.body로 portal되어 kit-root 밖(body 레벨)에 렌더된다.
+            KIT_STYLES에서 .disclaimer-overlay를 인라인화(static)해 카드처럼 보이게 한다.
+            onClose/onSelect류는 noop이라 항상 열린 상태로 캡처된다. */}
+        <BulkDeleteConfirmModal
+          onClose={noop}
+          onConfirm={noop}
+          copy={{
+            title: t.accountRecords.deleteSelected,
+            body: t.accountRecords.bulkDeleteConfirmSelectedWithCount.replace('{count}', '3'),
+            confirm: t.accountRecords.bulkDeleteConfirmButton,
+            confirmBusy: t.accountRecords.bulkDeleteBusy,
+            cancel: t.accountRecords.bulkDeleteCancel,
+            close: t.close,
+          }}
+        />
+        <SnapshotSavedModal
+          onClose={noop}
+          onGoToRecords={noop}
+          copy={{
+            title: t.accountRecords.savedModalTitle,
+            body: t.accountRecords.snapshotSaved,
+            goToRecords: t.accountRecords.savedModalGoToRecords,
+            close: t.close,
+          }}
+        />
+        <MarginKindAskModal
+          copy={{
+            title: t.marginKindAsk.title,
+            body: t.marginKindAsk.body,
+            question: t.marginKindAsk.question,
+            proportional: t.marginKindAsk.proportional,
+            proportionalHint: t.marginKindAsk.proportionalHint,
+            fixed: t.marginKindAsk.fixed,
+            fixedHint: t.marginKindAsk.fixedHint,
+            skipLabel: t.marginKindAsk.skipLabel,
+          }}
+          dontShowAgain={false}
+          onDontShowAgainChange={noop}
+          onSelect={noop}
+          onClose={noop}
+        />
+        <AuthModal onClose={noop} />
       </div>
     </LayoutProvider>
   )
@@ -308,4 +355,20 @@ const KIT_STYLES = `
 .kit-item__name { font-family: var(--font-mono); font-size: 11px; color: var(--color-primary); }
 .kit-item__note { font-size: 10px; color: var(--color-text-dim); }
 .kit-item__stage { position: relative; }
+
+/* 모달 오버레이를 전체화면 고정에서 인라인 블록으로 — 카드처럼 보이도록. 모달은 body로 portal됨. */
+.disclaimer-overlay {
+  position: static !important;
+  inset: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  width: fit-content !important;
+  max-width: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  display: block !important;
+  margin: 24px 0 0 32px !important;
+}
+/* 모달의 body overflow:hidden(스크롤 잠금) 부작용을 무효화 — 전체 캡처 위해. */
+body { overflow: visible !important; }
 `

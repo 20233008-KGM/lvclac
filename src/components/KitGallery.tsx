@@ -3,7 +3,6 @@ import { LayoutProvider } from '../context/LayoutContext'
 import { useLanguage } from '../i18n'
 import { sampleInputs, type CalculatorInputs } from '../types'
 import type { CalculatorNumberSet } from '../context/CalculatorContext'
-import type { AuthUser } from '../db/profile'
 import { InputPanel } from './InputPanel'
 import { ResultPanel } from './ResultPanel'
 import { SiteFooter } from './SiteFooter'
@@ -16,7 +15,6 @@ import { ClearAllInputsButton } from './ClearAllInputsButton'
 import { NumberInput } from './NumberInput'
 import { NumberStepper } from './NumberStepper'
 import {
-  MyPageView,
   AccountRecordsSummaryPanel,
   AccountSnapshotAutomationPanel,
   RegionPreferenceBlock,
@@ -36,16 +34,6 @@ import { MarginKindAskModal } from './MarginKindAskModal'
  */
 
 const noop = () => {}
-const noopAsyncFalse = async () => false
-
-/** 마이페이지 전시용 가짜 로그인 사용자(Pro). */
-const mockUser: AuthUser = {
-  id: 'kit-demo',
-  email: 'demo@liqguard.com',
-  nickname: '데모 사용자',
-  autoSaveOrderHistory: true,
-  isAdmin: false,
-}
 
 /** 숫자세트 전시용 목 클라우드 세트(캡처처럼 3개). */
 const mockCloudSets: CalculatorNumberSet[] = [
@@ -77,97 +65,6 @@ function KitItem({
         {children}
       </div>
     </div>
-  )
-}
-
-/** 지역/거래종목/숫자세트/자동스냅샷을 실제 마이페이지처럼 조립한 환경설정 패널. */
-function PreferencesPanelDemo() {
-  const { t } = useLanguage()
-  return (
-    <section className="my-page-panel" aria-labelledby="kit-prefs-title">
-      <h2 id="kit-prefs-title">{t.myPage.preferencesTitle}</h2>
-      <RegionPreferenceBlock copy={t.myPage} regions={t.welcome.regions} region="KR" onChange={noop} />
-      <div className="my-page-preference-block">
-        <h3>{t.myPage.glossaryPresetTitle}</h3>
-        <p>{t.myPage.glossaryPresetBody}</p>
-        <PresetSelect variant="inline" />
-      </div>
-      <NumberSetPreferencesPanel
-        copy={t.myPage}
-        localNumberSets={[]}
-        cloudNumberSets={mockCloudSets}
-        activeNumberSetId="set-2"
-        numberSetLimits={numberSetLimits}
-        busy={false}
-        notice={null}
-        onCreateNumberSet={noop}
-        onRenameNumberSet={noop}
-        onDeleteNumberSet={noop}
-        onSelectNumberSet={noop}
-      />
-      <AccountSnapshotAutomationPanel
-        copy={t.myPage}
-        isPro
-        hasCloudInput
-        settings={null}
-        browserTimeZone="Asia/Seoul"
-        onSave={noop}
-        onDisable={noop}
-      />
-    </section>
-  )
-}
-
-/** MyPageView(순수 표현) 전체 — 계정 허브·연동 로그인·구독·기록·환경설정 조립본. */
-function MyPageDemo() {
-  const { t } = useLanguage()
-  return (
-    <MyPageView
-      copy={t.myPage}
-      authLoading={false}
-      configured
-      user={mockUser}
-      isPro
-      nicknameDraft={mockUser.nickname}
-      nicknameBusy={false}
-      nicknameMessage={null}
-      linkedProviders={['email', 'google']}
-      identityBusy={null}
-      identityMessage={null}
-      passwordFormOpen={false}
-      passwordDraft=""
-      passwordConfirmationDraft=""
-      supportHref="mailto:support@liqguard.com"
-      recordsSummaryPanel={
-        <AccountRecordsSummaryPanel
-          copy={t.myPage}
-          recordsCopy={t.accountRecords}
-          loading={false}
-          error={null}
-          notice={null}
-          latestSnapshot={null}
-          recentOrders={[]}
-          archiveHref="#"
-          autoSaveEnabled
-          autoSaveBusy={false}
-          onAutoSaveChange={noop}
-          onRetry={noop}
-        />
-      }
-      preferencesPanel={<PreferencesPanelDemo />}
-      billingPanel={<BillingPanel embedded />}
-      devResetPanel={null}
-      onNicknameChange={noop}
-      onNicknameSubmit={noopAsyncFalse}
-      onLinkGoogle={noop}
-      onUnlinkGoogle={noop}
-      onPasswordFormToggle={noop}
-      onPasswordDraftChange={noop}
-      onPasswordConfirmationDraftChange={noop}
-      onSetPasswordSubmit={noop}
-      onLoginClick={noop}
-      onSignOut={noop}
-    />
   )
 }
 
@@ -277,9 +174,6 @@ export function KitGallery() {
         <KitItem name="BillingPanel" note="구독 결제" width={540}>
           <BillingPanel embedded />
         </KitItem>
-        <KitItem name="MyPageView" note="계정 허브·연동 로그인 포함 전체" width={1080}>
-          <MyPageDemo />
-        </KitItem>
 
         <KitItem name="SiteFooter" width={900}>
           <SiteFooter />
@@ -337,7 +231,7 @@ const KIT_STYLES = `
   background: transparent;
   padding: 32px;
   box-sizing: border-box;
-  width: 5200px;            /* 넓은 폭 → 카드가 가로로 흐르며 landscape 그리드가 된다 */
+  width: 3600px;            /* 넓은 폭 → 카드가 가로로 흐르며 landscape 그리드가 된다 */
   display: flex;
   flex-wrap: wrap;
   gap: 24px;

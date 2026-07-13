@@ -1139,6 +1139,7 @@ export function MyPageView({
                         disabled={identityBusy === 'setPassword'}
                         onChange={(event) => onPasswordDraftChange(event.currentTarget.value)}
                       />
+                      <p className="my-page-field-help">{copy.passwordRule}</p>
                     </label>
                     <label className="my-page-field" htmlFor="my-page-set-password-confirm">
                       <span>{copy.passwordConfirmationLabel}</span>

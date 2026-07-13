@@ -75,6 +75,7 @@ export function ResetPasswordScreen() {
                 autoComplete="new-password"
                 required
               />
+              <span className="hint">{t.auth.passwordRule}</span>
               <PasswordStrengthMeter password={password} />
               {pwErr && <span className="hint hint-warn">{pwErr}</span>}
             </label>

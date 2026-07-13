@@ -279,6 +279,7 @@ export interface Messages {
     setPasswordNoEmail: string
     savePassword: string
     passwordLabel: string
+    passwordRule: string
     passwordConfirmationLabel: string
     storageTitle: string
     storageBody: string

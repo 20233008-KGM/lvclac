@@ -675,10 +675,10 @@ function NumberSetRow({
           }}
         />
         <div className="my-page-number-set-row-actions">
-          {onSetAutoSnapshot && (
+          {onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled) && (
             <ToggleSwitch
               checked={numberSet.autoSnapshotEnabled}
-              disabled={busy || (!autoSnapshotAllowed && !numberSet.autoSnapshotEnabled)}
+              disabled={busy}
               label={copy.autoSnapshotSlotToggleLabel}
               onChange={(enabled) =>
                 onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
@@ -870,11 +870,11 @@ export function NumberSetPreferencesPanel({
           onSetAutoSnapshot={onSetAutoSnapshot}
         />
       </div>
-      <p className="my-page-field-help">
-        {isPro
-          ? copy.autoSnapshotSlotCountNote.replace('{count}', String(autoSnapshotCount))
-          : copy.autoSnapshotSlotProNote}
-      </p>
+      {isPro && (
+        <p className="my-page-field-help">
+          {copy.autoSnapshotSlotCountNote.replace('{count}', String(autoSnapshotCount))}
+        </p>
+      )}
       <p className="my-page-field-help">{copy.numberSetsLimitNote}</p>
       {notice && <p className="my-page-form-message" role="status">{notice}</p>}
     </section>

@@ -322,7 +322,6 @@ export const en: Messages = {
     autoSnapshotTimeZoneSearchPlaceholder: 'Search city or time zone (e.g. Seoul)',
     autoSnapshotSlotToggleLabel: 'Auto',
     autoSnapshotSlotCountNote: 'Auto snapshot targets: {count} cloud set(s). Each is saved automatically at your chosen time every day.',
-    autoSnapshotSlotProNote: 'Per-set automatic snapshots are available on Pro.',
     toggleUseLabel: 'On',
     navLabel: 'Jump to my page section',
     navAccount: 'Account',

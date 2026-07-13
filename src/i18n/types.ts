@@ -322,7 +322,6 @@ export interface Messages {
     autoSnapshotTimeZoneSearchPlaceholder: string
     autoSnapshotSlotToggleLabel: string
     autoSnapshotSlotCountNote: string
-    autoSnapshotSlotProNote: string
     toggleUseLabel: string
     navLabel: string
     navAccount: string

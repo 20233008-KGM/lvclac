@@ -315,7 +315,6 @@ export const ko: Messages = {
     autoSnapshotTimeZoneSearchPlaceholder: '도시·시간대 검색 (예: Seoul)',
     autoSnapshotSlotToggleLabel: '자동',
     autoSnapshotSlotCountNote: '자동 스냅샷 대상: 클라우드 세트 {count}개. 각 세트를 매일 설정한 시각에 자동 저장합니다.',
-    autoSnapshotSlotProNote: '클라우드 세트별 자동 스냅샷은 Pro에서 사용할 수 있습니다.',
     toggleUseLabel: '사용',
     navLabel: '마이페이지 섹션 바로가기',
     navAccount: '계정',

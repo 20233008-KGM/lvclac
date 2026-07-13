@@ -2573,7 +2573,7 @@ html[data-zone='about'] body {
 
 .my-page-automation-fields {
   display: grid;
-  grid-template-columns: 176px 176px;
+  grid-template-columns: 236px 140px;
   gap: var(--space-sm);
   align-items: end;
 }
@@ -2606,6 +2606,69 @@ html[data-zone='about'] body {
 .my-page-automation-fields input:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* 시간대 검색 콤보박스: 입력창 아래로 절대배치 드롭다운을 띄운다. */
+.tz-select {
+  position: relative;
+  width: 100%;
+}
+
+.tz-select__list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 264px;
+  overflow-y: auto;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.tz-select__option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 7px var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.tz-select__option--active {
+  background: var(--color-surface-hover, rgba(127, 127, 127, 0.12));
+}
+
+.tz-select__option--selected {
+  color: var(--color-primary);
+}
+
+.tz-select__option-city {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tz-select__option-offset {
+  flex: none;
+  color: var(--color-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.tz-select__empty,
+.tz-select__more {
+  padding: 7px var(--space-sm);
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
+  text-align: center;
 }
 
 .my-page-automation-status {
@@ -2741,6 +2804,15 @@ html[data-zone='about'] body {
 .my-page-icon-btn--sm {
   width: 28px;
   height: 28px;
+}
+
+/* 숫자세트 상세보기: 펼침 화살표. 열리면(aria-expanded) 위로 회전. */
+.my-page-chevron-icon {
+  transition: transform 0.2s ease;
+}
+
+.my-page-icon-btn[aria-expanded='true'] .my-page-chevron-icon {
+  transform: rotate(180deg);
 }
 
 /* 숫자세트: 위치(이 기기/클라우드)별 2열 그룹 카드. */

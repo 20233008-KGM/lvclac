@@ -44,14 +44,10 @@ import { calculateEvaluate } from '../calc/leverage'
 import { BillingPanel } from './billing/BillingPanel'
 import { PresetSelect } from './PresetSelect'
 import { ToggleSwitch } from './ToggleSwitch'
+import { TimeZoneSelect } from './TimeZoneSelect'
 import {
   readPreferredSnapshotTimeZone,
-  readPreferredRegion,
-  writePreferredRegion,
   writePreferredSnapshotTimeZone,
-  regionToTimeZone,
-  WELCOME_REGIONS,
-  type WelcomeRegion,
 } from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
@@ -408,9 +404,9 @@ function suggestedBrowserTimeZone(): string {
 }
 
 /**
- * 계좌스냅샷 자동 저장 설정 행. 지역(=시간대) + 스냅샷 시각 + 사용 토글로 구성한다.
- * 지역이 시간대를 결정하므로 raw 시간대 입력과 규칙 이름 입력은 두지 않고,
- * 토글 ON이 곧 규칙 저장, OFF가 규칙 해제다. 켜진 상태에서 지역·시각을 바꾸면 즉시 재저장한다.
+ * 계좌스냅샷 자동 저장 설정 행. 시간대 + 스냅샷 시각 + 사용 토글로 구성한다.
+ * 시간대는 전체 IANA 목록에서 검색으로 직접 고른다(기본값은 브라우저 추정 시간대).
+ * 토글 ON이 곧 규칙 저장, OFF가 규칙 해제다. 켜진 상태에서 시간대·시각을 바꾸면 즉시 재저장한다.
  */
 export function AccountSnapshotAutomationPanel({
   copy,
@@ -419,10 +415,8 @@ export function AccountSnapshotAutomationPanel({
   settings,
   busy = false,
   notice = null,
-  regions,
-  region,
   timeZone,
-  onRegionChange,
+  onTimeZoneChange,
   onSave,
   onDisable,
 }: {
@@ -432,11 +426,9 @@ export function AccountSnapshotAutomationPanel({
   settings: AccountSnapshotAutomationSettings | null
   busy?: boolean
   notice?: string | null
-  regions: Record<WelcomeRegion, string>
-  region: WelcomeRegion | null
-  /** 지역에서 파생된 IANA 시간대 — 저장 시 규칙의 timeZone으로 쓴다. */
+  /** 현재 선택된 IANA 시간대 — 저장 시 규칙의 timeZone으로 쓴다. */
   timeZone: string
-  onRegionChange: (region: WelcomeRegion) => void
+  onTimeZoneChange: (timeZone: string) => void
   onSave: (settings: AccountSnapshotAutomationSettingsInput) => void
   onDisable: () => void
 }) {
@@ -462,10 +454,10 @@ export function AccountSnapshotAutomationPanel({
     }
   }
 
-  const handleRegionChange = (next: WelcomeRegion) => {
-    onRegionChange(next)
+  const handleTimeZoneChange = (nextTimeZone: string) => {
+    onTimeZoneChange(nextTimeZone)
     if (enabled && canEnable && !busy) {
-      onSave({ enabled: true, label: ruleLabel, timeZone: regionToTimeZone(next), timeOfDay })
+      onSave({ enabled: true, label: ruleLabel, timeZone: nextTimeZone, timeOfDay })
     }
   }
 
@@ -486,24 +478,15 @@ export function AccountSnapshotAutomationPanel({
       <div className="my-page-setting-line__control">
         <div className="my-page-automation-control">
           <div className="my-page-automation-fields">
-            <label>
-              <span>{copy.autoSnapshotRegionLabel}</span>
-              <select
-                value={region ?? ''}
+            <label className="my-page-automation-fields__tz" htmlFor="auto-snapshot-timezone">
+              <span>{copy.autoSnapshotTimeZoneLabel}</span>
+              <TimeZoneSelect
+                id="auto-snapshot-timezone"
+                value={timeZone}
                 disabled={!canEnable || busy}
-                onChange={(event) => handleRegionChange(event.target.value as WelcomeRegion)}
-              >
-                {region == null && (
-                  <option value="" disabled>
-                    {copy.regionPlaceholder}
-                  </option>
-                )}
-                {WELCOME_REGIONS.map((id) => (
-                  <option key={id} value={id}>
-                    {regions[id]}
-                  </option>
-                ))}
-              </select>
+                searchPlaceholder={copy.autoSnapshotTimeZoneSearchPlaceholder}
+                onChange={handleTimeZoneChange}
+              />
             </label>
             <label>
               <span>{copy.autoSnapshotTimeOfDayLabel}</span>
@@ -547,10 +530,11 @@ export function AccountSnapshotAutomationPanel({
   )
 }
 
-/** 숫자세트 행 상세보기(눈) 아이콘. */
-function EyeIcon() {
+/** 숫자세트 행 상세보기(펼침 화살표) 아이콘. 열리면 CSS로 위로 회전한다. */
+function ChevronDownIcon() {
   return (
     <svg
+      className="my-page-chevron-icon"
       viewBox="0 0 24 24"
       width="16"
       height="16"
@@ -561,8 +545,7 @@ function EyeIcon() {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
+      <path d="M6 9l6 6 6-6" />
     </svg>
   )
 }
@@ -670,7 +653,7 @@ function NumberSetRow({
             aria-expanded={detailOpen}
             onClick={() => setDetailOpen((open) => !open)}
           >
-            <EyeIcon />
+            <ChevronDownIcon />
           </button>
           <button
             type="button"
@@ -1286,19 +1269,13 @@ export function MyPage() {
   const [automationNotice, setAutomationNotice] = useState<string | null>(null)
   const [numberSetBusy, setNumberSetBusy] = useState(false)
   const [numberSetNotice, setNumberSetNotice] = useState<string | null>(null)
-  const [region, setRegion] = useState<WelcomeRegion | null>(() => readPreferredRegion())
-  // 지역을 바꾸면 자동저장 스냅샷 시간대 기본값만 그 지역으로 맞춘다(언어·용어는 불변).
-  const browserTimeZone = useMemo(
-    () =>
-      region
-        ? regionToTimeZone(region)
-        : readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
-    [region],
+  // 자동 스냅샷 시간대: 저장값이 있으면 그걸, 없으면 브라우저 추정 시간대로 시작한다.
+  const [snapshotTimeZone, setSnapshotTimeZone] = useState<string>(
+    () => readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
   )
-  const handleRegionChange = useCallback((next: WelcomeRegion) => {
-    setRegion(next)
-    writePreferredRegion(next)
-    writePreferredSnapshotTimeZone(regionToTimeZone(next))
+  const handleTimeZoneChange = useCallback((next: string) => {
+    setSnapshotTimeZone(next)
+    writePreferredSnapshotTimeZone(next)
   }, [])
   // 서버 설정이 바뀌면 remount로 시각 입력 로컬 상태를 다시 동기화한다.
   // (지역 변경은 key에 넣지 않는다 — 편집 중인 시각이 날아가지 않도록.)
@@ -1697,10 +1674,8 @@ export function MyPage() {
                     settings={automationSettings}
                     busy={automationBusy}
                     notice={automationNotice}
-                    regions={t.welcome.regions}
-                    region={region}
-                    timeZone={browserTimeZone}
-                    onRegionChange={handleRegionChange}
+                    timeZone={snapshotTimeZone}
+                    onTimeZoneChange={handleTimeZoneChange}
                     onSave={(settings) => void handleAutomationSave(settings)}
                     onDisable={() => void handleAutomationDisable()}
                   />

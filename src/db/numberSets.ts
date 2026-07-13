@@ -9,6 +9,7 @@ interface NumberSetRow {
   title: string
   inputs: unknown
   updated_at: string
+  auto_snapshot_enabled?: boolean | null
 }
 
 export interface NumberSetRecord {
@@ -16,7 +17,10 @@ export interface NumberSetRecord {
   title: string
   inputs: CalculatorInputs
   updatedAt: string
+  autoSnapshotEnabled: boolean
 }
+
+const NUMBER_SET_COLUMNS = 'id,title,inputs,updated_at,auto_snapshot_enabled'
 
 type NumberSetResult<T> =
   | { data: T; error: null }
@@ -40,6 +44,7 @@ function rowToRecord(row: NumberSetRow): NumberSetRecord {
     title: row.title || DEFAULT_SET_TITLE,
     inputs: parseStoredCalculatorInputs(row.inputs) ?? { mode: 'evaluate', positionSide: 'long' },
     updatedAt: row.updated_at,
+    autoSnapshotEnabled: row.auto_snapshot_enabled ?? false,
   }
 }
 
@@ -50,7 +55,7 @@ export async function fetchLatestNumberSet(
 
   const { data, error } = await supabase
     .from('number_sets')
-    .select('id,title,inputs,updated_at')
+    .select(NUMBER_SET_COLUMNS)
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
     .limit(1)
@@ -67,7 +72,7 @@ export async function fetchNumberSets(
 
   const { data, error } = await supabase
     .from('number_sets')
-    .select('id,title,inputs,updated_at')
+    .select(NUMBER_SET_COLUMNS)
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
     .returns<NumberSetRow[]>()
@@ -86,7 +91,7 @@ export async function createNumberSet(
   const { data, error } = await supabase
     .from('number_sets')
     .insert({ user_id: userId, title: normalizeTitle(title), inputs })
-    .select('id,title,inputs,updated_at')
+    .select(NUMBER_SET_COLUMNS)
     .single<NumberSetRow>()
 
   if (error) return { data: null, error: mapError(error) }
@@ -109,7 +114,7 @@ export async function saveNumberSet(
       .update(title == null ? { inputs } : { title: normalizeTitle(title), inputs })
       .eq('id', existingId)
       .eq('user_id', userId)
-      .select('id,title,inputs,updated_at')
+      .select(NUMBER_SET_COLUMNS)
       .maybeSingle<NumberSetRow>()
 
     if (error) return { data: null, error: mapError(error) }
@@ -119,7 +124,7 @@ export async function saveNumberSet(
   const { data, error } = await supabase
     .from('number_sets')
     .insert({ user_id: userId, title: normalizeTitle(title), inputs })
-    .select('id,title,inputs,updated_at')
+    .select(NUMBER_SET_COLUMNS)
     .single<NumberSetRow>()
 
   if (error) return { data: null, error: mapError(error) }
@@ -138,7 +143,27 @@ export async function renameNumberSet(
     .update({ title: normalizeTitle(title) })
     .eq('id', setId)
     .eq('user_id', userId)
-    .select('id,title,inputs,updated_at')
+    .select(NUMBER_SET_COLUMNS)
+    .maybeSingle<NumberSetRow>()
+
+  if (error) return { data: null, error: mapError(error) }
+  if (!data) return { data: null, error: 'number_set_not_found' }
+  return { data: rowToRecord(data), error: null }
+}
+
+export async function setNumberSetAutoSnapshot(
+  userId: string,
+  setId: string,
+  enabled: boolean,
+): Promise<NumberSetResult<NumberSetRecord>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .update({ auto_snapshot_enabled: enabled })
+    .eq('id', setId)
+    .eq('user_id', userId)
+    .select(NUMBER_SET_COLUMNS)
     .maybeSingle<NumberSetRow>()
 
   if (error) return { data: null, error: mapError(error) }

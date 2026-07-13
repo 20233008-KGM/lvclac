@@ -10,7 +10,7 @@ import { bearerToken, sendJson } from '../../scripts/billing/nodeAdapter'
 const NOOP_DEPS: AccountSnapshotCronDeps = {
   fetchDueSettings: async () => [],
   fetchActiveSubscription: async () => ({ active: false }),
-  fetchLatestNumberSet: async () => null,
+  fetchAutoSnapshotSlots: async () => [],
   insertAutoSnapshot: async () => ({ ok: true }),
   updateSettingAfterRun: async () => ({ ok: true }),
 }

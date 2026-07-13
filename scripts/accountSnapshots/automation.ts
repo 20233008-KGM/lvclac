@@ -27,10 +27,18 @@ export interface DueSnapshotSetting {
   timeOfDay: string
 }
 
+/** 자동 스냅샷 대상으로 지정된 클라우드 슬롯 하나(number_sets 행). */
+export interface AutoSnapshotSlot {
+  numberSetId: string
+  title: string
+  inputs: unknown
+}
+
 export interface AccountSnapshotCronDeps {
   fetchDueSettings(nowIso: string): Promise<DueSnapshotSetting[]>
   fetchActiveSubscription(userId: string): Promise<{ active: boolean }>
-  fetchLatestNumberSet(userId: string): Promise<{ inputs: unknown } | null>
+  /** 자동 스냅샷이 켜진 슬롯 전부. 없으면 빈 배열. */
+  fetchAutoSnapshotSlots(userId: string): Promise<AutoSnapshotSlot[]>
   insertAutoSnapshot(
     userId: string,
     payload: AccountSnapshotPayload,
@@ -67,11 +75,14 @@ interface SubscriptionRow {
   status: string | null
 }
 
-interface NumberSetRow {
+interface AutoSnapshotSlotRow {
+  id: string
+  title: string | null
   inputs: unknown
 }
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing'])
+const DEFAULT_SLOT_TITLE = 'Automatic snapshot'
 
 function unauthorized(): AccountSnapshotCronResult {
   return { status: 401, body: { ok: false, processed: 0, skipped: 0, failed: 0 } }
@@ -97,6 +108,14 @@ function mapDueSetting(row: DueSettingRow): DueSnapshotSetting {
     label: row.label?.trim() || 'Automatic snapshot',
     timeZone: row.time_zone?.trim() || 'UTC',
     timeOfDay: row.time_of_day?.trim() || '16:00',
+  }
+}
+
+function mapAutoSnapshotSlot(row: AutoSnapshotSlotRow): AutoSnapshotSlot {
+  return {
+    numberSetId: row.id,
+    title: row.title?.trim() || DEFAULT_SLOT_TITLE,
+    inputs: row.inputs,
   }
 }
 
@@ -142,17 +161,17 @@ export function createAccountSnapshotCronDepsFromClient(
       return { active: ACTIVE_SUBSCRIPTION_STATUSES.has(data?.status ?? '') }
     },
 
-    async fetchLatestNumberSet(userId: string): Promise<{ inputs: unknown } | null> {
+    async fetchAutoSnapshotSlots(userId: string): Promise<AutoSnapshotSlot[]> {
       const { data, error } = await admin
         .from('number_sets')
-        .select('inputs')
+        .select('id,title,inputs')
         .eq('user_id', userId)
+        .eq('auto_snapshot_enabled', true)
         .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle<NumberSetRow>()
+        .returns<AutoSnapshotSlotRow[]>()
 
       if (error) throw new Error(error.message)
-      return data ? { inputs: data.inputs } : null
+      return (data ?? []).map(mapAutoSnapshotSlot)
     },
 
     async insertAutoSnapshot(
@@ -166,6 +185,7 @@ export function createAccountSnapshotCronDepsFromClient(
         result: payload.result,
         source: payload.source,
         source_local_date: payload.sourceLocalDate,
+        number_set_id: payload.numberSetId,
       })
       if (!error) return { ok: true }
       return {
@@ -218,6 +238,69 @@ async function markRun(
   return result.ok
 }
 
+/**
+ * 한 유저의 due 스케줄을 처리한다. 자동 대상 슬롯 전부에 대해 스냅샷을 남기고,
+ * 슬롯 단위 성공/건너뜀/실패 카운트를 돌려준다. next_run_at 갱신(markRun)은 유저당 1회.
+ */
+async function processDueSetting(
+  deps: AccountSnapshotCronDeps,
+  setting: DueSnapshotSetting,
+  now: Date,
+): Promise<{ processed: number; skipped: number; failed: number }> {
+  const subscription = await deps.fetchActiveSubscription(setting.userId)
+  if (!subscription.active) {
+    const updated = await markRun(deps, setting, now, { lastError: 'not_pro' })
+    return updated ? { processed: 0, skipped: 1, failed: 0 } : { processed: 0, skipped: 0, failed: 1 }
+  }
+
+  const slots = await deps.fetchAutoSnapshotSlots(setting.userId)
+  if (slots.length === 0) {
+    const updated = await markRun(deps, setting, now, { lastError: 'no_auto_slots' })
+    return updated ? { processed: 0, skipped: 1, failed: 0 } : { processed: 0, skipped: 0, failed: 1 }
+  }
+
+  const sourceLocalDate = localDateStringForTimeZone(now, setting.timeZone)
+  let processed = 0
+  let skipped = 0
+  let failed = 0
+  let anySuccess = false
+  let lastError: string | null = null
+
+  for (const slot of slots) {
+    const inputs = asCalculatorInputs(slot.inputs)
+    if (!inputs || !hasMeaningfulCalculatorInputs(inputs)) {
+      skipped += 1
+      lastError = 'missing_cloud_inputs'
+      continue
+    }
+
+    const payload = buildAccountSnapshotPayload(inputs, calculateEvaluate(inputs), slot.title, {
+      source: 'auto',
+      sourceLocalDate,
+      numberSetId: slot.numberSetId,
+    })
+    const inserted = await deps.insertAutoSnapshot(setting.userId, payload)
+    if (inserted.ok) {
+      processed += 1
+      anySuccess = true
+    } else if (inserted.duplicate) {
+      skipped += 1
+    } else {
+      failed += 1
+      lastError = inserted.error
+    }
+  }
+
+  const updated = await markRun(deps, setting, now, {
+    lastRunAt: anySuccess ? now.toISOString() : null,
+    lastRunLocalDate: anySuccess ? sourceLocalDate : null,
+    lastError,
+  })
+  if (!updated) failed += 1
+
+  return { processed, skipped, failed }
+}
+
 export async function handleAccountSnapshotCron(
   config: AccountSnapshotCronConfig | null,
   request: { authorization?: string | null },
@@ -240,53 +323,10 @@ export async function handleAccountSnapshotCron(
 
   for (const setting of dueSettings) {
     try {
-      const subscription = await deps.fetchActiveSubscription(setting.userId)
-      if (!subscription.active) {
-        const updated = await markRun(deps, setting, now, { lastError: 'not_pro' })
-        if (updated) skipped += 1
-        else failed += 1
-        continue
-      }
-
-      const numberSet = await deps.fetchLatestNumberSet(setting.userId)
-      const inputs = asCalculatorInputs(numberSet?.inputs)
-      if (!inputs || !hasMeaningfulCalculatorInputs(inputs)) {
-        const updated = await markRun(deps, setting, now, {
-          lastError: 'missing_cloud_inputs',
-        })
-        if (updated) skipped += 1
-        else failed += 1
-        continue
-      }
-
-      const sourceLocalDate = localDateStringForTimeZone(now, setting.timeZone)
-      const payload = buildAccountSnapshotPayload(
-        inputs,
-        calculateEvaluate(inputs),
-        setting.label,
-        { source: 'auto', sourceLocalDate },
-      )
-      const inserted = await deps.insertAutoSnapshot(setting.userId, payload)
-      if (!inserted.ok) {
-        if (inserted.duplicate) {
-          const updated = await markRun(deps, setting, now, { lastError: null })
-          if (updated) skipped += 1
-          else failed += 1
-          continue
-        }
-        const updated = await markRun(deps, setting, now, { lastError: inserted.error })
-        if (updated) failed += 1
-        else failed += 1
-        continue
-      }
-
-      const updated = await markRun(deps, setting, now, {
-        lastRunAt: now.toISOString(),
-        lastRunLocalDate: sourceLocalDate,
-        lastError: null,
-      })
-      if (updated) processed += 1
-      else failed += 1
+      const counts = await processDueSetting(deps, setting, now)
+      processed += counts.processed
+      skipped += counts.skipped
+      failed += counts.failed
     } catch (error) {
       failed += 1
       await markRun(deps, setting, now, {

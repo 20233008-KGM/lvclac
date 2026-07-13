@@ -622,14 +622,19 @@ function NumberSetRow({
   copy,
   numberSet,
   busy,
+  autoSnapshotAllowed,
   onRenameNumberSet,
   onDeleteNumberSet,
+  onSetAutoSnapshot,
 }: {
   copy: MyPageCopy
   numberSet: CalculatorNumberSet
   busy: boolean
+  // Pro 여부. onSetAutoSnapshot이 있을 때만(클라우드 슬롯) 토글을 노출하고, false면 켜기 불가.
+  autoSnapshotAllowed?: boolean
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
+  onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
 }) {
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -670,6 +675,16 @@ function NumberSetRow({
           }}
         />
         <div className="my-page-number-set-row-actions">
+          {onSetAutoSnapshot && (
+            <ToggleSwitch
+              checked={numberSet.autoSnapshotEnabled}
+              disabled={busy || (!autoSnapshotAllowed && !numberSet.autoSnapshotEnabled)}
+              label={copy.autoSnapshotSlotToggleLabel}
+              onChange={(enabled) =>
+                onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
+              }
+            />
+          )}
           <button
             type="button"
             className="my-page-icon-btn"
@@ -732,9 +747,11 @@ function NumberSetGroup({
   sets,
   limit,
   busy,
+  autoSnapshotAllowed,
   onCreateNumberSet,
   onRenameNumberSet,
   onDeleteNumberSet,
+  onSetAutoSnapshot,
 }: {
   copy: MyPageCopy
   title: string
@@ -743,9 +760,12 @@ function NumberSetGroup({
   sets: CalculatorNumberSet[]
   limit: number
   busy: boolean
+  autoSnapshotAllowed?: boolean
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
+  // 넘기면 이 그룹의 각 행에 자동 스냅샷 토글이 붙는다(클라우드 그룹 전용).
+  onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
 }) {
   return (
     <div className="my-page-number-set-group">
@@ -774,8 +794,10 @@ function NumberSetGroup({
             copy={copy}
             numberSet={numberSet}
             busy={busy}
+            autoSnapshotAllowed={autoSnapshotAllowed}
             onRenameNumberSet={onRenameNumberSet}
             onDeleteNumberSet={onDeleteNumberSet}
+            onSetAutoSnapshot={onSetAutoSnapshot}
           />
         ))}
       </ul>
@@ -791,9 +813,11 @@ export function NumberSetPreferencesPanel({
   numberSetLimits,
   busy,
   notice,
+  isPro,
   onCreateNumberSet,
   onRenameNumberSet,
   onDeleteNumberSet,
+  onSetAutoSnapshot,
 }: {
   copy: MyPageCopy
   localNumberSets: CalculatorNumberSet[]
@@ -801,10 +825,13 @@ export function NumberSetPreferencesPanel({
   numberSetLimits: Record<SaveStorageMode, number>
   busy: boolean
   notice: string | null
+  isPro: boolean
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
+  onSetAutoSnapshot: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
 }) {
+  const autoSnapshotCount = cloudNumberSets.filter((set) => set.autoSnapshotEnabled).length
   return (
     <section
       id="my-page-number-sets"
@@ -836,11 +863,18 @@ export function NumberSetPreferencesPanel({
           sets={cloudNumberSets}
           limit={numberSetLimits.cloud}
           busy={busy}
+          autoSnapshotAllowed={isPro}
           onCreateNumberSet={onCreateNumberSet}
           onRenameNumberSet={onRenameNumberSet}
           onDeleteNumberSet={onDeleteNumberSet}
+          onSetAutoSnapshot={onSetAutoSnapshot}
         />
       </div>
+      <p className="my-page-field-help">
+        {isPro
+          ? copy.autoSnapshotSlotCountNote.replace('{count}', String(autoSnapshotCount))
+          : copy.autoSnapshotSlotProNote}
+      </p>
       <p className="my-page-field-help">{copy.numberSetsLimitNote}</p>
       {notice && <p className="my-page-form-message" role="status">{notice}</p>}
     </section>
@@ -1262,6 +1296,7 @@ export function MyPage() {
     numberSetLimits,
     createNumberSet,
     renameNumberSet,
+    setNumberSetAutoSnapshot,
     deleteNumberSetById,
   } = useCalculator()
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -1660,6 +1695,13 @@ export function MyPage() {
     [deleteNumberSetById, runNumberSetAction],
   )
 
+  const handleSetNumberSetAutoSnapshot = useCallback(
+    (mode: SaveStorageMode, setId: string, enabled: boolean) => {
+      void runNumberSetAction(() => setNumberSetAutoSnapshot(mode, setId, enabled))
+    },
+    [setNumberSetAutoSnapshot, runNumberSetAction],
+  )
+
   return (
     <>
       <MyPageView
@@ -1758,9 +1800,11 @@ export function MyPage() {
                 numberSetLimits={numberSetLimits}
                 busy={numberSetBusy}
                 notice={numberSetNotice}
+                isPro={isPro}
                 onCreateNumberSet={handleCreateNumberSet}
                 onRenameNumberSet={handleRenameNumberSet}
                 onDeleteNumberSet={handleDeleteNumberSet}
+                onSetAutoSnapshot={handleSetNumberSetAutoSnapshot}
               />
             </>
           ) : null

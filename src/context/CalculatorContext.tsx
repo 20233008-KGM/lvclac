@@ -31,6 +31,7 @@ import {
   fetchNumberSets,
   fetchLatestNumberSet,
   renameNumberSet as renameCloudNumberSet,
+  setNumberSetAutoSnapshot as setCloudNumberSetAutoSnapshot,
   type NumberSetRecord,
   saveNumberSet,
 } from '../db/numberSets'
@@ -68,6 +69,8 @@ export interface CalculatorNumberSet {
   inputs: CalculatorInputs
   updatedAt: string | null
   storageMode: SaveStorageMode
+  // 자동 스냅샷 대상 여부. 클라우드 슬롯에서만 의미가 있고 로컬은 항상 false.
+  autoSnapshotEnabled: boolean
 }
 
 interface CalculatorContextValue {
@@ -101,6 +104,11 @@ interface CalculatorContextValue {
   selectNumberSet: (mode: SaveStorageMode, setId: string) => Promise<string | null>
   createNumberSet: (mode: SaveStorageMode) => Promise<string | null>
   renameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => Promise<string | null>
+  setNumberSetAutoSnapshot: (
+    mode: SaveStorageMode,
+    setId: string,
+    enabled: boolean,
+  ) => Promise<string | null>
   deleteNumberSetById: (mode: SaveStorageMode, setId: string) => Promise<string | null>
   migrateLocalDraftToCloud: () => Promise<string | null>
   copyDraftBetweenStorageModes: (source: SaveStorageMode, target: SaveStorageMode) => Promise<string | null>
@@ -386,6 +394,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       ...localNumberSets.map((set) => ({
         ...set,
         storageMode: 'local' as const,
+        autoSnapshotEnabled: false,
       })),
       ...cloudNumberSets.map((set) => ({
         ...set,
@@ -895,6 +904,23 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     [activeUserId, refreshLocalNumberSetState],
   )
 
+  const setNumberSetAutoSnapshot = useCallback(
+    async (mode: SaveStorageMode, setId: string, enabled: boolean): Promise<string | null> => {
+      // 자동 스냅샷은 서버 크론이 접근하는 클라우드 슬롯에서만 동작한다. 로컬 슬롯은 대상 불가.
+      if (mode === 'local') return 'auto_snapshot_local_unsupported'
+      if (!activeUserId) return 'not_logged_in'
+      const result = await setCloudNumberSetAutoSnapshot(activeUserId, setId, enabled)
+      if (result.error) return result.error
+      const updatedSet = result.data
+      if (!updatedSet) return 'number_set_not_found'
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === updatedSet.id ? updatedSet : set)),
+      )
+      return null
+    },
+    [activeUserId],
+  )
+
   const deleteNumberSetById = useCallback(
     async (mode: SaveStorageMode, setId: string): Promise<string | null> => {
       if (mode === 'local') {
@@ -1099,6 +1125,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         selectNumberSet,
         createNumberSet,
         renameNumberSet,
+        setNumberSetAutoSnapshot,
         deleteNumberSetById,
         migrateLocalDraftToCloud,
         copyDraftBetweenStorageModes,

@@ -36,9 +36,9 @@ const noop = () => {}
 
 /** 숫자세트 전시용 목 클라우드 세트(캡처처럼 3개). */
 const mockCloudSets: CalculatorNumberSet[] = [
-  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud' },
-  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud' },
-  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud' },
+  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true },
+  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false },
+  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false },
 ]
 const numberSetLimits: Record<'local' | 'cloud', number> = { local: 10, cloud: 10 }
 
@@ -145,9 +145,11 @@ export function KitGallery() {
             numberSetLimits={numberSetLimits}
             busy={false}
             notice={null}
+            isPro
             onCreateNumberSet={noop}
             onRenameNumberSet={noop}
             onDeleteNumberSet={noop}
+            onSetAutoSnapshot={noop}
           />
         </KitItem>
         <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·자동 스냅샷 행" width={560}>

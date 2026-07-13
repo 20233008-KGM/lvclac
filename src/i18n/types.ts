@@ -320,6 +320,9 @@ export interface Messages {
     autoSnapshotLastRun: string
     autoSnapshotRegionLabel: string
     autoSnapshotTimeZoneSearchPlaceholder: string
+    autoSnapshotSlotToggleLabel: string
+    autoSnapshotSlotCountNote: string
+    autoSnapshotSlotProNote: string
     toggleUseLabel: string
     navLabel: string
     navAccount: string

@@ -516,17 +516,17 @@ export function AccountSnapshotAutomationPanel({
               )}
             </div>
             <div className="my-page-automation-toggle">
+              {isPro && !hasCloudInput && (
+                <span className="my-page-automation-toggle-hint">
+                  {copy.autoSnapshotCloudRequired}
+                </span>
+              )}
               <ToggleSwitch
                 checked={enabled}
                 disabled={(!canEnable && !enabled) || busy}
                 label={copy.toggleUseLabel}
                 onChange={handleToggle}
               />
-              {isPro && !hasCloudInput && (
-                <span className="my-page-automation-toggle-hint">
-                  {copy.autoSnapshotCloudRequired}
-                </span>
-              )}
             </div>
           </div>
         </div>

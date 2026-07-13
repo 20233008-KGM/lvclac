@@ -2573,9 +2573,10 @@ html[data-zone='about'] body {
 
 .my-page-automation-fields {
   display: grid;
-  /* 첫 열(시간대)은 minmax(0, 1fr)로 남는 폭을 채우되 절대 넘치지 않게 한다.
-     고정 px 합이 컨트롤 폭(360px)을 넘으면 왼쪽 설명 열을 밀어내 문구가 잘린다. */
-  grid-template-columns: minmax(0, 1fr) 128px;
+  /* 거래종목(preset) 셀렉트와 동일한 176px 두 칸으로 맞춰 세 입력의 너비를 통일한다.
+     176 + 176 + 8(gap) = 360px로 컨트롤 폭에 정확히 들어가 넘치지 않는다.
+     긴 시간대 이름은 입력칸에서 잘리되(툴팁·드롭다운으로 전체 확인) 정렬은 유지한다. */
+  grid-template-columns: 176px 176px;
   gap: var(--space-sm);
   align-items: end;
 }
@@ -2620,11 +2621,15 @@ html[data-zone='about'] body {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  right: 0;
   z-index: 30;
   margin: 0;
   padding: 4px;
   list-style: none;
+  /* 입력칸(176px)보다 넓게 펼쳐 긴 시간대 이름도 목록에선 다 보이게 한다.
+     좁은 입력에 갇히지 않도록 min-width는 입력폭, 실제 폭은 내용에 맞춰 최대 320px까지. */
+  min-width: 100%;
+  width: max-content;
+  max-width: 320px;
   max-height: 264px;
   overflow-y: auto;
   background: var(--color-bg);

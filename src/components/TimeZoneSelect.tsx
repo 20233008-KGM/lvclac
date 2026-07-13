@@ -131,6 +131,7 @@ export function TimeZoneSelect({
         spellCheck={false}
         disabled={disabled}
         value={inputValue}
+        title={formatTimeZoneLabel(value)}
         placeholder={searchPlaceholder}
         onFocus={openList}
         onChange={(event) => {

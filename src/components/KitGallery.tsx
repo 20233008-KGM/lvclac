@@ -156,10 +156,8 @@ export function KitGallery() {
             isPro
             hasCloudInput
             settings={null}
-            regions={t.welcome.regions}
-            region="KR"
             timeZone="Asia/Seoul"
-            onRegionChange={noop}
+            onTimeZoneChange={noop}
             onSave={noop}
             onDisable={noop}
           />

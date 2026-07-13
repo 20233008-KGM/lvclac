@@ -318,6 +318,7 @@ export interface Messages {
     autoSnapshotNextRun: string
     autoSnapshotLastRun: string
     autoSnapshotRegionLabel: string
+    autoSnapshotTimeZoneSearchPlaceholder: string
     toggleUseLabel: string
     navLabel: string
     navAccount: string

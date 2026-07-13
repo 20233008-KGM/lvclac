@@ -318,6 +318,7 @@ export const en: Messages = {
     autoSnapshotNextRun: 'Next snapshot: {date}',
     autoSnapshotLastRun: 'Last automatic snapshot: {date}',
     autoSnapshotRegionLabel: 'Region (time zone)',
+    autoSnapshotTimeZoneSearchPlaceholder: 'Search city or time zone (e.g. Seoul)',
     toggleUseLabel: 'On',
     navLabel: 'Jump to my page section',
     navAccount: 'Account',

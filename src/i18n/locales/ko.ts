@@ -311,6 +311,7 @@ export const ko: Messages = {
     autoSnapshotNextRun: '다음 스냅샷: {date}',
     autoSnapshotLastRun: '마지막 자동 스냅샷: {date}',
     autoSnapshotRegionLabel: '지역 (시간대)',
+    autoSnapshotTimeZoneSearchPlaceholder: '도시·시간대 검색 (예: Seoul)',
     toggleUseLabel: '사용',
     navLabel: '마이페이지 섹션 바로가기',
     navAccount: '계정',

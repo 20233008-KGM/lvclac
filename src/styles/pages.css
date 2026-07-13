@@ -2573,7 +2573,9 @@ html[data-zone='about'] body {
 
 .my-page-automation-fields {
   display: grid;
-  grid-template-columns: 236px 140px;
+  /* 첫 열(시간대)은 minmax(0, 1fr)로 남는 폭을 채우되 절대 넘치지 않게 한다.
+     고정 px 합이 컨트롤 폭(360px)을 넘으면 왼쪽 설명 열을 밀어내 문구가 잘린다. */
+  grid-template-columns: minmax(0, 1fr) 128px;
   gap: var(--space-sm);
   align-items: end;
 }

@@ -2950,6 +2950,83 @@ html[data-zone='about'] body {
   font-variant-numeric: tabular-nums;
 }
 
+/* 펼침 상세 하단: 전체 상세 모달 여는 버튼 — 미니 그리드 전체 폭 차지. */
+.my-page-number-set-detail-more {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  padding: 6px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-dim);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.my-page-number-set-detail-more:hover,
+.my-page-number-set-detail-more:focus-visible {
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+/* 숫자세트 전체 상세 읽기전용 모달: 좌측 정렬 + 섹션별 정의 목록. */
+.number-set-detail-modal {
+  width: min(100%, 460px);
+  text-align: left;
+}
+
+.number-set-detail-modal .disclaimer-modal-title {
+  text-align: left;
+}
+
+.number-set-detail-modal__section + .number-set-detail-modal__section {
+  margin-top: var(--space-lg);
+}
+
+.number-set-detail-modal__heading {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-dim);
+}
+
+.number-set-detail-modal__list {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.number-set-detail-modal__list > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.number-set-detail-modal__list > div:last-child {
+  border-bottom: none;
+}
+
+.number-set-detail-modal__list dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.number-set-detail-modal__list dd {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .my-page-number-sets .my-page-field-help {
   margin-top: var(--space-sm);
 }

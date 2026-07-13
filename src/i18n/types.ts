@@ -351,6 +351,11 @@ export interface Messages {
     numberSetDetailPrice: string
     numberSetDetailLeverage: string
     numberSetDetailLiquidation: string
+    numberSetDetailOpen: string
+    numberSetDetailInputsHeading: string
+    numberSetDetailResultsHeading: string
+    numberSetDetailPositionLabel: string
+    numberSetDetailClose: string
     numberSetLimitReached: string
     numberSetLoginRequired: string
     numberSetError: string

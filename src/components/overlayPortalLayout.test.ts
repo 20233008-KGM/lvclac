@@ -24,6 +24,33 @@ describe('calculator modal overlays', () => {
   })
 })
 
+describe('number set detail modal', () => {
+  it('renders the read-only detail view through the document body portal', () => {
+    const text = source('src/components/NumberSetDetailModal.tsx')
+
+    expect(text).toContain("import { createPortal } from 'react-dom'")
+    expect(text).toContain("import { useModalFocusRestore } from '../hooks/useModalFocusRestore'")
+    expect(text).toContain('document.body.style.overflow')
+    expect(text).toContain('return createPortal(modal, document.body)')
+    expect(text).toContain('role="dialog"')
+    expect(text).toContain('aria-modal="true"')
+    // Closes on Escape and shows both input and result sections.
+    expect(text).toContain("e.key === 'Escape'")
+    expect(text).toContain('numberSetDetailInputsHeading')
+    expect(text).toContain('numberSetDetailResultsHeading')
+    expect(text).toContain('calculateEvaluate')
+  })
+
+  it('wires the number-set row to open the detail modal from the expanded peek', () => {
+    const text = source('src/components/MyPage.tsx')
+
+    expect(text).toContain("import { NumberSetDetailModal } from './NumberSetDetailModal'")
+    expect(text).toContain('setDetailModalOpen')
+    expect(text).toContain('restoreFocusRef={detailModalTriggerRef}')
+    expect(text).toContain('copy.numberSetDetailOpen')
+  })
+})
+
 describe('records context menu', () => {
   it('renders the ledger right-click menu through the document body portal', () => {
     const text = source('src/components/RecordsContextMenu.tsx')

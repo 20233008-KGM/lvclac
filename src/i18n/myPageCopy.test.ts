@@ -56,6 +56,19 @@ describe('my page copy', () => {
     expect(en.myPage.addCloudNumberSet).toBe('Add cloud set')
   })
 
+  it('provides number-set detail modal copy for both languages', () => {
+    expect(ko.myPage.numberSetDetailOpen).toBe('전체 상세 보기')
+    expect(ko.myPage.numberSetDetailInputsHeading).toBe('입력값')
+    expect(ko.myPage.numberSetDetailResultsHeading).toBe('계산 결과')
+    expect(ko.myPage.numberSetDetailPositionLabel).toBe('포지션')
+    expect(ko.myPage.numberSetDetailClose).toBe('닫기')
+    expect(en.myPage.numberSetDetailOpen).toBe('View full details')
+    expect(en.myPage.numberSetDetailInputsHeading).toBe('Inputs')
+    expect(en.myPage.numberSetDetailResultsHeading).toBe('Results')
+    expect(en.myPage.numberSetDetailPositionLabel).toBe('Position')
+    expect(en.myPage.numberSetDetailClose).toBe('Close')
+  })
+
   it('provides the side/pill nav copy for both languages', () => {
     expect(ko.myPage.navLabel).toBe('마이페이지 섹션 바로가기')
     expect(ko.myPage.navAccount).toBe('계정')

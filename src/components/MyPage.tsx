@@ -42,6 +42,7 @@ import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
 import { calculateEvaluate } from '../calc/leverage'
 import { BillingPanel } from './billing/BillingPanel'
+import { NumberSetDetailModal } from './NumberSetDetailModal'
 import { PresetSelect } from './PresetSelect'
 import { ToggleSwitch } from './ToggleSwitch'
 import { TimeZoneSelect } from './TimeZoneSelect'
@@ -610,6 +611,8 @@ function NumberSetRow({
 }) {
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const detailModalTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const commitRename = () => {
     const trimmed = titleDraft.trim()
@@ -675,7 +678,22 @@ function NumberSetRow({
               <strong>{metric.value}</strong>
             </div>
           ))}
+          <button
+            type="button"
+            ref={detailModalTriggerRef}
+            className="my-page-number-set-detail-more"
+            onClick={() => setDetailModalOpen(true)}
+          >
+            {copy.numberSetDetailOpen}
+          </button>
         </div>
+      )}
+      {detailModalOpen && (
+        <NumberSetDetailModal
+          numberSet={numberSet}
+          restoreFocusRef={detailModalTriggerRef}
+          onClose={() => setDetailModalOpen(false)}
+        />
       )}
     </li>
   )

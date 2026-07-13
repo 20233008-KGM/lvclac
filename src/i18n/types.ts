@@ -246,6 +246,18 @@ export interface Messages {
     loginTitle: string
     loginBody: string
     loginAction: string
+    loginHeadline: string
+    loginPanelTitle: string
+    loginPanelBody: string
+    loginEmailAction: string
+    loginTerms: string
+    googleContinue: string
+    loginBenefitSetsTitle: string
+    loginBenefitSetsBody: string
+    loginBenefitRecordsTitle: string
+    loginBenefitRecordsBody: string
+    loginBenefitProTitle: string
+    loginBenefitProBody: string
     configuredWarning: string
     profileTitle: string
     emailLabel: string

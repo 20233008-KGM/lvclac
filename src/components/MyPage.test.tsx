@@ -102,6 +102,7 @@ describe('MyPageView', () => {
     onPasswordConfirmationDraftChange: vi.fn(),
     onSetPasswordSubmit: vi.fn(),
     onLoginClick: vi.fn(),
+    onGoogleLogin: vi.fn(),
     onSignOut: vi.fn(),
   }
 
@@ -109,8 +110,10 @@ describe('MyPageView', () => {
     const html = renderToStaticMarkup(<MyPageView {...baseProps} user={null} />)
 
     expect(html).toContain('my-page-shell')
-    expect(html).toContain(en.myPage.loginTitle)
-    expect(html).toContain(en.myPage.loginAction)
+    expect(html).toContain('my-page-signin')
+    expect(html).toContain(en.myPage.loginHeadline)
+    expect(html).toContain(en.myPage.loginEmailAction)
+    expect(html).toContain(en.myPage.googleContinue)
     expect(html).not.toContain(en.myPage.profileTitle)
     expect(html).not.toContain('my-page-console')
   })

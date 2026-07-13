@@ -52,6 +52,9 @@ import {
 } from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
+// 로그아웃 /my 뷰의 Google 로그인 버튼(.google-btn)은 auth-dialog.css에 정의돼 있다.
+// AuthModal이 열리기 전에도 스타일이 적용되도록 여기서 직접 로드한다(기존 스타일 재사용).
+import '../styles/auth-dialog.css'
 
 const AuthModal = lazy(() => import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })))
 
@@ -218,6 +221,7 @@ interface MyPageViewProps {
   onPasswordConfirmationDraftChange: (value: string) => void
   onSetPasswordSubmit: () => void
   onLoginClick: () => void
+  onGoogleLogin: () => void
   onSignOut: () => void
 }
 
@@ -935,6 +939,7 @@ export function MyPageView({
   onPasswordConfirmationDraftChange,
   onSetPasswordSubmit,
   onLoginClick,
+  onGoogleLogin,
   onSignOut,
 }: MyPageViewProps) {
   const hasEmail = linkedProviders.includes('email')
@@ -998,18 +1003,70 @@ export function MyPageView({
             <p>{copy.loginBody}</p>
           </section>
         ) : !user ? (
-          <section className="my-page-panel my-page-login" aria-labelledby="my-page-login-title">
-            <h2 id="my-page-login-title">{copy.loginTitle}</h2>
-            <p>{copy.loginBody}</p>
-            {!configured && <p className="my-page-alert">{copy.configuredWarning}</p>}
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={!configured}
-              onClick={onLoginClick}
-            >
-              {copy.loginAction}
-            </button>
+          <section className="my-page-signin" aria-labelledby="my-page-login-title">
+            <div className="my-page-signin__intro">
+              <span className="my-page-signin__badge">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4" /><path d="M6 21v-1a6 6 0 0 1 12 0v1" />
+                </svg>
+                {copy.title}
+              </span>
+              <h2 id="my-page-login-title" className="my-page-signin__title">{copy.loginHeadline}</h2>
+              <p className="my-page-signin__lead">{copy.loginBody}</p>
+              <ul className="my-page-signin__benefits">
+                <li className="my-page-signin__benefit">
+                  <span className="my-page-signin__benefit-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                  </span>
+                  <div>
+                    <strong>{copy.loginBenefitSetsTitle}</strong>
+                    <span>{copy.loginBenefitSetsBody}</span>
+                  </div>
+                </li>
+                <li className="my-page-signin__benefit">
+                  <span className="my-page-signin__benefit-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                  </span>
+                  <div>
+                    <strong>{copy.loginBenefitRecordsTitle}</strong>
+                    <span>{copy.loginBenefitRecordsBody}</span>
+                  </div>
+                </li>
+                <li className="my-page-signin__benefit">
+                  <span className="my-page-signin__benefit-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z" /></svg>
+                  </span>
+                  <div>
+                    <strong>{copy.loginBenefitProTitle}</strong>
+                    <span>{copy.loginBenefitProBody}</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div className="my-page-signin__card">
+              <h3 className="my-page-signin__card-title">{copy.loginPanelTitle}</h3>
+              <p className="my-page-signin__card-lead">{copy.loginPanelBody}</p>
+              {!configured && <p className="my-page-alert">{copy.configuredWarning}</p>}
+              <button
+                type="button"
+                className="btn btn-primary my-page-signin__email"
+                disabled={!configured}
+                onClick={onLoginClick}
+              >
+                {copy.loginEmailAction}
+              </button>
+              <button
+                type="button"
+                className="google-btn"
+                disabled={!configured}
+                onClick={onGoogleLogin}
+              >
+                <GoogleLogo className="google-btn__logo" />
+                <span>{copy.googleContinue}</span>
+              </button>
+              <p className="my-page-signin__terms">{copy.loginTerms}</p>
+            </div>
           </section>
         ) : (
           <>
@@ -1294,6 +1351,7 @@ export function MyPage() {
     unlinkGoogle,
     setPasswordForCurrentUser,
     setAutoSaveOrderHistory,
+    signInWithGoogle,
     isPro,
   } = useAuth()
   const {
@@ -1835,6 +1893,7 @@ export function MyPage() {
         onPasswordConfirmationDraftChange={setPasswordConfirmationDraft}
         onSetPasswordSubmit={() => void handleSetPassword()}
         onLoginClick={() => setAuthModalOpen(true)}
+        onGoogleLogin={() => void signInWithGoogle()}
         onSignOut={() => void signOut()}
       />
       <SiteFooter />

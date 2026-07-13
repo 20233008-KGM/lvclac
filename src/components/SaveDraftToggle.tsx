@@ -150,11 +150,13 @@ function OffIcon() {
 
 function NumberSetStackIcon() {
   return (
-    <svg viewBox="0 0 28 28" aria-hidden="true">
-      <rect x="8" y="6.2" width="12" height="4.2" rx="1.4" fill="none" />
-      <rect x="8" y="11.9" width="12" height="4.2" rx="1.4" fill="none" />
-      <rect x="8" y="17.6" width="12" height="4.2" rx="1.4" fill="none" />
-      <path d="m21.2 10.6 2 2 2-2" fill="none" />
+    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+      <line x1="6" y1="6" x2="16" y2="6" />
+      <line x1="6" y1="10" x2="16" y2="10" />
+      <line x1="6" y1="14" x2="16" y2="14" />
+      <circle cx="3" cy="6" r="0.6" />
+      <circle cx="3" cy="10" r="0.6" />
+      <circle cx="3" cy="14" r="0.6" />
     </svg>
   )
 }
@@ -632,6 +634,7 @@ export function SaveDraftToggle() {
                 </button>
               )
             })}
+            <span className="draft-save-slots__divider" aria-hidden="true" />
             <button
               ref={numberSetPickerRef}
               type="button"

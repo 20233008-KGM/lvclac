@@ -2584,13 +2584,36 @@ input:focus:not(:focus-visible) {
   fill: #eef2f7;
 }
 
+.draft-save-slots__divider {
+  align-self: stretch;
+  flex: 0 0 auto;
+  width: 1px;
+  margin: 2px 3px;
+  background: #3a4252;
+}
+
 .draft-number-set-picker {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  min-width: 0;
+  padding: 0 7px;
   color: var(--color-text-muted);
 }
 
 .draft-number-set-picker svg {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
+}
+
+/* 목록 글리프의 앞 점은 채움만(선 없음)으로 유지 — 공용 slot circle 규칙 무효화 */
+.draft-number-set-picker circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.draft-number-set-picker line {
+  stroke-width: 1.6;
 }
 
 .draft-number-set-menu {
@@ -4077,6 +4100,64 @@ body.scrub-drag-active * {
 .result-hero-value .fit-text--ellipsis.is-overflowing,
 .result-sheet tbody td .fit-text--ellipsis.is-overflowing {
   text-align: left;
+}
+
+/* 잘린 값 — 탭/클릭으로 전체값 팝오버 (모바일은 hover가 없어 title 툴팁이 안 뜸) */
+.fit-text--revealable {
+  cursor: pointer;
+  text-decoration: underline dotted var(--color-border);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.fit-text--revealable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+.floating-tooltip-layer.fit-text-reveal-tooltip {
+  width: max-content;
+  max-width: min(320px, 88vw);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text);
+  text-align: right;
+  white-space: nowrap;
+  transform: translateX(-50%) translateY(4px);
+}
+
+.floating-tooltip-layer--below.fit-text-reveal-tooltip {
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.floating-tooltip-layer--active.fit-text-reveal-tooltip {
+  transform: translateX(-50%) translateY(0);
+}
+
+.floating-tooltip-layer.fit-text-reveal-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--floating-tooltip-arrow-left, 50%);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-border-subtle);
+}
+
+.floating-tooltip-layer--below.fit-text-reveal-tooltip::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--color-border-subtle);
 }
 
 .numeric-field-clip {

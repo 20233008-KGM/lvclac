@@ -12,6 +12,7 @@ const NOOP_DEPS: AccountSnapshotCronDeps = {
   fetchActiveSubscription: async () => ({ active: false }),
   fetchAutoSnapshotSlots: async () => [],
   insertAutoSnapshot: async () => ({ ok: true }),
+  markSlotRolledOver: async () => ({ ok: true }),
   updateSettingAfterRun: async () => ({ ok: true }),
 }
 

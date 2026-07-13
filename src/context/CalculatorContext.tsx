@@ -32,9 +32,13 @@ import {
   fetchLatestNumberSet,
   renameNumberSet as renameCloudNumberSet,
   setNumberSetAutoSnapshot as setCloudNumberSetAutoSnapshot,
+  setNumberSetRollover as setCloudNumberSetRollover,
+  clearNumberSetRolloverPending as clearCloudNumberSetRolloverPending,
   type NumberSetRecord,
+  type RolloverSettings,
   saveNumberSet,
 } from '../db/numberSets'
+import type { RolloverAnchor, RolloverIntervalMonths } from '../db/rolloverSchedule'
 import {
   appendLocalNumberSet,
   deleteLocalNumberSet,
@@ -71,6 +75,16 @@ export interface CalculatorNumberSet {
   storageMode: SaveStorageMode
   // 자동 스냅샷 대상 여부. 클라우드 슬롯에서만 의미가 있고 로컬은 항상 false.
   autoSnapshotEnabled: boolean
+  // 롤오버 알림 설정. 클라우드 슬롯에서만 의미가 있고 로컬은 항상 비활성.
+  rollover: RolloverSettings
+}
+
+const DISABLED_ROLLOVER: RolloverSettings = {
+  enabled: false,
+  intervalMonths: null,
+  anchor: null,
+  nextDate: null,
+  pending: false,
 }
 
 interface CalculatorContextValue {
@@ -108,6 +122,20 @@ interface CalculatorContextValue {
     mode: SaveStorageMode,
     setId: string,
     enabled: boolean,
+  ) => Promise<string | null>
+  setNumberSetRollover: (
+    mode: SaveStorageMode,
+    setId: string,
+    settings: {
+      enabled: boolean
+      intervalMonths: RolloverIntervalMonths | null
+      anchor: RolloverAnchor | null
+      nextDate: string | null
+    },
+  ) => Promise<string | null>
+  clearNumberSetRolloverPending: (
+    mode: SaveStorageMode,
+    setId: string,
   ) => Promise<string | null>
   deleteNumberSetById: (mode: SaveStorageMode, setId: string) => Promise<string | null>
   migrateLocalDraftToCloud: () => Promise<string | null>
@@ -395,6 +423,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         ...set,
         storageMode: 'local' as const,
         autoSnapshotEnabled: false,
+        rollover: DISABLED_ROLLOVER,
       })),
       ...cloudNumberSets.map((set) => ({
         ...set,
@@ -921,6 +950,48 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     [activeUserId],
   )
 
+  const setNumberSetRollover = useCallback(
+    async (
+      mode: SaveStorageMode,
+      setId: string,
+      settings: {
+        enabled: boolean
+        intervalMonths: RolloverIntervalMonths | null
+        anchor: RolloverAnchor | null
+        nextDate: string | null
+      },
+    ): Promise<string | null> => {
+      // 롤오버 알림도 서버 크론이 접근하는 클라우드 슬롯 전용.
+      if (mode === 'local') return 'auto_snapshot_local_unsupported'
+      if (!activeUserId) return 'not_logged_in'
+      const result = await setCloudNumberSetRollover(activeUserId, setId, settings)
+      if (result.error) return result.error
+      const updatedSet = result.data
+      if (!updatedSet) return 'number_set_not_found'
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === updatedSet.id ? updatedSet : set)),
+      )
+      return null
+    },
+    [activeUserId],
+  )
+
+  const clearNumberSetRolloverPending = useCallback(
+    async (mode: SaveStorageMode, setId: string): Promise<string | null> => {
+      if (mode === 'local') return 'auto_snapshot_local_unsupported'
+      if (!activeUserId) return 'not_logged_in'
+      const result = await clearCloudNumberSetRolloverPending(activeUserId, setId)
+      if (result.error) return result.error
+      const updatedSet = result.data
+      if (!updatedSet) return 'number_set_not_found'
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === updatedSet.id ? updatedSet : set)),
+      )
+      return null
+    },
+    [activeUserId],
+  )
+
   const deleteNumberSetById = useCallback(
     async (mode: SaveStorageMode, setId: string): Promise<string | null> => {
       if (mode === 'local') {
@@ -1126,6 +1197,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         createNumberSet,
         renameNumberSet,
         setNumberSetAutoSnapshot,
+        setNumberSetRollover,
+        clearNumberSetRolloverPending,
         deleteNumberSetById,
         migrateLocalDraftToCloud,
         copyDraftBetweenStorageModes,

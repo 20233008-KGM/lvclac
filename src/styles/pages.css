@@ -3085,6 +3085,83 @@ html[data-zone='about'] body {
   margin-top: 2px;
 }
 
+/* 롤오버(만기 이월) 알림 설정: 상세 펼침 안에 두는 슬롯별 설정 블록. */
+.my-page-rollover {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--color-border);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.my-page-rollover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.my-page-rollover-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  align-items: end;
+}
+
+.my-page-rollover-fields label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.my-page-rollover-fields label > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.my-page-rollover-fields select,
+.my-page-rollover-fields input {
+  width: 100%;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.my-page-rollover-fields select:focus-visible,
+.my-page-rollover-fields input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 날짜 입력칸(다음 예정일)은 두 칸을 다 차지해 힌트와 폭을 맞춘다. */
+.my-page-rollover-fields label:last-of-type,
+.my-page-rollover-fields .my-page-field-help {
+  grid-column: 1 / -1;
+}
+
+/* 롤오버 대기 배너: 유저에게 새 약정가로 값 갱신을 요청. 주의색 톤. */
+.my-page-rollover-banner {
+  margin-top: var(--space-xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-muted);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
 /* 숫자세트 전체 상세 읽기전용 모달: 좌측 정렬 + 섹션별 정의 목록. */
 .number-set-detail-modal {
   width: min(100%, 460px);

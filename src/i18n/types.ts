@@ -340,6 +340,20 @@ export interface Messages {
     autoSnapshotTimeZoneSearchPlaceholder: string
     autoSnapshotSlotToggleLabel: string
     autoSnapshotSlotCountNote: string
+    rolloverTitle: string
+    rolloverToggleLabel: string
+    rolloverIntervalLabel: string
+    rolloverIntervalMonthly: string
+    rolloverIntervalBimonthly: string
+    rolloverIntervalQuarterly: string
+    rolloverIntervalSemiannual: string
+    rolloverAnchorLabel: string
+    rolloverAnchorSecondThursday: string
+    rolloverAnchorThirdFriday: string
+    rolloverNextDateLabel: string
+    rolloverNextDateHint: string
+    rolloverPendingBanner: string
+    rolloverPendingAction: string
     toggleUseLabel: string
     navLabel: string
     navAccount: string

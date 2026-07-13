@@ -5,6 +5,15 @@ import {
   localDateStringForTimeZone,
 } from '../../src/db/accountSnapshotAutomation'
 import {
+  advanceRolloverDate,
+  isRolloverAnchor,
+  isRolloverDue,
+  isRolloverInterval,
+  isLocalDateString,
+  type RolloverAnchor,
+  type RolloverIntervalMonths,
+} from '../../src/db/rolloverSchedule'
+import {
   buildAccountSnapshotPayload,
   type AccountSnapshotPayload,
 } from '../../src/db/accountRecordPayloads'
@@ -32,6 +41,11 @@ export interface AutoSnapshotSlot {
   numberSetId: string
   title: string
   inputs: unknown
+  /** 롤오버 알림 설정(꺼져 있거나 미지정이면 스냅샷을 정상 진행). */
+  rolloverEnabled?: boolean
+  rolloverIntervalMonths?: RolloverIntervalMonths | null
+  rolloverAnchor?: RolloverAnchor | null
+  rolloverNextDate?: string | null
 }
 
 export interface AccountSnapshotCronDeps {
@@ -43,6 +57,11 @@ export interface AccountSnapshotCronDeps {
     userId: string,
     payload: AccountSnapshotPayload,
   ): Promise<{ ok: true } | { ok: false; duplicate?: boolean; error: string }>
+  /** 롤오버일에 스냅샷 대신: 슬롯을 대기로 표시하고 다음 예정일로 전진시킨다. */
+  markSlotRolledOver(
+    numberSetId: string,
+    nextDate: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }>
   updateSettingAfterRun(
     userId: string,
     patch: {
@@ -79,6 +98,10 @@ interface AutoSnapshotSlotRow {
   id: string
   title: string | null
   inputs: unknown
+  rollover_reminder_enabled: boolean | null
+  rollover_interval_months: number | null
+  rollover_anchor: string | null
+  rollover_next_date: string | null
 }
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing'])
@@ -112,10 +135,16 @@ function mapDueSetting(row: DueSettingRow): DueSnapshotSetting {
 }
 
 function mapAutoSnapshotSlot(row: AutoSnapshotSlotRow): AutoSnapshotSlot {
+  const interval = row.rollover_interval_months
+  const anchor = row.rollover_anchor
   return {
     numberSetId: row.id,
     title: row.title?.trim() || DEFAULT_SLOT_TITLE,
     inputs: row.inputs,
+    rolloverEnabled: row.rollover_reminder_enabled ?? false,
+    rolloverIntervalMonths: isRolloverInterval(interval) ? interval : null,
+    rolloverAnchor: isRolloverAnchor(anchor) ? anchor : null,
+    rolloverNextDate: isLocalDateString(row.rollover_next_date) ? row.rollover_next_date : null,
   }
 }
 
@@ -164,7 +193,9 @@ export function createAccountSnapshotCronDepsFromClient(
     async fetchAutoSnapshotSlots(userId: string): Promise<AutoSnapshotSlot[]> {
       const { data, error } = await admin
         .from('number_sets')
-        .select('id,title,inputs')
+        .select(
+          'id,title,inputs,rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date',
+        )
         .eq('user_id', userId)
         .eq('auto_snapshot_enabled', true)
         .order('updated_at', { ascending: false })
@@ -193,6 +224,15 @@ export function createAccountSnapshotCronDepsFromClient(
         duplicate: duplicateError(error),
         error: error.message || 'snapshot_insert_failed',
       }
+    },
+
+    async markSlotRolledOver(numberSetId, nextDate) {
+      const { error } = await admin
+        .from('number_sets')
+        .update({ rollover_pending: true, rollover_next_date: nextDate })
+        .eq('id', numberSetId)
+      if (error) return { ok: false, error: error.message || 'rollover_mark_failed' }
+      return { ok: true }
     },
 
     async updateSettingAfterRun(userId, patch) {
@@ -267,6 +307,31 @@ async function processDueSetting(
   let lastError: string | null = null
 
   for (const slot of slots) {
+    // 롤오버일: 스냅샷을 남기면 옛 포지션 기준의 잘못된 기록이 되므로 건너뛴다.
+    // 대신 슬롯을 대기로 표시하고 다음 예정일로 전진 → 마이페이지 배너로 유저에게 갱신 요청.
+    if (
+      slot.rolloverEnabled &&
+      slot.rolloverIntervalMonths &&
+      slot.rolloverAnchor &&
+      isRolloverDue(slot.rolloverNextDate, sourceLocalDate)
+    ) {
+      const nextDate = advanceRolloverDate(
+        slot.rolloverNextDate as string,
+        slot.rolloverIntervalMonths,
+        slot.rolloverAnchor,
+        sourceLocalDate,
+      )
+      const marked = await deps.markSlotRolledOver(slot.numberSetId, nextDate)
+      if (marked.ok) {
+        skipped += 1
+        lastError = 'rollover_pending'
+      } else {
+        failed += 1
+        lastError = marked.error
+      }
+      continue
+    }
+
     const inputs = asCalculatorInputs(slot.inputs)
     if (!inputs || !hasMeaningfulCalculatorInputs(inputs)) {
       skipped += 1

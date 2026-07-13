@@ -35,10 +35,33 @@ import { MarginKindAskModal } from './MarginKindAskModal'
 const noop = () => {}
 
 /** 숫자세트 전시용 목 클라우드 세트(캡처처럼 3개). */
+const mockRolloverOff = {
+  enabled: false,
+  intervalMonths: null,
+  anchor: null,
+  nextDate: null,
+  pending: false,
+} as const
+// 롤오버 설정 켜짐(분기·둘째 목요일) 예시.
+const mockRolloverOn = {
+  enabled: true,
+  intervalMonths: 3,
+  anchor: 'second_thursday',
+  nextDate: '2026-09-10',
+  pending: false,
+} as const
+// 롤오버 대기(갱신 요청 배너) 예시.
+const mockRolloverPending = {
+  enabled: true,
+  intervalMonths: 3,
+  anchor: 'second_thursday',
+  nextDate: '2026-12-10',
+  pending: true,
+} as const
 const mockCloudSets: CalculatorNumberSet[] = [
-  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true },
-  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false },
-  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false },
+  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
+  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverPending },
+  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false, rollover: mockRolloverOff },
 ]
 const numberSetLimits: Record<'local' | 'cloud', number> = { local: 10, cloud: 10 }
 
@@ -150,6 +173,8 @@ export function KitGallery() {
             onRenameNumberSet={noop}
             onDeleteNumberSet={noop}
             onSetAutoSnapshot={noop}
+            onSetRollover={noop}
+            onClearRolloverPending={noop}
           />
         </KitItem>
         <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·자동 스냅샷 행" width={560}>

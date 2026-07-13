@@ -20,6 +20,7 @@ function baseDeps(
     fetchActiveSubscription: async () => ({ active: false }),
     fetchAutoSnapshotSlots: async () => [],
     insertAutoSnapshot: async () => ({ ok: true }),
+    markSlotRolledOver: async () => ({ ok: true }),
     updateSettingAfterRun: async () => ({ ok: true }),
     ...overrides,
   }
@@ -139,6 +140,54 @@ describe('handleAccountSnapshotCron', () => {
     )
 
     expect(result.body).toMatchObject({ ok: true, processed: 0, skipped: 1, failed: 0 })
+  })
+
+  it('skips the snapshot on a rollover day and marks the slot pending with the advanced date', async () => {
+    const rolled: Array<{ numberSetId: string; nextDate: string }> = []
+    const inserts: string[] = []
+    const result = await handleAccountSnapshotCron(
+      CONFIG,
+      { authorization: 'Bearer secret' },
+      baseDeps({
+        fetchDueSettings: async () => [
+          { userId: 'user-1', label: 'Close', timeZone: 'Asia/Seoul', timeOfDay: '16:00' },
+        ],
+        fetchActiveSubscription: async () => ({ active: true }),
+        fetchAutoSnapshotSlots: async () => [
+          {
+            numberSetId: 'set-roll',
+            title: 'KOSPI200',
+            inputs: sampleInputs,
+            rolloverEnabled: true,
+            rolloverIntervalMonths: 3,
+            rolloverAnchor: 'second_thursday',
+            rolloverNextDate: '2026-09-10', // 오늘(로컬)과 같은 날 → 도래.
+          },
+          {
+            numberSetId: 'set-normal',
+            title: 'Perp',
+            inputs: sampleInputs,
+            rolloverEnabled: false,
+          },
+        ],
+        insertAutoSnapshot: async (_userId, payload) => {
+          inserts.push(payload.numberSetId ?? '')
+          return { ok: true }
+        },
+        markSlotRolledOver: async (numberSetId, nextDate) => {
+          rolled.push({ numberSetId, nextDate })
+          return { ok: true }
+        },
+      }),
+      // 2026-09-10 16:00 KST = 2026-09-10T07:00Z.
+      new Date('2026-09-10T07:00:00.000Z'),
+    )
+
+    // 롤오버 슬롯은 스킵(1), 일반 슬롯은 스냅샷(1).
+    expect(result.body).toMatchObject({ ok: true, processed: 1, skipped: 1, failed: 0 })
+    expect(inserts).toEqual(['set-normal'])
+    // 분기 전진: 2026-09-10 → 2026-12-10.
+    expect(rolled).toEqual([{ numberSetId: 'set-roll', nextDate: '2026-12-10' }])
   })
 
   it('counts per slot: one slot succeeds while another is skipped for empty inputs', async () => {

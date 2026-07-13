@@ -26,6 +26,9 @@
   --color-short-muted: rgba(212, 122, 138, 0.12);
   --color-danger: #e07070;
   --color-danger-muted: rgba(224, 112, 112, 0.1);
+  /* 주의(파괴 아님) — 롤오버 갱신 요청 등. 팔레트 톤에 맞춘 desaturated amber. */
+  --color-warning: #e0a458;
+  --color-warning-muted: rgba(224, 164, 88, 0.12);
   --color-success: #6bc48a;
 
   --radius: 8px;

@@ -27,7 +27,12 @@ import type {
   AccountSnapshotAutomationSettings,
   AccountSnapshotAutomationSettingsInput,
 } from '../db/accountSnapshotAutomation'
-import { fetchNumberSets } from '../db/numberSets'
+import { fetchNumberSets, type RolloverSettings } from '../db/numberSets'
+import {
+  computeNextRolloverDate,
+  type RolloverAnchor,
+  type RolloverIntervalMonths,
+} from '../db/rolloverSchedule'
 import type { AuthUser } from '../db/profile'
 import type { Messages } from '../i18n/types'
 import { useLanguage } from '../i18n'
@@ -623,6 +628,134 @@ function PlusIcon() {
   )
 }
 
+/** 롤오버 설정 저장 페이로드(활성 시 나머지 값 필수, 비활성 시 전부 null). */
+export interface RolloverSaveSettings {
+  enabled: boolean
+  intervalMonths: RolloverIntervalMonths | null
+  anchor: RolloverAnchor | null
+  nextDate: string | null
+}
+
+/** 유저 브라우저 로컬 달력 기준 오늘(YYYY-MM-DD). 롤오버 예정일 초기 계산의 기준. */
+function todayLocalDateString(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * 슬롯별 롤오버(만기 이월) 알림 설정. 자동 스냅샷이 켜진 클라우드 슬롯에서만 노출한다.
+ * 주기·기준일을 바꾸면 다음 예정일을 관행 위상으로 재계산하고, 날짜를 직접 고치면 그 날짜를 존중한다.
+ */
+function RolloverSettingControl({
+  copy,
+  rollover,
+  busy,
+  onSave,
+}: {
+  copy: MyPageCopy
+  rollover: RolloverSettings
+  busy: boolean
+  onSave: (settings: RolloverSaveSettings) => void
+}) {
+  const enabled = rollover.enabled
+  const interval: RolloverIntervalMonths = rollover.intervalMonths ?? 3
+  const anchor: RolloverAnchor = rollover.anchor ?? 'second_thursday'
+  const nextDate = rollover.nextDate ?? ''
+
+  const handleToggle = (on: boolean) => {
+    if (busy) return
+    if (!on) {
+      onSave({ enabled: false, intervalMonths: null, anchor: null, nextDate: null })
+      return
+    }
+    onSave({
+      enabled: true,
+      intervalMonths: interval,
+      anchor,
+      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor),
+    })
+  }
+
+  const handleInterval = (value: string) => {
+    const nextInterval = Number(value) as RolloverIntervalMonths
+    onSave({
+      enabled: true,
+      intervalMonths: nextInterval,
+      anchor,
+      nextDate: computeNextRolloverDate(todayLocalDateString(), nextInterval, anchor),
+    })
+  }
+
+  const handleAnchor = (value: string) => {
+    const nextAnchor = value as RolloverAnchor
+    onSave({
+      enabled: true,
+      intervalMonths: interval,
+      anchor: nextAnchor,
+      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, nextAnchor),
+    })
+  }
+
+  const handleDate = (value: string) => {
+    onSave({ enabled: true, intervalMonths: interval, anchor, nextDate: value || null })
+  }
+
+  return (
+    <div className="my-page-rollover">
+      <div className="my-page-rollover-head">
+        <span>{copy.rolloverTitle}</span>
+        <ToggleSwitch
+          checked={enabled}
+          disabled={busy}
+          label={copy.rolloverToggleLabel}
+          onChange={handleToggle}
+        />
+      </div>
+      {enabled && (
+        <div className="my-page-rollover-fields">
+          <label>
+            <span>{copy.rolloverIntervalLabel}</span>
+            <select
+              value={interval}
+              disabled={busy}
+              onChange={(event) => handleInterval(event.currentTarget.value)}
+            >
+              <option value={1}>{copy.rolloverIntervalMonthly}</option>
+              <option value={2}>{copy.rolloverIntervalBimonthly}</option>
+              <option value={3}>{copy.rolloverIntervalQuarterly}</option>
+              <option value={6}>{copy.rolloverIntervalSemiannual}</option>
+            </select>
+          </label>
+          <label>
+            <span>{copy.rolloverAnchorLabel}</span>
+            <select
+              value={anchor}
+              disabled={busy}
+              onChange={(event) => handleAnchor(event.currentTarget.value)}
+            >
+              <option value="second_thursday">{copy.rolloverAnchorSecondThursday}</option>
+              <option value="third_friday">{copy.rolloverAnchorThirdFriday}</option>
+            </select>
+          </label>
+          <label>
+            <span>{copy.rolloverNextDateLabel}</span>
+            <input
+              type="date"
+              value={nextDate}
+              disabled={busy}
+              onChange={(event) => handleDate(event.currentTarget.value)}
+            />
+          </label>
+          <p className="my-page-field-help">{copy.rolloverNextDateHint}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /**
  * 숫자세트 행: 이름은 input 직접 편집(blur/Enter 시 커밋), 액션은 상세보기 토글 + 삭제.
  * 상세는 세트 기준값(계좌평가금·현재가)과 계산 결과(레버리지·청산가)를 미니 그리드로 펼친다.
@@ -635,6 +768,8 @@ function NumberSetRow({
   onRenameNumberSet,
   onDeleteNumberSet,
   onSetAutoSnapshot,
+  onSetRollover,
+  onClearRolloverPending,
 }: {
   copy: MyPageCopy
   numberSet: CalculatorNumberSet
@@ -644,6 +779,8 @@ function NumberSetRow({
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
+  onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
+  onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -716,6 +853,19 @@ function NumberSetRow({
           </button>
         </div>
       </div>
+      {numberSet.rollover.pending && onClearRolloverPending && (
+        <div className="my-page-rollover-banner" role="status">
+          <span>{copy.rolloverPendingBanner}</span>
+          <button
+            type="button"
+            className="link-btn"
+            disabled={busy}
+            onClick={() => onClearRolloverPending(numberSet.storageMode, numberSet.id)}
+          >
+            {copy.rolloverPendingAction}
+          </button>
+        </div>
+      )}
       {detailOpen && detailMetrics && (
         <div className="my-page-number-set-detail">
           {detailMetrics.map((metric) => (
@@ -735,6 +885,15 @@ function NumberSetRow({
             <ExpandIcon />
           </button>
         </div>
+      )}
+      {/* 롤오버 설정: Pro + 자동 스냅샷이 켜진 슬롯에서만. 상세 펼침 안에 둔다. */}
+      {detailOpen && onSetRollover && autoSnapshotAllowed && numberSet.autoSnapshotEnabled && (
+        <RolloverSettingControl
+          copy={copy}
+          rollover={numberSet.rollover}
+          busy={busy}
+          onSave={(settings) => onSetRollover(numberSet.storageMode, numberSet.id, settings)}
+        />
       )}
       {detailModalOpen && (
         <NumberSetDetailModal
@@ -761,6 +920,8 @@ function NumberSetGroup({
   onRenameNumberSet,
   onDeleteNumberSet,
   onSetAutoSnapshot,
+  onSetRollover,
+  onClearRolloverPending,
 }: {
   copy: MyPageCopy
   title: string
@@ -775,6 +936,8 @@ function NumberSetGroup({
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   // 넘기면 이 그룹의 각 행에 자동 스냅샷 토글이 붙는다(클라우드 그룹 전용).
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
+  onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
+  onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
   return (
     <div className="my-page-number-set-group">
@@ -807,6 +970,8 @@ function NumberSetGroup({
             onRenameNumberSet={onRenameNumberSet}
             onDeleteNumberSet={onDeleteNumberSet}
             onSetAutoSnapshot={onSetAutoSnapshot}
+            onSetRollover={onSetRollover}
+            onClearRolloverPending={onClearRolloverPending}
           />
         ))}
       </ul>
@@ -827,6 +992,8 @@ export function NumberSetPreferencesPanel({
   onRenameNumberSet,
   onDeleteNumberSet,
   onSetAutoSnapshot,
+  onSetRollover,
+  onClearRolloverPending,
 }: {
   copy: MyPageCopy
   localNumberSets: CalculatorNumberSet[]
@@ -839,6 +1006,8 @@ export function NumberSetPreferencesPanel({
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
+  onSetRollover: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
+  onClearRolloverPending: (mode: SaveStorageMode, setId: string) => void
 }) {
   const autoSnapshotCount = cloudNumberSets.filter((set) => set.autoSnapshotEnabled).length
   return (
@@ -877,6 +1046,8 @@ export function NumberSetPreferencesPanel({
           onRenameNumberSet={onRenameNumberSet}
           onDeleteNumberSet={onDeleteNumberSet}
           onSetAutoSnapshot={onSetAutoSnapshot}
+          onSetRollover={onSetRollover}
+          onClearRolloverPending={onClearRolloverPending}
         />
       </div>
       {isPro && (
@@ -1360,6 +1531,8 @@ export function MyPage() {
     createNumberSet,
     renameNumberSet,
     setNumberSetAutoSnapshot,
+    setNumberSetRollover,
+    clearNumberSetRolloverPending,
     deleteNumberSetById,
   } = useCalculator()
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -1765,6 +1938,20 @@ export function MyPage() {
     [setNumberSetAutoSnapshot, runNumberSetAction],
   )
 
+  const handleSetNumberSetRollover = useCallback(
+    (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => {
+      void runNumberSetAction(() => setNumberSetRollover(mode, setId, settings))
+    },
+    [setNumberSetRollover, runNumberSetAction],
+  )
+
+  const handleClearNumberSetRolloverPending = useCallback(
+    (mode: SaveStorageMode, setId: string) => {
+      void runNumberSetAction(() => clearNumberSetRolloverPending(mode, setId))
+    },
+    [clearNumberSetRolloverPending, runNumberSetAction],
+  )
+
   return (
     <>
       <MyPageView
@@ -1869,6 +2056,8 @@ export function MyPage() {
                 onRenameNumberSet={handleRenameNumberSet}
                 onDeleteNumberSet={handleDeleteNumberSet}
                 onSetAutoSnapshot={handleSetNumberSetAutoSnapshot}
+                onSetRollover={handleSetNumberSetRollover}
+                onClearRolloverPending={handleClearNumberSetRolloverPending}
               />
             </>
           ) : null

@@ -1162,8 +1162,9 @@ html[data-zone='about'] body {
   display: grid;
   gap: var(--space-lg);
   min-width: 0;
-  /* 본문 폭: 기존 유효 폭(~880px)에서 10% 줄임 — 불필요하게 넓다는 사용자 피드백(2026-07-13). */
-  max-width: 792px;
+  /* 본문 폭: ~880px → 792px → 720px 순으로 좁힘 — 넓다는 사용자 피드백(2026-07-13).
+     720px는 이전 폭 전략(--mypage-panel-max)에서도 쓰던 검증된 측정 폭. */
+  max-width: 720px;
 }
 
 .my-page-panel {

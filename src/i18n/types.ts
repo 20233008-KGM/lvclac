@@ -177,6 +177,12 @@ export interface Messages {
     delete: string
     saveSnapshot: string
     savingSnapshot: string
+    snapshotGateTitle: string
+    snapshotGateGuestBody: string
+    snapshotGateFreeBody: string
+    snapshotGateLoginCta: string
+    snapshotGateViewPlansCta: string
+    snapshotGateUpgradeCta: string
     orderHistoryEmpty: string
     snapshotsEmpty: string
     snapshotSaved: string
@@ -467,6 +473,66 @@ export interface Messages {
         summaryPending: string
         goToCalculator: string
         viewSubscription: string
+        /** 업그레이드(free) 리디자인 — 세로 스크롤 스냅 4섹션 */
+        upgrade: {
+          /** 우측 섹션 네비게이터 라벨(4개) */
+          navItems: readonly string[]
+          scrollHint: string
+          /** 섹션1 히어로 + 가격 카드 */
+          proBadge: string
+          heroTitleLine1: string
+          heroTitleLine2: string
+          heroSubtitle: string
+          toggleMonthly: string
+          toggleYearly: string
+          toggleSave: string
+          planName: string
+          planSub: string
+          recommendBadge: string
+          priceUnit: string
+          priceMonthly: string
+          priceYearly: string
+          priceStrike: string
+          billedMonthly: string
+          billedYearly: string
+          ctaMonthly: string
+          ctaYearly: string
+          featuresTitle: string
+          features: readonly string[]
+          /** 섹션2 Before / After + 계정 기록 미리보기 */
+          baEyebrow: string
+          baTitle: string
+          beforeLabel: string
+          beforeItems: readonly string[]
+          afterLabel: string
+          afterItems: readonly string[]
+          recordsTitle: string
+          recordsBadge: string
+          recordsLink: string
+          snapshotTitle: string
+          snapshotHeaders: readonly string[]
+          ordersTitle: string
+          ordersHeaders: readonly string[]
+          recordsNote: string
+          /** 섹션3 비교표 + FAQ */
+          compareTitle: string
+          compareFeatureCol: string
+          compareFree: string
+          comparePro: string
+          compareRows: readonly { label: string; free: string; pro: string }[]
+          comparePriceLabel: string
+          comparePriceFree: string
+          compareProYearly: string
+          compareProMonthly: string
+          faq: readonly { q: string; a: string }[]
+          /** 섹션4 최종 결제 CTA */
+          finalTitle: string
+          finalSublineMonthly: string
+          finalSublineYearly: string
+          finalCta: string
+          finalFinePrint: string
+          trust: readonly string[]
+        }
       }
     }
     privacyTitle: string

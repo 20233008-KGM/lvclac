@@ -28,7 +28,7 @@ import {
 } from '../db/accountRecords'
 import type { CalculatorInputs, EvaluateResult, OrderResult, TotalMarginKind } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
-import { FORMULAS_PATH, GUIDE_PATH, MY_PAGE_PATH } from '../config/routes'
+import { BILLING_PATH, FORMULAS_PATH, GUIDE_PATH, MY_PAGE_PATH } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useAuth } from '../context/AuthContext'
@@ -68,6 +68,14 @@ import {
 
 const SnapshotSavedModal = lazy(() =>
   import('./SnapshotSavedModal').then((mod) => ({ default: mod.SnapshotSavedModal })),
+)
+
+const SnapshotProGateModal = lazy(() =>
+  import('./SnapshotProGateModal').then((mod) => ({ default: mod.SnapshotProGateModal })),
+)
+
+const AuthModal = lazy(() =>
+  import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })),
 )
 
 const MarginKindAskModal = lazy(() =>
@@ -736,7 +744,7 @@ function OrderResults({
 
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
-  const { user } = useAuth()
+  const { user, isPro } = useAuth()
   const navigate = useNavigate()
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
@@ -749,6 +757,10 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const [snapshotBusy, setSnapshotBusy] = useState(false)
   const [snapshotSavedModalOpen, setSnapshotSavedModalOpen] = useState(false)
   const [snapshotSaveNotice, setSnapshotSaveNotice] = useState<string | null>(null)
+  // 비로그인/무료 유저가 스냅샷 저장을 눌렀을 때 뜨는 Pro 유도 모달의 모드.
+  // null이면 닫힘, 'guest'=비로그인, 'free'=로그인·무료.
+  const [snapshotGateMode, setSnapshotGateMode] = useState<'guest' | 'free' | null>(null)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [orderSaveNotice, setOrderSaveNotice] = useState<string | null>(null)
   const [marginKindModalOpen, setMarginKindModalOpen] = useState(false)
   const [dontShowAgainMarginKind, setDontShowAgainMarginKind] = useState(false)
@@ -797,6 +809,20 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     setSnapshotSavedModalOpen(true)
     setSnapshotBusy(false)
   }, [activeCloudNumberSetId, evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
+
+  // 스냅샷 저장은 Pro 전용. 비로그인이면 로그인 유도, 로그인·무료면 Pro 유도 모달을 띄우고,
+  // Pro 유저만 실제 저장으로 진행한다.
+  const handleSnapshotClick = useCallback(() => {
+    if (!userId) {
+      setSnapshotGateMode('guest')
+      return
+    }
+    if (!isPro) {
+      setSnapshotGateMode('free')
+      return
+    }
+    void saveSnapshot()
+  }, [isPro, saveSnapshot, userId])
 
   const saveOrderRecord = useCallback<OrderApplyHandler>(
     (beforeInputs, afterInputs, result) => {
@@ -874,17 +900,15 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         <div className="result-panel__head">
           <h2>{t.result}</h2>
           <div className="result-panel__head-actions">
-            {userId && (
-              <button
-                type="button"
-                ref={snapshotButtonRef}
-                className="result-panel__head-btn"
-                disabled={snapshotBusy}
-                onClick={() => void saveSnapshot()}
-              >
-                {snapshotBusy ? t.accountRecords.savingSnapshot : t.accountRecords.saveSnapshot}
-              </button>
-            )}
+            <button
+              type="button"
+              ref={snapshotButtonRef}
+              className="result-panel__head-btn"
+              disabled={snapshotBusy}
+              onClick={handleSnapshotClick}
+            >
+              {snapshotBusy ? t.accountRecords.savingSnapshot : t.accountRecords.saveSnapshot}
+            </button>
             <a
               className="result-panel__head-btn"
               href={FORMULAS_PATH}
@@ -985,6 +1009,39 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
               navigate(MY_PAGE_PATH)
             }}
           />
+        </Suspense>
+      )}
+
+      {snapshotGateMode && (
+        <Suspense fallback={null}>
+          <SnapshotProGateModal
+            mode={snapshotGateMode}
+            copy={{
+              title: t.accountRecords.snapshotGateTitle,
+              guestBody: t.accountRecords.snapshotGateGuestBody,
+              freeBody: t.accountRecords.snapshotGateFreeBody,
+              loginCta: t.accountRecords.snapshotGateLoginCta,
+              viewPlansCta: t.accountRecords.snapshotGateViewPlansCta,
+              upgradeCta: t.accountRecords.snapshotGateUpgradeCta,
+              close: t.close,
+            }}
+            restoreFocusRef={snapshotButtonRef}
+            onClose={() => setSnapshotGateMode(null)}
+            onLogin={() => {
+              setSnapshotGateMode(null)
+              setAuthModalOpen(true)
+            }}
+            onUpgrade={() => {
+              setSnapshotGateMode(null)
+              navigate(BILLING_PATH)
+            }}
+          />
+        </Suspense>
+      )}
+
+      {authModalOpen && (
+        <Suspense fallback={null}>
+          <AuthModal onClose={() => setAuthModalOpen(false)} />
         </Suspense>
       )}
 

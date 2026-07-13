@@ -57,6 +57,24 @@ describe('account records copy', () => {
     expect(en.accountRecords.bulkDeleteConfirmSnapshotsWithCount).toContain('{count}')
   })
 
+  it('provides snapshot Pro-gate copy for both languages', () => {
+    expect(ko.accountRecords.snapshotGateTitle).toBe('Pro 전용 기능이에요')
+    expect(ko.accountRecords.snapshotGateGuestBody).toContain('로그인')
+    expect(ko.accountRecords.snapshotGateGuestBody).toContain('Pro')
+    expect(ko.accountRecords.snapshotGateFreeBody).toContain('Pro')
+    expect(ko.accountRecords.snapshotGateLoginCta).toBe('로그인')
+    expect(ko.accountRecords.snapshotGateViewPlansCta).toBe('Pro 요금제 보기')
+    expect(ko.accountRecords.snapshotGateUpgradeCta).toBe('Pro 업그레이드')
+
+    expect(en.accountRecords.snapshotGateTitle).toBe('A Pro feature')
+    expect(en.accountRecords.snapshotGateGuestBody).toContain('Log in')
+    expect(en.accountRecords.snapshotGateGuestBody).toContain('Pro')
+    expect(en.accountRecords.snapshotGateFreeBody).toContain('Pro')
+    expect(en.accountRecords.snapshotGateLoginCta).toBe('Log in')
+    expect(en.accountRecords.snapshotGateViewPlansCta).toBe('See Pro plans')
+    expect(en.accountRecords.snapshotGateUpgradeCta).toBe('Upgrade to Pro')
+  })
+
   it('provides compact archive and snapshot metric copy for both languages', () => {
     expect(ko.accountRecords.recordsArchiveTitle).toBe('기록 장부')
     expect(ko.accountRecords.summaryAccountEquity).toBe('계좌평가금')

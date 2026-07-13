@@ -4677,6 +4677,13 @@ body.scrub-drag-active * {
   text-align: center;
 }
 
+/* 스냅샷 Pro 게이트 모달: 로그인/업그레이드 버튼을 세로로 쌓는다. */
+.snapshot-pro-gate-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 /* Disclaimer banner */
 .service-disclaimer {
   margin-bottom: var(--space-sm);

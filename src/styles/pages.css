@@ -4132,3 +4132,937 @@ a.my-page-compare-card__action {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================================
+   업그레이드(free) 리디자인 — 세로 스크롤 스냅 4섹션. 색·간격 전부 토큰 매핑.
+   ========================================================================= */
+@keyframes billing-up-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes billing-up-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes billing-up-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+}
+
+/* 스크롤 스냅 컨테이너 — 풀 뷰포트, 배경 글로우 */
+.billing-up {
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  background:
+    radial-gradient(1100px 480px at 50% -8%, rgba(91, 141, 239, 0.14), transparent 60%),
+    linear-gradient(180deg, rgba(91, 141, 239, 0.06), transparent 320px), var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.billing-up__section {
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding-right: 44px;
+}
+
+.billing-up__section--center {
+  align-items: center;
+  justify-content: center;
+}
+
+.billing-up__col {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 60px 20px;
+  box-sizing: border-box;
+}
+
+.billing-up__col--header {
+  padding: 28px 20px 0;
+}
+
+.billing-up__hero-fill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.billing-up__col--final {
+  width: min(100%, 720px);
+}
+
+/* --- 우측 섹션 네비게이터 --- */
+.billing-up__nav {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.billing-up__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 0;
+  font: inherit;
+}
+
+.billing-up__nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+
+.billing-up__nav-label[data-active='true'] {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.billing-up__nav-bar {
+  width: 10px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.billing-up__nav-bar[data-active='true'] {
+  width: 26px;
+  background: var(--color-primary);
+}
+
+/* 텍스트 라벨은 넓은 화면에서만(가격 카드와 겹침 방지) */
+@media (max-width: 1200px) {
+  .billing-up__nav-label {
+    display: none;
+  }
+}
+
+/* --- 스크롤 힌트 --- */
+.billing-up__hint {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-text-dim);
+  pointer-events: none;
+}
+
+.billing-up__hint-label {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+}
+
+.billing-up__hint-chevron {
+  animation: billing-up-bob 1.6s ease-in-out infinite;
+}
+
+/* --- 섹션1 헤더 --- */
+.billing-up__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.billing-up__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.billing-up__back:hover {
+  color: var(--color-text);
+}
+
+.billing-up__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.billing-up__status-label {
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.billing-up__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.billing-up__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* --- 섹션1 히어로 그리드 --- */
+.billing-up__hero-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 440px);
+  gap: 48px;
+  align-items: center;
+  padding: 16px 20px 56px;
+  animation: billing-up-rise 0.5s ease both;
+}
+
+.billing-up__pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  background: rgba(91, 141, 239, 0.12);
+  border: 1px solid rgba(91, 141, 239, 0.28);
+  margin-bottom: 22px;
+}
+
+.billing-up__pro-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.billing-up__pro-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #8fb0f4;
+}
+
+.billing-up__title {
+  margin: 0;
+  font-size: 2.5rem;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+.billing-up__subtitle {
+  margin: 18px 0 0;
+  max-width: 420px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* --- 월간/연간 토글 --- */
+.billing-up__toggle {
+  position: relative;
+  display: inline-flex;
+  margin-top: 28px;
+  padding: 4px;
+  border-radius: 11px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.billing-up__toggle-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.billing-up__toggle-indicator[data-yearly='true'] {
+  transform: translateX(100%);
+}
+
+.billing-up__toggle-btn {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: color 0.28s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.billing-up__toggle-btn[data-active='true'] {
+  color: var(--color-text);
+}
+
+.billing-up__toggle-save {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(92, 184, 138, 0.14);
+  border: 1px solid rgba(92, 184, 138, 0.4);
+  color: var(--color-success);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* --- Pro 가격 카드 --- */
+.billing-up__card {
+  position: relative;
+}
+
+.billing-up__card-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(91, 141, 239, 0.5), rgba(91, 141, 239, 0.05));
+  animation: billing-up-glow 4s ease-in-out infinite;
+  filter: blur(0.5px);
+}
+
+.billing-up__card-body {
+  position: relative;
+  padding: 32px;
+  border-radius: 17px;
+  background: linear-gradient(180deg, var(--color-surface), #191d26);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+}
+
+.billing-up__card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.billing-up__card-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.billing-up__card-sub {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.billing-up__card-badge {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--color-primary-muted);
+  border: 1px solid rgba(91, 141, 239, 0.35);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #8fb0f4;
+}
+
+.billing-up__price {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.billing-up__price-main {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-mono);
+}
+
+.billing-up__price-amount {
+  font-size: 3.4rem;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.billing-up__price-unit {
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+.billing-up__price-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 4px;
+}
+
+.billing-up__price-strike {
+  min-height: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-dim);
+  text-decoration: line-through;
+}
+
+.billing-up__price-billed {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* --- CTA 버튼(가격 카드 + 최종) --- */
+.billing-up__cta {
+  width: 100%;
+  margin-top: 24px;
+  min-height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.12s;
+  box-shadow: 0 8px 24px -8px rgba(91, 141, 239, 0.7);
+}
+
+.billing-up__cta:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.billing-up__cta:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.billing-up__cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* --- 가격 카드 포함 기능 --- */
+.billing-up__features {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.billing-up__features-title {
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  letter-spacing: 0.02em;
+}
+
+.billing-up__features-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px 22px;
+}
+
+.billing-up__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.billing-up__check {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-long);
+}
+
+/* --- 섹션 헤딩 --- */
+.billing-up__section-head {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.billing-up__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.billing-up__section-title {
+  margin: 8px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* --- Before / After --- */
+.billing-up__ba-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.billing-up__ba-card {
+  padding: 22px;
+  border-radius: 14px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.billing-up__ba-card--after {
+  background: linear-gradient(180deg, rgba(91, 141, 239, 0.12), rgba(91, 141, 239, 0.03));
+  border-color: rgba(91, 141, 239, 0.4);
+}
+
+.billing-up__ba-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.billing-up__ba-card--after .billing-up__ba-label {
+  color: var(--color-text);
+}
+
+.billing-up__ba-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.billing-up__ba-dot--muted {
+  background: var(--color-text-dim);
+}
+
+.billing-up__ba-dot--pro {
+  background: var(--color-success);
+}
+
+.billing-up__ba-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.billing-up__ba-item {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.billing-up__ba-item--before {
+  color: var(--color-text-muted);
+}
+
+.billing-up__ba-dash {
+  flex: none;
+  color: var(--color-text-dim);
+}
+
+.billing-up__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.billing-up__arrow > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-primary-muted);
+  border: 1px solid rgba(91, 141, 239, 0.35);
+  color: var(--color-primary);
+}
+
+/* --- 계정 기록 미리보기 --- */
+.billing-up__records {
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.billing-up__records-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.billing-up__records-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.billing-up__records-title {
+  margin: 0;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--color-primary);
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.billing-up__records-badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(91, 141, 239, 0.12);
+  border: 1px solid rgba(91, 141, 239, 0.3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: #8fb0f4;
+}
+
+.billing-up__records-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.billing-up__records .records-summary-grid {
+  margin-top: 0;
+}
+
+.billing-up__records-note {
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* --- 비교표 --- */
+.billing-up__compare {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+  margin-bottom: 44px;
+}
+
+.billing-up__compare-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  align-items: center;
+  border-bottom: 1px solid rgba(35, 41, 52, 0.5);
+}
+
+.billing-up__compare-row:last-child {
+  border-bottom: 0;
+}
+
+.billing-up__compare-head {
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.billing-up__compare-cell {
+  padding: 15px 20px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.billing-up__compare-cell--plan,
+.billing-up__compare-cell--pro {
+  padding: 15px 12px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.billing-up__compare-cell--pro {
+  background: rgba(91, 141, 239, 0.06);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.billing-up__compare-mono {
+  font-family: var(--font-mono);
+}
+
+.billing-up__compare-cell--plan {
+  color: var(--color-text-muted);
+}
+
+.billing-up__compare-head .billing-up__compare-cell {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+}
+
+.billing-up__compare-head .billing-up__compare-cell--plan {
+  padding: 16px 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.billing-up__compare-head .billing-up__compare-cell--pro {
+  padding: 16px 12px;
+  font-weight: 700;
+  color: #8fb0f4;
+}
+
+.billing-up__compare-price .billing-up__compare-cell--feature {
+  padding: 17px 20px;
+  font-weight: 600;
+}
+
+.billing-up__compare-price .billing-up__compare-cell--plan,
+.billing-up__compare-price .billing-up__compare-cell--pro {
+  padding: 17px 12px;
+  font-size: 14px;
+}
+
+.billing-up__compare-price .billing-up__compare-cell--pro {
+  font-weight: 700;
+  color: #8fb0f4;
+}
+
+/* --- FAQ --- */
+.billing-up__faq {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 32px;
+}
+
+.billing-up__faq-q {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.billing-up__faq-a {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+/* --- 섹션4 최종 CTA --- */
+.billing-up__final {
+  margin-bottom: 24px;
+  text-align: center;
+  padding: 34px 28px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(91, 141, 239, 0.14), rgba(91, 141, 239, 0.03));
+  border: 1px solid rgba(91, 141, 239, 0.4);
+}
+
+.billing-up__final-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.billing-up__final-subline {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.billing-up__final-cta {
+  width: auto;
+  min-width: 280px;
+  margin: 20px auto 0;
+  min-height: 52px;
+  padding: 0 40px;
+  border-radius: 11px;
+  font-size: 16px;
+  box-shadow: 0 10px 28px -8px rgba(91, 141, 239, 0.7);
+}
+
+.billing-up__final-fine {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.billing-up__trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.billing-up__trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-dim);
+}
+
+.billing-up__trust-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--color-border-subtle);
+}
+
+/* 결제 상태 메시지 — 하단 중앙 고정 토스트 */
+.billing-up__message {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  margin: 0;
+  max-width: min(92vw, 520px);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* 모션 축소: 장식용 애니메이션 정지 */
+.billing-up--reduced,
+.billing-up--reduced * {
+  scroll-behavior: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .billing-up,
+  .billing-up__card-glow,
+  .billing-up__hint-chevron,
+  .billing-up__hero-grid {
+    animation: none;
+    scroll-behavior: auto;
+  }
+}
+
+/* 좁은 화면: 2단 → 1단, before/after 세로 스택 */
+@media (max-width: 860px) {
+  .billing-up__hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .billing-up__ba-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .billing-up__arrow {
+    transform: rotate(90deg);
+  }
+
+  .billing-up__faq {
+    grid-template-columns: 1fr;
+  }
+
+  .records-summary-grid ~ .records-summary-grid,
+  .billing-up__records .records-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .billing-up__section {
+    padding-right: 20px;
+  }
+
+  .billing-up__features-list {
+    grid-template-columns: 1fr;
+  }
+
+  .billing-up__title {
+    font-size: 2rem;
+  }
+}

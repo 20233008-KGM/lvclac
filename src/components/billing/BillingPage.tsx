@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
 import { openBillingPortal, startCheckout, type BillingPlan } from '../../db/billing'
+import { BillingUpgrade } from './BillingUpgrade'
 import '../../styles/pages.css'
 
 type BusyState = BillingPlan | 'portal' | null
@@ -390,6 +391,19 @@ export function BillingPage() {
   )
 
   const showBanner = view === 'failed' && !bannerDismissed
+
+  // free(업그레이드) 화면은 세로 스크롤 스냅 리디자인을 전폭으로 렌더한다.
+  // pro/failed/success는 아래 기존 셸을 그대로 유지한다.
+  if (view === 'free') {
+    return (
+      <BillingUpgrade
+        copy={copy}
+        busy={busy}
+        message={message}
+        onCheckout={(plan) => void handleCheckout(plan)}
+      />
+    )
+  }
 
   return (
     <div className="my-page-shell billing-shell">

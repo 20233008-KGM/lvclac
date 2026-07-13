@@ -551,6 +551,28 @@ function ChevronDownIcon() {
   )
 }
 
+/** 숫자세트 전체 상세 모달 열기(확대) 아이콘. */
+function ExpandIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="15 3 21 3 21 9" />
+      <polyline points="9 21 3 21 3 15" />
+      <line x1="21" y1="3" x2="14" y2="10" />
+      <line x1="3" y1="21" x2="10" y2="14" />
+    </svg>
+  )
+}
+
 /** 숫자세트 행 삭제(휴지통) 아이콘. */
 function TrashIcon() {
   return (
@@ -681,10 +703,12 @@ function NumberSetRow({
           <button
             type="button"
             ref={detailModalTriggerRef}
-            className="my-page-number-set-detail-more"
+            className="my-page-icon-btn my-page-icon-btn--sm my-page-number-set-detail-more"
+            title={copy.numberSetDetailOpen}
+            aria-label={copy.numberSetDetailOpen}
             onClick={() => setDetailModalOpen(true)}
           >
-            {copy.numberSetDetailOpen}
+            <ExpandIcon />
           </button>
         </div>
       )}
@@ -1054,11 +1078,6 @@ export function MyPageView({
                 </button>
                 </div>
 
-                {!isPro && billingPanel && (
-                  <div className="my-page-account-hub__block my-page-account-hub__billing">
-                    {billingPanel}
-                  </div>
-                )}
                 <div
                   className="my-page-account-hub__block my-page-account-hub__logins"
                   aria-labelledby="my-page-linked-logins-title"

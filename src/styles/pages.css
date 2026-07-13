@@ -2950,28 +2950,11 @@ html[data-zone='about'] body {
   font-variant-numeric: tabular-nums;
 }
 
-/* 펼침 상세 하단: 전체 상세 모달 여는 버튼 — 미니 그리드 전체 폭 차지. */
+/* 펼침 상세 하단: 전체 상세 모달 여는 작은 확대 아이콘 버튼 — 그리드 전체 폭에서 우측 정렬. */
 .my-page-number-set-detail-more {
   grid-column: 1 / -1;
+  justify-self: end;
   margin-top: 2px;
-  padding: 6px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-dim);
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.my-page-number-set-detail-more:hover,
-.my-page-number-set-detail-more:focus-visible {
-  background: var(--color-surface-2);
-  border-color: var(--color-border);
-  color: var(--color-text);
 }
 
 /* 숫자세트 전체 상세 읽기전용 모달: 좌측 정렬 + 섹션별 정의 목록. */

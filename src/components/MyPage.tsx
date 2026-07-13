@@ -1790,6 +1790,7 @@ export function MyPage() {
                             checked={user.autoSaveOrderHistory}
                             disabled={autoSaveBusy}
                             label={t.myPage.toggleUseLabel}
+                            labelHidden
                             onChange={(enabled) => void handleAutoSaveOrderHistory(enabled)}
                           />
                         </div>

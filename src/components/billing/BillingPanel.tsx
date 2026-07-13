@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { openBillingPortal, startCheckout, type BillingPlan } from '../../db/billing'
+import { BILLING_PATH } from '../../config/routes'
 
 type BusyState = BillingPlan | 'portal' | null
 
@@ -160,14 +161,11 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
                 )}
               </p>
             )}
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={busy !== null}
-              onClick={() => void handleManage()}
-            >
-              {busy === 'portal' ? copy.redirecting : copy.manageAction}
-            </button>
+            {/* 마이페이지 "구독 관리"는 포털을 직접 열지 않고 전용 결제 페이지(/billing)로 이동한다.
+                실제 Paddle 고객 포털 열기는 그 페이지의 "구독 관리 포털 열기" 버튼이 담당한다. */}
+            <a className="btn btn-ghost my-page-billing-cluster__manage" href={BILLING_PATH}>
+              {copy.manageAction}
+            </a>
           </div>
           {messageNode}
         </div>

@@ -525,6 +525,7 @@ export function AccountSnapshotAutomationPanel({
                 checked={enabled}
                 disabled={(!canEnable && !enabled) || busy}
                 label={copy.toggleUseLabel}
+                labelHidden
                 onChange={handleToggle}
               />
             </div>

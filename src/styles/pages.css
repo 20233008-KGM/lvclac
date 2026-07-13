@@ -2763,6 +2763,19 @@ html[data-zone='about'] body {
   font-weight: 600;
 }
 
+/* on/off가 자명한 토글에서 라벨을 화면에선 감추고 스크린리더에만 남긴다. */
+.toggle-switch__label--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .toggle-switch__track {
   position: relative;
   display: inline-block;

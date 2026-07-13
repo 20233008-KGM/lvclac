@@ -28,6 +28,7 @@ import { parseBoardPath } from './config/boards'
 import {
   isAboutPath,
   isAdminFeedbackPath,
+  isBillingPath,
   isFormulasPath,
   isGuidePath,
   isLegalPath,
@@ -68,6 +69,9 @@ const AboutPage = lazy(() =>
 )
 const MyPage = lazy(() =>
   import('./components/MyPage').then((mod) => ({ default: mod.MyPage })),
+)
+const BillingPage = lazy(() =>
+  import('./components/billing/BillingPage').then((mod) => ({ default: mod.BillingPage })),
 )
 const RecordsArchivePage = lazy(() =>
   import('./components/RecordsArchivePage').then((mod) => ({ default: mod.RecordsArchivePage })),
@@ -509,6 +513,15 @@ function AppRouter() {
       <Suspense fallback={null}>
         <div key={pathname} className="route-enter">
           <MyPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isBillingPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter">
+          <BillingPage />
         </div>
       </Suspense>
     )

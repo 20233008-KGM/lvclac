@@ -387,6 +387,53 @@ export interface Messages {
       checkoutCanceled: string
       checkoutSuccess: string
       taxNote: string
+      /** 구독 결제 전용 페이지(/billing) */
+      page: {
+        /** 헤더 */
+        backToCalculator: string
+        pageTitle: string
+        pageSubtitle: string
+        statusLabel: string
+        /** 플랜 선택 패널 */
+        planSelectTitle: string
+        /** 월간 카드 */
+        monthlyCode: string
+        monthlyAmount: string
+        perMonth: string
+        monthlyDesc: string
+        /** 연간 카드 */
+        yearlyBadge: string
+        yearlyCode: string
+        yearlyAmount: string
+        perYear: string
+        yearlyStrike: string
+        yearlyDesc: string
+        /** Pro 혜택 목록 */
+        benefitsTitle: string
+        benefitsTitleActive: string
+        benefits: readonly string[]
+        /** 구독 관리(Pro) */
+        manageTitle: string
+        proPlanName: string
+        activeBadge: string
+        portalAction: string
+        receiptsAction: string
+        paymentMethodAction: string
+        cancelNote: string
+        cancelAction: string
+        /** 결제 실패 배너 */
+        failedTitle: string
+        failedBody: string
+        retryAction: string
+        /** 결제 완료 */
+        successTitle: string
+        successBody: string
+        summaryPlan: string
+        summaryNextBilling: string
+        summaryPending: string
+        goToCalculator: string
+        viewSubscription: string
+      }
     }
     privacyTitle: string
     privacyBody: string

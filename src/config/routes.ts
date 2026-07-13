@@ -2,6 +2,7 @@ export const FORMULAS_PATH = '/formulas'
 export const GUIDE_PATH = '/guide'
 export const ABOUT_PATH = '/about'
 export const MY_PAGE_PATH = '/my'
+export const BILLING_PATH = '/billing'
 export const RECORDS_PATH = '/records'
 export const ADMIN_FEEDBACK_PATH = '/admin/feedback'
 export const PRODUCT_PATH = '/product'
@@ -30,6 +31,10 @@ export function isAboutPath(pathname: string): boolean {
 
 export function isMyPagePath(pathname: string): boolean {
   return matchesPath(pathname, MY_PAGE_PATH)
+}
+
+export function isBillingPath(pathname: string): boolean {
+  return matchesPath(pathname, BILLING_PATH)
 }
 
 export function isRecordsPath(pathname: string): boolean {

@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import type { AuthUser } from '../../db/profile'
 import { useLanguage } from '../../i18n'
-import { MY_PAGE_PATH } from '../../config/routes'
+import { BILLING_PATH, MY_PAGE_PATH } from '../../config/routes'
 
 const AuthModal = lazy(() => import('./AuthModal').then((mod) => ({ default: mod.AuthModal })))
 
@@ -37,6 +37,7 @@ function initialOf(name: string) {
 interface AccountMenuProps {
   copy: {
     myPage: string
+    billing: string
     logout: string
   }
   user: AuthUser
@@ -59,6 +60,9 @@ export function AccountMenu({ copy, user, onClose, onSignOut }: AccountMenuProps
       </div>
       <a role="menuitem" className="auth-menu__item" href={MY_PAGE_PATH} onClick={onClose}>
         {copy.myPage}
+      </a>
+      <a role="menuitem" className="auth-menu__item" href={BILLING_PATH} onClick={onClose}>
+        {copy.billing}
       </a>
       <button
         type="button"
@@ -146,7 +150,7 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
         </button>
         {menuOpen && (
           <AccountMenu
-            copy={{ myPage: t.myPage.title, logout: t.logout }}
+            copy={{ myPage: t.myPage.title, billing: t.myPage.billing.page.pageTitle, logout: t.logout }}
             user={user}
             onClose={() => setMenuOpen(false)}
             onSignOut={() => void signOut()}

@@ -3296,3 +3296,495 @@ html[data-zone='about'] body {
  * MyPage 폭 전략(v3): 패널은 콘솔 전폭을 쓴다. 설정 행 패턴(1fr auto)과
  * 2열 그리드(계정 기록·숫자세트)가 남는 폭을 스스로 소화하므로 측정 폭 캡을 두지 않는다.
  */
+
+/* =========================================================================
+   구독 결제 전용 페이지 (/billing) — 시안 재현. 색·간격은 전부 토큰 매핑.
+   ========================================================================= */
+@keyframes billing-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 헤더: 제목/서브카피 + 우측 상태 배지 */
+.billing-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.billing-hero__copy h1 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.billing-hero__copy p {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.billing-hero__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.billing-hero__status-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+}
+
+.billing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.billing-status__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.billing-status--free {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  border-color: var(--color-border-subtle);
+}
+
+.billing-status--pro {
+  background: var(--color-long-muted);
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+}
+
+.billing-status--failed {
+  background: var(--color-danger-muted);
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
+}
+
+/* 결제 실패 배너 */
+.billing-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: var(--space-md);
+  padding: var(--space-md) 18px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+  border-radius: var(--radius);
+  background: var(--color-danger-muted);
+  animation: billing-pop 260ms ease;
+}
+
+.billing-banner__icon {
+  display: flex;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+  color: var(--color-danger);
+}
+
+.billing-banner__body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.billing-banner__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-danger);
+}
+
+.billing-banner__text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.billing-banner__retry {
+  flex: none;
+  min-height: 38px;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* 패널 머리말 */
+.billing-panel-head {
+  margin-bottom: var(--space-md);
+}
+
+.billing-panel-head p {
+  margin: 10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 플랜 카드 확장(기존 .my-page-plan-card 컨테이너 재사용 + 상세 요소 추가) */
+.billing-plan-card {
+  gap: var(--space-md);
+}
+
+.billing-plan-card--annual {
+  position: relative;
+}
+
+.billing-plan-card__badge {
+  position: absolute;
+  top: -11px;
+  left: 20px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.billing-plan-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.billing-plan-card__code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.billing-plan-card__code--accent {
+  color: var(--color-primary);
+}
+
+.billing-plan-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-mono);
+}
+
+.billing-plan-card__amount {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.billing-plan-card__unit {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.billing-plan-card__strike {
+  margin-left: var(--space-xs);
+  font-size: 12px;
+  color: var(--color-text-dim);
+  text-decoration: line-through;
+}
+
+.billing-plan-card__desc {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  min-height: 2.6em;
+}
+
+/* Pro 혜택 목록 */
+.billing-benefits-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.billing-benefits-title {
+  margin: 0 0 12px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.billing-benefits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px var(--space-lg);
+}
+
+.billing-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.billing-benefit__check {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-long);
+}
+
+.billing-tax-note {
+  margin-top: var(--space-md);
+}
+
+/* 구독 관리(Pro): 현재 플랜 하이라이트 행 */
+.billing-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: 20px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-primary-muted);
+}
+
+.billing-current__info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.billing-current__name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.billing-current__name {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.billing-current__badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-long-muted);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
+}
+
+.billing-current__body {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.billing-current__renews {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+}
+
+.billing-current__manage {
+  flex: none;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* 보조 액션(영수증 / 결제 수단) */
+.billing-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: var(--space-md);
+}
+
+.billing-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.billing-action:hover:not(:disabled) {
+  border-color: var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.billing-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.billing-action__icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+/* 해지 안내 행 */
+.billing-cancel-row {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.billing-cancel-note {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  line-height: 1.5;
+}
+
+.billing-cancel-btn {
+  padding: 0 18px;
+  min-height: 38px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.billing-cancel-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+  color: var(--color-danger);
+}
+
+.billing-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 결제 완료 화면 */
+.billing-success {
+  padding: calc(var(--space-xl) + var(--space-md)) var(--space-lg);
+  text-align: center;
+}
+
+.billing-success__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-long-muted);
+  border: 1px solid color-mix(in srgb, var(--color-success) 40%, transparent);
+  color: var(--color-success);
+}
+
+.my-page-panel h2.billing-success__title {
+  padding-left: 0;
+  border-left: none;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.billing-success__body {
+  margin: 12px auto 0;
+  max-width: 44ch;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.billing-summary {
+  display: inline-grid;
+  gap: 6px;
+  margin: var(--space-lg) auto 0;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-bg-elevated);
+  text-align: left;
+  font-family: var(--font-mono);
+}
+
+.billing-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  font-size: var(--font-size-sm);
+}
+
+.billing-summary__label {
+  color: var(--color-text-dim);
+}
+
+.billing-cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.billing-cta__primary,
+.billing-cta__ghost {
+  width: auto;
+  padding: 0 var(--space-lg);
+}
+
+.billing-message {
+  margin-top: var(--space-md);
+}
+
+@media (max-width: 620px) {
+  .billing-benefits,
+  .billing-actions {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1199,26 +1199,77 @@ html[data-zone='about'] body {
   gap: 0;
 }
 
-/* 신원 헤더: 아래 설정 목록과 구분선으로 분리해 "누구"와 "설정"의 위계를 만든다. */
+/* 프로필 + 구독 클러스터 + 로그아웃을 담는 상단 행. 아래 연동 로그인과 구분선으로 위계를 만든다. */
+.my-page-account-hub__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-lg);
+  align-items: center;
+  padding-bottom: var(--space-md);
+}
+
+/* 신원 헤더: 왼쪽 프로필, 오른쪽 끝 구독 관리 클러스터. */
 .my-page-account-hub__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  padding-bottom: var(--space-md);
+  min-width: 0;
 }
 
-/* 로그아웃: 파괴적이지 않은 보조 동작이라 조용한 톤으로 낮춘다. */
-.my-page-signout.btn {
+/* 구독 관리 클러스터: 파란 카드 대신 dim 결제일 + ghost 버튼으로 존재감을 낮춘다. */
+.my-page-billing-cluster {
+  display: grid;
+  gap: var(--space-xs);
+  justify-items: end;
+  flex: none;
+  margin-left: auto;
+}
+
+.my-page-billing-cluster__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.my-page-billing-cluster p.my-page-billing-cluster__renews {
+  margin: 0;
+  color: var(--color-text-dim);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.my-page-billing-cluster .btn {
+  width: auto;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 14px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  flex: none;
+}
+
+/* 로그아웃: 버튼이 아닌 밑줄 텍스트 링크 — 구독 관리(버튼)와 시각적으로 분리한다. */
+.my-page-signout {
   width: auto;
   min-height: 34px;
   padding: 0 var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }
 
-.my-page-signout.btn:hover,
-.my-page-signout.btn:focus-visible {
+.my-page-signout:hover,
+.my-page-signout:focus-visible {
   color: var(--color-text);
 }
 
@@ -1242,77 +1293,6 @@ html[data-zone='about'] body {
   align-items: center;
   gap: var(--space-xs);
   min-width: 0;
-}
-
-.my-page-account-hub__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
-}
-
-/*
- * Pro 사용자는 '구독'이 [구독 관리] 버튼 하나뿐이라 세로로 쌓으면 카드 오른쪽에
- * 큰 여백이 남는다. 프로필+구독을 왼쪽 열, 연동 로그인을 오른쪽 열로 묶어 두 열
- * 높이를 맞추고 가로 폭을 채운다. Free 사용자는 '구독' 자리에 요금제 카드(가로 2열)
- * 업그레이드 패널이 떠서 폭을 다 써야 하므로 이 2단을 적용하지 않고 세로를 유지한다.
- */
-.my-page-account-hub--split {
-  grid-template-columns: 1fr 1.15fr;
-  grid-template-areas:
-    'identity logins'
-    'billing  logins';
-  column-gap: var(--space-lg);
-  align-items: start;
-}
-
-.my-page-account-hub--split .my-page-account-hub__head {
-  grid-area: identity;
-}
-
-.my-page-account-hub--split .my-page-account-hub__billing {
-  grid-area: billing;
-}
-
-.my-page-account-hub--split .my-page-account-hub__logins {
-  grid-area: logins;
-  /* 세로 스택용 위쪽 구분선 대신, 두 열 사이 세로 구분선으로 바꾼다. */
-  border-top: 0;
-  border-left: 1px solid var(--color-border-subtle);
-  padding-top: 0;
-  padding-left: var(--space-lg);
-}
-
-/*
- * 2단의 오른쪽 열은 좁아서, 전체폭용 고정폭 행(20px 12rem 5.5rem 7rem)이 열을 넘친다.
- * 2단이 실제로 켜지는 폭(>700px)에서만 이름 칸을 유연(1fr)하게 줄여 열 폭에 맞춘다.
- * (좁은 화면에선 2단이 세로로 접히므로 전체폭용 고정폭 규칙을 그대로 쓴다.)
- */
-@media (min-width: 701px) {
-  .my-page-account-hub--split .my-page-account-hub__logins .my-page-linked-row {
-    /* 이름만 유연(1fr)하게 줄이고 상태·버튼은 고정폭으로 둔다. 고정폭이라야
-       두 행의 상태·버튼 칸이 같은 열 위치에 와서 세로축 정렬이 유지된다. */
-    grid-template-columns: 20px minmax(0, 1fr) 5.5rem 7rem;
-    justify-content: normal;
-  }
-}
-
-/* 좁은 화면에서는 2단을 다시 세로 스택으로 접는다(가로 구분선 복원). */
-@media (max-width: 700px) {
-  .my-page-account-hub--split {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'identity'
-      'billing'
-      'logins';
-    column-gap: 0;
-  }
-
-  .my-page-account-hub--split .my-page-account-hub__logins {
-    border-top: 1px solid var(--color-border-subtle);
-    border-left: 0;
-    padding-top: var(--space-md);
-    padding-left: 0;
-  }
 }
 
 /*
@@ -1399,13 +1379,6 @@ html[data-zone='about'] body {
   max-width: 26rem;
 }
 
-.my-page-account-hub__billing .my-page-billing-status-card {
-  margin-top: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-
 .my-page-account-hub__billing .my-page-billing-free-headline {
   margin-top: 0;
 }
@@ -1425,14 +1398,11 @@ html[data-zone='about'] body {
 }
 
 /*
- * 이름·상태·액션 열을 모두 고정 너비로 두고 grid를 왼쪽 정렬(justify-content: start)한다.
- * 이름을 1fr로 늘리면 남는 공간을 전부 먹어 이름과 상태 사이가 뻥 뚫린다. 고정폭이라야
- * (1) 내용이 왼쪽에 촘촘히 모이고 남는 여백은 오른쪽 끝으로 가며 (2) 행마다 버튼이 같은
- * 열 위치에 와서 세로축 정렬이 유지된다.
+ * 이름 칸만 유연(1fr)하게 늘리고 상태·액션은 고정폭으로 둔다. 고정폭이라야
+ * 두 행의 상태·버튼 칸이 같은 열 위치에 와서 세로축 정렬이 유지된다(v3 전폭 블록).
  */
 .my-page-account-hub__logins .my-page-linked-row {
-  grid-template-columns: 20px 12rem 5.5rem 7rem;
-  justify-content: start;
+  grid-template-columns: 20px minmax(0, 1fr) 5.5rem 7rem;
   gap: var(--space-sm) var(--space-md);
   min-height: 44px;
   padding: var(--space-sm) var(--space-md);
@@ -2450,7 +2420,9 @@ html[data-zone='about'] body {
   font-weight: 700;
 }
 
-.records-summary-table--snapshot .records-summary-values strong {
+/* "라벨 왼쪽 · 숫자 오른쪽" — 첫 열(계좌평가금)은 왼쪽, 나머지 숫자 열은 헤더·값 모두 오른쪽. */
+.records-summary-table--snapshot .records-summary-head span:nth-child(n + 2),
+.records-summary-table--snapshot .records-summary-values strong:nth-child(n + 2) {
   text-align: right;
 }
 
@@ -2517,144 +2489,139 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
-.my-page-preference-block {
+/*
+ * 환경설정 "설정 행" 패턴: 왼쪽 제목+설명, 오른쪽 끝 컨트롤.
+ * 행 사이는 구분선 하나 — 카드 중첩 없이 공통 왼쪽 정렬선을 공유한다.
+ */
+.my-page-setting-lines {
+  display: grid;
+  gap: 0;
   margin-top: var(--space-md);
-  padding-top: var(--space-md);
+}
+
+.my-page-setting-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-lg);
+  align-items: center;
+  padding: var(--space-md) 0;
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.my-page-panel > .my-page-preference-block:first-of-type {
-  margin-top: var(--space-md);
-  padding-top: 0;
-  border-top: 0;
+/* 컨트롤이 여러 줄인 행(자동 스냅샷)은 상단 기준으로 정렬한다. */
+.my-page-setting-line--top {
+  align-items: start;
 }
 
-.my-page-preference-block h3 {
+/* 마지막 행은 패널 자체 패딩과 겹쳐 바닥 리듬이 무너지지 않도록 하단 패딩을 없앤다. */
+.my-page-setting-line:last-child {
+  padding-bottom: 0;
+}
+
+.my-page-setting-line__copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+
+.my-page-setting-line__copy h3 {
   margin: 0;
   color: var(--color-text);
   font-size: var(--font-size-base);
 }
 
-.my-page-number-sets {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.my-page-number-set-usage {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-sm);
-}
-
-.my-page-number-set-usage-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-xs) var(--space-sm);
-  align-items: center;
-  padding: var(--space-md);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-2);
-}
-
-.my-page-number-set-usage-card span {
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-}
-
-.my-page-number-set-usage-card strong {
-  color: var(--color-text-dim);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.my-page-number-set-usage-card .btn {
-  grid-column: 1 / -1;
-  min-height: 32px;
-}
-
-.my-page-number-set-list {
-  display: grid;
-  gap: var(--space-sm);
+.my-page-setting-line__copy p {
   margin: 0;
-  padding: 0;
-  list-style: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
 }
 
-.my-page-number-set-row {
+.my-page-setting-line__control {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+/* 행 제목이 라벨 역할을 하므로 PresetSelect 자체 라벨은 숨긴다(select에 aria-label 있음). */
+.my-page-setting-line .preset-select__label {
+  display: none;
+}
+
+.my-page-setting-line .preset-select__control {
+  width: 176px;
+  max-width: 100%;
+  min-height: 34px;
+  height: 34px;
+  border-color: var(--color-border);
+  background: var(--color-bg);
+}
+
+/* 자동 스냅샷 행의 오른쪽 컨트롤 묶음: [지역|시각] 위, [상태 정보|토글] 아래. */
+.my-page-automation-control {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: var(--space-sm);
-  align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-2);
+  width: 360px;
+  max-width: 100%;
 }
 
-.my-page-number-set-main {
+.my-page-automation-fields {
   display: grid;
-  gap: var(--space-xs);
+  grid-template-columns: 176px 176px;
+  gap: var(--space-sm);
+  align-items: end;
+}
+
+.my-page-automation-fields label {
+  display: grid;
+  gap: 6px;
   min-width: 0;
 }
 
-.my-page-number-set-main input {
-  min-width: 0;
-  min-height: 32px;
-  height: 32px;
+.my-page-automation-fields label > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.my-page-automation-fields select,
+.my-page-automation-fields input {
+  width: 100%;
+  min-height: 34px;
+  height: 34px;
   padding: 0 var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg);
   color: var(--color-text);
+  font-size: var(--font-size-sm);
 }
 
-.my-page-number-set-main input:focus {
+.my-page-automation-fields select:focus-visible,
+.my-page-automation-fields input:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-.my-page-number-set-main span {
-  color: var(--color-text-dim);
-  font-size: 11px;
-}
-
-.my-page-number-set-active {
-  padding: 4px 7px;
-  border: 1px solid color-mix(in srgb, var(--color-success) 42%, transparent);
-  border-radius: 999px;
-  color: var(--color-success);
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.my-page-number-set-actions {
+.my-page-automation-status {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
 }
 
-.my-page-number-set-actions .btn {
-  min-height: 32px;
-  height: 32px;
-  width: auto;
-  padding-inline: var(--space-sm);
-}
-
-.my-page-automation-form {
+.my-page-automation-status-meta {
   display: grid;
-  grid-template-columns: minmax(10rem, 1.2fr) minmax(10rem, 1fr) 8rem;
-  gap: var(--space-sm);
-  align-items: end;
-  margin-top: var(--space-sm);
+  gap: 2px;
+  min-width: 0;
 }
 
-.my-page-automation-form .my-page-field {
-  margin-top: 0;
+.my-page-automation-status-meta p {
+  margin: 0;
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
 }
 
-.my-page-automation-form input,
 .my-page-set-password-form input {
   min-height: 34px;
   height: 34px;
@@ -2665,30 +2632,228 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
-.my-page-automation-form input:focus,
 .my-page-set-password-form input:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-.my-page-automation-actions {
-  grid-column: 1 / -1;
-  justify-content: flex-end;
-  margin-top: 0;
+/* 온/오프 토글 스위치 — 채워진 버튼(저장처럼 보임)이 아니라 상태임을 드러낸다. */
+.toggle-switch {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
 }
 
-.my-page-automation-actions .btn {
-  width: auto;
-  min-height: 34px;
-  height: 34px;
-  padding-inline: var(--space-md);
-  white-space: nowrap;
+.toggle-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.my-page-automation-meta {
+.toggle-switch__label {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.toggle-switch__track {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--color-surface-3);
+  transition: background 0.15s ease;
+}
+
+.toggle-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: left 0.15s ease;
+}
+
+.toggle-switch input:checked ~ .toggle-switch__track {
+  background: var(--color-primary);
+}
+
+.toggle-switch input:checked ~ .toggle-switch__track .toggle-switch__knob {
+  left: 18px;
+}
+
+.toggle-switch input:focus-visible ~ .toggle-switch__track {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.toggle-switch input:disabled ~ .toggle-switch__label,
+.toggle-switch input:disabled ~ .toggle-switch__track {
+  opacity: 0.55;
+}
+
+/* 아이콘 전용 사각 버튼(상세보기·삭제·추가). */
+.my-page-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.my-page-icon-btn:hover:not(:disabled),
+.my-page-icon-btn:focus-visible {
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.my-page-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.my-page-icon-btn--sm {
+  width: 28px;
+  height: 28px;
+}
+
+/* 숫자세트: 위치(이 기기/클라우드)별 2열 그룹 카드. */
+.my-page-number-set-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  align-items: start;
+  margin-top: var(--space-md);
+}
+
+.my-page-number-set-group {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+}
+
+.my-page-number-set-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.my-page-number-set-group-head > span {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.my-page-number-set-group-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.my-page-number-set-group-meta strong {
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.my-page-number-set-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-page-number-set-row {
+  display: grid;
+  gap: 6px;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+
+.my-page-number-set-row-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.my-page-number-set-row-main input {
+  min-width: 0;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.my-page-number-set-row-main input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.my-page-number-set-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* 상세보기 펼침: 세트 기준값 미니 그리드. */
+.my-page-number-set-detail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.my-page-number-set-detail > div {
   display: grid;
   gap: 2px;
-  margin-top: var(--space-xs);
+  min-width: 0;
+}
+
+.my-page-number-set-detail span {
+  color: var(--color-text-dim);
+  font-size: var(--font-size-xs);
+}
+
+.my-page-number-set-detail strong {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.my-page-number-sets .my-page-field-help {
+  margin-top: var(--space-sm);
 }
 
 /* 회원 탈퇴: 요즘 앱들처럼 페이지 맨 아래 작고 조용하게 — 파괴적 행동이라 눈에 안 띄게 */
@@ -2899,7 +3064,7 @@ html[data-zone='about'] body {
 
   .my-page-nav {
     position: static;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .my-page-nav a {
@@ -2912,8 +3077,13 @@ html[data-zone='about'] body {
     align-items: stretch;
   }
 
-  .my-page-account-hub__grid {
+  .my-page-account-hub__top {
     grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .my-page-account-hub__top > .my-page-signout {
+    justify-self: start;
   }
 
   .my-page-account-hub__head {
@@ -2921,8 +3091,9 @@ html[data-zone='about'] body {
     align-items: stretch;
   }
 
-  .my-page-account-hub__head > .btn {
-    align-self: flex-start;
+  .my-page-billing-cluster {
+    justify-items: start;
+    margin-left: 0;
   }
 
   .my-page-storage-row {
@@ -2943,25 +3114,27 @@ html[data-zone='about'] body {
     max-width: none;
   }
 
-  .my-page-automation-form,
-  .my-page-number-set-usage,
-  .my-page-number-set-row {
+  /* 좁은 폭: 설정 행은 세로로 접고 컨트롤을 왼쪽 정렬선에 맞춘다. */
+  .my-page-setting-line {
     grid-template-columns: 1fr;
   }
 
-  .my-page-number-set-actions {
-    justify-content: stretch;
+  .my-page-setting-line__control {
+    justify-content: flex-start;
   }
 
-  .my-page-number-set-actions .btn {
-    flex: 1 1 6rem;
+  .my-page-automation-control {
+    width: 100%;
   }
 
-  .my-page-automation-actions {
-    justify-content: stretch;
+  .my-page-automation-fields {
+    grid-template-columns: 1fr;
   }
 
-  .my-page-automation-actions .btn,
+  .my-page-number-set-groups {
+    grid-template-columns: 1fr;
+  }
+
   .records-summary-link {
     width: 100%;
   }
@@ -3040,24 +3213,7 @@ html[data-zone='about'] body {
   }
 }
 
-/* MyPage 폭 전략: ② 패널 측정 폭 캡, ③ 액션 행 밴드 캡 */
-.my-page-console > .my-page-panel {
-  max-width: var(--mypage-panel-max);
-}
-.my-page-console > .my-page-panel:has(.my-page-account-hub--split),
-.my-page-console > .my-page-panel:has(.my-page-plans) {
-  max-width: none;
-}
-.my-page-linked-row,
-.my-page-number-set-row,
-.my-page-storage-row {
-  max-width: var(--mypage-row-max);
-}
-.my-page-automation-form:has(.my-page-field) {
-  max-width: var(--mypage-panel-max);
-}
-@media (min-width: 701px) {
-  .my-page-account-hub--split .my-page-account-hub__logins .my-page-linked-row {
-    max-width: none;
-  }
-}
+/*
+ * MyPage 폭 전략(v3): 패널은 콘솔 전폭을 쓴다. 설정 행 패턴(1fr auto)과
+ * 2열 그리드(계정 기록·숫자세트)가 남는 폭을 스스로 소화하므로 측정 폭 캡을 두지 않는다.
+ */

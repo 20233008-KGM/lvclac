@@ -317,6 +317,8 @@ export interface Messages {
     autoSnapshotError: string
     autoSnapshotNextRun: string
     autoSnapshotLastRun: string
+    autoSnapshotRegionLabel: string
+    toggleUseLabel: string
     navLabel: string
     navAccount: string
     navData: string
@@ -342,6 +344,11 @@ export interface Messages {
     selectNumberSet: string
     activeNumberSet: string
     numberSetNamePlaceholder: string
+    numberSetDetails: string
+    numberSetDetailEquity: string
+    numberSetDetailPrice: string
+    numberSetDetailLeverage: string
+    numberSetDetailLiquidation: string
     numberSetLimitReached: string
     numberSetLoginRequired: string
     numberSetError: string

@@ -207,7 +207,6 @@ describe('AccountRecordsSummaryPanel', () => {
         recordsCopy={en.accountRecords}
         loading={false}
         error={null}
-        notice={null}
         latestSnapshot={snapshotRecord()}
         recentOrders={[
           orderRecord('order-1', 280_000),
@@ -218,9 +217,6 @@ describe('AccountRecordsSummaryPanel', () => {
           orderRecord('order-6', 276_000),
         ]}
         archiveHref="/records"
-        autoSaveEnabled={true}
-        autoSaveBusy={false}
-        onAutoSaveChange={vi.fn()}
         onRetry={vi.fn()}
       />,
     )

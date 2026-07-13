@@ -40,8 +40,10 @@ import {
 import { authErrorMessage } from './auth/authMessages'
 import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
+import { calculateEvaluate } from '../calc/leverage'
 import { BillingPanel } from './billing/BillingPanel'
 import { PresetSelect } from './PresetSelect'
+import { ToggleSwitch } from './ToggleSwitch'
 import {
   readPreferredSnapshotTimeZone,
   readPreferredRegion,
@@ -327,26 +329,18 @@ export function AccountRecordsSummaryPanel({
   recordsCopy,
   loading,
   error,
-  notice,
   latestSnapshot,
   recentOrders,
   archiveHref,
-  autoSaveEnabled,
-  autoSaveBusy,
-  onAutoSaveChange,
   onRetry,
 }: {
   copy: MyPageCopy
   recordsCopy: AccountRecordsCopy
   loading: boolean
   error: string | null
-  notice: string | null
   latestSnapshot: AccountSnapshotRecord | null
   recentOrders: OrderHistoryRecord[]
   archiveHref: string
-  autoSaveEnabled: boolean
-  autoSaveBusy: boolean
-  onAutoSaveChange: (enabled: boolean) => void
   onRetry: () => void
 }) {
   const recentOrderCount =
@@ -363,25 +357,12 @@ export function AccountRecordsSummaryPanel({
       <div className="my-page-panel-head">
         <div>
           <h2 id="my-page-records-summary-title">{copy.recordsSummaryTitle}</h2>
-          <p>{copy.storageBody}</p>
         </div>
         <a className="records-summary-link" href={archiveHref}>
           {copy.recordsArchiveLink}
         </a>
       </div>
 
-      <label className="my-page-toggle records-summary-toggle">
-        <input
-          type="checkbox"
-          checked={autoSaveEnabled}
-          disabled={autoSaveBusy}
-          onChange={(event) => onAutoSaveChange(event.currentTarget.checked)}
-        />
-        <span>{copy.autoSaveOrderHistoryLabel}</span>
-      </label>
-      <p className="my-page-field-help">{copy.autoSaveOrderHistoryHint}</p>
-
-      {notice && <p className="account-records-notice" role="status">{notice}</p>}
       {error && (
         <div className="account-records-error" role="alert">
           <span>{error}</span>
@@ -426,6 +407,11 @@ function suggestedBrowserTimeZone(): string {
   }
 }
 
+/**
+ * 계좌스냅샷 자동 저장 설정 행. 지역(=시간대) + 스냅샷 시각 + 사용 토글로 구성한다.
+ * 지역이 시간대를 결정하므로 raw 시간대 입력과 규칙 이름 입력은 두지 않고,
+ * 토글 ON이 곧 규칙 저장, OFF가 규칙 해제다. 켜진 상태에서 지역·시각을 바꾸면 즉시 재저장한다.
+ */
 export function AccountSnapshotAutomationPanel({
   copy,
   isPro,
@@ -433,7 +419,10 @@ export function AccountSnapshotAutomationPanel({
   settings,
   busy = false,
   notice = null,
-  browserTimeZone,
+  regions,
+  region,
+  timeZone,
+  onRegionChange,
   onSave,
   onDisable,
 }: {
@@ -443,247 +432,390 @@ export function AccountSnapshotAutomationPanel({
   settings: AccountSnapshotAutomationSettings | null
   busy?: boolean
   notice?: string | null
-  browserTimeZone: string
+  regions: Record<WelcomeRegion, string>
+  region: WelcomeRegion | null
+  /** 지역에서 파생된 IANA 시간대 — 저장 시 규칙의 timeZone으로 쓴다. */
+  timeZone: string
+  onRegionChange: (region: WelcomeRegion) => void
   onSave: (settings: AccountSnapshotAutomationSettingsInput) => void
   onDisable: () => void
 }) {
-  const [label, setLabel] = useState(settings?.label ?? copy.autoSnapshotDefaultLabel)
-  const [timeZone, setTimeZone] = useState(settings?.timeZone ?? browserTimeZone)
   const [timeOfDay, setTimeOfDay] = useState(settings?.timeOfDay ?? '16:00')
   const canEnable = isPro && hasCloudInput
+  const enabled = settings?.enabled ?? false
+  const ruleLabel = settings?.label?.trim() ? settings.label : copy.autoSnapshotDefaultLabel
+
+  const handleToggle = (next: boolean) => {
+    if (busy) return
+    if (next) {
+      if (!canEnable) return
+      onSave({ enabled: true, label: ruleLabel, timeZone, timeOfDay })
+    } else {
+      onDisable()
+    }
+  }
+
+  const handleTimeChange = (next: string) => {
+    setTimeOfDay(next)
+    if (enabled && canEnable && !busy && next) {
+      onSave({ enabled: true, label: ruleLabel, timeZone, timeOfDay: next })
+    }
+  }
+
+  const handleRegionChange = (next: WelcomeRegion) => {
+    onRegionChange(next)
+    if (enabled && canEnable && !busy) {
+      onSave({ enabled: true, label: ruleLabel, timeZone: regionToTimeZone(next), timeOfDay })
+    }
+  }
 
   return (
-    <section className="my-page-preference-block" aria-labelledby="auto-snapshot-title">
-      <div className="my-page-panel-head">
-        <div>
-          <h3 id="auto-snapshot-title">{copy.autoSnapshotTitle}</h3>
-          <p>{copy.autoSnapshotBody}</p>
+    <div
+      className="my-page-setting-line my-page-setting-line--top"
+      aria-labelledby="auto-snapshot-title"
+    >
+      <div className="my-page-setting-line__copy">
+        <h3 id="auto-snapshot-title">{copy.autoSnapshotTitle}</h3>
+        <p>{copy.autoSnapshotBody}</p>
+        {!isPro && <p className="my-page-alert">{copy.autoSnapshotProRequired}</p>}
+        {isPro && !hasCloudInput && (
+          <p className="my-page-alert">{copy.autoSnapshotCloudRequired}</p>
+        )}
+        {notice && <p className="my-page-form-message" role="status">{notice}</p>}
+      </div>
+      <div className="my-page-setting-line__control">
+        <div className="my-page-automation-control">
+          <div className="my-page-automation-fields">
+            <label>
+              <span>{copy.autoSnapshotRegionLabel}</span>
+              <select
+                value={region ?? ''}
+                disabled={!canEnable || busy}
+                onChange={(event) => handleRegionChange(event.target.value as WelcomeRegion)}
+              >
+                {region == null && (
+                  <option value="" disabled>
+                    {copy.regionPlaceholder}
+                  </option>
+                )}
+                {WELCOME_REGIONS.map((id) => (
+                  <option key={id} value={id}>
+                    {regions[id]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>{copy.autoSnapshotTimeOfDayLabel}</span>
+              <input
+                type="time"
+                value={timeOfDay}
+                disabled={!canEnable || busy}
+                onChange={(event) => handleTimeChange(event.currentTarget.value)}
+              />
+            </label>
+          </div>
+          <div className="my-page-automation-status">
+            <div className="my-page-automation-status-meta">
+              {settings?.nextRunAt && (
+                <p>
+                  {copy.autoSnapshotNextRun.replace(
+                    '{date}',
+                    formatSavedAtCompact(settings.nextRunAt),
+                  )}
+                </p>
+              )}
+              {settings?.lastRunAt && (
+                <p>
+                  {copy.autoSnapshotLastRun.replace(
+                    '{date}',
+                    formatSavedAtCompact(settings.lastRunAt),
+                  )}
+                </p>
+              )}
+            </div>
+            <ToggleSwitch
+              checked={enabled}
+              disabled={(!canEnable && !enabled) || busy}
+              label={copy.toggleUseLabel}
+              onChange={handleToggle}
+            />
+          </div>
         </div>
       </div>
-
-      {!isPro && <p className="my-page-alert">{copy.autoSnapshotProRequired}</p>}
-      {isPro && !hasCloudInput && (
-        <p className="my-page-alert">{copy.autoSnapshotCloudRequired}</p>
-      )}
-
-      <form
-        className="my-page-automation-form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (!canEnable || busy) return
-          onSave({ enabled: true, label, timeZone, timeOfDay })
-        }}
-      >
-        <label className="my-page-field">
-          <span>{copy.autoSnapshotLabelLabel}</span>
-          <input
-            value={label}
-            placeholder={copy.autoSnapshotLabelPlaceholder}
-            disabled={!canEnable || busy}
-            onChange={(event) => setLabel(event.currentTarget.value)}
-            required
-          />
-        </label>
-        <label className="my-page-field">
-          <span>{copy.autoSnapshotTimeZoneLabel}</span>
-          <input
-            value={timeZone}
-            disabled={!canEnable || busy}
-            onChange={(event) => setTimeZone(event.currentTarget.value)}
-            required
-          />
-        </label>
-        <label className="my-page-field">
-          <span>{copy.autoSnapshotTimeOfDayLabel}</span>
-          <input
-            type="time"
-            value={timeOfDay}
-            disabled={!canEnable || busy}
-            onChange={(event) => setTimeOfDay(event.currentTarget.value)}
-            required
-          />
-        </label>
-        <div className="my-page-actions my-page-automation-actions">
-          <button type="submit" className="btn btn-primary" disabled={!canEnable || busy}>
-            {busy ? copy.autoSnapshotSaving : copy.autoSnapshotSave}
-          </button>
-          {settings?.enabled && (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={busy}
-              onClick={onDisable}
-            >
-              {copy.autoSnapshotDisable}
-            </button>
-          )}
-        </div>
-      </form>
-
-      {(settings?.nextRunAt || settings?.lastRunAt || notice) && (
-        <div className="my-page-automation-meta">
-          {settings?.nextRunAt && (
-            <p className="my-page-field-help">
-              {copy.autoSnapshotNextRun.replace('{date}', formatSavedAtCompact(settings.nextRunAt))}
-            </p>
-          )}
-          {settings?.lastRunAt && (
-            <p className="my-page-field-help">
-              {copy.autoSnapshotLastRun.replace('{date}', formatSavedAtCompact(settings.lastRunAt))}
-            </p>
-          )}
-          {notice && <p className="my-page-form-message" role="status">{notice}</p>}
-        </div>
-      )}
-    </section>
+    </div>
   )
 }
 
+/** 숫자세트 행 상세보기(눈) 아이콘. */
+function EyeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+/** 숫자세트 행 삭제(휴지통) 아이콘. */
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+    </svg>
+  )
+}
+
+/** 숫자세트 그룹 헤더의 추가(+) 아이콘. */
+function PlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  )
+}
+
+/**
+ * 숫자세트 행: 이름은 input 직접 편집(blur/Enter 시 커밋), 액션은 상세보기 토글 + 삭제.
+ * 상세는 세트 기준값(계좌평가금·현재가)과 계산 결과(레버리지·청산가)를 미니 그리드로 펼친다.
+ */
 function NumberSetRow({
   copy,
   numberSet,
-  active,
   busy,
   onRenameNumberSet,
   onDeleteNumberSet,
-  onSelectNumberSet,
 }: {
   copy: MyPageCopy
   numberSet: CalculatorNumberSet
-  active: boolean
   busy: boolean
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
-  onSelectNumberSet: (mode: SaveStorageMode, setId: string) => void
 }) {
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
+  const [detailOpen, setDetailOpen] = useState(false)
+
+  const commitRename = () => {
+    const trimmed = titleDraft.trim()
+    if (!trimmed || trimmed === numberSet.title) return
+    onRenameNumberSet(numberSet.storageMode, numberSet.id, trimmed)
+  }
+
+  const detailMetrics = useMemo(() => {
+    if (!detailOpen) return null
+    const result = calculateEvaluate(numberSet.inputs)
+    return [
+      { label: copy.numberSetDetailEquity, value: formatNumber(numberSet.inputs.accountEval ?? null) },
+      { label: copy.numberSetDetailPrice, value: formatNumber(numberSet.inputs.currentPrice ?? null) },
+      { label: copy.numberSetDetailLeverage, value: formatLeverageValue(result.leverageRatio) },
+      { label: copy.numberSetDetailLiquidation, value: formatNumber(result.liquidationPrice) },
+    ]
+  }, [copy, detailOpen, numberSet])
 
   return (
     <li className="my-page-number-set-row">
-      <div className="my-page-number-set-main">
+      <div className="my-page-number-set-row-main">
         <input
           value={titleDraft}
           aria-label={copy.numberSetNamePlaceholder}
           placeholder={copy.numberSetNamePlaceholder}
+          title={copy.renameNumberSet}
           disabled={busy}
           onChange={(event) => setTitleDraft(event.currentTarget.value)}
+          onBlur={commitRename}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur()
+            if (event.key === 'Escape') setTitleDraft(numberSet.title)
+          }}
         />
-        <span>
-          {numberSet.storageMode === 'local' ? copy.numberSetsLocalTitle : copy.numberSetsCloudTitle}
-        </span>
+        <div className="my-page-number-set-row-actions">
+          <button
+            type="button"
+            className="my-page-icon-btn"
+            title={copy.numberSetDetails}
+            aria-label={copy.numberSetDetails}
+            aria-expanded={detailOpen}
+            onClick={() => setDetailOpen((open) => !open)}
+          >
+            <EyeIcon />
+          </button>
+          <button
+            type="button"
+            className="my-page-icon-btn"
+            title={copy.deleteNumberSet}
+            aria-label={copy.deleteNumberSet}
+            disabled={busy}
+            onClick={() => onDeleteNumberSet(numberSet.storageMode, numberSet.id)}
+          >
+            <TrashIcon />
+          </button>
+        </div>
       </div>
-      {active && <span className="my-page-number-set-active">{copy.activeNumberSet}</span>}
-      <div className="my-page-number-set-actions">
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={busy || titleDraft.trim() === numberSet.title}
-          onClick={() => onRenameNumberSet(numberSet.storageMode, numberSet.id, titleDraft)}
-        >
-          {copy.renameNumberSet}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={busy || active}
-          onClick={() => onSelectNumberSet(numberSet.storageMode, numberSet.id)}
-        >
-          {active ? copy.activeNumberSet : copy.selectNumberSet}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={busy}
-          onClick={() => onDeleteNumberSet(numberSet.storageMode, numberSet.id)}
-        >
-          {copy.deleteNumberSet}
-        </button>
-      </div>
+      {detailOpen && detailMetrics && (
+        <div className="my-page-number-set-detail">
+          {detailMetrics.map((metric) => (
+            <div key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+            </div>
+          ))}
+        </div>
+      )}
     </li>
   )
 }
 
+/** 위치(이 기기/클라우드)별 숫자세트 그룹 카드: 헤더(이름 + n/10 + 추가 아이콘) + 세트 행 리스트. */
+function NumberSetGroup({
+  copy,
+  title,
+  addLabel,
+  mode,
+  sets,
+  limit,
+  busy,
+  onCreateNumberSet,
+  onRenameNumberSet,
+  onDeleteNumberSet,
+}: {
+  copy: MyPageCopy
+  title: string
+  addLabel: string
+  mode: SaveStorageMode
+  sets: CalculatorNumberSet[]
+  limit: number
+  busy: boolean
+  onCreateNumberSet: (mode: SaveStorageMode) => void
+  onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
+}) {
+  return (
+    <div className="my-page-number-set-group">
+      <div className="my-page-number-set-group-head">
+        <span>{title}</span>
+        <div className="my-page-number-set-group-meta">
+          <strong>
+            {sets.length} / {limit}
+          </strong>
+          <button
+            type="button"
+            className="my-page-icon-btn my-page-icon-btn--sm"
+            title={addLabel}
+            aria-label={addLabel}
+            disabled={busy || sets.length >= limit}
+            onClick={() => onCreateNumberSet(mode)}
+          >
+            <PlusIcon />
+          </button>
+        </div>
+      </div>
+      <ul className="my-page-number-set-list">
+        {sets.map((numberSet) => (
+          <NumberSetRow
+            key={`${numberSet.storageMode}:${numberSet.id}:${numberSet.title}`}
+            copy={copy}
+            numberSet={numberSet}
+            busy={busy}
+            onRenameNumberSet={onRenameNumberSet}
+            onDeleteNumberSet={onDeleteNumberSet}
+          />
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** 숫자세트 독립 패널: 환경설정과 분리된 최상위 섹션, 위치별 2열 그룹 카드. */
 export function NumberSetPreferencesPanel({
   copy,
   localNumberSets,
   cloudNumberSets,
-  activeNumberSetId,
   numberSetLimits,
   busy,
   notice,
   onCreateNumberSet,
   onRenameNumberSet,
   onDeleteNumberSet,
-  onSelectNumberSet,
 }: {
   copy: MyPageCopy
   localNumberSets: CalculatorNumberSet[]
   cloudNumberSets: CalculatorNumberSet[]
-  activeNumberSetId: string | null
   numberSetLimits: Record<SaveStorageMode, number>
   busy: boolean
   notice: string | null
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
-  onSelectNumberSet: (mode: SaveStorageMode, setId: string) => void
 }) {
-  const allNumberSets = [...localNumberSets, ...cloudNumberSets]
-
   return (
-    <section className="my-page-preference-block my-page-number-sets">
-      <div className="my-page-panel-head">
-        <div>
-          <h3>{copy.numberSetsTitle}</h3>
-          <p>{copy.numberSetsBody}</p>
-        </div>
+    <section
+      id="my-page-number-sets"
+      className="my-page-panel my-page-number-sets"
+      aria-labelledby="my-page-number-sets-title"
+    >
+      <div>
+        <h2 id="my-page-number-sets-title">{copy.numberSetsTitle}</h2>
+        <p>{copy.numberSetsBody}</p>
       </div>
-
-      <div className="my-page-number-set-usage">
-        <div className="my-page-number-set-usage-card">
-          <span>{copy.numberSetsLocalTitle}</span>
-          <strong>
-            {localNumberSets.length} / {numberSetLimits.local}
-          </strong>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            disabled={busy || localNumberSets.length >= numberSetLimits.local}
-            onClick={() => onCreateNumberSet('local')}
-          >
-            {copy.addLocalNumberSet}
-          </button>
-        </div>
-        <div className="my-page-number-set-usage-card">
-          <span>{copy.numberSetsCloudTitle}</span>
-          <strong>
-            {cloudNumberSets.length} / {numberSetLimits.cloud}
-          </strong>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            disabled={busy || cloudNumberSets.length >= numberSetLimits.cloud}
-            onClick={() => onCreateNumberSet('cloud')}
-          >
-            {copy.addCloudNumberSet}
-          </button>
-        </div>
+      <div className="my-page-number-set-groups">
+        <NumberSetGroup
+          copy={copy}
+          title={copy.numberSetsLocalTitle}
+          addLabel={copy.addLocalNumberSet}
+          mode="local"
+          sets={localNumberSets}
+          limit={numberSetLimits.local}
+          busy={busy}
+          onCreateNumberSet={onCreateNumberSet}
+          onRenameNumberSet={onRenameNumberSet}
+          onDeleteNumberSet={onDeleteNumberSet}
+        />
+        <NumberSetGroup
+          copy={copy}
+          title={copy.numberSetsCloudTitle}
+          addLabel={copy.addCloudNumberSet}
+          mode="cloud"
+          sets={cloudNumberSets}
+          limit={numberSetLimits.cloud}
+          busy={busy}
+          onCreateNumberSet={onCreateNumberSet}
+          onRenameNumberSet={onRenameNumberSet}
+          onDeleteNumberSet={onDeleteNumberSet}
+        />
       </div>
-
-      <ul className="my-page-number-set-list">
-        {allNumberSets.map((numberSet) => (
-          <NumberSetRow
-            key={`${numberSet.storageMode}:${numberSet.id}:${numberSet.title}`}
-            copy={copy}
-            numberSet={numberSet}
-            active={activeNumberSetId === numberSet.id}
-            busy={busy}
-            onRenameNumberSet={onRenameNumberSet}
-            onDeleteNumberSet={onDeleteNumberSet}
-            onSelectNumberSet={onSelectNumberSet}
-          />
-        ))}
-      </ul>
       <p className="my-page-field-help">{copy.numberSetsLimitNote}</p>
       {notice && <p className="my-page-form-message" role="status">{notice}</p>}
     </section>
@@ -707,47 +839,6 @@ function PencilIcon() {
       <path d="M12 20h9" />
       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
     </svg>
-  )
-}
-
-/** 지역 선택 블록. 지역을 바꾸면 자동저장 스냅샷 시간대 기본값만 그 지역으로 맞춘다. */
-export function RegionPreferenceBlock({
-  copy,
-  regions,
-  region,
-  onChange,
-}: {
-  copy: MyPageCopy
-  regions: Record<WelcomeRegion, string>
-  region: WelcomeRegion | null
-  onChange: (region: WelcomeRegion) => void
-}) {
-  const selectId = 'my-page-region-select'
-  return (
-    <div className="my-page-preference-block">
-      <h3>{copy.regionTitle}</h3>
-      <p>{copy.regionBody}</p>
-      <label className="my-page-sr-only" htmlFor={selectId}>
-        {copy.regionTitle}
-      </label>
-      <select
-        id={selectId}
-        className="preset-select__control"
-        value={region ?? ''}
-        onChange={(event) => onChange(event.target.value as WelcomeRegion)}
-      >
-        {region == null && (
-          <option value="" disabled>
-            {copy.regionPlaceholder}
-          </option>
-        )}
-        {WELCOME_REGIONS.map((id) => (
-          <option key={id} value={id}>
-            {regions[id]}
-          </option>
-        ))}
-      </select>
-    </div>
   )
 }
 
@@ -875,14 +966,13 @@ export function MyPageView({
               <main className="my-page-console">
               <section
                 id="my-page-profile"
-                className={`my-page-panel my-page-account-hub${
-                  isPro ? ' my-page-account-hub--split' : ''
-                }`}
+                className="my-page-panel my-page-account-hub"
                 aria-labelledby="my-page-profile-title"
               >
                 <h2 id="my-page-profile-title" className="my-page-sr-only">
                   {copy.navAccount}
                 </h2>
+                <div className="my-page-account-hub__top">
                 <div className="my-page-account-hub__head">
                   <div className="my-page-account-hub__identity">
                     <span className="my-page-avatar" aria-hidden="true">
@@ -954,16 +1044,16 @@ export function MyPageView({
                       </span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-ghost my-page-signout"
-                    onClick={onSignOut}
-                  >
-                    {copy.signOut}
-                  </button>
+                  {isPro && billingPanel ? (
+                    <div className="my-page-account-hub__billing-cluster">{billingPanel}</div>
+                  ) : null}
+                </div>
+                <button type="button" className="my-page-signout" onClick={onSignOut}>
+                  {copy.signOut}
+                </button>
                 </div>
 
-                {billingPanel && (
+                {!isPro && billingPanel && (
                   <div className="my-page-account-hub__block my-page-account-hub__billing">
                     {billingPanel}
                   </div>
@@ -1141,12 +1231,10 @@ export function MyPage() {
   } = useAuth()
   const {
     numberSets,
-    activeNumberSetId,
     numberSetLimits,
     createNumberSet,
     renameNumberSet,
     deleteNumberSetById,
-    selectNumberSet,
   } = useCalculator()
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [identityBusy, setIdentityBusy] = useState<'link' | 'unlink' | 'setPassword' | null>(null)
@@ -1212,10 +1300,10 @@ export function MyPage() {
     writePreferredRegion(next)
     writePreferredSnapshotTimeZone(regionToTimeZone(next))
   }, [])
+  // 서버 설정이 바뀌면 remount로 시각 입력 로컬 상태를 다시 동기화한다.
+  // (지역 변경은 key에 넣지 않는다 — 편집 중인 시각이 날아가지 않도록.)
   const automationPanelKey = [
     automationSettings?.updatedAt ?? 'new',
-    automationSettings?.label ?? t.myPage.autoSnapshotDefaultLabel,
-    automationSettings?.timeZone ?? browserTimeZone,
     automationSettings?.timeOfDay ?? '16:00',
   ].join('|')
 
@@ -1550,13 +1638,6 @@ export function MyPage() {
     [deleteNumberSetById, runNumberSetAction],
   )
 
-  const handleSelectNumberSet = useCallback(
-    (mode: SaveStorageMode, setId: string) => {
-      void runNumberSetAction(() => selectNumberSet(mode, setId))
-    },
-    [runNumberSetAction, selectNumberSet],
-  )
-
   return (
     <>
       <MyPageView
@@ -1582,62 +1663,80 @@ export function MyPage() {
               recordsCopy={t.accountRecords}
               loading={recordsLoading}
               error={recordsError}
-              notice={recordsNotice}
               latestSnapshot={latestSnapshot}
               recentOrders={recentOrders}
               archiveHref={RECORDS_PATH}
-              autoSaveEnabled={user.autoSaveOrderHistory}
-              autoSaveBusy={autoSaveBusy}
-              onAutoSaveChange={handleAutoSaveOrderHistory}
               onRetry={() => void loadRecordsSummary()}
             />
           ) : null
         }
         preferencesPanel={
           user ? (
-            <section
-              id="my-page-preferences"
-              className="my-page-panel"
-              aria-labelledby="my-page-preferences-title"
-            >
-              <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
-              <RegionPreferenceBlock
-                copy={t.myPage}
-                regions={t.welcome.regions}
-                region={region}
-                onChange={handleRegionChange}
-              />
-              <div className="my-page-preference-block">
-                <h3>{t.myPage.glossaryPresetTitle}</h3>
-                <p>{t.myPage.glossaryPresetBody}</p>
-                <PresetSelect variant="inline" />
-              </div>
+            <>
+              <section
+                id="my-page-preferences"
+                className="my-page-panel"
+                aria-labelledby="my-page-preferences-title"
+              >
+                <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
+                <div className="my-page-setting-lines">
+                  <div className="my-page-setting-line">
+                    <div className="my-page-setting-line__copy">
+                      <h3>{t.myPage.glossaryPresetTitle}</h3>
+                      <p>{t.myPage.glossaryPresetBody}</p>
+                    </div>
+                    <div className="my-page-setting-line__control">
+                      <PresetSelect variant="inline" />
+                    </div>
+                  </div>
+                  <AccountSnapshotAutomationPanel
+                    key={automationPanelKey}
+                    copy={t.myPage}
+                    isPro={isPro}
+                    hasCloudInput={hasCloudInput}
+                    settings={automationSettings}
+                    busy={automationBusy}
+                    notice={automationNotice}
+                    regions={t.welcome.regions}
+                    region={region}
+                    timeZone={browserTimeZone}
+                    onRegionChange={handleRegionChange}
+                    onSave={(settings) => void handleAutomationSave(settings)}
+                    onDisable={() => void handleAutomationDisable()}
+                  />
+                  <div className="my-page-setting-line">
+                    <div className="my-page-setting-line__copy">
+                      <h3>{t.myPage.autoSaveOrderHistoryLabel}</h3>
+                      <p>{t.myPage.autoSaveOrderHistoryHint}</p>
+                      {recordsNotice && (
+                        <p className="my-page-form-message" role="status">
+                          {recordsNotice}
+                        </p>
+                      )}
+                    </div>
+                    <div className="my-page-setting-line__control">
+                      <ToggleSwitch
+                        checked={user.autoSaveOrderHistory}
+                        disabled={autoSaveBusy}
+                        label={t.myPage.toggleUseLabel}
+                        onChange={(enabled) => void handleAutoSaveOrderHistory(enabled)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
               <NumberSetPreferencesPanel
                 copy={t.myPage}
                 localNumberSets={localNumberSets}
                 cloudNumberSets={cloudNumberSets}
-                activeNumberSetId={activeNumberSetId}
                 numberSetLimits={numberSetLimits}
                 busy={numberSetBusy}
                 notice={numberSetNotice}
                 onCreateNumberSet={handleCreateNumberSet}
                 onRenameNumberSet={handleRenameNumberSet}
                 onDeleteNumberSet={handleDeleteNumberSet}
-                onSelectNumberSet={handleSelectNumberSet}
               />
-              <AccountSnapshotAutomationPanel
-                key={automationPanelKey}
-                copy={t.myPage}
-                isPro={isPro}
-                hasCloudInput={hasCloudInput}
-                settings={automationSettings}
-                busy={automationBusy}
-                notice={automationNotice}
-                browserTimeZone={browserTimeZone}
-                onSave={(settings) => void handleAutomationSave(settings)}
-                onDisable={() => void handleAutomationDisable()}
-              />
-            </section>
+            </>
           ) : null
         }
         billingPanel={user ? <BillingPanel embedded /> : null}

@@ -17,7 +17,6 @@ import { NumberStepper } from './NumberStepper'
 import {
   AccountRecordsSummaryPanel,
   AccountSnapshotAutomationPanel,
-  RegionPreferenceBlock,
   NumberSetPreferencesPanel,
 } from './MyPage'
 import { BillingPanel } from './billing/BillingPanel'
@@ -132,41 +131,35 @@ export function KitGallery() {
             recordsCopy={t.accountRecords}
             loading={false}
             error={null}
-            notice={null}
             latestSnapshot={null}
             recentOrders={[]}
             archiveHref="#"
-            autoSaveEnabled
-            autoSaveBusy={false}
-            onAutoSaveChange={noop}
             onRetry={noop}
           />
         </KitItem>
-        <KitItem name="RegionPreferenceBlock" note="환경설정·지역" width={420}>
-          <RegionPreferenceBlock copy={t.myPage} regions={t.welcome.regions} region="KR" onChange={noop} />
-        </KitItem>
-        <KitItem name="NumberSetPreferencesPanel" note="환경설정·숫자세트" width={560}>
+        <KitItem name="NumberSetPreferencesPanel" note="숫자세트 패널" width={560}>
           <NumberSetPreferencesPanel
             copy={t.myPage}
             localNumberSets={[]}
             cloudNumberSets={mockCloudSets}
-            activeNumberSetId="set-2"
             numberSetLimits={numberSetLimits}
             busy={false}
             notice={null}
             onCreateNumberSet={noop}
             onRenameNumberSet={noop}
             onDeleteNumberSet={noop}
-            onSelectNumberSet={noop}
           />
         </KitItem>
-        <KitItem name="AccountSnapshotAutomationPanel" note="마이페이지" width={540}>
+        <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·자동 스냅샷 행" width={560}>
           <AccountSnapshotAutomationPanel
             copy={t.myPage}
             isPro
             hasCloudInput
             settings={null}
-            browserTimeZone="Asia/Seoul"
+            regions={t.welcome.regions}
+            region="KR"
+            timeZone="Asia/Seoul"
+            onRegionChange={noop}
             onSave={noop}
             onDisable={noop}
           />

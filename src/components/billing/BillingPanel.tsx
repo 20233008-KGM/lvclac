@@ -147,37 +147,30 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
 
   if (embedded) {
     if (isPro) {
+      // Pro 상태는 계정 허브 프로필 행 오른쪽 끝의 조용한 클러스터로 —
+      // 파란 강조 카드 대신 dim 결제일 + ghost 버튼(2026-07-13 마이페이지 v3 핸드오프).
       return (
-        <>
-          <div
-            id="my-page-plan"
-            className="my-page-billing-status-card"
-            aria-labelledby="my-page-plan-title"
-          >
-            <p className="my-page-billing-status-card__headline" id="my-page-plan-title">
-              {copy.proHeadline}
-            </p>
-            <div className="my-page-billing-status-card__row">
-              {subscription?.currentPeriodEnd && (
-                <p className="my-page-billing-status-card__renews">
-                  {copy.renewsOn.replace(
-                    '{date}',
-                    formatDate(subscription.currentPeriodEnd, t.lang),
-                  )}
-                </p>
-              )}
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={busy !== null}
-                onClick={() => void handleManage()}
-              >
-                {busy === 'portal' ? copy.redirecting : copy.manageAction}
-              </button>
-            </div>
+        <div id="my-page-plan" className="my-page-billing-cluster" aria-label={copy.proHeadline}>
+          <div className="my-page-billing-cluster__row">
+            {subscription?.currentPeriodEnd && (
+              <p className="my-page-billing-cluster__renews">
+                {copy.renewsOn.replace(
+                  '{date}',
+                  formatDate(subscription.currentPeriodEnd, t.lang),
+                )}
+              </p>
+            )}
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={busy !== null}
+              onClick={() => void handleManage()}
+            >
+              {busy === 'portal' ? copy.redirecting : copy.manageAction}
+            </button>
           </div>
           {messageNode}
-        </>
+        </div>
       )
     }
 

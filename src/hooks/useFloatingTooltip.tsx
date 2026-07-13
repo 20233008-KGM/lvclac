@@ -255,6 +255,8 @@ export function useFloatingTooltip({
     open: mounted,
     anchorHandlers,
     focusWithinHandlers,
+    show,
+    hide,
     renderTooltip,
   }
 }

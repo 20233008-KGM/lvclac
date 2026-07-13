@@ -1162,6 +1162,8 @@ html[data-zone='about'] body {
   display: grid;
   gap: var(--space-lg);
   min-width: 0;
+  /* 본문 폭: 기존 유효 폭(~880px)에서 10% 줄임 — 불필요하게 넓다는 사용자 피드백(2026-07-13). */
+  max-width: 792px;
 }
 
 .my-page-panel {
@@ -1517,6 +1519,8 @@ html[data-zone='about'] body {
 
 .records-archive .my-page-console {
   gap: var(--space-md);
+  /* 기록 장부는 넓은 타임라인 표가 있어 마이페이지용 본문 폭 캡을 적용하지 않는다. */
+  max-width: none;
 }
 
 .records-archive-panel {

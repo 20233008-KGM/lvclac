@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { openBillingPortal, startCheckout, type BillingPlan } from '../../db/billing'
@@ -172,39 +172,10 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
       )
     }
 
+    // Free 유저: Pro 전용 기능을 "노출 후 차단"하지 않는다. 월간/연간 나열 대신
+    // Free vs Pro 비교 카드 하나로 지금 상태와 업그레이드 이득을 나란히 보여준다.
     return (
-      <>
-        <div id="my-page-plan" aria-labelledby="my-page-plan-title">
-          <p className="my-page-billing-free-headline" id="my-page-plan-title">
-            {copy.freeHeadline}
-          </p>
-          <p className="my-page-field-help">{copy.freeBody}</p>
-          <div className="my-page-plans">
-            <PlanCard
-              name={copy.monthlyName}
-              price={copy.monthlyPrice}
-              action={copy.choosePlan}
-              busyLabel={copy.redirecting}
-              busy={busy === 'monthly'}
-              disabled={busy !== null}
-              onSelect={() => void handleCheckout('monthly')}
-            />
-            <PlanCard
-              name={copy.yearlyName}
-              price={copy.yearlyPrice}
-              note={copy.yearlyNote}
-              action={copy.choosePlan}
-              busyLabel={copy.redirecting}
-              busy={busy === 'yearly'}
-              disabled={busy !== null}
-              highlighted
-              onSelect={() => void handleCheckout('yearly')}
-            />
-          </div>
-          <p className="my-page-field-help">{copy.taxNote}</p>
-        </div>
-        {messageNode}
-      </>
+      <ComparePlansCard copy={copy} upgradeHref={BILLING_PATH} message={messageNode} />
     )
   }
 
@@ -264,5 +235,124 @@ function PlanCard({
         {busy ? busyLabel : action}
       </button>
     </div>
+  )
+}
+
+/** 비교 카드 기능행의 체크(포함) 아이콘. */
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  )
+}
+
+/** 비교 카드 기능행의 X(미지원) 아이콘. */
+function CrossIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+/**
+ * Free vs Pro 비교 카드. 무료 유저에게 "지금 이용 중"(Free)과 업그레이드 이득(Pro)을
+ * 나란히 보여준다. Pro CTA는 인라인 결제 대신 전용 결제 페이지(/billing)로 이동해
+ * 월간/연간 선택과 상세를 그곳에서 처리한다.
+ */
+function ComparePlansCard({
+  copy,
+  upgradeHref,
+  message,
+}: {
+  copy: ReturnType<typeof useLanguage>['t']['myPage']['billing']
+  upgradeHref: string
+  message: ReactNode
+}) {
+  return (
+    <section
+      id="my-page-plan"
+      className="my-page-panel my-page-upgrade"
+      aria-labelledby="my-page-upgrade-title"
+    >
+      <div className="my-page-upgrade__head">
+        <h2 id="my-page-upgrade-title">{copy.freeHeadline}</h2>
+        <span className="my-page-upgrade__price-line">{copy.compareHeadPrice}</span>
+      </div>
+      <p className="my-page-upgrade__subtitle">{copy.compareSubtitle}</p>
+      <div className="my-page-compare">
+        <div className="my-page-compare-card">
+          <div className="my-page-compare-card__head">
+            <span className="my-page-compare-card__name">
+              {copy.compareFreeName}
+              <span className="my-page-compare-card__tag">{copy.compareCurrentTag}</span>
+            </span>
+            <span className="my-page-compare-card__price">{copy.comparePriceFree}</span>
+          </div>
+          <div className="my-page-compare-card__features">
+            {copy.freeFeaturesIncluded.map((feature) => (
+              <div key={feature} className="my-page-compare-feature">
+                <CheckIcon />
+                <span>{feature}</span>
+              </div>
+            ))}
+            {copy.freeFeaturesExcluded.map((feature) => (
+              <div key={feature} className="my-page-compare-feature is-excluded">
+                <CrossIcon />
+                <span>{feature}</span>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="btn btn-ghost my-page-compare-card__action" disabled>
+            {copy.currentPlanAction}
+          </button>
+        </div>
+        <div className="my-page-compare-card is-pro">
+          <div className="my-page-compare-card__head">
+            <span className="my-page-compare-card__name">{copy.compareProName}</span>
+            <span className="my-page-compare-card__price my-page-compare-card__price--pro">
+              {copy.compareProPrice}
+              <span className="my-page-compare-card__price-sub">{copy.compareProSub}</span>
+            </span>
+          </div>
+          <div className="my-page-compare-card__features">
+            {copy.proFeatures.map((feature) => (
+              <div key={feature} className="my-page-compare-feature is-pro">
+                <CheckIcon />
+                <span>{feature}</span>
+              </div>
+            ))}
+          </div>
+          <a className="btn btn-primary my-page-compare-card__action" href={upgradeHref}>
+            {copy.proCta}
+          </a>
+        </div>
+      </div>
+      <p className="my-page-field-help">{copy.taxNote}</p>
+      {message}
+    </section>
   )
 }

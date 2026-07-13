@@ -393,6 +393,20 @@ export interface Messages {
       checkoutCanceled: string
       checkoutSuccess: string
       taxNote: string
+      /** Free 마이페이지 Free vs Pro 비교 카드 (embedded && !isPro) */
+      compareHeadPrice: string
+      compareSubtitle: string
+      compareFreeName: string
+      compareCurrentTag: string
+      comparePriceFree: string
+      compareProName: string
+      compareProPrice: string
+      compareProSub: string
+      freeFeaturesIncluded: string[]
+      freeFeaturesExcluded: string[]
+      proFeatures: string[]
+      currentPlanAction: string
+      proCta: string
       /** 구독 결제 전용 페이지(/billing) */
       page: {
         /** 헤더 */

@@ -934,6 +934,10 @@ export function MyPageView({
     '#my-page-records-summary': copy.navData,
     '#my-page-preferences': copy.preferencesTitle,
   }
+  // 무료 유저에겐 계정 기록 패널을 렌더하지 않으므로, 내비에서도 '데이터' 항목을 뺀다.
+  const navItems = isPro
+    ? MY_PAGE_NAV_ITEMS
+    : MY_PAGE_NAV_ITEMS.filter((item) => item.href !== '#my-page-records-summary')
 
   return (
     <div className="my-page-shell">
@@ -972,7 +976,7 @@ export function MyPageView({
           <>
             <div className="my-page-body">
               <nav className="my-page-nav" aria-label={copy.navLabel}>
-                {MY_PAGE_NAV_ITEMS.map((item) => {
+                {navItems.map((item) => {
                   const isActive = activeNavHref === item.href
                   return (
                     <a
@@ -1214,6 +1218,9 @@ export function MyPageView({
                 )}
                 </div>
               </section>
+
+              {/* 무료 유저: 계정 허브 바로 아래 Free vs Pro 비교 카드(업그레이드 패널)를 독립 섹션으로. */}
+              {!isPro && billingPanel}
 
               {recordsSummaryPanel}
 
@@ -1672,7 +1679,7 @@ export function MyPage() {
         passwordConfirmationDraft={passwordConfirmationDraft}
         supportHref={`mailto:${CONTACT_EMAIL}`}
         recordsSummaryPanel={
-          user ? (
+          user && isPro ? (
             <AccountRecordsSummaryPanel
               copy={t.myPage}
               recordsCopy={t.accountRecords}
@@ -1704,38 +1711,44 @@ export function MyPage() {
                       <PresetSelect variant="inline" />
                     </div>
                   </div>
-                  <AccountSnapshotAutomationPanel
-                    key={automationPanelKey}
-                    copy={t.myPage}
-                    isPro={isPro}
-                    hasCloudInput={hasCloudInput}
-                    settings={automationSettings}
-                    busy={automationBusy}
-                    notice={automationNotice}
-                    timeZone={snapshotTimeZone}
-                    onTimeZoneChange={handleTimeZoneChange}
-                    onSave={(settings) => void handleAutomationSave(settings)}
-                    onDisable={() => void handleAutomationDisable()}
-                  />
-                  <div className="my-page-setting-line">
-                    <div className="my-page-setting-line__copy">
-                      <h3>{t.myPage.autoSaveOrderHistoryLabel}</h3>
-                      <p>{t.myPage.autoSaveOrderHistoryHint}</p>
-                      {recordsNotice && (
-                        <p className="my-page-form-message" role="status">
-                          {recordsNotice}
-                        </p>
-                      )}
-                    </div>
-                    <div className="my-page-setting-line__control">
-                      <ToggleSwitch
-                        checked={user.autoSaveOrderHistory}
-                        disabled={autoSaveBusy}
-                        label={t.myPage.toggleUseLabel}
-                        onChange={(enabled) => void handleAutoSaveOrderHistory(enabled)}
+                  {/* 계좌 스냅샷 자동 저장·주문 기록 자동 저장은 Pro 전용 —
+                      무료 유저에겐 "노출 후 차단" 대신 아예 렌더하지 않는다(업그레이드 패널로 일원화). */}
+                  {isPro && (
+                    <>
+                      <AccountSnapshotAutomationPanel
+                        key={automationPanelKey}
+                        copy={t.myPage}
+                        isPro={isPro}
+                        hasCloudInput={hasCloudInput}
+                        settings={automationSettings}
+                        busy={automationBusy}
+                        notice={automationNotice}
+                        timeZone={snapshotTimeZone}
+                        onTimeZoneChange={handleTimeZoneChange}
+                        onSave={(settings) => void handleAutomationSave(settings)}
+                        onDisable={() => void handleAutomationDisable()}
                       />
-                    </div>
-                  </div>
+                      <div className="my-page-setting-line">
+                        <div className="my-page-setting-line__copy">
+                          <h3>{t.myPage.autoSaveOrderHistoryLabel}</h3>
+                          <p>{t.myPage.autoSaveOrderHistoryHint}</p>
+                          {recordsNotice && (
+                            <p className="my-page-form-message" role="status">
+                              {recordsNotice}
+                            </p>
+                          )}
+                        </div>
+                        <div className="my-page-setting-line__control">
+                          <ToggleSwitch
+                            checked={user.autoSaveOrderHistory}
+                            disabled={autoSaveBusy}
+                            label={t.myPage.toggleUseLabel}
+                            onChange={(enabled) => void handleAutoSaveOrderHistory(enabled)}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
               <NumberSetPreferencesPanel

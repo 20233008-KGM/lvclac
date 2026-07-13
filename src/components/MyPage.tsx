@@ -471,9 +471,6 @@ export function AccountSnapshotAutomationPanel({
         <h3 id="auto-snapshot-title">{copy.autoSnapshotTitle}</h3>
         <p>{copy.autoSnapshotBody}</p>
         {!isPro && <p className="my-page-alert">{copy.autoSnapshotProRequired}</p>}
-        {isPro && !hasCloudInput && (
-          <p className="my-page-alert">{copy.autoSnapshotCloudRequired}</p>
-        )}
         {notice && <p className="my-page-form-message" role="status">{notice}</p>}
       </div>
       <div className="my-page-setting-line__control">
@@ -518,12 +515,19 @@ export function AccountSnapshotAutomationPanel({
                 </p>
               )}
             </div>
-            <ToggleSwitch
-              checked={enabled}
-              disabled={(!canEnable && !enabled) || busy}
-              label={copy.toggleUseLabel}
-              onChange={handleToggle}
-            />
+            <div className="my-page-automation-toggle">
+              <ToggleSwitch
+                checked={enabled}
+                disabled={(!canEnable && !enabled) || busy}
+                label={copy.toggleUseLabel}
+                onChange={handleToggle}
+              />
+              {isPro && !hasCloudInput && (
+                <span className="my-page-automation-toggle-hint">
+                  {copy.autoSnapshotCloudRequired}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

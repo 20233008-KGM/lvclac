@@ -309,7 +309,7 @@ export const en: Messages = {
     autoSnapshotTimeZoneLabel: 'Time zone',
     autoSnapshotTimeOfDayLabel: 'Snapshot time',
     autoSnapshotProRequired: 'Upgrade to Pro to enable server-side automatic snapshots.',
-    autoSnapshotCloudRequired: 'Save calculator inputs to Cloud before enabling server-side snapshots.',
+    autoSnapshotCloudRequired: 'No saved set yet',
     autoSnapshotSave: 'Save automatic snapshot rule',
     autoSnapshotSaving: 'Saving rule',
     autoSnapshotDisable: 'Turn off automatic snapshots',

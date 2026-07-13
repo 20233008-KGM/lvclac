@@ -2705,6 +2705,18 @@ html[data-zone='about'] body {
   min-width: 0;
 }
 
+/* '사용' 토글 + 그 오른쪽에 붙는 짤막한 상태 힌트(예: 아직 저장된 세트 없음). */
+.my-page-automation-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.my-page-automation-toggle-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+}
+
 .my-page-automation-status-meta p {
   margin: 0;
   color: var(--color-text-dim);

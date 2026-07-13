@@ -302,7 +302,7 @@ export const ko: Messages = {
     autoSnapshotTimeZoneLabel: '시간대',
     autoSnapshotTimeOfDayLabel: '스냅샷 시각',
     autoSnapshotProRequired: '서버 자동 스냅샷은 Pro에서 사용할 수 있습니다.',
-    autoSnapshotCloudRequired: '서버가 읽을 수 있도록 먼저 입력값을 클라우드에 저장해 주세요.',
+    autoSnapshotCloudRequired: '아직 저장된 세트가 없습니다',
     autoSnapshotSave: '자동 스냅샷 규칙 저장',
     autoSnapshotSaving: '규칙 저장 중',
     autoSnapshotDisable: '자동 스냅샷 끄기',

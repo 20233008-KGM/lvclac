@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useId,
   useRef,
@@ -16,9 +18,16 @@ import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { formatSavedAtCompact } from '../utils/format'
-import { AuthModal } from './auth/AuthModal'
-import { SnapshotProGateModal, type SnapshotProGateMode } from './SnapshotProGateModal'
 import { TooltipBody } from './TooltipBody'
+import type { SnapshotProGateMode } from './SnapshotProGateModal'
+
+// 게이트/로그인 모달은 실제로 열릴 때만 로드(코드 스플리팅 — ResultPanel과 동일 패턴).
+const AuthModal = lazy(() =>
+  import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })),
+)
+const SnapshotProGateModal = lazy(() =>
+  import('./SnapshotProGateModal').then((mod) => ({ default: mod.SnapshotProGateModal })),
+)
 
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 const DRAFT_SLOT_DRAG_TYPE = 'application/x-lvclac-draft-slot'
@@ -853,36 +862,42 @@ export function SaveDraftToggle() {
       )}
 
       {gateMode && (
-        <SnapshotProGateModal
-          mode={gateMode}
-          copy={{
-            eyebrow: t.accountRecords.snapshotGateEyebrow,
-            title:
-              gateMode === 'guest'
-                ? t.draftSave.numberSetGateGuestTitle
-                : t.draftSave.numberSetGateFreeTitle,
-            guestBody: t.draftSave.numberSetGateGuestBody,
-            freeBody: t.draftSave.numberSetGateFreeBody,
-            loginCta: t.draftSave.numberSetGateLoginCta,
-            viewPlansCta: t.draftSave.numberSetGateViewPlansCta,
-            upgradeCta: t.draftSave.numberSetGateUpgradeCta,
-            close: t.close,
-            benefits: t.myPage.billing.page.benefits.slice(0, 3),
-          }}
-          restoreFocusRef={numberSetPickerRef}
-          onClose={() => setGateMode(null)}
-          onLogin={() => {
-            setGateMode(null)
-            setAuthModalOpen(true)
-          }}
-          onUpgrade={() => {
-            setGateMode(null)
-            navigate(BILLING_PATH)
-          }}
-        />
+        <Suspense fallback={null}>
+          <SnapshotProGateModal
+            mode={gateMode}
+            copy={{
+              eyebrow: t.accountRecords.snapshotGateEyebrow,
+              title:
+                gateMode === 'guest'
+                  ? t.draftSave.numberSetGateGuestTitle
+                  : t.draftSave.numberSetGateFreeTitle,
+              guestBody: t.draftSave.numberSetGateGuestBody,
+              freeBody: t.draftSave.numberSetGateFreeBody,
+              loginCta: t.draftSave.numberSetGateLoginCta,
+              viewPlansCta: t.draftSave.numberSetGateViewPlansCta,
+              upgradeCta: t.draftSave.numberSetGateUpgradeCta,
+              close: t.close,
+              benefits: t.myPage.billing.page.benefits.slice(0, 3),
+            }}
+            restoreFocusRef={numberSetPickerRef}
+            onClose={() => setGateMode(null)}
+            onLogin={() => {
+              setGateMode(null)
+              setAuthModalOpen(true)
+            }}
+            onUpgrade={() => {
+              setGateMode(null)
+              navigate(BILLING_PATH)
+            }}
+          />
+        </Suspense>
       )}
 
-      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
+      {authModalOpen && (
+        <Suspense fallback={null}>
+          <AuthModal onClose={() => setAuthModalOpen(false)} />
+        </Suspense>
+      )}
     </>
   )
 }

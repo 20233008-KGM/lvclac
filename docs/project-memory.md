@@ -106,8 +106,14 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 ## 최근 근황
 
-- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈1,900토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
+- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,000토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
 - **운영 규칙**: 근황은 **최신 5개만** 여기 둔다. 새 항목을 맨 위에 추가해 6개가 되면 **가장 오래된 1개를 [`docs/project-history.md`](./project-history.md)로 잘라 이동**(요약 말고 원문 그대로). 전체 흐름은 위 Live Summary가 책임지므로, 근황은 마음 놓고 짧게 유지한다.
+
+**2026-07-15 — 기록 장부(/records) 무한 스크롤 + 날짜 점프 조회** (커밋 c02a694)
+- 사용자 요청: 수백 개로 쌓일 기록 대응 — ①스크롤 바닥 도달 시 자동 추가 로드(더보기 버튼 유지) ②특정 날짜 근처 조회. UX는 AskUserQuestion으로 확정: **날짜 점프 방식**(달력서 날짜 선택→그 날짜 이하로 재조회, 채팅/은행 '날짜로 이동' 표준) + **자동/버튼 병행**(observer 미지원·키보드 폴백).
+- **재활용**: 페이지네이션 백엔드(offset+`.range()` N+1 오버페치·`hasMore`·`fetchRecordCounts`·로컬 offset 보정)는 이미 완성 → `loadOlderRecords`에 트리거만 붙임. 신규 훅 `src/hooks/useInfiniteScroll.ts`(IntersectionObserver sentinel, rootMargin 200px, onLoadMore ref로 최신참조, IO 미지원 시 no-op → jsdom 테스트 안전). 날짜는 조회 4함수에 선택적 `before?`(ISO 상한) 추가→`.lte('created_at', before)`, 슬롯 필터와 AND, 생략 시 하위호환.
+- 컨테이너: `dateAnchor`(YYYY-MM-DD)→`beforeBound`(그 날 끝 23:59:59.999 ISO) memo, load 함수 deps 포함→날짜 변경 시 첫 페이지 재조회+상세 닫음. UI는 툴바 네이티브 `<input type=date>`(max=오늘)+활성 시 "{date} 이전 기록" 칩+"최신으로" 해제. 시맨틱 '선택일 이하'라 빈 날 골라도 그 이전 이어짐.
+- 검증: tsc·vitest 608/608(워크트리 제외, accountRecords에 before→.lte 2건 추가). dev /records 로그인 실측 — 07-11 선택 시 스냅샷 6→4·07.14 제외·칩 표시, 최신으로 복귀 정상, 콘솔 에러 0, 패널 360px 툴바 줄바꿈·오버플로 0. **무한스크롤 자동로딩은 현재 계정 13개(20개 미만)라 hasMore 미발동 → sentinel/버튼 정상 부재로 실측 불가**(단위테스트+코드 커버). 공유 워크트리라 내 8파일만 명시 스테이징.
 
 **2026-07-15 — '계산결과/주문시나리오 공유' 기능 디자인 시안(방향 탐색만, 미구현)** (커밋 예정)
 - 사용자 요청: 공유 기능을 만들기 전 "받은 사람이 링크 누르면 뭐가 떠야 하나"부터 설계. Claude in Chrome에 로컬서버(HTML 목업) 띄워 시안 4종을 사용자 피드백 반복하며 다듬음. **구현은 안 함** — 백로그 등재 후 종료.
@@ -135,15 +141,5 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - **함정 3개**: ①입력패널은 내부 표시상태 보유 — props 변경만으론 화면 미갱신, `key` 재마운트 필요. ②주문 beforeInputs는 주문 '반영 중' 시나리오 상태로 저장 — 표시 로직이 반영값(=주문 후와 동일)을 보여줌 → `revertOrderScenarioState`(계산기 ESC 취소 함수)로 벗겨 표시, 진위는 Supabase 원본 대조로 확정. ③터치 에뮬레이션 탭은 CDP 마우스 입력 불가(JS click·키보드로 검증), 전환(transition) 중 getComputedStyle은 중간값 반환.
 - 상세 모달 다듬기 4라운드(사용자 피드백 반복): 계산기 본체 외 chrome 제거(툴팁·비우기·저장토글·헤드액션) → 여백 다이어트+무스크롤 자동 축소(CSS zoom, 가용높이/계산기높이, 하한 0.55) → 헤더 최소화(제목 제거, aria-label 대체) → **주문 전/후 소형 토글(20px)+주문 입력줄은 '주문 전'에서만 표시**(그 순간 입력돼 있던 주문 스펙 노출). 세로 1px=글자 크기 통화: 세로 chrome을 뺄 때마다 zoom 0.69→0.90까지 상승. 폭은 내용 적응형 대신 고정 프레임(1160px) 유지 결정 — 흔들림 방지, 조단위 수용 실측.
 - 검증: tsc·vitest main 전부 통과(모달 소스검증 테스트 확장), 각 건 브라우저 실측. 미검증: 상세 모달 ≤960px 1열 스택·실기기. Work Log 11건 기록.
-
-**2026-07-15 — 모달 디자인 일관성 정돈(핸드오프 R1–R6 적용)**
-- 다운로드 zip("모달 디자인 일관성 검토") 개선안을 실제 소스에 역반영. 16개 모달 상태가 갈려 있던 세 시각 계층(base·auth·snapshot)의 편차를 단일 토큰/규칙으로 수렴. 로직·포털·포커스복원·i18n 계약은 그대로, 시각·마크업만 교체.
-- **R1(토큰 통일)**: variables.css에 `--modal-radius:16 / --btn-radius:10 / --btn-h:46` 신설. App.css `.btn`(min-height/radius/weight 600), `.disclaimer-modal`·`.snap-modal`(18→16) 토큰화. `.btn` 변경은 앱 전역 버튼에 영향(핸드오프 의도).
-- **R3(Primary 단일)**: 표준 `.btn-primary`는 solid+상단 하이라이트 1개(inset). 그라데이션+상승그림자는 고가치 CTA(로그인 제출/스냅샷 게이트)만 예외 유지.
-- **R5(오버레이)**: `.disclaimer-overlay`를 `rgba(6,8,12,.72)+blur6`로 통일, `.snap-modal-overlay`는 커스텀 radial 배경 제거하고 이 값을 상속(등장 애니메이션만 유지).
-- **auth 리디자인**: 기존 1c 파랑/보라 그라데이션 워시 블록을 스냅샷 계열(surface+상단 헤어라인+primary radial glow+snap-card-in)로 교체. `.reset-screen` 카드도 동일 톤. eyebrow(계정/비밀번호, mono) 신설 — AuthPage·ResetPasswordScreen 헤더에 추가(i18n `eyebrowAccount`/`eyebrowPassword` ko·en). 입력창 mono→본문폰트, 포커스 링.
-- **약관 fine print 이동**: GoogleButton 안(개별 버튼 옆)에서 떼어 AuthPage 하단(모든 로그인 수단 공통, login·register만·forgot 제외)으로. 로그인 모달 업계 표준.
-- **R4(파괴형 X 제거)**: BulkDeleteConfirmModal 우상단 X 삭제(ESC·오버레이클릭·취소버튼으로 dismiss 유지). 조회형(NumberSetDetailModal·스냅샷)은 X 유지. 테스트도 X-검증→X-부재 검증으로 교체.
-- 검증: tsc 통과, vitest 604/604, dev 브라우저에서 disclaimer/로그인/forgot 모달 computed-style·DOM순서 실측(카드 16px·surface·eyebrow·약관 하단·입력 본문폰트·primary 그라데이션·콘솔 에러 0). 스크린샷은 이 환경 타임아웃이라 미수행. 미검증: 회원가입/reset 실제 제출 플로우, 스냅샷 저장완료/게이트 실모달(토큰 상속으로 커버).
 
 <!-- 근황은 최신 5개만. 더 오래된 기록은 docs/project-history.md 참조. -->

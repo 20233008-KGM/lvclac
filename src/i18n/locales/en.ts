@@ -714,6 +714,12 @@ export const en: Messages = {
     disclaimerStepTitle: 'Before you start',
     disclaimerStepBody:
       'This calculator is for reference only. Trading futures and derivatives carries risk of loss exceeding your principal, and liquidation rules vary by broker and exchange.',
+    stepNav: ['Welcome · Region', 'Instrument', 'Your situation', 'Save inputs', 'Before you start'],
+    regionPrompt: 'Choose where you live or where you mainly trade.',
+    railHint: 'About 30 seconds. You can change any setting later.',
+    marginDivider: 'Margin input method',
+    doneTitle: "You're all set!",
+    doneBody: "We've tailored the calculator screen and tips to your choices. Now go calculate your liquidation price.",
   },
   fieldHint: {
     dismiss: 'Dismiss',

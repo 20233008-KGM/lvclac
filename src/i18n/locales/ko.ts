@@ -702,6 +702,12 @@ export const ko: Messages = {
     disclaimerStepTitle: '시작하기 전에',
     disclaimerStepBody:
       '이 계산기는 참고용이에요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있고, 증권사·거래소마다 청산 규정이 다를 수 있어요.',
+    stepNav: ['환영 · 지역', '거래 종목', '거래 상황', '입력 저장', '시작 전 확인'],
+    regionPrompt: '거주하시는 지역 또는 주거래 시장의 위치를 선택해주세요.',
+    railHint: '약 30초면 끝나요. 모든 설정은 나중에 언제든 바꿀 수 있어요.',
+    marginDivider: '증거금 입력 방식',
+    doneTitle: '설정 완료!',
+    doneBody: '선택하신 내용에 맞춰 계산기 화면과 안내를 준비했어요. 이제 청산가를 계산해 보세요.',
   },
   fieldHint: {
     dismiss: '안내 닫기',

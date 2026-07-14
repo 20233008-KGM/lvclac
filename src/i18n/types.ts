@@ -655,6 +655,18 @@ export interface Messages {
     saveNoDesc: string
     disclaimerStepTitle: string
     disclaimerStepBody: string
+    /** 좌측 레일 세로 스테퍼 & 우측 헤더 섹션명(5단계, 순서대로) */
+    stepNav: [string, string, string, string, string]
+    /** STEP01 지역 선택 위 안내문 */
+    regionPrompt: string
+    /** 좌측 레일 하단 안내(자물쇠) */
+    railHint: string
+    /** STEP02 증거금 방식 구분선 라벨 */
+    marginDivider: string
+    /** 완료 화면 제목 */
+    doneTitle: string
+    /** 완료 화면 본문 */
+    doneBody: string
   }
   /** 계산기 필드 인디케이터(거래 상태별 '이 칸부터') 코치 배너 카피 */
   fieldHint: {

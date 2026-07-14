@@ -255,6 +255,10 @@ export const ko: Messages = {
     slotFilterAll: '전체 슬롯',
     slotFilterUnassigned: '미분류',
     slotFilterAria: '슬롯별로 기록 보기',
+    jumpToDate: '날짜로 이동',
+    jumpToDateAria: '선택한 날짜 이전 기록 보기',
+    dateAnchorLabel: '{date} 이전 기록',
+    backToLatest: '최신으로',
   },
   myPage: {
     title: '마이페이지',

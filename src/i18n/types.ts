@@ -260,6 +260,10 @@ export interface Messages {
     slotFilterAll: string
     slotFilterUnassigned: string
     slotFilterAria: string
+    jumpToDate: string
+    jumpToDateAria: string
+    dateAnchorLabel: string
+    backToLatest: string
   }
   myPage: {
     title: string

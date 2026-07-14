@@ -12,6 +12,7 @@ import {
   type OrderHistoryRecord,
 } from '../db/accountRecords'
 import { fetchNumberSets } from '../db/numberSets'
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import { useLanguage } from '../i18n'
 import { revertOrderScenarioState } from '../calc/mtmLink'
 import type { CalculatorInputs } from '../types'
@@ -56,6 +57,14 @@ function timelineKey(entry: TimelineRecord): string {
 function timestamp(value: string): number {
   const time = new Date(value).getTime()
   return Number.isFinite(time) ? time : 0
+}
+
+/** Date → <input type="date"> 값(YYYY-MM-DD, 로컬 기준). */
+function toDateInputValue(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function toTimelineRecords(
@@ -417,6 +426,8 @@ export function RecordsArchiveView({
   slots = [],
   slotFilter = { kind: 'all' },
   onSlotFilterChange,
+  dateAnchor = null,
+  onDateAnchorChange,
 }: {
   copy: AccountRecordsCopy
   backLabel?: string
@@ -453,8 +464,15 @@ export function RecordsArchiveView({
   slots?: { id: string; title: string }[]
   slotFilter?: NumberSetFilter
   onSlotFilterChange?: (filter: NumberSetFilter) => void
+  dateAnchor?: string | null
+  onDateAnchorChange?: (date: string | null) => void
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
+  const loadMoreSentinelRef = useInfiniteScroll<HTMLDivElement>({
+    onLoadMore: () => onLoadOlderRecords?.(),
+    enabled: Boolean(onLoadOlderRecords) && !loadingOlderRecords,
+  })
+  const todayInputValue = useMemo(() => toDateInputValue(new Date()), [])
   const hasRecords = timelineRecords.length > 0
   const orderActionsLocked = loadingOlderRecords || orderDeleteBusy || orderBulkBusy
   const snapshotActionsLocked = loadingOlderRecords || snapshotDeleteBusy || snapshotBulkBusy
@@ -628,6 +646,21 @@ export function RecordsArchiveView({
                     </span>
                   </div>
                   <div className="records-timeline-actions">
+                    {onDateAnchorChange && (
+                      <label className="records-date-jump">
+                        <span className="records-date-jump-label">{copy.jumpToDate}</span>
+                        <input
+                          type="date"
+                          className="records-date-jump-input"
+                          aria-label={copy.jumpToDateAria}
+                          max={todayInputValue}
+                          value={dateAnchor ?? ''}
+                          onChange={(event) =>
+                            onDateAnchorChange(event.target.value ? event.target.value : null)
+                          }
+                        />
+                      </label>
+                    )}
                     {onSlotFilterChange && slotMenuItems.length > 0 && (
                       <button
                         type="button"
@@ -655,6 +688,21 @@ export function RecordsArchiveView({
                     )}
                   </div>
                 </div>
+
+                {dateAnchor && onDateAnchorChange && (
+                  <div className="records-date-anchor-bar" role="status">
+                    <span className="records-date-anchor-label">
+                      {copy.dateAnchorLabel.replace('{date}', dateAnchor.replace(/-/g, '.'))}
+                    </span>
+                    <button
+                      type="button"
+                      className="link-btn records-date-anchor-clear"
+                      onClick={() => onDateAnchorChange(null)}
+                    >
+                      {copy.backToLatest}
+                    </button>
+                  </div>
+                )}
 
                 {selectedCount > 0 && (
                   <div className="records-selection-bar" role="status">
@@ -782,14 +830,23 @@ export function RecordsArchiveView({
                       })}
                     </div>
                     {onLoadOlderRecords && (
-                      <button
-                        type="button"
-                        className="link-btn account-record-load-more records-timeline-load-more"
-                        disabled={loadingOlderRecords}
-                        onClick={onLoadOlderRecords}
-                      >
-                        {loadingOlderRecords ? copy.loadingMore : copy.loadOlderRecords}
-                      </button>
+                      <>
+                        {/* 스크롤이 이 지점 근처에 닿으면 자동으로 다음 페이지 로드(무한 스크롤).
+                            버튼은 접근성·observer 미지원 대비 폴백으로 유지. */}
+                        <div
+                          ref={loadMoreSentinelRef}
+                          className="records-timeline-sentinel"
+                          aria-hidden="true"
+                        />
+                        <button
+                          type="button"
+                          className="link-btn account-record-load-more records-timeline-load-more"
+                          disabled={loadingOlderRecords}
+                          onClick={onLoadOlderRecords}
+                        >
+                          {loadingOlderRecords ? copy.loadingMore : copy.loadOlderRecords}
+                        </button>
+                      </>
                     )}
                   </>
                 ) : (
@@ -870,6 +927,15 @@ export function RecordsArchivePage() {
   const activeRecordsUserIdRef = useRef(user?.id ?? null)
   const [numberSetFilter, setNumberSetFilter] = useState<NumberSetFilter>({ kind: 'all' })
   const [slots, setSlots] = useState<{ id: string; title: string }[]>([])
+  const [dateAnchor, setDateAnchor] = useState<string | null>(null)
+
+  // 날짜 점프: 선택한 날(YYYY-MM-DD)의 끝(로컬 23:59:59.999)을 상한으로 삼아
+  // 그 시각 이하의 기록만 조회한다. null이면 상한 없음(최신부터).
+  const beforeBound = useMemo(() => {
+    if (!dateAnchor) return null
+    const end = new Date(`${dateAnchor}T23:59:59.999`)
+    return Number.isNaN(end.getTime()) ? null : end.toISOString()
+  }, [dateAnchor])
 
   const loadRecords = useCallback(async () => {
     const requestId = recordsRequestIdRef.current + 1
@@ -896,8 +962,8 @@ export function RecordsArchivePage() {
     setLoading(true)
     setError(null)
     const [bundleResult, countsResult] = await Promise.all([
-      recordsRepository.fetchRecentRecords(userId, undefined, numberSetFilter),
-      recordsRepository.fetchRecordCounts(userId, numberSetFilter),
+      recordsRepository.fetchRecentRecords(userId, undefined, numberSetFilter, beforeBound),
+      recordsRepository.fetchRecordCounts(userId, numberSetFilter, beforeBound),
     ])
 
     if (recordsRequestIdRef.current !== requestId || activeRecordsUserIdRef.current !== userId) {
@@ -920,7 +986,7 @@ export function RecordsArchivePage() {
     setSnapshotTotal(countsResult.error === null ? countsResult.data.accountSnapshotCount : null)
     setSelectedKeys(new Set())
     setLoading(false)
-  }, [numberSetFilter, recordsRepository, t.accountRecords.loadError, user?.id])
+  }, [beforeBound, numberSetFilter, recordsRepository, t.accountRecords.loadError, user?.id])
 
   const loadOlderRecords = useCallback(async () => {
     const userId = user?.id ?? null
@@ -934,10 +1000,10 @@ export function RecordsArchivePage() {
 
     const [ordersResult, snapshotsResult] = await Promise.all([
       orderHasMore
-        ? recordsRepository.fetchOrderHistoryPage(userId, orderOffset, undefined, numberSetFilter)
+        ? recordsRepository.fetchOrderHistoryPage(userId, orderOffset, undefined, numberSetFilter, beforeBound)
         : Promise.resolve(null),
       snapshotHasMore
-        ? recordsRepository.fetchAccountSnapshotsPage(userId, snapshotOffset, undefined, numberSetFilter)
+        ? recordsRepository.fetchAccountSnapshotsPage(userId, snapshotOffset, undefined, numberSetFilter, beforeBound)
         : Promise.resolve(null),
     ])
 
@@ -966,6 +1032,7 @@ export function RecordsArchivePage() {
       setSnapshotHasMore(snapshotsResult.data.hasMore)
     }
   }, [
+    beforeBound,
     orderHasMore,
     orderLoadingMore,
     orderOffset,
@@ -1182,6 +1249,11 @@ export function RecordsArchivePage() {
         slotFilter={numberSetFilter}
         onSlotFilterChange={(filter) => {
           setNumberSetFilter(filter)
+          setDetail(null)
+        }}
+        dateAnchor={dateAnchor}
+        onDateAnchorChange={(date) => {
+          setDateAnchor(date)
           setDetail(null)
         }}
       />

@@ -275,6 +275,7 @@ export function createAccountRecordsRepository(
       offset: number,
       limit = DEFAULT_RECORD_LIMIT,
       filter: NumberSetFilter = ALL_FILTER,
+      before?: string | null,
     ): Promise<AccountRecordResult<PaginatedRecords<OrderHistoryRecord>>> {
       if (!client) return unavailable()
 
@@ -286,6 +287,7 @@ export function createAccountRecordsRepository(
         .eq('user_id', userId)
       if (filter.kind === 'slot') query = query.eq('number_set_id', filter.id)
       else if (filter.kind === 'unassigned') query = query.is('number_set_id', null)
+      if (before) query = query.lte('created_at', before)
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
@@ -308,6 +310,7 @@ export function createAccountRecordsRepository(
       offset: number,
       limit = DEFAULT_RECORD_LIMIT,
       filter: NumberSetFilter = ALL_FILTER,
+      before?: string | null,
     ): Promise<AccountRecordResult<PaginatedRecords<AccountSnapshotRecord>>> {
       if (!client) return unavailable()
 
@@ -317,6 +320,7 @@ export function createAccountRecordsRepository(
         .eq('user_id', userId)
       if (filter.kind === 'slot') query = query.eq('number_set_id', filter.id)
       else if (filter.kind === 'unassigned') query = query.is('number_set_id', null)
+      if (before) query = query.lte('created_at', before)
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
@@ -338,12 +342,13 @@ export function createAccountRecordsRepository(
       userId: string,
       limit = DEFAULT_RECORD_LIMIT,
       filter: NumberSetFilter = ALL_FILTER,
+      before?: string | null,
     ): Promise<AccountRecordResult<AccountRecordsBundle>> {
       if (!client) return unavailable()
 
       const [ordersResult, snapshotsResult] = await Promise.all([
-        this.fetchOrderHistoryPage(userId, 0, limit, filter),
-        this.fetchAccountSnapshotsPage(userId, 0, limit, filter),
+        this.fetchOrderHistoryPage(userId, 0, limit, filter, before),
+        this.fetchAccountSnapshotsPage(userId, 0, limit, filter, before),
       ])
 
       const ordersFailed = ordersResult.error !== null
@@ -366,6 +371,7 @@ export function createAccountRecordsRepository(
     async fetchRecordCounts(
       userId: string,
       filter: NumberSetFilter = ALL_FILTER,
+      before?: string | null,
     ): Promise<AccountRecordResult<AccountRecordCounts>> {
       if (!client) return unavailable()
 
@@ -383,6 +389,10 @@ export function createAccountRecordsRepository(
       } else if (filter.kind === 'unassigned') {
         ordersQuery = ordersQuery.is('number_set_id', null)
         snapshotsQuery = snapshotsQuery.is('number_set_id', null)
+      }
+      if (before) {
+        ordersQuery = ordersQuery.lte('created_at', before)
+        snapshotsQuery = snapshotsQuery.lte('created_at', before)
       }
 
       const [ordersResult, snapshotsResult] = await Promise.all([ordersQuery, snapshotsQuery])

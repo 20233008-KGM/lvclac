@@ -648,4 +648,81 @@ describe('account records repository helpers', () => {
 
     expect(filterCalls).toEqual([{ method: 'eq', column: 'user_id' }])
   })
+
+  it('fetchAccountSnapshotsPage applies the date upper bound via .lte(created_at, before)', async () => {
+    const filterCalls: { method: string; column: string; value: unknown }[] = []
+    const makeChain = () => {
+      const chain = {
+        eq(column: string, value: unknown) {
+          filterCalls.push({ method: 'eq', column, value })
+          return chain
+        },
+        is(column: string, value: unknown) {
+          filterCalls.push({ method: 'is', column, value })
+          return chain
+        },
+        lte(column: string, value: unknown) {
+          filterCalls.push({ method: 'lte', column, value })
+          return chain
+        },
+        order() {
+          return {
+            range() {
+              return { returns: () => Promise.resolve({ data: [], error: null }) }
+            },
+          }
+        },
+      }
+      return chain
+    }
+    const client = { from: () => ({ select: () => makeChain() }) }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await repo.fetchAccountSnapshotsPage(
+      'user-1',
+      0,
+      20,
+      { kind: 'slot', id: 'slot-9' },
+      '2026-03-02T14:59:59.999Z',
+    )
+
+    expect(filterCalls).toEqual([
+      { method: 'eq', column: 'user_id', value: 'user-1' },
+      { method: 'eq', column: 'number_set_id', value: 'slot-9' },
+      { method: 'lte', column: 'created_at', value: '2026-03-02T14:59:59.999Z' },
+    ])
+  })
+
+  it('fetchRecordCounts applies the date upper bound to both count queries', async () => {
+    const lteCalls: { table: string; column: string; value: unknown }[] = []
+    const makeQuery = (table: string) => {
+      const query = {
+        eq() {
+          return query
+        },
+        is() {
+          return query
+        },
+        lte(column: string, value: unknown) {
+          lteCalls.push({ table, column, value })
+          return query
+        },
+        then(resolve: (value: { count: number; error: null }) => unknown) {
+          return Promise.resolve({ count: 0, error: null }).then(resolve)
+        },
+      }
+      return query
+    }
+    const client = {
+      from: (table: string) => ({ select: () => makeQuery(table) }),
+    }
+
+    const repo = createAccountRecordsRepository(client as never)
+    await repo.fetchRecordCounts('user-1', { kind: 'all' }, '2026-03-02T14:59:59.999Z')
+
+    expect(lteCalls).toEqual([
+      { table: 'order_history', column: 'created_at', value: '2026-03-02T14:59:59.999Z' },
+      { table: 'account_snapshots', column: 'created_at', value: '2026-03-02T14:59:59.999Z' },
+    ])
+  })
 })

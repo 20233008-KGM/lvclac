@@ -196,9 +196,6 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
 
   const c = t.welcome
   const stepIndex = draft.step
-  const stepLabel = c.stepLabel
-    .replace('{current}', String(stepIndex + 1))
-    .replace('{total}', String(WELCOME_STEP_COUNT))
   const eyebrow = `STEP ${String(stepIndex + 1).padStart(2, '0')}`
   const counterLabel = `${String(stepIndex + 1).padStart(2, '0')} / ${String(WELCOME_STEP_COUNT).padStart(2, '0')}`
 

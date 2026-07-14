@@ -1,0 +1,354 @@
+<!doctype html>
+<!--
+  LiqGuard '계산결과/주문시나리오 공유' 기능 — 디자인 시안 (미구현·보관용)
+  작성: 2026-07-15 · 상태: 방향 탐색만 완료, 코드 구현 안 함 (백로그: '언젠가 공유 기능 만들기')
+
+  담긴 시안 4종:
+    ① 카톡 링크 미리보기(OG) 카드   ② 계산결과 공유 — 결과 우선형
+    ③ 계산결과 공유 — 계산기 통째형   ④ 주문 시나리오 공유 — 전/후 2열 비교
+
+  합의된 방침(이 시안에 반영됨):
+    - 방식: B안(짧은링크 + DB + 서버 OG 이미지). 카톡 미리보기 카드가 바이럴 핵심.
+    - 프라이버시: 계좌잔고·진입가·체결가·유지증거금률 등 개인정보는 화면에서 전면 제외.
+      노출 값은 청산가 / 하락 여유 % / 방향 / 레버리지 / 현재가(=시장 공개값) 정도.
+    - CTA: '내 포지션 점검하기' — 입력값을 공유하지 않으므로 남의 계산기에 값을 채울 수 없다.
+      대신 받은 사람이 자기 포지션을 넣어보게 유도(자연스러운 신규 유입).
+    - 톤: 청산가 숫자는 흰색, 빨강은 '작은 점 표식' 수준만(겁주지 않게).
+    - 재활용: 읽기전용 렌더는 RecordsArchivePage.tsx의 RecordsDetailPanel
+      (InputPanel/ResultPanel onChange=noop + 주문 전/후 토글)을 모달 껍데기만 벗겨 재사용 가능.
+
+  미결정(구현 착수 시 정할 것):
+    ② 결과 우선형 vs ③ 계산기 통째형 중 택1 · ③ 결과값 빨강 톤다운 여부
+    · ④ 2열의 계약수/레버리지 노출 범위(개인정보 관점)
+
+  로컬에서 보려면: 이 폴더에서 `python -m http.server` 후 브라우저로 파일 열기.
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LiqGuard 공유 화면 시안</title>
+<style>
+  :root{
+    --color-bg:#12151c; --color-bg-elevated:#181c25; --color-surface:#1e232d;
+    --color-surface-2:#262c38; --color-surface-3:#2f3644; --color-border:#3a4252;
+    --color-border-subtle:#2a3040; --color-text:#e8eaed; --color-text-muted:#9aa3b2;
+    --color-text-dim:#7a8494; --color-primary:#5b8def; --color-primary-hover:#4a7de0;
+    --color-primary-muted:rgba(91,141,239,.15); --color-long:#5cb88a;
+    --color-long-muted:rgba(92,184,138,.12); --color-short:#d47a8a;
+    --color-short-muted:rgba(212,122,138,.12); --color-danger:#e07070;
+    --color-warning:#e0a458;
+    --font-mono:'JetBrains Mono','D2Coding','Consolas',monospace;
+    --font:-apple-system,'Segoe UI','Malgun Gothic',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0c11;color:var(--color-text);font-family:var(--font);
+    padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+  h1.page{font-size:22px;font-weight:700;margin-bottom:6px;text-align:center}
+  p.page-sub{color:var(--color-text-muted);font-size:14px;text-align:center;margin-bottom:40px}
+  .gallery{display:flex;flex-wrap:wrap;gap:48px 40px;justify-content:center;align-items:flex-start;max-width:1400px;margin:0 auto}
+  .frame{width:390px}
+  .frame > .cap{font-size:13px;font-weight:600;color:var(--color-primary);margin-bottom:6px;letter-spacing:.02em}
+  .frame > .cap small{display:block;color:var(--color-text-dim);font-weight:400;font-size:12px;margin-top:2px}
+
+  /* ===== phone shell ===== */
+  .phone{background:var(--color-bg);border:1px solid var(--color-border-subtle);
+    border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .phone-status{height:34px;display:flex;align-items:center;justify-content:center;
+    font-size:11px;color:var(--color-text-dim);background:var(--color-bg-elevated);
+    border-bottom:1px solid var(--color-border-subtle)}
+  .screen{padding:20px 18px 26px}
+
+  /* shared banner (sender) */
+  .share-banner{display:flex;align-items:center;gap:10px;background:var(--color-surface);
+    border:1px solid var(--color-border-subtle);border-radius:12px;padding:11px 13px;margin-bottom:16px}
+  .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#5b8def,#8a6bef);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+  .share-banner .who{font-size:13px;line-height:1.35}
+  .share-banner .who b{color:var(--color-text)}
+  .share-banner .who span{color:var(--color-text-muted)}
+  .brand-chip{margin-left:auto;font-size:11px;font-weight:700;color:var(--color-primary);
+    font-family:var(--font-mono);letter-spacing:.03em}
+
+  /* hero liq — 차분하게: 큰 숫자는 흰색, 빨강은 작은 표식만 */
+  .hero{background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;
+    padding:20px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:0 0 auto 0;height:110px;
+    background:radial-gradient(60% 100% at 50% 0,rgba(91,141,239,.10),transparent);pointer-events:none}
+  .hero .lbl{font-size:12px;color:var(--color-text-muted);letter-spacing:.04em;position:relative;
+    display:inline-flex;align-items:center;gap:6px}
+  .hero .lbl::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--color-danger);opacity:.75}
+
+  /* order scenario — 전/후 2열 비교 */
+  .order-chip{background:var(--color-primary-muted);border:1px solid rgba(91,141,239,.25);
+    border-radius:10px;padding:9px 12px;text-align:center;font-size:12px;color:var(--color-text-muted);margin-bottom:12px}
+  .order-chip b{color:var(--color-long);font-family:var(--font-mono)}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;position:relative}
+  .cmp-col{background:var(--color-surface);border:1px solid var(--color-border-subtle);
+    border-radius:12px;padding:13px 10px;text-align:center}
+  .cmp-col.after{border-color:var(--color-primary);background:var(--color-surface-2)}
+  .cmp-head{font-size:11px;color:var(--color-text-muted);letter-spacing:.03em;margin-bottom:9px;font-weight:600}
+  .cmp-col.after .cmp-head{color:var(--color-primary)}
+  .cmp-liq-lbl{font-size:10px;color:var(--color-text-dim);display:inline-flex;align-items:center;gap:4px;margin-bottom:2px}
+  .cmp-liq-lbl::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--color-danger);opacity:.7}
+  .cmp-liq{font-size:24px;font-weight:800;font-family:var(--font-mono);color:var(--color-text);line-height:1.1}
+  .cmp-sub{font-size:10px;color:var(--color-text-dim);margin-top:3px}
+  .cmp-mini{margin-top:11px;border-top:1px solid var(--color-border-subtle);padding-top:9px;text-align:left}
+  .cmp-mini .m{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+  .cmp-mini .m .k{color:var(--color-text-muted)}
+  .cmp-mini .m .v{font-family:var(--font-mono);font-weight:600}
+  .cmp-arrow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+    width:24px;height:24px;border-radius:50%;background:var(--color-bg-elevated);border:1px solid var(--color-border);
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--color-warning);font-weight:700}
+  .hero .liq{font-size:38px;font-weight:800;font-family:var(--font-mono);color:var(--color-text);
+    margin:4px 0 2px;letter-spacing:-.01em;position:relative}
+  .hero .liq small{font-size:16px;font-weight:600;opacity:.7}
+  .hero .dist{font-size:12px;color:var(--color-text-dim);position:relative}
+
+  .pill-row{display:flex;gap:8px;margin-bottom:14px}
+  .pill{flex:1;background:var(--color-surface);border:1px solid var(--color-border-subtle);
+    border-radius:10px;padding:9px 6px;text-align:center}
+  .pill .k{font-size:10.5px;color:var(--color-text-dim);margin-bottom:3px}
+  .pill .v{font-size:15px;font-weight:700;font-family:var(--font-mono)}
+  .v.long{color:var(--color-long)} .v.short{color:var(--color-short)}
+
+  /* rows */
+  .rows{background:var(--color-surface);border:1px solid var(--color-border-subtle);
+    border-radius:12px;padding:4px 14px;margin-bottom:8px}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;
+    border-bottom:1px solid var(--color-border-subtle);font-size:13px}
+  .row:last-child{border-bottom:none}
+  .row .k{color:var(--color-text-muted)}
+  .row .v{font-family:var(--font-mono);font-weight:600}
+  .row.hidden .v{color:var(--color-text-dim);font-weight:400;font-style:italic;
+    display:flex;align-items:center;gap:5px}
+  .lock{font-size:11px;opacity:.6}
+
+  .privacy-note{font-size:11.5px;color:var(--color-text-dim);text-align:center;
+    margin:2px 4px 16px;line-height:1.5}
+  .privacy-note b{color:var(--color-text-muted)}
+
+  .cta{display:block;width:100%;background:var(--color-primary);color:#fff;border:none;
+    border-radius:10px;height:48px;font-size:15px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(91,141,239,.35);margin-bottom:10px}
+  .cta.ghost{background:transparent;border:1px solid var(--color-border);color:var(--color-text-muted);
+    box-shadow:none;height:42px;font-size:13px;font-weight:600}
+
+  .footer-note{text-align:center;font-size:10.5px;color:var(--color-text-dim);margin-top:14px;line-height:1.5}
+
+  /* before/after toggle */
+  .toggle{display:flex;background:var(--color-bg-elevated);border:1px solid var(--color-border-subtle);
+    border-radius:10px;padding:3px;margin-bottom:14px}
+  .toggle button{flex:1;background:none;border:none;color:var(--color-text-muted);font-size:13px;
+    font-weight:600;padding:8px;border-radius:7px;cursor:pointer;font-family:inherit}
+  .toggle button.on{background:var(--color-surface-2);color:var(--color-text)}
+
+  .delta{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;
+    color:var(--color-text-muted);margin-bottom:14px}
+  .delta .arrow{color:var(--color-warning);font-weight:700}
+  .delta .to{font-family:var(--font-mono);font-weight:700;color:var(--color-danger)}
+  .delta .from{font-family:var(--font-mono);color:var(--color-text-dim);text-decoration:line-through}
+
+  /* calc-whole reuse look */
+  .calc-panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);
+    border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .calc-panel h4{font-size:12px;color:var(--color-text-dim);font-weight:600;
+    padding-bottom:8px;border-bottom:1px solid var(--color-border-subtle);margin-bottom:8px;letter-spacing:.03em}
+  .ci{display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px}
+  .ci .k{color:var(--color-text-muted)}
+  .ci .v{font-family:var(--font-mono);font-weight:600}
+  .ro-badge{display:inline-block;font-size:10px;color:var(--color-text-dim);
+    border:1px solid var(--color-border-subtle);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+
+  /* ===== KakaoTalk preview ===== */
+  .kakao{width:390px}
+  .kakao-wrap{background:#b2c7d9;border-radius:18px;padding:20px 16px 26px}
+  .kakao-day{text-align:center;font-size:11px;color:#5a6b7a;margin-bottom:16px}
+  .kakao-day span{background:rgba(0,0,0,.12);color:#33414d;padding:3px 12px;border-radius:12px}
+  .msg-line{display:flex;gap:8px;align-items:flex-end}
+  .k-avatar{width:36px;height:36px;border-radius:14px;background:linear-gradient(135deg,#5b8def,#8a6bef);
+    flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}
+  .k-col{max-width:250px}
+  .k-name{font-size:11px;color:#4a5763;margin-bottom:3px}
+  .k-text{background:#fff;border-radius:2px 14px 14px 14px;padding:9px 12px;font-size:13px;color:#1a1a1a;margin-bottom:4px}
+  .k-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  .og{height:150px;background:var(--color-bg);position:relative;display:flex;flex-direction:column;
+    justify-content:center;padding:0 20px;overflow:hidden}
+  .og::before{content:"";position:absolute;inset:0 0 auto 0;height:90px;
+    background:radial-gradient(50% 100% at 30% 0,rgba(91,141,239,.16),transparent)}
+  .og .og-brand{position:absolute;top:12px;right:16px;font-size:11px;font-weight:800;color:#5b8def;font-family:var(--font-mono)}
+  .og .og-side{font-size:12px;color:var(--color-long);font-weight:700;position:relative;margin-bottom:2px}
+  .og .og-liq{font-size:30px;font-weight:800;font-family:var(--font-mono);color:#fff;position:relative;line-height:1.1}
+  .og .og-liq .u{color:#fff}
+  .og .og-liq-lbl{display:inline-flex;align-items:center;gap:5px}
+  .og .og-liq-lbl::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--color-danger);opacity:.7}
+  .og .og-sub{font-size:12px;color:var(--color-text-muted);position:relative;margin-top:4px}
+  .k-card-meta{padding:10px 13px}
+  .k-card-meta .t{font-size:13px;font-weight:600;color:#1a1a1a}
+  .k-card-meta .d{font-size:11.5px;color:#8a8a8a;margin-top:2px}
+  .k-card-meta .u{font-size:11px;color:#a5a5a5;margin-top:6px}
+  .k-time{font-size:10px;color:#5a6b7a;margin-top:2px}
+
+  .legend{max-width:900px;margin:44px auto 0;background:var(--color-surface);
+    border:1px solid var(--color-border-subtle);border-radius:12px;padding:20px 24px;font-size:13.5px;line-height:1.7}
+  .legend h3{font-size:15px;margin-bottom:10px}
+  .legend b{color:var(--color-primary)}
+  .legend ul{margin:6px 0 0 18px}
+</style>
+</head>
+<body>
+  <h1 class="page">LiqGuard · 계산결과 공유 화면 시안</h1>
+  <p class="page-sub">B안(짧은링크+DB+미리보기) 기준 · 모바일(카톡) 우선 · 계좌잔고는 가림</p>
+
+  <div class="gallery">
+
+    <!-- 0. KakaoTalk preview -->
+    <div class="kakao">
+      <div class="cap">① 카톡에 링크 붙였을 때 (미리보기 카드)<small>B안의 핵심 — 이 카드 자체가 광고가 됨</small></div>
+      <div class="kakao-wrap">
+        <div class="kakao-day"><span>오늘</span></div>
+        <div class="msg-line">
+          <div class="k-avatar">규</div>
+          <div class="k-col">
+            <div class="k-name">김규민</div>
+            <div class="k-text">내 나스닥 롱 청산가 이거 봐봐 ㄷㄷ</div>
+            <div class="k-card">
+              <div class="og">
+                <div class="og-brand">LiqGuard</div>
+                <div class="og-side">▲ 롱 · 10배</div>
+                <div class="og-liq"><span class="og-liq-lbl">청산가</span> <span class="u">18,240</span></div>
+                <div class="og-sub">현재가 20,100 · 하락 여유 9.3%</div>
+              </div>
+              <div class="k-card-meta">
+                <div class="t">규민님이 공유한 청산가 계산</div>
+                <div class="d">지금 세팅이면 얼마에 청산되는지 확인해보세요</div>
+                <div class="u">liqguard.com</div>
+              </div>
+            </div>
+            <div class="k-time">오후 3:24</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A. 결과 우선 -->
+    <div class="frame">
+      <div class="cap">② 계산결과 공유 — 결과 우선형<small>청산가 크게 → 핵심값 → CTA. 스크롤 짧음</small></div>
+      <div class="phone">
+        <div class="phone-status">liqguard.com/s/nQ8xK2</div>
+        <div class="screen">
+          <div class="share-banner">
+            <div class="avatar">규</div>
+            <div class="who"><b>규민</b>님이 공유한<br><span>청산가 계산 결과</span></div>
+            <div class="brand-chip">LiqGuard</div>
+          </div>
+
+          <div class="hero">
+            <div class="lbl">청산 가격</div>
+            <div class="liq">18,240</div>
+          </div>
+
+          <div class="pill-row">
+            <div class="pill"><div class="k">방향</div><div class="v long">롱 ▲</div></div>
+            <div class="pill"><div class="k">레버리지</div><div class="v">10.0배</div></div>
+            <div class="pill"><div class="k">하락 여유</div><div class="v">9.3%</div></div>
+          </div>
+
+          <div class="rows">
+            <div class="row"><span class="k">계약 수</span><span class="v">3 계약</span></div>
+            <div class="row"><span class="k">현재가</span><span class="v">20,100</span></div>
+          </div>
+          <button class="cta">내 포지션 점검하기</button>
+
+          <div class="footer-note">본 계산은 참고용이며 투자 조언이 아닙니다.<br>실제 청산가는 거래소·수수료에 따라 다를 수 있습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B. 계산기 통째 재활용 -->
+    <div class="frame">
+      <div class="cap">③ 계산결과 공유 — 계산기 통째형<small>장부 상세모달 그대로 재활용 (읽기전용 계산기)</small></div>
+      <div class="phone">
+        <div class="phone-status">liqguard.com/s/nQ8xK2</div>
+        <div class="screen">
+          <div class="share-banner">
+            <div class="avatar">규</div>
+            <div class="who"><b>규민</b>님이 공유한<br><span>청산가 계산 결과</span></div>
+            <div class="brand-chip">LiqGuard</div>
+          </div>
+
+          <div class="calc-panel">
+            <h4>입력값 <span class="ro-badge">읽기전용</span></h4>
+            <div class="ci"><span class="k">포지션</span><span class="v" style="color:var(--color-long)">롱 ▲</span></div>
+            <div class="ci"><span class="k">현재가</span><span class="v">20,100</span></div>
+            <div class="ci"><span class="k">계약 수</span><span class="v">3</span></div>
+          </div>
+
+          <div class="calc-panel" style="border-color:var(--color-border)">
+            <h4 style="color:var(--color-danger)">계산 결과</h4>
+            <div class="ci"><span class="k">청산 가격</span><span class="v" style="font-size:16px;color:var(--color-danger)">18,240</span></div>
+            <div class="ci"><span class="k">레버리지</span><span class="v">10.0배</span></div>
+            <div class="ci"><span class="k">하락 여유</span><span class="v">9.3%</span></div>
+          </div>
+
+          <button class="cta">내 포지션 점검하기</button>
+          <div class="footer-note">참고용 · 투자 조언 아님</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C. 주문 시나리오 (2열 비교) -->
+    <div class="frame">
+      <div class="cap">④ 주문 시나리오 공유 — 전/후 2열 비교<small>왼쪽 주문 전 · 오른쪽 주문 후 한눈에</small></div>
+      <div class="phone">
+        <div class="phone-status">liqguard.com/s/aB3zP9</div>
+        <div class="screen">
+          <div class="share-banner">
+            <div class="avatar">규</div>
+            <div class="who"><b>규민</b>님이 공유한<br><span>주문 시나리오</span></div>
+            <div class="brand-chip">LiqGuard</div>
+          </div>
+
+          <div class="compare">
+            <div class="cmp-col before">
+              <div class="cmp-head">주문 전</div>
+              <div class="cmp-liq-lbl">청산 가격</div>
+              <div class="cmp-liq">21,050</div>
+              <div class="cmp-sub">−4.5%</div>
+              <div class="cmp-mini">
+                <div class="m"><span class="k">레버리지</span><span class="v">6.7배</span></div>
+                <div class="m"><span class="k">계약</span><span class="v">1</span></div>
+              </div>
+            </div>
+            <div class="cmp-arrow">→</div>
+            <div class="cmp-col after">
+              <div class="cmp-head">주문 후</div>
+              <div class="cmp-liq-lbl">청산 가격</div>
+              <div class="cmp-liq">18,240</div>
+              <div class="cmp-sub">−9.3%</div>
+              <div class="cmp-mini">
+                <div class="m"><span class="k">레버리지</span><span class="v">10.0배</span></div>
+                <div class="m"><span class="k">계약</span><span class="v">3</span></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="cta">내 포지션 점검하기</button>
+          <div class="footer-note">참고용 · 투자 조언 아님</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <h3>이 시안들에서 정할 것</h3>
+    <ul>
+      <li><b>②(결과 우선) vs ③(계산기 통째)</b> — ②는 청산가를 크게 앞세워 링크 받은 사람이 3초 안에 이해. ③은 장부 상세모달을 <b>그대로 재활용</b>해서 구현이 가장 빠름(코드 거의 공짜). 취향/공수 선택.</li>
+      <li><b>계좌잔고 처리</b> — 세 시안 모두 <b>🔒 비공개로 가림</b>. 청산가·레버리지는 이미 파생값이라 잔고 원값 없이도 다 보임.</li>
+      <li><b>CTA</b> — "내 계산기에서 열기"가 신규 유입 핵심 동선. 누르면 그 값들이 채워진 계산기로 이동.</li>
+      <li><b>①(카톡 미리보기)</b> — B안을 택하는 이유 그 자체. 서버가 OG 이미지를 그려줘야 이게 뜸(A안은 안 뜸).</li>
+    </ul>
+  </div>
+</body>
+</html>

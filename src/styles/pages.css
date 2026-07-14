@@ -2002,6 +2002,15 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
+/* 제목·메타를 한 줄에(기준선 정렬) — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
+.records-detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding-right: var(--space-xl);
+}
+
 /* 주문 전/후 전환 세그먼트 — 언어 토글과 같은 필(pill) 문법으로 통일 */
 .records-detail-toggle {
   display: inline-flex;
@@ -2040,8 +2049,12 @@ html[data-zone='about'] body {
   pointer-events: none;
 }
 
-/* 기록을 보던 중 또 기록(스냅샷 저장)하거나 수식 페이지로 이탈하는 헤드 액션은 숨긴다 */
-.records-detail-modal .result-panel__head-actions {
+/* 기록을 보던 중 또 기록(스냅샷 저장)하거나 수식 페이지로 이탈하는 헤드 액션,
+   읽기 전용에서 무의미한 보조 chrome(도움말 툴팁·비우기)은 계산기 본체만 남기고 숨긴다 */
+.records-detail-modal .result-panel__head-actions,
+.records-detail-modal .field-label-tooltip-anchor,
+.records-detail-modal .input-panel__clear-actions,
+.records-detail-modal .field-section-footer {
   display: none;
 }
 

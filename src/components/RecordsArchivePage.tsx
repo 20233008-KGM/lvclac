@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
@@ -131,6 +131,7 @@ function RecordsDetailPanel({
 }) {
   useModalFocusRestore()
   const [orderPhase, setOrderPhase] = useState<'before' | 'after'>('after')
+  const calcRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -139,6 +140,27 @@ function RecordsDetailPanel({
       document.body.style.overflow = prev
     }
   }, [])
+
+  // 계산기 전체가 스크롤 없이 한눈에 들어오도록 모달 가용 높이에 맞춰 축소(zoom).
+  // zoom은 레이아웃 좌표계 자체를 줄여 transform과 달리 빈 공간이 남지 않는다.
+  useLayoutEffect(() => {
+    const calc = calcRef.current
+    const shell = calc?.parentElement
+    if (!calc || !shell) return
+    const apply = () => {
+      calc.style.setProperty('zoom', '1')
+      // 모달 상한(92vh, 900px 캡 — CSS와 동일)에서 헤더 등 계산기 외 높이를 뺀 가용분
+      const cap = Math.min(window.innerHeight * 0.92, 900)
+      const chromeHeight = shell.scrollHeight - calc.offsetHeight
+      // 서브픽셀 반올림 오차로 스크롤바가 생기지 않게 16px 여유 + 내림
+      const available = cap - chromeHeight - 16
+      const scale = Math.min(1, available / calc.offsetHeight)
+      calc.style.setProperty('zoom', String(Math.max(0.55, Math.floor(scale * 1000) / 1000)))
+    }
+    apply()
+    window.addEventListener('resize', apply)
+    return () => window.removeEventListener('resize', apply)
+  }, [orderPhase, detail])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -178,46 +200,48 @@ function RecordsDetailPanel({
         >
           <span className="auth-modal-close__mark" aria-hidden="true" />
         </button>
-        <h3 id="records-detail-title">{copy.detail}</h3>
-        {detail.type === 'order' ? (
-          <>
+        <div className="records-detail-head">
+          <h3 id="records-detail-title">{copy.detail}</h3>
+          {detail.type === 'order' ? (
             <p className="records-detail-meta">
               {copy.side}: {detail.record.positionSide} · {copy.archiveOrderContracts}:{' '}
               {formatNumber(detail.record.orderContracts)} · {copy.archiveOrderPrice}:{' '}
               {formatNumber(detail.record.orderPrice)} · {copy.detailReadOnly}
             </p>
-            <div
-              className="records-detail-toggle"
-              role="group"
-              aria-label={copy.orderSimulationLabel}
+          ) : (
+            <p className="records-detail-meta">
+              {detail.record.title} · {formatSavedAtCompact(detail.record.createdAt)} ·{' '}
+              {copy.detailReadOnly}
+            </p>
+          )}
+        </div>
+        {detail.type === 'order' && (
+          <div
+            className="records-detail-toggle"
+            role="group"
+            aria-label={copy.orderSimulationLabel}
+          >
+            <button
+              type="button"
+              className={orderPhase === 'before' ? 'active' : ''}
+              aria-pressed={orderPhase === 'before'}
+              onClick={() => setOrderPhase('before')}
             >
-              <button
-                type="button"
-                className={orderPhase === 'before' ? 'active' : ''}
-                aria-pressed={orderPhase === 'before'}
-                onClick={() => setOrderPhase('before')}
-              >
-                {copy.detailBefore}
-              </button>
-              <button
-                type="button"
-                className={orderPhase === 'after' ? 'active' : ''}
-                aria-pressed={orderPhase === 'after'}
-                onClick={() => setOrderPhase('after')}
-              >
-                {copy.detailAfter}
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="records-detail-meta">
-            {detail.record.title} · {formatSavedAtCompact(detail.record.createdAt)} ·{' '}
-            {copy.detailReadOnly}
-          </p>
+              {copy.detailBefore}
+            </button>
+            <button
+              type="button"
+              className={orderPhase === 'after' ? 'active' : ''}
+              aria-pressed={orderPhase === 'after'}
+              onClick={() => setOrderPhase('after')}
+            >
+              {copy.detailAfter}
+            </button>
+          </div>
         )}
         {/* key로 전/후 전환 시 패널을 재마운트 — 입력 패널이 내부 표시 상태를 갖고 있어
             props만 바뀌면 화면 문자열이 안 갱신된다(읽기 전용이라 재마운트 비용 무해) */}
-        <div className="records-detail-calc" key={orderPhase}>
+        <div className="records-detail-calc" key={orderPhase} ref={calcRef}>
           <InputPanel inputs={calcInputs} onChange={noopChange} />
           <ResultPanel inputs={calcInputs} onChange={noopChange} />
         </div>

@@ -4326,6 +4326,19 @@ body.scrub-drag-active * {
   border-right: 1px solid var(--color-border-subtle);
 }
 
+/* 좁은 폰(약 440px 이하): 2열 pair를 1열로 세워 숫자에 폭을 몰아준다.
+   각 값이 행 전체 폭을 쓰므로 잘림(…)이 거의 사라진다. 태블릿·데스크톱은 2열 유지. */
+@media (max-width: 440px) {
+  .result-row-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .result-row-pair > .result-row:first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+}
+
 .result-row-label {
   min-width: max-content;
   font-size: var(--font-size-sm);

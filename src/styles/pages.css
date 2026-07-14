@@ -1498,10 +1498,6 @@ html[data-zone='about'] body {
   margin-top: var(--space-sm);
 }
 
-.my-page-linked-logins-note {
-  margin-top: var(--space-xs);
-}
-
 .my-page-account-hub__logins .my-page-linked-list {
   gap: var(--space-xs);
   margin-top: var(--space-sm);
@@ -2114,27 +2110,6 @@ html[data-zone='about'] body {
   line-height: 1.35;
 }
 
-.my-page-linked-group {
-  margin-top: var(--space-md);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
-  overflow: hidden;
-}
-
-.my-page-linked-item {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 5.5rem auto;
-  align-items: center;
-  gap: var(--space-sm) var(--space-md);
-  min-height: 52px;
-  padding: var(--space-sm) var(--space-md);
-}
-
-.my-page-linked-item + .my-page-linked-item {
-  border-top: 1px solid var(--color-border-subtle);
-}
-
 /* @deprecated — legacy flat settings list. */
 .my-page-settings-list {
   list-style: none;
@@ -2250,10 +2225,6 @@ html[data-zone='about'] body {
   margin-top: 0;
 }
 
-.my-page-setting-row--linked {
-  grid-template-columns: 20px minmax(0, 1fr) 7rem 7.5rem;
-}
-
 .my-page-setting-row__value-stack {
   display: grid;
   gap: 2px;
@@ -2291,8 +2262,7 @@ html[data-zone='about'] body {
   padding: 0;
 }
 
-.my-page-linked-row,
-.my-page-setting-row--linked {
+.my-page-linked-row {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) 7rem 7.5rem;
   align-items: center;
@@ -3484,38 +3454,30 @@ a.my-page-compare-card__action {
     width: 100%;
   }
 
-  .my-page-linked-item {
+  /* 연동된 로그인 행: 아이콘+이름·상태 2열로 접고, 액션 버튼은 아래 전체 너비.
+     자식 규칙은 .my-page-linked-row로 스코프(과거 전역 규칙이 새어 레이아웃 깨진 이력) */
+  .my-page-linked-row,
+  .my-page-account-hub__logins .my-page-linked-row {
     grid-template-columns: 20px minmax(0, 1fr);
-    grid-template-rows: auto auto;
     align-items: start;
   }
 
-  .my-page-linked-name {
+  .my-page-linked-row .my-page-linked-name,
+  .my-page-linked-row .my-page-linked-status {
     grid-column: 2;
   }
 
-  .my-page-linked-status {
-    grid-column: 2;
-  }
-
-  .my-page-linked-action {
+  .my-page-linked-row .my-page-linked-action {
     grid-column: 1 / -1;
     width: 100%;
   }
 
-  .my-page-linked-action .btn {
+  .my-page-linked-row .my-page-linked-action .btn {
     width: 100%;
   }
 
   .my-page-setting-row--nickname,
-  .my-page-setting-row--billing,
-  .my-page-setting-row--linked,
-  .my-page-linked-row {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-
-  .my-page-account-hub__logins .my-page-linked-row {
+  .my-page-setting-row--billing {
     grid-template-columns: 1fr;
     align-items: stretch;
   }

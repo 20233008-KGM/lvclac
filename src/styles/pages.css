@@ -2002,13 +2002,42 @@ html[data-zone='about'] body {
   overflow-y: auto;
 }
 
-/* 헤더는 메타 한 줄 — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
+/* 헤더는 메타 한 줄(+주문이면 소형 전/후 토글) — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
 .records-detail-head {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
   padding-right: 48px;
+}
+
+/* 주문 전/후 소형 토글 — 메타 텍스트와 같은 무게로 조용히(언어 토글의 축소판) */
+.records-detail-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+
+.records-detail-toggle button {
+  min-height: 20px;
+  padding: 0 var(--space-sm);
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.records-detail-toggle button.active {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 /* 모달 안 계산기: 읽기 전용 — 포인터를 통째로 차단해 입력·버튼을 비활성화 */
@@ -2026,6 +2055,12 @@ html[data-zone='about'] body {
 .records-detail-modal .field-label-tooltip-anchor,
 .records-detail-modal .input-panel__clear-actions,
 .records-detail-modal .field-section-footer {
+  display: none;
+}
+
+/* 주문 입력줄은 읽기 전용에서 무의미해 숨기되, '주문 전' 화면에서만 예외 —
+   그 순간 입력돼 있던 주문 스펙(계약수·가격)을 입력창 그대로 보여준다 */
+.records-detail-modal .records-detail-calc:not(.records-detail-calc--order-entry) .result-order-fields {
   display: none;
 }
 

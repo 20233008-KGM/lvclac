@@ -244,6 +244,8 @@ export const en: Messages = {
     archiveOrderPrice: 'Order price',
     detail: 'Details',
     detailReadOnly: 'Values as saved · read-only',
+    detailBefore: 'Before order',
+    detailAfter: 'After order',
     selectRecord: 'Select record',
     selectedCount: '{count} selected',
     selectAllShown: 'Select all',

@@ -13,6 +13,8 @@ import {
 } from '../db/accountRecords'
 import { fetchNumberSets } from '../db/numberSets'
 import { useLanguage } from '../i18n'
+import { revertOrderScenarioState } from '../calc/mtmLink'
+import type { CalculatorInputs } from '../types'
 import { InputPanel } from './InputPanel'
 import { ResultPanel } from './ResultPanel'
 import { RecordsContextMenu, type RecordsContextMenuItem } from './RecordsContextMenu'
@@ -100,11 +102,21 @@ function TimelineValue({
 const noopChange = () => undefined
 
 /**
+ * '주문 전' 화면용 입력값. 저장된 beforeInputs는 주문이 '반영 중'인 시나리오 상태라
+ * 입력 패널이 반영된(=주문 후와 같은) 값을 보여준다 — 시나리오를 벗겨(계산기 ESC 취소와
+ * 같은 함수) 주문 직전의 원래 값으로 되돌려 보여준다.
+ */
+function rawBeforeInputs(inputs: CalculatorInputs): CalculatorInputs {
+  return { ...inputs, ...revertOrderScenarioState(inputs) }
+}
+
+/**
  * 기록 상세 — 화면 전면 모달(body 포털). 저장 당시 입력값이 채워진 계산기
- * (입력+결과 패널)를 읽기 전용으로 통째로 보여준다. 주문 기록은 주문이
- * 반영된 직후(afterInputs) 상태를 보여준다. 조회형이라 우상단 X를 유지하고
- * ESC·오버레이 클릭으로 닫으며, 열려 있는 동안 배경 스크롤을 잠근다.
- * 포커스 복원은 마운트 시점의 activeElement(클릭한 카드)로 자동 복귀.
+ * (입력+결과 패널)를 읽기 전용으로 통째로 보여준다. 주문 기록은 기본으로
+ * 반영 직후(afterInputs)를 보여주고, 헤더의 소형 전/후 토글로 직전 상태를
+ * 오갈 수 있다. 조회형이라 우상단 X를 유지하고 ESC·오버레이 클릭으로 닫으며,
+ * 열려 있는 동안 배경 스크롤을 잠근다. 포커스 복원은 마운트 시점의
+ * activeElement(클릭한 카드)로 자동 복귀.
  */
 function RecordsDetailPanel({
   detail,
@@ -118,6 +130,7 @@ function RecordsDetailPanel({
   onClose: () => void
 }) {
   useModalFocusRestore()
+  const [orderPhase, setOrderPhase] = useState<'before' | 'after'>('after')
   const calcRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -147,7 +160,7 @@ function RecordsDetailPanel({
     apply()
     window.addEventListener('resize', apply)
     return () => window.removeEventListener('resize', apply)
-  }, [detail])
+  }, [orderPhase, detail])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -158,7 +171,11 @@ function RecordsDetailPanel({
   }, [onClose])
 
   const calcInputs =
-    detail.type === 'order' ? detail.record.afterInputs : detail.record.inputs
+    detail.type === 'order'
+      ? orderPhase === 'before'
+        ? rawBeforeInputs(detail.record.beforeInputs)
+        : detail.record.afterInputs
+      : detail.record.inputs
 
   const modal = (
     <div
@@ -196,10 +213,42 @@ function RecordsDetailPanel({
               {copy.detailReadOnly}
             </p>
           )}
+          {detail.type === 'order' && (
+            <div
+              className="records-detail-toggle"
+              role="group"
+              aria-label={copy.orderSimulationLabel}
+            >
+              <button
+                type="button"
+                className={orderPhase === 'before' ? 'active' : ''}
+                aria-pressed={orderPhase === 'before'}
+                onClick={() => setOrderPhase('before')}
+              >
+                {copy.detailBefore}
+              </button>
+              <button
+                type="button"
+                className={orderPhase === 'after' ? 'active' : ''}
+                aria-pressed={orderPhase === 'after'}
+                onClick={() => setOrderPhase('after')}
+              >
+                {copy.detailAfter}
+              </button>
+            </div>
+          )}
         </div>
         {/* key로 기록이 바뀌면 패널을 재마운트 — 입력 패널이 내부 표시 상태를 갖고 있어
             props만 바뀌면 화면 문자열이 안 갱신된다(읽기 전용이라 재마운트 비용 무해) */}
-        <div className="records-detail-calc" key={detail.record.id} ref={calcRef}>
+        <div
+          className={`records-detail-calc${
+            detail.type === 'order' && orderPhase === 'before'
+              ? ' records-detail-calc--order-entry'
+              : ''
+          }`}
+          key={`${detail.record.id}-${orderPhase}`}
+          ref={calcRef}
+        >
           <InputPanel inputs={calcInputs} onChange={noopChange} />
           <ResultPanel inputs={calcInputs} onChange={noopChange} />
         </div>

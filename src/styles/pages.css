@@ -3433,16 +3433,11 @@ a.my-page-compare-card__action {
     text-decoration: none;
   }
 
+  /* 행 최소 너비를 강제하지 않는다 — 1fr 시각 열이 남는 폭을 흡수하고 숫자 열은
+     max-content라 안 잘리므로 428px에서도 4열이 화면 안에 들어옴(실측 309px).
+     overflow-x는 극단적으로 긴 데이터의 안전판으로만 유지(평상시 가로 스크롤 없음) */
   .records-summary-table {
     overflow-x: auto;
-  }
-
-  .records-summary-table--snapshot .records-summary-row {
-    min-width: 22rem;
-  }
-
-  .records-summary-table--orders .records-summary-row {
-    min-width: 32rem;
   }
 
   .records-timeline-toolbar,

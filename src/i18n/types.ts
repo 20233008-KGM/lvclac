@@ -242,8 +242,6 @@ export interface Messages {
     archiveOrderPrice: string
     detail: string
     detailReadOnly: string
-    detailBefore: string
-    detailAfter: string
     selectRecord: string
     selectedCount: string
     selectAllShown: string

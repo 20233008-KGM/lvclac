@@ -2002,52 +2002,13 @@ html[data-zone='about'] body {
   overflow-y: auto;
 }
 
-.records-detail-modal h3,
-.records-detail-modal h4 {
-  margin: 0;
-  color: var(--color-text);
-}
-
-/* 제목·메타·(주문이면)전후 토글까지 한 줄 — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
+/* 헤더는 메타 한 줄 — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
 .records-detail-head {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
   padding-right: 48px;
-}
-
-.records-detail-head .records-detail-toggle {
-  margin-left: auto;
-}
-
-/* 주문 전/후 전환 세그먼트 — 언어 토글과 같은 필(pill) 문법으로 통일 */
-.records-detail-toggle {
-  display: inline-flex;
-  gap: 2px;
-  justify-self: start;
-  padding: 2px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-elevated);
-}
-
-.records-detail-toggle button {
-  min-height: 30px;
-  padding: 0 var(--space-md);
-  border: none;
-  border-radius: calc(var(--radius-md) - 2px);
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.records-detail-toggle button.active {
-  background: var(--color-surface-2);
-  color: var(--color-text);
-  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 /* 모달 안 계산기: 읽기 전용 — 포인터를 통째로 차단해 입력·버튼을 비활성화 */

@@ -237,8 +237,6 @@ export const ko: Messages = {
     archiveOrderPrice: '주문가격',
     detail: '상세',
     detailReadOnly: '저장 당시 값 · 읽기 전용',
-    detailBefore: '주문 전',
-    detailAfter: '주문 후',
     selectRecord: '이 기록 선택',
     selectedCount: '{count}개 선택됨',
     selectAllShown: '전체 선택',

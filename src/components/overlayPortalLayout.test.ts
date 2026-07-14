@@ -67,18 +67,15 @@ describe('records detail modal', () => {
     expect(text).toContain('auth-modal-close')
   })
 
-  it('shows the saved calculator (read-only) with a before/after toggle for orders', () => {
+  it('shows the saved calculator (read-only), orders in their post-apply state', () => {
     const text = source('src/components/RecordsArchivePage.tsx')
 
     // 저장 당시 입력값으로 실제 계산기 패널을 재사용한다(요약 타일 아님).
     expect(text).toContain('<InputPanel inputs={calcInputs} onChange={noopChange} />')
     expect(text).toContain('<ResultPanel inputs={calcInputs} onChange={noopChange} />')
     expect(text).toContain('records-detail-calc')
-    // 주문 기록은 주문 전/후 입력을 토글로 오간다.
-    expect(text).toContain('detail.record.beforeInputs')
+    // 주문 기록은 주문 반영 직후(afterInputs) 상태를 보여준다.
     expect(text).toContain('detail.record.afterInputs')
-    expect(text).toContain('copy.detailBefore')
-    expect(text).toContain('copy.detailAfter')
     expect(text).toContain('copy.detailReadOnly')
   })
 })

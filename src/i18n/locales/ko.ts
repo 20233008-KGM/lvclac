@@ -331,6 +331,7 @@ export const ko: Messages = {
     autoSaveOrderHistoryError: '설정을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
     autoSnapshotTitle: '계좌스냅샷 자동 저장',
     autoSnapshotBody: '지역 기준 시간대로 하루 한 번 계좌를 저장합니다.',
+    autoSnapshotChangeOnlyHint: '값이 바뀐 날만 저장돼요. 마지막 스냅샷과 같으면 그날은 건너뜁니다.',
     autoSnapshotDefaultLabel: '일일 장마감',
     autoSnapshotLabelLabel: '규칙 이름',
     autoSnapshotLabelPlaceholder: 'CME 장마감',

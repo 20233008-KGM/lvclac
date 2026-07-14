@@ -21,6 +21,7 @@ import type { CalculatorInputs } from '../../src/types.js'
 import {
   hasMeaningfulCalculatorInputs,
   parseStoredCalculatorInputs,
+  storedCalculatorInputsEqual,
 } from '../../src/utils/storedCalculatorInputs.js'
 
 export interface AccountSnapshotCronConfig {
@@ -53,6 +54,8 @@ export interface AccountSnapshotCronDeps {
   fetchActiveSubscription(userId: string): Promise<{ active: boolean }>
   /** 자동 스냅샷이 켜진 슬롯 전부. 없으면 빈 배열. */
   fetchAutoSnapshotSlots(userId: string): Promise<AutoSnapshotSlot[]>
+  /** 해당 슬롯의 가장 최근 스냅샷(수동 포함) 입력값. 없으면 null. */
+  fetchLatestSlotSnapshotInputs(userId: string, numberSetId: string): Promise<unknown | null>
   insertAutoSnapshot(
     userId: string,
     payload: AccountSnapshotPayload,
@@ -205,6 +208,23 @@ export function createAccountSnapshotCronDepsFromClient(
       return (data ?? []).map(mapAutoSnapshotSlot)
     },
 
+    async fetchLatestSlotSnapshotInputs(
+      userId: string,
+      numberSetId: string,
+    ): Promise<unknown | null> {
+      const { data, error } = await admin
+        .from('account_snapshots')
+        .select('inputs')
+        .eq('user_id', userId)
+        .eq('number_set_id', numberSetId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle<{ inputs: unknown }>()
+
+      if (error) throw new Error(error.message)
+      return data?.inputs ?? null
+    },
+
     async insertAutoSnapshot(
       userId: string,
       payload: AccountSnapshotPayload,
@@ -236,14 +256,18 @@ export function createAccountSnapshotCronDepsFromClient(
     },
 
     async updateSettingAfterRun(userId, patch) {
+      // last_run_at/last_run_local_date는 "마지막으로 실제 저장한 시각"이므로
+      // 이번 실행에서 저장이 없었으면(null) 기존 값을 지우지 않고 유지한다.
+      // (값 미변경 스킵이 일상이 된 뒤로는 매일 null로 덮으면 기록이 사라진다.)
+      const fields: Record<string, string | null> = {
+        next_run_at: patch.nextRunAt,
+        last_error: patch.lastError,
+      }
+      if (patch.lastRunAt !== null) fields.last_run_at = patch.lastRunAt
+      if (patch.lastRunLocalDate !== null) fields.last_run_local_date = patch.lastRunLocalDate
       const { error } = await admin
         .from('account_snapshot_settings')
-        .update({
-          next_run_at: patch.nextRunAt,
-          last_run_at: patch.lastRunAt,
-          last_run_local_date: patch.lastRunLocalDate,
-          last_error: patch.lastError,
-        })
+        .update(fields)
         .eq('user_id', userId)
       if (error) return { ok: false, error: error.message || 'settings_update_failed' }
       return { ok: true }
@@ -336,6 +360,17 @@ async function processDueSetting(
     if (!inputs || !hasMeaningfulCalculatorInputs(inputs)) {
       skipped += 1
       lastError = 'missing_cloud_inputs'
+      continue
+    }
+
+    // 값이 안 바뀐 날은 기록하지 않는다 — 이 슬롯의 마지막 스냅샷(수동 포함)과
+    // 입력값이 같으면 건너뛴다. 궁금해서 만졌다가 원복한 what-if도 자연히 걸러진다.
+    const previousInputs = await deps.fetchLatestSlotSnapshotInputs(
+      setting.userId,
+      slot.numberSetId,
+    )
+    if (previousInputs !== null && storedCalculatorInputsEqual(previousInputs, inputs)) {
+      skipped += 1
       continue
     }
 

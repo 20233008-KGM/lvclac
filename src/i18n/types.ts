@@ -334,6 +334,7 @@ export interface Messages {
     autoSaveOrderHistoryError: string
     autoSnapshotTitle: string
     autoSnapshotBody: string
+    autoSnapshotChangeOnlyHint: string
     autoSnapshotDefaultLabel: string
     autoSnapshotLabelLabel: string
     autoSnapshotLabelPlaceholder: string

@@ -339,6 +339,7 @@ export const en: Messages = {
     autoSaveOrderHistoryError: 'Could not save this setting. Please try again shortly.',
     autoSnapshotTitle: 'Automatic account snapshot',
     autoSnapshotBody: 'Saves your account once a day in your region’s time zone.',
+    autoSnapshotChangeOnlyHint: 'Only days with changes are saved — if nothing differs from the last snapshot, that day is skipped.',
     autoSnapshotDefaultLabel: 'Daily close',
     autoSnapshotLabelLabel: 'Rule name',
     autoSnapshotLabelPlaceholder: 'CME close',

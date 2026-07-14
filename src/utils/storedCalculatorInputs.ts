@@ -70,3 +70,21 @@ export function parseStoredCalculatorInputs(value: unknown): CalculatorInputs | 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   return normalizeStoredCalculatorInputs(value as Partial<CalculatorInputs>)
 }
+
+/**
+ * 저장된 두 입력값이 계산상 같은 값인지 비교한다.
+ * 양쪽 다 정규화(normalize)한 뒤 필드 단위로 비교하므로 jsonb 키 순서·레거시
+ * 필드명 차이에 흔들리지 않는다. 한쪽이라도 파싱 불가면 "다르다"로 본다.
+ */
+export function storedCalculatorInputsEqual(a: unknown, b: unknown): boolean {
+  const left = parseStoredCalculatorInputs(a)
+  const right = parseStoredCalculatorInputs(b)
+  if (!left || !right) return false
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)])
+  for (const key of keys) {
+    if (!Object.is(left[key as keyof CalculatorInputs], right[key as keyof CalculatorInputs])) {
+      return false
+    }
+  }
+  return true
+}

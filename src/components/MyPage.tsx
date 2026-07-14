@@ -479,6 +479,7 @@ export function AccountSnapshotAutomationPanel({
       <div className="my-page-setting-line__copy">
         <h3 id="auto-snapshot-title">{copy.autoSnapshotTitle}</h3>
         <p>{copy.autoSnapshotBody}</p>
+        <p className="my-page-setting-hint">{copy.autoSnapshotChangeOnlyHint}</p>
         {!isPro && <p className="my-page-alert">{copy.autoSnapshotProRequired}</p>}
         {notice && <p className="my-page-form-message" role="status">{notice}</p>}
       </div>

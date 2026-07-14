@@ -19,6 +19,7 @@ function baseDeps(
     fetchDueSettings: async () => [],
     fetchActiveSubscription: async () => ({ active: false }),
     fetchAutoSnapshotSlots: async () => [],
+    fetchLatestSlotSnapshotInputs: async () => null,
     insertAutoSnapshot: async () => ({ ok: true }),
     markSlotRolledOver: async () => ({ ok: true }),
     updateSettingAfterRun: async () => ({ ok: true }),
@@ -188,6 +189,93 @@ describe('handleAccountSnapshotCron', () => {
     expect(inserts).toEqual(['set-normal'])
     // 분기 전진: 2026-09-10 → 2026-12-10.
     expect(rolled).toEqual([{ numberSetId: 'set-roll', nextDate: '2026-12-10' }])
+  })
+
+  it('skips a slot whose inputs equal its latest snapshot (values unchanged since last record)', async () => {
+    const errors: Array<string | null> = []
+    const result = await handleAccountSnapshotCron(
+      CONFIG,
+      { authorization: 'Bearer secret' },
+      baseDeps({
+        fetchDueSettings: async () => [
+          { userId: 'user-1', label: 'Close', timeZone: 'UTC', timeOfDay: '16:00' },
+        ],
+        fetchActiveSubscription: async () => ({ active: true }),
+        fetchAutoSnapshotSlots: async () => [
+          { numberSetId: 'set-a', title: 'BTC perp', inputs: sampleInputs },
+        ],
+        // jsonb는 키 순서를 보존하지 않으므로, 키 순서를 뒤집은 같은 값으로 돌려준다.
+        fetchLatestSlotSnapshotInputs: async () =>
+          Object.fromEntries(Object.entries(sampleInputs).reverse()),
+        insertAutoSnapshot: async () => {
+          throw new Error('should_not_insert')
+        },
+        updateSettingAfterRun: async (_userId, patch) => {
+          errors.push(patch.lastError)
+          return { ok: true }
+        },
+      }),
+      new Date('2026-07-09T20:01:00.000Z'),
+    )
+
+    expect(result.body).toMatchObject({ ok: true, processed: 0, skipped: 1, failed: 0 })
+    // 값 미변경은 정상 동작이지 오류가 아니다.
+    expect(errors).toEqual([null])
+  })
+
+  it('inserts a snapshot when slot inputs differ from the latest snapshot', async () => {
+    const inserts: string[] = []
+    const result = await handleAccountSnapshotCron(
+      CONFIG,
+      { authorization: 'Bearer secret' },
+      baseDeps({
+        fetchDueSettings: async () => [
+          { userId: 'user-1', label: 'Close', timeZone: 'UTC', timeOfDay: '16:00' },
+        ],
+        fetchActiveSubscription: async () => ({ active: true }),
+        fetchAutoSnapshotSlots: async () => [
+          { numberSetId: 'set-a', title: 'BTC perp', inputs: sampleInputs },
+        ],
+        fetchLatestSlotSnapshotInputs: async () => ({
+          ...sampleInputs,
+          currentPrice: (sampleInputs.currentPrice ?? 0) + 1,
+        }),
+        insertAutoSnapshot: async (_userId, payload) => {
+          inserts.push(payload.numberSetId ?? '')
+          return { ok: true }
+        },
+      }),
+      new Date('2026-07-09T20:01:00.000Z'),
+    )
+
+    expect(result.body).toMatchObject({ ok: true, processed: 1, skipped: 0, failed: 0 })
+    expect(inserts).toEqual(['set-a'])
+  })
+
+  it('inserts the first snapshot of a slot even though there is nothing to compare against', async () => {
+    const inserts: string[] = []
+    const result = await handleAccountSnapshotCron(
+      CONFIG,
+      { authorization: 'Bearer secret' },
+      baseDeps({
+        fetchDueSettings: async () => [
+          { userId: 'user-1', label: 'Close', timeZone: 'UTC', timeOfDay: '16:00' },
+        ],
+        fetchActiveSubscription: async () => ({ active: true }),
+        fetchAutoSnapshotSlots: async () => [
+          { numberSetId: 'set-new', title: 'New slot', inputs: sampleInputs },
+        ],
+        fetchLatestSlotSnapshotInputs: async () => null,
+        insertAutoSnapshot: async (_userId, payload) => {
+          inserts.push(payload.numberSetId ?? '')
+          return { ok: true }
+        },
+      }),
+      new Date('2026-07-09T20:01:00.000Z'),
+    )
+
+    expect(result.body).toMatchObject({ ok: true, processed: 1, skipped: 0, failed: 0 })
+    expect(inserts).toEqual(['set-new'])
   })
 
   it('counts per slot: one slot succeeds while another is skipped for empty inputs', async () => {

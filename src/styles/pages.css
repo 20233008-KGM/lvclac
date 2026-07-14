@@ -2650,6 +2650,11 @@ html[data-zone='about'] body {
   line-height: 1.55;
 }
 
+.my-page-setting-line__copy .my-page-setting-hint {
+  font-size: var(--font-size-xs);
+  opacity: 0.85;
+}
+
 .my-page-setting-line__control {
   display: flex;
   justify-content: flex-end;

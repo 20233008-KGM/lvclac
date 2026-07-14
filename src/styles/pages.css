@@ -1427,27 +1427,6 @@ html[data-zone='about'] body {
   margin-top: 0;
 }
 
-.my-page-account-hub .my-page-nickname-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  /* legacy .my-page-nickname-form의 flex-end(우측 정렬)를 덮어써 왼쪽 정렬로 되돌린다. */
-  justify-items: start;
-  justify-content: stretch;
-  align-content: start;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.my-page-account-hub .my-page-nickname-form .my-page-inline-control {
-  width: 100%;
-  max-width: 24rem;
-}
-
-.my-page-account-hub .my-page-nickname-form input {
-  flex: 1 1 auto;
-  max-width: none;
-}
-
 /* 닉네임 인라인 편집: 이름 옆 연필 버튼 + 그 자리에서 열리는 편집 폼 */
 .my-page-nickname-edit-btn {
   display: inline-grid;
@@ -1548,10 +1527,6 @@ html[data-zone='about'] body {
   align-items: stretch;
   min-width: 0;
   gap: var(--space-sm);
-}
-
-.my-page-nickname-form .my-page-inline-control {
-  width: 100%;
 }
 
 .my-page-inline-control input {
@@ -2108,149 +2083,6 @@ html[data-zone='about'] body {
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.35;
-}
-
-/* @deprecated — legacy flat settings list. */
-.my-page-settings-list {
-  list-style: none;
-  display: grid;
-  gap: var(--space-xs);
-  margin: var(--space-md) 0 0;
-  padding: 0;
-}
-
-.my-page-setting-row {
-  display: grid;
-  align-items: center;
-  gap: var(--space-sm) var(--space-md);
-  min-height: 48px;
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
-}
-
-.my-page-setting-row__label {
-  font-weight: 600;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  line-height: 1.35;
-}
-
-.my-page-setting-row--nickname {
-  grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr);
-}
-
-.my-page-setting-row__control {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-  min-width: 0;
-}
-
-.my-page-setting-row__control input {
-  width: min(100%, 12rem);
-  flex: none;
-  min-height: 34px;
-  height: 34px;
-  padding: 0 var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.25;
-}
-
-.my-page-setting-row__control input:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.my-page-setting-row__control .btn {
-  min-height: 34px;
-  height: 34px;
-  width: auto;
-  flex: none;
-  padding-inline: var(--space-md);
-  white-space: nowrap;
-}
-
-.my-page-nickname-form {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-  min-width: 0;
-  width: 100%;
-}
-
-.my-page-setting-row__label label {
-  cursor: pointer;
-}
-
-.my-page-setting-row--billing {
-  grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr) auto;
-  align-items: center;
-}
-
-.my-page-setting-row__value {
-  min-width: 0;
-  font-weight: 600;
-  color: var(--color-text);
-  line-height: 1.35;
-}
-
-.my-page-setting-row__action {
-  display: flex;
-  justify-content: flex-end;
-  min-height: 32px;
-}
-
-.my-page-setting-row__action .btn {
-  min-height: 32px;
-  height: 32px;
-  padding: 0 10px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.my-page-setting-row--billing-plans {
-  display: block;
-  padding: var(--space-md);
-}
-
-.my-page-setting-row--billing-plans .my-page-billing {
-  margin-top: 0;
-}
-
-.my-page-setting-row__value-stack {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.my-page-setting-row__value-stack .my-page-field-help {
-  margin: 0;
-  font-weight: 400;
-}
-
-.my-page-settings-note {
-  padding: 0 var(--space-md);
-  border: none;
-  background: transparent;
-  min-height: 0;
-}
-
-.my-page-settings-note .my-page-form-message {
-  margin: 0;
-}
-
-.my-page-account-settings-meta {
-  display: grid;
-  gap: var(--space-xs);
-  margin-top: var(--space-sm);
 }
 
 /* 연동된 로그인: 카드형 행, 이름·상태·액션 열 정렬 고정 */
@@ -3484,31 +3316,6 @@ a.my-page-compare-card__action {
     align-self: center;
   }
 
-  .my-page-setting-row--nickname,
-  .my-page-setting-row--billing {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-
-  .my-page-setting-row__control {
-    justify-content: stretch;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .my-page-setting-row__control input {
-    width: 100%;
-  }
-
-  .my-page-setting-row__action {
-    width: 100%;
-  }
-
-  .my-page-setting-row__action .btn,
-  .my-page-setting-row--billing .my-page-setting-row__action .btn-primary {
-    width: 100%;
-  }
-
   .my-page-billing-row {
     flex-direction: column;
     align-items: stretch;
@@ -3579,13 +3386,6 @@ a.my-page-compare-card__action {
   .my-page-inline-control {
     flex-direction: column;
     flex-wrap: nowrap;
-    max-width: none;
-  }
-
-  .my-page-account-hub .my-page-nickname-form .my-page-inline-control,
-  .my-page-account-hub .my-page-nickname-form input {
-    flex: 1 1 auto;
-    width: 100%;
     max-width: none;
   }
 

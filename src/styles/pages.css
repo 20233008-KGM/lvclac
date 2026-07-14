@@ -1933,6 +1933,22 @@ html[data-zone='about'] body {
   }
 }
 
+/* 터치 기기: 숨길 수는 없으니(호버 부재) 항상 보이되 흐리게 배경에 녹인다.
+   체크됐거나 선택 모드가 시작되면 또렷하게 — 데스크톱의 드러남 조건과 동일 계약 */
+@media (hover: none) {
+  .records-timeline-select input {
+    opacity: 0.4;
+    transition: opacity 0.12s ease;
+  }
+
+  .records-timeline-select input:checked,
+  .records-timeline-card--selected .records-timeline-select input,
+  .records-timeline-grid--selecting .records-timeline-select input,
+  .records-timeline-select:focus-within input {
+    opacity: 1;
+  }
+}
+
 .records-timeline-card--snapshot {
   margin-right: 4px;
   border-left: 3px solid var(--color-success);

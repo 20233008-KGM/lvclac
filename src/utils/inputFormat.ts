@@ -1,4 +1,4 @@
-import { exceedsSafePrecision, roundTo, trimTrailingZeros } from './format'
+import { exceedsSafePrecision, roundTo, trimTrailingZeros } from './format.js'
 
 /**
  * 정수부 최대 자릿수. 1000조(10^15)는 16자리이며,

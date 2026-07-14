@@ -1,6 +1,6 @@
-import { defaultInputs, type CalculatorInputs } from '../types'
-import { normalizeStoredRate } from './inputFormat'
-import { sanitizeDraftInputs } from './sanitizeDraftInputs'
+import { defaultInputs, type CalculatorInputs } from '../types.js'
+import { normalizeStoredRate } from './inputFormat.js'
+import { sanitizeDraftInputs } from './sanitizeDraftInputs.js'
 
 const MEANINGFUL_NUMBER_FIELDS: (keyof CalculatorInputs)[] = [
   'accountEval',

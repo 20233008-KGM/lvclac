@@ -1,5 +1,5 @@
-import type { CalculatorInputs } from '../types'
-import { isIndexScaleReferencePair } from './accountEval'
+import type { CalculatorInputs } from '../types.js'
+import { isIndexScaleReferencePair } from './accountEval.js'
 
 /** HTS 지수×1000 표기 (예: 320500 → 320.5pt) */
 export const INDEX_FIELD_DIVISOR = 1000

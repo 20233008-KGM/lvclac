@@ -1,4 +1,4 @@
-import type { BillingDeps } from './billingConfig'
+import type { BillingDeps } from './billingConfig.js'
 
 export type SubscriptionStatus =
   | 'inactive'

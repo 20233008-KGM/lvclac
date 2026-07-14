@@ -1,6 +1,6 @@
-import type { CalculatorInputs, PositionSide } from '../types'
-import { isWonAccountIndexFieldMismatch } from './indexNotional'
-import { resolvePointValue } from './pointValue'
+import type { CalculatorInputs, PositionSide } from '../types.js'
+import { isWonAccountIndexFieldMismatch } from './indexNotional.js'
+import { resolvePointValue } from './pointValue.js'
 
 /**
  * 약정금액·현재가가 같은 지수 스케일(예: 303500 vs 320500)로 보일 때

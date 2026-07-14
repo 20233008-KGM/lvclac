@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { createBillingDeps, readBillingConfig } from '../../scripts/billing/billingConfig'
-import { handlePortal } from '../../scripts/billing/billingHandlers'
-import { bearerToken, requestOrigin, sendJson } from '../../scripts/billing/nodeAdapter'
+import { createBillingDeps, readBillingConfig } from '../../scripts/billing/billingConfig.js'
+import { handlePortal } from '../../scripts/billing/billingHandlers.js'
+import { bearerToken, requestOrigin, sendJson } from '../../scripts/billing/nodeAdapter.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   if (req.method !== 'POST') {

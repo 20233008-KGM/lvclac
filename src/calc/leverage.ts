@@ -1,4 +1,4 @@
-import type { CalcMessageCode } from '../i18n/calcMessages'
+import type { CalcMessageCode } from '../i18n/calcMessages.js'
 import type {
   CalculatorInputs,
   EvaluateResult,
@@ -6,12 +6,12 @@ import type {
   OrderResult,
   OrderScenarioBaseline,
   PositionSide,
-} from '../types'
+} from '../types.js'
 import {
   resolveEvaluationInputs,
   resolveMarginCalculationInputs,
   resolveMarginEquity,
-} from './mtmLink'
+} from './mtmLink.js'
 import {
   calcMargins,
   calcPositionNotional,
@@ -22,16 +22,16 @@ import {
   withReferencePrice,
   validateLiquidationInputs,
   validateMarginRates,
-} from './margins'
+} from './margins.js'
 import {
   buildLiquidationParams,
   calcLiquidationPriceFromParams,
   calcToleranceDelta,
   calcToleranceRate,
   calcTotalQuantity,
-} from './liquidation'
+} from './liquidation/index.js'
 
-export { getPointValue, resolvePointValue } from './pointValue'
+export { getPointValue, resolvePointValue } from './pointValue.js'
 export {
   buildLiquidationParams,
   calcLongLiquidationPrice,
@@ -39,7 +39,7 @@ export {
   calcTotalQuantity,
   calcToleranceDelta,
   calcToleranceRate,
-} from './liquidation'
+} from './liquidation/index.js'
 
 /** @deprecated calcLiquidationPriceForInputs 또는 calcLiquidationPriceFromParams 사용 */
 export function calcLiquidationPrice(

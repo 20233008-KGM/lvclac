@@ -1,4 +1,4 @@
-import type { LiquidationParams } from './common'
+import type { LiquidationParams } from './common.js'
 
 /**
  * LONG 청산가

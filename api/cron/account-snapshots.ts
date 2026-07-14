@@ -4,8 +4,8 @@ import {
   handleAccountSnapshotCron,
   readAccountSnapshotCronConfig,
   type AccountSnapshotCronDeps,
-} from '../../scripts/accountSnapshots/automation'
-import { bearerToken, sendJson } from '../../scripts/billing/nodeAdapter'
+} from '../../scripts/accountSnapshots/automation.js'
+import { bearerToken, sendJson } from '../../scripts/billing/nodeAdapter.js'
 
 const NOOP_DEPS: AccountSnapshotCronDeps = {
   fetchDueSettings: async () => [],

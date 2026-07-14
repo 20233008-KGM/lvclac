@@ -1,17 +1,17 @@
-import type { CalcMessageCode } from '../i18n/calcMessages'
+import type { CalcMessageCode } from '../i18n/calcMessages.js'
 import type {
   CalculatorInputs,
   EntrustedMarginSource,
   MaintenanceMarginSource,
   MarginAmounts,
   MarginInputMode,
-} from '../types'
+} from '../types.js'
 import {
   calcIndexNotionalWon,
   isWonAccountIndexFieldMismatch,
-} from './indexNotional'
-import { resolveMarginEquity } from './mtmLink'
-import { hasContractSpec, resolvePointValue } from './pointValue'
+} from './indexNotional.js'
+import { resolveMarginEquity } from './mtmLink.js'
+import { hasContractSpec, resolvePointValue } from './pointValue.js'
 
 type NotionalInputs = Pick<
   CalculatorInputs,

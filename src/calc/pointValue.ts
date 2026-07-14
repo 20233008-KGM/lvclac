@@ -1,4 +1,4 @@
-import type { CalculatorInputs } from '../types'
+import type { CalculatorInputs } from '../types.js'
 
 type PointValueInputs = Pick<
   CalculatorInputs,

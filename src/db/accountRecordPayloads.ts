@@ -3,7 +3,7 @@ import type {
   EvaluateResult,
   OrderResult,
   PositionSide,
-} from '../types'
+} from '../types.js'
 
 const DEFAULT_SNAPSHOT_TITLE = 'Account snapshot'
 

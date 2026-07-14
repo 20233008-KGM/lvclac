@@ -1,6 +1,6 @@
-import type { CalculatorInputs } from '../../types'
-import { effectiveAccountEval } from '../accountEval'
-import { isMaintenanceFixed, maintenanceMarginMode } from '../margins'
+import type { CalculatorInputs } from '../../types.js'
+import { effectiveAccountEval } from '../accountEval.js'
+import { isMaintenanceFixed, maintenanceMarginMode } from '../margins.js'
 
 /** 청산가 계산 입력 — E0, C0, Q, M(C0) */
 export interface LiquidationParams {

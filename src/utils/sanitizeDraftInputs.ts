@@ -1,4 +1,4 @@
-import type { CalculatorInputs, OrderScenarioBaseline } from '../types'
+import type { CalculatorInputs, OrderScenarioBaseline } from '../types.js'
 
 function cleanOptionalNumber(value: number | undefined): number | undefined {
   if (value == null) return value

@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { createBillingDeps, readBillingConfig } from '../../scripts/billing/billingConfig'
-import { handleWebhook } from '../../scripts/billing/billingHandlers'
-import { headerValue, readRawBody, sendJson } from '../../scripts/billing/nodeAdapter'
+import { createBillingDeps, readBillingConfig } from '../../scripts/billing/billingConfig.js'
+import { handleWebhook } from '../../scripts/billing/billingHandlers.js'
+import { headerValue, readRawBody, sendJson } from '../../scripts/billing/nodeAdapter.js'
 
 export const config = { api: { bodyParser: false } }
 

@@ -1,4 +1,4 @@
-import type { CalcMessageCode } from './i18n/calcMessages'
+import type { CalcMessageCode } from './i18n/calcMessages.js'
 
 export type PositionSide = 'long' | 'short'
 export type CalculatorMode = 'evaluate' | 'order'

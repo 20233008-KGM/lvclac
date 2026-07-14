@@ -1,6 +1,6 @@
-import type { CalculatorInputs, OrderScenarioBaseline, PositionSide } from '../types'
-import { buildAfterOrderInputs } from './leverage'
-import { calcTotalQuantity } from './liquidation/common'
+import type { CalculatorInputs, OrderScenarioBaseline, PositionSide } from '../types.js'
+import { buildAfterOrderInputs } from './leverage.js'
+import { calcTotalQuantity } from './liquidation/common.js'
 
 export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   /** 시나리오 가격 Enter — 시나리오 모드 진입 (손익·현재가 유지) */

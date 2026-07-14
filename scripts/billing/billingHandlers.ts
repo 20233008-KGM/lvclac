@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import type { BillingConfig, BillingDeps, BillingPlan } from './billingConfig'
-import { isBillingPlan, paddleApiBaseUrl, resolveBaseUrl } from './billingConfig'
-import { customerIdOf, syncSubscription } from './subscriptionSync'
+import type { BillingConfig, BillingDeps, BillingPlan } from './billingConfig.js'
+import { isBillingPlan, paddleApiBaseUrl, resolveBaseUrl } from './billingConfig.js'
+import { customerIdOf, syncSubscription } from './subscriptionSync.js'
 
 type JsonObject = Record<string, unknown>
 

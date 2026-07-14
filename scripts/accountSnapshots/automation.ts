@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { calculateEvaluate } from '../../src/calc/leverage'
+import { calculateEvaluate } from '../../src/calc/leverage.js'
 import {
   computeNextSnapshotRunAt,
   localDateStringForTimeZone,
-} from '../../src/db/accountSnapshotAutomation'
+} from '../../src/db/accountSnapshotAutomation.js'
 import {
   advanceRolloverDate,
   isRolloverAnchor,
@@ -12,16 +12,16 @@ import {
   isLocalDateString,
   type RolloverAnchor,
   type RolloverIntervalMonths,
-} from '../../src/db/rolloverSchedule'
+} from '../../src/db/rolloverSchedule.js'
 import {
   buildAccountSnapshotPayload,
   type AccountSnapshotPayload,
-} from '../../src/db/accountRecordPayloads'
-import type { CalculatorInputs } from '../../src/types'
+} from '../../src/db/accountRecordPayloads.js'
+import type { CalculatorInputs } from '../../src/types.js'
 import {
   hasMeaningfulCalculatorInputs,
   parseStoredCalculatorInputs,
-} from '../../src/utils/storedCalculatorInputs'
+} from '../../src/utils/storedCalculatorInputs.js'
 
 export interface AccountSnapshotCronConfig {
   cronSecret: string

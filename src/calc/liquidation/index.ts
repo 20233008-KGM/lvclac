@@ -1,9 +1,9 @@
-import type { CalculatorInputs, PositionSide } from '../../types'
-import { buildLiquidationParams, type LiquidationParams } from './common'
-import { calcLongLiquidationPrice } from './long'
-import { calcShortLiquidationPrice } from './short'
+import type { CalculatorInputs, PositionSide } from '../../types.js'
+import { buildLiquidationParams, type LiquidationParams } from './common.js'
+import { calcLongLiquidationPrice } from './long.js'
+import { calcShortLiquidationPrice } from './short.js'
 
-export type { LiquidationParams } from './common'
+export type { LiquidationParams } from './common.js'
 export {
   buildLiquidationParams,
   calcTotalQuantity,
@@ -13,9 +13,9 @@ export {
   maintenanceAtPrice,
   resolveMaintenanceAtCurrent,
   shortEquityAtPrice,
-} from './common'
-export { calcLongLiquidationPrice, isLongLiquidationValid } from './long'
-export { calcShortLiquidationPrice } from './short'
+} from './common.js'
+export { calcLongLiquidationPrice, isLongLiquidationValid } from './long.js'
+export { calcShortLiquidationPrice } from './short.js'
 
 /** UI·시뮬에 쓸 수 있는 청산가만 반환 — 음수·현재가 반대편은 null */
 export function sanitizeLiquidationPrice(

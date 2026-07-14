@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
-import { LegalLinks } from '../ServiceDisclaimer'
 import { authErrorMessage } from './authMessages'
 import { GoogleLogo } from './GoogleLogo'
 
@@ -33,10 +32,6 @@ export function GoogleButton() {
         <GoogleLogo />
         <span>{t.auth.continueWithGoogle}</span>
       </button>
-      <p className="auth-consent-note">{t.auth.oauthConsent}</p>
-      <div className="auth-legal-links">
-        <LegalLinks />
-      </div>
       {error && (
         <p className="auth-alert auth-alert--error" role="alert">
           {error}

@@ -874,6 +874,8 @@ export const ko: Messages = {
     title: '선물 계산기',
     modalTitle: '로그인',
     subtitle: '로그인하면 설정이 기기 간에 동기화됩니다.',
+    eyebrowAccount: '계정',
+    eyebrowPassword: '비밀번호',
     loginTitle: '로그인',
     loginSubtitle: '저장된 입력값과 설정을 불러옵니다.',
     registerTitle: '회원가입',

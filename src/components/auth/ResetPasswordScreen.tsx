@@ -51,6 +51,7 @@ export function ResetPasswordScreen() {
     <div className="auth-page reset-screen">
       <div className="auth-card">
         <div className="auth-card__header">
+          <p className="auth-eyebrow">{t.auth.eyebrowPassword}</p>
           <h1>{t.auth.resetTitle}</h1>
           <p className="auth-subtitle">{t.auth.resetSubtitle}</p>
         </div>

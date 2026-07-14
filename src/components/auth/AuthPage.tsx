@@ -3,6 +3,7 @@ import { GoogleButton } from './GoogleButton'
 import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
 import { ForgotPasswordForm } from './ForgotPasswordForm'
+import { LegalLinks } from '../ServiceDisclaimer'
 import { useLanguage } from '../../i18n'
 
 type AuthMode = 'login' | 'register' | 'forgot'
@@ -24,9 +25,12 @@ export function AuthPage() {
       ? t.auth.loginSubtitle
       : t.auth.registerSubtitle
 
+  const eyebrow = isForgot ? t.auth.eyebrowPassword : t.auth.eyebrowAccount
+
   return (
     <div className="auth-card">
       <div className="auth-card__header">
+        <p className="auth-eyebrow">{eyebrow}</p>
         <h1 id="auth-modal-title">{title}</h1>
         <p className="auth-subtitle">{subtitle}</p>
       </div>
@@ -58,6 +62,13 @@ export function AuthPage() {
               {isLogin ? t.auth.switchToRegisterAction : t.auth.switchToLoginAction}
             </button>
           </p>
+
+          {/* 약관 fine print: 개별 OAuth 버튼 옆이 아니라 모든 로그인 수단 공통으로
+              모달 맨 아래에 배치(로그인 모달 업계 표준). */}
+          <p className="auth-consent-note">{t.auth.oauthConsent}</p>
+          <div className="auth-legal-links">
+            <LegalLinks />
+          </div>
         </>
       )}
     </div>

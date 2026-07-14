@@ -29,8 +29,12 @@ describe('BulkDeleteConfirmModal', () => {
     expect(source).toMatch(/if \(e\.target === e\.currentTarget\) onClose\(\)/)
   })
 
-  it('wires the close (X) button and Cancel button to onClose', () => {
-    expect(source).toMatch(/className="auth-modal-close"\s*\n\s*onClick={onClose}/)
+  it('omits the top-right close (X) on this destructive-confirm modal (R4)', () => {
+    // 파괴형 확인 모달은 우상단 X 없이 취소/삭제 명시 버튼만 노출한다.
+    expect(source).not.toContain('auth-modal-close')
+  })
+
+  it('wires the Cancel button to onClose', () => {
     expect(source).toMatch(/className="btn btn-ghost" disabled={busy} onClick={onClose}/)
   })
 

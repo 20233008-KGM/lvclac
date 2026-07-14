@@ -888,6 +888,8 @@ export const en: Messages = {
     title: 'Futures Calculator',
     modalTitle: 'Log in',
     subtitle: 'Sign in to sync your settings across devices.',
+    eyebrowAccount: 'Account',
+    eyebrowPassword: 'Password',
     loginTitle: 'Log in',
     loginSubtitle: 'Load your saved inputs and settings.',
     registerTitle: 'Sign up',

@@ -56,14 +56,8 @@ export function BulkDeleteConfirmModal({
         aria-labelledby="bulk-delete-confirm-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          className="auth-modal-close"
-          onClick={onClose}
-          aria-label={copy.close}
-        >
-          <span className="auth-modal-close__mark" aria-hidden="true" />
-        </button>
+        {/* 파괴형 확인 모달은 우상단 X 없이 취소/삭제 명시 버튼만 노출(R4).
+            ESC·오버레이 클릭으로도 닫히므로 dismiss 경로는 유지된다. */}
         <h2 id="bulk-delete-confirm-title" className="disclaimer-modal-title">
           {copy.title}
         </h2>

@@ -329,166 +329,233 @@
 }
 
 /* =========================================================================
-   로그인 모달 리디자인 (핸드오프 1c · 에디토리얼 · 상단 그라데이션 배경)
-   기존 AuthPage/LoginForm 구조·카피·로직은 그대로 두고, 모달 안에서만
-   (.auth-overlay .auth-modal) 시각 레이어를 덧입힌다.
+   인증/계정 모달 리디자인 (모달 디자인 일관성 핸드오프 · 스냅샷 계열로 통일)
+   기존 AuthPage/LoginForm/ResetPasswordScreen 구조·카피·로직은 그대로 두고,
+   모달 안(.auth-overlay .auth-modal)·재설정 화면(.reset-screen)의 시각 레이어만
+   교체한다. 촌스러운 파랑·보라 그라데이션 워시를 걷어내고 스냅샷 카드와 동일한
+   surface 배경 + 상단 하이라이트 헤어라인 + 은은한 primary radial glow +
+   등장 애니메이션(snap-card-in)으로 세 시각 계층(base·auth·snapshot)을 수렴한다.
    ========================================================================= */
 
-/* 오버레이: 기본 disclaimer-overlay보다 살짝 더 어둡고 흐리게.
-   같은 클래스 특이도의 .disclaimer-overlay 배경을 확실히 덮으려 복합 선택자 사용. */
+/* 오버레이: 전 모달 통일값(R5). 같은 클래스 특이도의 .disclaimer-overlay 배경을
+   확실히 덮으려 복합 선택자 사용. */
 .disclaimer-overlay.auth-overlay {
   background: rgba(6, 8, 12, 0.72);
   backdrop-filter: blur(6px);
 }
 
 .auth-overlay .auth-modal {
-  width: min(100%, 404px);
+  width: min(100%, 440px);
 }
 
-/* 카드: 그라데이션 배경 레이어를 아래에 깔기 위해 relative + overflow hidden. */
-.auth-overlay .auth-card {
+/* 카드: 스냅샷 카드와 동일한 surface + 헤어라인 + radial glow를 얹기 위해
+   relative + overflow hidden. 재설정 전체화면(.reset-screen)도 같은 톤으로. */
+.auth-overlay .auth-card,
+.reset-screen .auth-card {
   position: relative;
   max-width: none;
-  padding: 0 30px 30px;
+  padding: 40px 36px 32px;
   overflow: hidden;
-  border: 1px solid #2c3444;
-  border-radius: 16px;
-  background: #1c212b;
-  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.72);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--modal-radius);
+  background: var(--color-surface);
+  box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.7);
+  animation: snap-card-in 480ms cubic-bezier(0.16, 0.9, 0.24, 1);
 }
 
-/* 레이어 1: 컬러 그라데이션(반투명). 위→아래로 카드 색이 비쳐 보이며 사라짐. */
-.auth-overlay .auth-card::before {
+/* 상단 하이라이트 헤어라인(스냅샷 카드 ::before와 동일 언어). */
+.auth-overlay .auth-card::before,
+.reset-screen .auth-card::before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
   top: 0;
-  height: 46%;
+  left: 20%;
+  right: 20%;
+  height: 1px;
   background: linear-gradient(
-    180deg,
-    rgba(43, 60, 102, 0.62) 0%,
-    rgba(39, 58, 99, 0.46) 42%,
-    rgba(33, 44, 66, 0.28) 78%,
-    rgba(28, 33, 43, 0) 100%
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-primary) 60%, #fff 40%),
+    transparent
   );
+  opacity: 0.55;
   pointer-events: none;
 }
 
-/* 레이어 2: 글라스 톤 워시 + 상단 1px 하이라이트(파랑+보라 유리 질감). */
-.auth-overlay .auth-card::after {
+/* 은은한 primary radial glow(상단 중앙). */
+.auth-overlay .auth-card::after,
+.reset-screen .auth-card::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 46%;
-  background:
-    linear-gradient(150deg, rgba(120, 150, 240, 0.16) 0%, transparent 42%),
-    radial-gradient(140% 80% at 90% 4%, rgba(150, 120, 230, 0.15), transparent 55%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  top: -42%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150%;
+  height: 72%;
   pointer-events: none;
+  background: radial-gradient(
+    50% 60% at 50% 42%,
+    color-mix(in srgb, var(--color-primary) 13%, transparent),
+    transparent 70%
+  );
 }
 
 /* 콘텐츠는 배경 레이어 위로. */
-.auth-overlay .auth-card > * {
+.auth-overlay .auth-card > *,
+.reset-screen .auth-card > * {
   position: relative;
   z-index: 1;
 }
 
-/* 헤더(그라데이션 위). */
-.auth-overlay .auth-card__header {
-  padding: 34px 16px 22px 0;
+/* 헤더. */
+.auth-overlay .auth-card__header,
+.reset-screen .auth-card__header {
+  padding: 2px 16px 20px 0;
 }
 
-.auth-overlay .auth-card h1 {
-  margin: 0 0 6px;
+/* eyebrow(계정 / 비밀번호) — 스냅샷의 "계좌 스냅샷 / PRO 전용" 언어와 통일. */
+.auth-eyebrow {
+  margin: 0 0 9px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-primary) 78%, var(--color-text-muted));
+}
+
+.auth-overlay .auth-card h1,
+.reset-screen .auth-card h1 {
+  margin: 0 0 7px;
   color: #f4f6fa;
-  font-size: 24px;
+  font-size: 23px;
+  font-weight: 750;
   letter-spacing: -0.02em;
 }
 
-.auth-overlay .auth-subtitle {
+.auth-overlay .auth-subtitle,
+.reset-screen .auth-subtitle {
   margin: 0;
-  color: #a9b4c6;
+  color: var(--color-text-muted);
   font-size: 13.5px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-/* 닫기 버튼: 어두운 알약. */
+/* 닫기 버튼: surface 톤 알약. */
 .auth-overlay .auth-modal-close {
   top: 14px;
   right: 14px;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.25);
-  color: #d7deea;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--color-surface-2);
+  color: var(--color-text-dim);
 }
 
 .auth-overlay .auth-modal-close:hover,
 .auth-overlay .auth-modal-close:focus-visible {
-  background: rgba(0, 0, 0, 0.45);
-  color: #f4f6fa;
+  background: var(--color-surface-3);
+  color: var(--color-text);
 }
 
-/* Google 버튼. */
-.auth-overlay .google-btn {
-  min-height: 47px;
-  border: 1px solid #3a4252;
-  border-radius: 10px;
-  background: #20252f;
-  color: #e8eaed;
+/* Google 버튼: surface 톤 정돈. */
+.auth-overlay .google-btn,
+.reset-screen .google-btn {
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--btn-radius);
+  background: var(--color-surface-2);
+  color: var(--color-text);
   font-weight: 600;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .auth-overlay .google-btn:hover:not(:disabled),
 .auth-overlay .google-btn:focus-visible {
-  border-color: #4a5468;
-  background: #262c38;
+  border-color: var(--color-border);
+  background: var(--color-surface-3);
 }
 
 /* 구분선 "또는". */
-.auth-overlay .auth-divider {
-  margin: 20px 0;
-  color: #7a8494;
+.auth-overlay .auth-divider,
+.reset-screen .auth-divider {
+  margin: 18px 0;
+  color: var(--color-text-dim);
   font-size: 12px;
   font-weight: 600;
 }
 
 .auth-overlay .auth-divider::before,
 .auth-overlay .auth-divider::after {
-  background: #2c3444;
+  background: var(--color-border-subtle);
 }
 
-/* 입력 필드: 모노폰트 → 본문 폰트(Pretendard), 어두운 배경. */
-.auth-overlay .auth-form {
+/* 약관 fine print: 로그인 모달 업계 표준대로 모달 맨 아래·가운데 정렬로 통일
+   (개별 OAuth 버튼 옆이 아니라 모든 로그인 수단 공통). */
+.auth-overlay .auth-consent-note {
+  margin-top: 12px;
+}
+
+.auth-overlay .auth-legal-links {
+  margin-top: 8px;
+}
+
+.auth-overlay .auth-legal-links .legal-links {
+  justify-content: center;
+  gap: 16px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.auth-overlay .auth-legal-links .link-btn {
+  color: var(--color-text-dim);
+  text-decoration: none;
+}
+
+.auth-overlay .auth-legal-links .link-btn:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* 입력 필드: 모노폰트 → 본문 폰트(inherit), 어두운 배경 + 포커스 링. */
+.auth-overlay .auth-form,
+.reset-screen .auth-form {
   gap: 15px;
 }
 
-.auth-overlay .auth-form .field {
+.auth-overlay .auth-form .field,
+.reset-screen .auth-form .field {
   gap: 7px;
 }
 
-.auth-overlay .auth-form .field > span {
-  color: #c2c9d6;
+.auth-overlay .auth-form .field > span,
+.reset-screen .auth-form .field > span {
+  color: var(--color-text-muted);
   font-size: 12.5px;
   font-weight: 600;
 }
 
-.auth-overlay .auth-form .field input {
+.auth-overlay .auth-form .field input,
+.reset-screen .auth-form .field input {
   min-height: 46px;
   padding: 0 15px;
-  border: 1px solid #333c4c;
-  border-radius: 10px;
-  background: #161a22;
-  color: #e8eaed;
+  border: 1px solid var(--color-border);
+  border-radius: var(--btn-radius);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
   font-family: inherit;
   font-size: 15px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.auth-overlay .auth-form .field input:focus {
-  border-color: #5b8def;
+.auth-overlay .auth-form .field input:focus,
+.reset-screen .auth-form .field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.18);
 }
 
@@ -497,40 +564,53 @@
   margin-top: -4px;
 }
 
-.auth-overlay .auth-switch__btn {
+.auth-overlay .auth-switch__btn,
+.reset-screen .auth-switch__btn {
   color: #8fb0f2;
 }
 
-.auth-overlay .auth-switch {
+.auth-overlay .auth-switch,
+.reset-screen .auth-switch {
   margin-top: 22px;
-  color: #9aa3b2;
+  color: var(--color-text-muted);
 }
 
-/* 로그인/제출 버튼(primary): 그라데이션 + 승격 그림자. */
-.auth-overlay .auth-form .btn-primary {
-  min-height: 47px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #5b8def, #4a7de0);
+/* 로그인/제출 버튼(primary): 고가치 CTA 예외(R3) — 그라데이션 + 승격 그림자 유지. */
+.auth-overlay .auth-form .btn-primary,
+.reset-screen .auth-form .btn-primary {
+  min-height: var(--btn-h);
+  border-radius: var(--btn-radius);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 92%, #fff 8%),
+    var(--color-primary)
+  );
+  color: #fff;
   font-size: 15px;
   font-weight: 700;
-  box-shadow: 0 10px 24px -10px rgba(91, 141, 239, 0.8);
+  box-shadow:
+    0 8px 20px -8px color-mix(in srgb, var(--color-primary) 80%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   transition:
     filter var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.auth-overlay .auth-form .btn-primary:hover:not(:disabled) {
-  filter: brightness(1.06);
+.auth-overlay .auth-form .btn-primary:hover:not(:disabled),
+.reset-screen .auth-form .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: linear-gradient(180deg, #5b8def, #4a7de0);
+  filter: brightness(1.05);
+  background: var(--color-primary-hover);
 }
 
 @media (max-width: 480px) {
-  .auth-overlay .auth-card {
-    padding: 0 20px 24px;
+  .auth-overlay .auth-card,
+  .reset-screen .auth-card {
+    padding: 32px 22px 26px;
   }
 
-  .auth-overlay .auth-card__header {
-    padding: 28px 16px 18px 0;
+  .auth-overlay .auth-card__header,
+  .reset-screen .auth-card__header {
+    padding: 2px 12px 16px 0;
   }
 }

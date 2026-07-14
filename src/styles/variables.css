@@ -35,6 +35,12 @@
   --radius-sm: 6px;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
 
+  /* 모달·버튼 통일 토큰 (모달 디자인 일관성 핸드오프 R1) —
+     모달 반경 8/16/18 → 16, 버튼 높이 44/47 → 46, 버튼 반경 6/10 → 10 */
+  --modal-radius: 16px;
+  --btn-radius: 10px;
+  --btn-h: 46px;
+
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;

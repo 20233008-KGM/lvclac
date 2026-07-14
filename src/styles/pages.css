@@ -3451,6 +3451,12 @@ a.my-page-compare-card__action {
     display: none;
   }
 
+  /* 양쪽 분기 타임라인을 한쪽 정렬로 접는다 — 날짜 칩은 스냅샷·주문 모두 카드 위(행 순서 강제),
+     기록 사이는 넓게 벌려 '날짜+카드'가 한 덩어리로 읽히게(근접성). DOM 순서는 불변 */
+  .records-timeline-grid {
+    gap: var(--space-md);
+  }
+
   .records-timeline-row {
     grid-template-columns: 1fr;
     gap: var(--space-xs);
@@ -3462,9 +3468,14 @@ a.my-page-compare-card__action {
   }
 
   .records-timeline-time {
+    grid-row: 1;
     justify-self: start;
     max-width: none;
     margin-bottom: calc(var(--space-xs) * -1);
+  }
+
+  .records-timeline-cell {
+    grid-row: 2;
   }
 
   .records-timeline-card--snapshot,

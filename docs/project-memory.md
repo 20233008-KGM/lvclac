@@ -69,6 +69,8 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 - 모든 종류의(행정,법무,개발 등등) 업무 종료 시 tasks db( https://app.notion.com/p/9677d2bd9bb74376a7ee964292978f24?v=61e5027eeaca4942bbb24bc71475d7cf)에 꼭 업무 내용을 상세히 기록하고 최신화합니다.
 
+- **⚠️ 백로그 DB 착오 주의**: 워크스페이스에 이름이 똑같은 **"백로그 항목" DB가 2개** 있다. **lvclac(선물 청산 계산기) 백로그**는 `collection://29a3b15d-8ce6-4c1e-a456-fbda80e2ea77` (페이지 [🗂️ Backlog](https://app.notion.com/p/39826e6d586f81b2a0e1e9c67c1c567b), 부모 "선물 청산 계산기"). **다른 하나는 Atrelier(캔버스/그림 앱) 백로그** `collection://0fc34f14-14d7-4de1-8d43-51660b7b043f` (부모 "Atrelier") — **lvclac 항목을 여기 넣지 말 것**. Notion 검색은 둘 다 반환하니, 백로그에 행 추가 전 **부모 경로(ancestor-path)가 "선물 청산 계산기"인지 반드시 확인**한다. 2026-07-15에 lvclac 항목 2건(주문/스냅샷 CSV export, 트레이딩 광고 필터)이 Atrelier로 잘못 들어가 있어 lvclac 백로그로 옮겼다. 캔버스/브러시/3D 카테고리면 Atrelier, 청산가/스냅샷/트레이딩이면 lvclac이다.
+
 - Release 성격의 변경은 Release Notes 또는 Releases DB에 남깁니다.
 - 버그, 장애, QA 리스크는 QA / Test Plan 또는 Incidents / QA DB에 남깁니다.
 

@@ -164,6 +164,17 @@ export interface Messages {
     numberSetManage: string
     numberSetActive: string
     numberSetLimitReached: string
+    numberSetEmptyTitle: string
+    numberSetEmptyBody: string
+    numberSetEmptyCta: string
+    numberSetLimitHint: string
+    numberSetGateGuestTitle: string
+    numberSetGateGuestBody: string
+    numberSetGateFreeTitle: string
+    numberSetGateFreeBody: string
+    numberSetGateLoginCta: string
+    numberSetGateViewPlansCta: string
+    numberSetGateUpgradeCta: string
   }
   accountRecords: {
     title: string
@@ -183,6 +194,7 @@ export interface Messages {
     snapshotGateLoginCta: string
     snapshotGateViewPlansCta: string
     snapshotGateUpgradeCta: string
+    snapshotGateEyebrow: string
     orderHistoryEmpty: string
     snapshotsEmpty: string
     snapshotSaved: string
@@ -206,6 +218,7 @@ export interface Messages {
     atRisk: string
     noValue: string
     savedModalTitle: string
+    savedModalEyebrow: string
     savedModalGoToRecords: string
     bulkDeleteOrders: string
     bulkDeleteSnapshots: string

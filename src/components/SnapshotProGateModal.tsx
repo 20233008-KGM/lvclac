@@ -21,6 +21,7 @@ interface SnapshotProGateModalProps {
   /** 포커스 복원 대상 ref(트리거 버튼). */
   restoreFocusRef?: RefObject<HTMLElement | null>
   copy: {
+    eyebrow: string
     title: string
     guestBody: string
     freeBody: string
@@ -28,6 +29,8 @@ interface SnapshotProGateModalProps {
     viewPlansCta: string
     upgradeCta: string
     close: string
+    /** Pro 혜택 요약(선택). 있으면 본문 아래에 인셋 리스트로 노출. */
+    benefits?: readonly string[]
   }
 }
 
@@ -59,45 +62,74 @@ export function SnapshotProGateModal({
 
   const isGuest = mode === 'guest'
 
+  const benefits = copy.benefits ?? []
+
   const modal = (
     <div
-      className="disclaimer-overlay"
+      className="disclaimer-overlay snap-modal-overlay"
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
       <div
-        className="disclaimer-modal snapshot-pro-gate-modal"
+        className="disclaimer-modal snap-modal snap-modal--gate"
         role="dialog"
         aria-modal="true"
         aria-labelledby="snapshot-pro-gate-title"
         onClick={(e) => e.stopPropagation()}
       >
+        <span className="snap-shimmer" aria-hidden="true" />
         <button
           type="button"
-          className="auth-modal-close"
+          className="auth-modal-close snap-modal__close"
           onClick={onClose}
           aria-label={copy.close}
         >
           <span className="auth-modal-close__mark" aria-hidden="true" />
         </button>
-        <h2 id="snapshot-pro-gate-title" className="disclaimer-modal-title">
+        <span className="snap-emblem snap-emblem--lock" aria-hidden="true">
+          <span className="snap-emblem__disc" />
+          <span className="snap-emblem__glow" />
+          <span className="snap-emblem__halo" />
+          <svg className="snap-emblem__mark" viewBox="0 0 48 48">
+            <path className="snap-emblem__shackle" d="M16 21 V16 a8 8 0 0 1 16 0 V21" />
+            <rect className="snap-emblem__lock-body" x="12" y="21" width="24" height="18" rx="4" />
+            <circle className="snap-emblem__keyhole" cx="24" cy="29" r="2.4" />
+            <path className="snap-emblem__keyhole-stem" d="M24 30 v4" />
+          </svg>
+        </span>
+        <p className="snap-eyebrow">{copy.eyebrow}</p>
+        <h2 id="snapshot-pro-gate-title" className="snap-title">
           {copy.title}
         </h2>
-        <p className="disclaimer-modal-text">{isGuest ? copy.guestBody : copy.freeBody}</p>
+        <p className="snap-body">{isGuest ? copy.guestBody : copy.freeBody}</p>
+        {benefits.length > 0 && (
+          <ul className="snap-feats">
+            {benefits.map((feat) => (
+              <li key={feat} className="snap-feats__item">
+                <span className="snap-feats__icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M5 10.5 L8.5 14 L15 6.5" />
+                  </svg>
+                </span>
+                <span className="snap-feats__label">{feat}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="snapshot-pro-gate-modal__actions">
           {isGuest ? (
             <>
-              <button type="button" className="btn btn-primary" onClick={onLogin}>
+              <button type="button" className="btn btn-primary snap-primary" onClick={onLogin}>
                 {copy.loginCta}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={onUpgrade}>
+              <button type="button" className="btn btn-ghost snap-ghost" onClick={onUpgrade}>
                 {copy.viewPlansCta}
               </button>
             </>
           ) : (
-            <button type="button" className="btn btn-primary" onClick={onUpgrade}>
+            <button type="button" className="btn btn-primary snap-primary" onClick={onUpgrade}>
               {copy.upgradeCta}
             </button>
           )}

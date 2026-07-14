@@ -216,6 +216,7 @@ export function KitGallery() {
           onClose={noop}
           onGoToRecords={noop}
           copy={{
+            eyebrow: t.accountRecords.savedModalEyebrow,
             title: t.accountRecords.savedModalTitle,
             body: t.accountRecords.snapshotSaved,
             goToRecords: t.accountRecords.savedModalGoToRecords,

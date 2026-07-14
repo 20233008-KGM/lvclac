@@ -35,7 +35,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
   const modal = (
     <div
-      className="disclaimer-overlay"
+      className="disclaimer-overlay auth-overlay"
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()

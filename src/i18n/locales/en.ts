@@ -156,6 +156,20 @@ export const en: Messages = {
     numberSetManage: 'Manage all',
     numberSetActive: 'Active',
     numberSetLimitReached: 'Number set limit reached.',
+    numberSetEmptyTitle: 'No sets saved yet',
+    numberSetEmptyBody:
+      'Save your go-to account and margin values as sets and switch between them fast.',
+    numberSetEmptyCta: 'Add your first set',
+    numberSetLimitHint: 'Free plan: 1 per location. Pro manages up to 10 each.',
+    numberSetGateGuestTitle: 'Log in to save sets',
+    numberSetGateGuestBody:
+      'Log in to save number sets on this device and the cloud, and manage up to 10 per location with Pro.',
+    numberSetGateFreeTitle: 'Go Pro for more sets',
+    numberSetGateFreeBody:
+      'The free plan lets you save 1 per location. Upgrade to Pro to create up to 10 each on this device and the cloud.',
+    numberSetGateLoginCta: 'Log in',
+    numberSetGateViewPlansCta: 'See Pro plans',
+    numberSetGateUpgradeCta: 'Upgrade to Pro',
   },
   accountRecords: {
     title: 'Records',
@@ -177,6 +191,7 @@ export const en: Messages = {
     snapshotGateLoginCta: 'Log in',
     snapshotGateViewPlansCta: 'See Pro plans',
     snapshotGateUpgradeCta: 'Upgrade to Pro',
+    snapshotGateEyebrow: 'PRO ONLY',
     orderHistoryEmpty: 'No applied order simulation records yet.',
     snapshotsEmpty: 'No account snapshots saved yet.',
     snapshotSaved: 'Account snapshot saved.',
@@ -200,6 +215,7 @@ export const en: Messages = {
     atRisk: 'Risk',
     noValue: '-',
     savedModalTitle: 'Saved',
+    savedModalEyebrow: 'ACCOUNT SNAPSHOT',
     savedModalGoToRecords: 'View saved records',
     bulkDeleteOrders: 'Delete all order history',
     bulkDeleteSnapshots: 'Delete all snapshots',

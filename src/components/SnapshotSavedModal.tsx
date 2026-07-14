@@ -10,6 +10,7 @@ interface SnapshotSavedModalProps {
    * document.activeElement가 유실될 수 있어 명시적으로 전달받는다. */
   restoreFocusRef?: RefObject<HTMLElement | null>
   copy: {
+    eyebrow: string
     title: string
     body: string
     goToRecords: string
@@ -43,14 +44,14 @@ export function SnapshotSavedModal({
 
   const modal = (
     <div
-      className="disclaimer-overlay"
+      className="disclaimer-overlay snap-modal-overlay"
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
       <div
-        className="disclaimer-modal snapshot-saved-modal"
+        className="disclaimer-modal snap-modal snap-modal--saved"
         role="dialog"
         aria-modal="true"
         aria-labelledby="snapshot-saved-modal-title"
@@ -58,17 +59,31 @@ export function SnapshotSavedModal({
       >
         <button
           type="button"
-          className="auth-modal-close"
+          className="auth-modal-close snap-modal__close"
           onClick={onClose}
           aria-label={copy.close}
         >
           <span className="auth-modal-close__mark" aria-hidden="true" />
         </button>
-        <h2 id="snapshot-saved-modal-title" className="disclaimer-modal-title">
+        <span className="snap-emblem snap-emblem--success" aria-hidden="true">
+          <span className="snap-emblem__disc" />
+          <span className="snap-emblem__glow" />
+          <span className="snap-emblem__halo" />
+          <svg className="snap-emblem__mark" viewBox="0 0 60 60">
+            <circle className="snap-emblem__ring" cx="30" cy="30" r="28" />
+            <path className="snap-emblem__check" d="M18 31 L26.5 39 L43 21" />
+          </svg>
+        </span>
+        <p className="snap-eyebrow">{copy.eyebrow}</p>
+        <h2 id="snapshot-saved-modal-title" className="snap-title">
           {copy.title}
         </h2>
-        <p className="disclaimer-modal-text">{copy.body}</p>
-        <button type="button" className="btn btn-primary" onClick={onGoToRecords}>
+        <p className="snap-body">{copy.body}</p>
+        <button
+          type="button"
+          className="btn btn-primary snap-primary"
+          onClick={onGoToRecords}
+        >
           {copy.goToRecords}
         </button>
       </div>

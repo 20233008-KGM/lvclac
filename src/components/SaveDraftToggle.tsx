@@ -9,11 +9,15 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { MY_PAGE_PATH } from '../config/routes'
+import { BILLING_PATH, MY_PAGE_PATH } from '../config/routes'
+import { useAuth } from '../context/AuthContext'
 import { useCalculator, type SaveStorageMode } from '../context/CalculatorContext'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
+import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { formatSavedAtCompact } from '../utils/format'
+import { AuthModal } from './auth/AuthModal'
+import { SnapshotProGateModal, type SnapshotProGateMode } from './SnapshotProGateModal'
 import { TooltipBody } from './TooltipBody'
 
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
@@ -161,6 +165,29 @@ function NumberSetStackIcon() {
   )
 }
 
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+      <line x1="10" y1="4.5" x2="10" y2="15.5" />
+      <line x1="4.5" y1="10" x2="15.5" y2="10" />
+    </svg>
+  )
+}
+
+/** 위치(로컬/클라우드)별 스토리지 글리프 — 그룹 라벨·아이콘 타일에 재사용. */
+function StorageGlyph({ mode }: { mode: SaveStorageMode }) {
+  return mode === 'local' ? <LocalComputerIcon /> : <CloudIcon />
+}
+
+function LockGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+      <rect x="4.5" y="9" width="11" height="7.5" rx="1.6" fill="none" />
+      <path d="M6.75 9 V6.5 a3.25 3.25 0 0 1 6.5 0 V9" fill="none" />
+    </svg>
+  )
+}
+
 export function SaveDraftToggle() {
   const { t } = useLanguage()
   const {
@@ -174,6 +201,7 @@ export function SaveDraftToggle() {
     cloudDraftSavedAt,
     numberSets,
     activeNumberSetId,
+    numberSetLimits,
     setSaveEnabled,
     pauseSaving,
     setStorageMode,
@@ -181,6 +209,8 @@ export function SaveDraftToggle() {
     createNumberSet,
     copyDraftBetweenStorageModes,
   } = useCalculator()
+  const { user, isPro } = useAuth()
+  const navigate = useNavigate()
   const [modal, setModal] = useState<ModalKind>(null)
   const [pendingMode, setPendingMode] = useState<SaveStorageMode | null>(null)
   const [dontShowAgain, setDontShowAgain] = useState(false)
@@ -191,6 +221,8 @@ export function SaveDraftToggle() {
   const [dropTargetMode, setDropTargetMode] = useState<SaveStorageMode | null>(null)
   const [numberSetMenuOpen, setNumberSetMenuOpen] = useState(false)
   const [numberSetMenuStyle, setNumberSetMenuStyle] = useState<CSSProperties | null>(null)
+  const [gateMode, setGateMode] = useState<SnapshotProGateMode | null>(null)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const numberSetPickerRef = useRef<HTMLButtonElement>(null)
   const numberSetMenuRef = useRef<HTMLDivElement>(null)
   const isCloud = storageMode === 'cloud'
@@ -223,6 +255,34 @@ export function SaveDraftToggle() {
     .filter((numberSet) => cloudAvailable || numberSet.storageMode === 'local')
   const localNumberSets = menuNumberSets.filter((numberSet) => numberSet.storageMode === 'local')
   const cloudNumberSets = menuNumberSets.filter((numberSet) => numberSet.storageMode === 'cloud')
+
+  const countForMode = (mode: SaveStorageMode) =>
+    mode === 'local' ? localNumberSets.length : cloudNumberSets.length
+
+  // '세트 추가' 게이트 판정. 로컬 세트는 로그인 없이도 무료 한도까지 만들 수 있고,
+  // 클라우드 세트만 로그인이 필요하다(로컬 우선 UX 보존).
+  // - 클라우드인데 비로그인 → 로그인 유도('guest')
+  // - 무료·한도 초과 → 로그인 상태면 Pro 유도('free'), 비로그인이면 로그인 유도('guest')
+  const addAtLimit = countForMode(storageMode) >= numberSetLimits[storageMode]
+  const addGatedByPlan = addAtLimit && !isPro
+  const addGateMode: SnapshotProGateMode | null =
+    storageMode === 'cloud' && !user
+      ? 'guest'
+      : addGatedByPlan
+        ? user
+          ? 'free'
+          : 'guest'
+        : null
+
+  // 아이템 메타 줄: 마지막 저장 시각 · 방향 · 계약수(있을 때).
+  const formatNumberSetMeta = (numberSet: (typeof menuNumberSets)[number]): string[] => {
+    const parts: string[] = []
+    if (numberSet.updatedAt) parts.push(formatSavedAtCompact(numberSet.updatedAt))
+    const side = numberSet.inputs.positionSide === 'short' ? t.short : t.long
+    const contracts = numberSet.inputs.contracts
+    parts.push(contracts != null ? `${side} · ${contracts}${t.contractsUnit}` : side)
+    return parts
+  }
 
   const openEnableModal = (mode: SaveStorageMode = storageMode) => {
     setPendingMode(mode === storageMode ? null : mode)
@@ -380,6 +440,11 @@ export function SaveDraftToggle() {
   }
 
   const handleNumberSetAdd = () => {
+    if (addGateMode) {
+      setNumberSetMenuOpen(false)
+      setGateMode(addGateMode)
+      return
+    }
     setBusy(true)
     setNotice(null)
     void createNumberSet(storageMode).then((error) => {
@@ -485,12 +550,22 @@ export function SaveDraftToggle() {
   const renderNumberSetGroup = (mode: SaveStorageMode, label: string) => {
     const groupSets = mode === 'local' ? localNumberSets : cloudNumberSets
     if (groupSets.length === 0) return null
+    const countLabel = isPro
+      ? String(groupSets.length)
+      : `${groupSets.length} / ${numberSetLimits[mode]}`
 
     return (
       <div className="draft-number-set-menu__group">
-        <div className="draft-number-set-menu__group-label">{label}</div>
+        <div className="draft-number-set-menu__group-label">
+          <span className="draft-number-set-menu__group-glyph" aria-hidden="true">
+            <StorageGlyph mode={mode} />
+          </span>
+          <span>{label}</span>
+          <span className="draft-number-set-menu__group-count">{countLabel}</span>
+        </div>
         {groupSets.map((numberSet) => {
           const active = saveEnabled && storageMode === mode && activeNumberSetId === numberSet.id
+          const meta = formatNumberSetMeta(numberSet)
           return (
             <button
               key={`${mode}:${numberSet.id}`}
@@ -502,15 +577,26 @@ export function SaveDraftToggle() {
               aria-checked={active}
               onClick={() => handleNumberSetSelect(numberSet.storageMode, numberSet.id)}
             >
-              <span className="draft-number-set-menu__check" aria-hidden="true">
-                {active ? '✓' : ''}
+              <span className="draft-number-set-menu__tile" aria-hidden="true">
+                <StorageGlyph mode={mode} />
               </span>
               <span className="draft-number-set-menu__copy">
                 <strong>{numberSet.title}</strong>
-                <span>{mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode}</span>
+                <span className="draft-number-set-menu__meta">
+                  {meta.map((part, index) => (
+                    <span key={part}>
+                      {index > 0 && (
+                        <span className="draft-number-set-menu__meta-dot" aria-hidden="true" />
+                      )}
+                      {part}
+                    </span>
+                  ))}
+                </span>
               </span>
               {active && (
-                <span className="draft-number-set-menu__pill">{t.draftSave.numberSetActive}</span>
+                <span className="draft-number-set-menu__check" aria-hidden="true">
+                  ✓
+                </span>
               )}
             </button>
           )
@@ -530,27 +616,62 @@ export function SaveDraftToggle() {
           >
             <div className="draft-number-set-menu__head">
               <span>{t.draftSave.numberSetMenuTitle}</span>
-              <span>{menuNumberSets.length}</span>
+              <span className="draft-number-set-menu__total">{menuNumberSets.length}</span>
             </div>
-            {renderNumberSetGroup('local', t.draftSave.localMode)}
-            {renderNumberSetGroup('cloud', t.draftSave.cloudMode)}
-            <div className="draft-number-set-menu__actions">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                disabled={busy}
-                onClick={handleNumberSetAdd}
-              >
-                {t.draftSave.numberSetAdd}
-              </button>
-              <a
-                className="btn btn-ghost"
-                href={`${MY_PAGE_PATH}#my-page-preferences`}
-                onClick={() => setNumberSetMenuOpen(false)}
-              >
-                {t.draftSave.numberSetManage}
-              </a>
-            </div>
+            {menuNumberSets.length === 0 ? (
+              <div className="draft-number-set-menu__empty">
+                <span className="draft-number-set-menu__empty-tile" aria-hidden="true">
+                  <NumberSetStackIcon />
+                </span>
+                <strong>{t.draftSave.numberSetEmptyTitle}</strong>
+                <span>{t.draftSave.numberSetEmptyBody}</span>
+                <button
+                  type="button"
+                  className="btn btn-primary draft-number-set-menu__empty-cta"
+                  disabled={busy}
+                  onClick={handleNumberSetAdd}
+                >
+                  <PlusIcon />
+                  {t.draftSave.numberSetEmptyCta}
+                </button>
+              </div>
+            ) : (
+              <>
+                {renderNumberSetGroup('local', t.draftSave.localMode)}
+                {renderNumberSetGroup('cloud', t.draftSave.cloudMode)}
+                {!isPro && (
+                  <div className="draft-number-set-menu__limit-hint">
+                    <span className="draft-number-set-menu__limit-glyph" aria-hidden="true">
+                      <LockGlyph />
+                    </span>
+                    <span>{t.draftSave.numberSetLimitHint}</span>
+                  </div>
+                )}
+                <div className="draft-number-set-menu__actions">
+                  <button
+                    type="button"
+                    className={`btn btn-ghost draft-number-set-menu__add${
+                      addGateMode ? ' draft-number-set-menu__add--gated' : ''
+                    }`}
+                    disabled={busy}
+                    onClick={handleNumberSetAdd}
+                  >
+                    <PlusIcon />
+                    {t.draftSave.numberSetAdd}
+                    {addGatedByPlan && (
+                      <span className="draft-number-set-menu__pro-badge">PRO</span>
+                    )}
+                  </button>
+                  <a
+                    className="btn btn-ghost"
+                    href={`${MY_PAGE_PATH}#my-page-preferences`}
+                    onClick={() => setNumberSetMenuOpen(false)}
+                  >
+                    {t.draftSave.numberSetManage}
+                  </a>
+                </div>
+              </>
+            )}
           </div>,
           document.body,
         )
@@ -731,6 +852,37 @@ export function SaveDraftToggle() {
         </DraftSaveModal>
       )}
 
+      {gateMode && (
+        <SnapshotProGateModal
+          mode={gateMode}
+          copy={{
+            eyebrow: t.accountRecords.snapshotGateEyebrow,
+            title:
+              gateMode === 'guest'
+                ? t.draftSave.numberSetGateGuestTitle
+                : t.draftSave.numberSetGateFreeTitle,
+            guestBody: t.draftSave.numberSetGateGuestBody,
+            freeBody: t.draftSave.numberSetGateFreeBody,
+            loginCta: t.draftSave.numberSetGateLoginCta,
+            viewPlansCta: t.draftSave.numberSetGateViewPlansCta,
+            upgradeCta: t.draftSave.numberSetGateUpgradeCta,
+            close: t.close,
+            benefits: t.myPage.billing.page.benefits.slice(0, 3),
+          }}
+          restoreFocusRef={numberSetPickerRef}
+          onClose={() => setGateMode(null)}
+          onLogin={() => {
+            setGateMode(null)
+            setAuthModalOpen(true)
+          }}
+          onUpgrade={() => {
+            setGateMode(null)
+            navigate(BILLING_PATH)
+          }}
+        />
+      )}
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
     </>
   )
 }

@@ -997,6 +997,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         <Suspense fallback={null}>
           <SnapshotSavedModal
             copy={{
+              eyebrow: t.accountRecords.savedModalEyebrow,
               title: t.accountRecords.savedModalTitle,
               body: t.accountRecords.snapshotSaved,
               goToRecords: t.accountRecords.savedModalGoToRecords,
@@ -1017,6 +1018,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           <SnapshotProGateModal
             mode={snapshotGateMode}
             copy={{
+              eyebrow: t.accountRecords.snapshotGateEyebrow,
               title: t.accountRecords.snapshotGateTitle,
               guestBody: t.accountRecords.snapshotGateGuestBody,
               freeBody: t.accountRecords.snapshotGateFreeBody,
@@ -1024,6 +1026,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
               viewPlansCta: t.accountRecords.snapshotGateViewPlansCta,
               upgradeCta: t.accountRecords.snapshotGateUpgradeCta,
               close: t.close,
+              benefits: t.myPage.billing.page.benefits.slice(0, 3),
             }}
             restoreFocusRef={snapshotButtonRef}
             onClose={() => setSnapshotGateMode(null)}

@@ -327,3 +327,210 @@
     width: min(100%, calc(100vw - var(--space-md) * 2));
   }
 }
+
+/* =========================================================================
+   로그인 모달 리디자인 (핸드오프 1c · 에디토리얼 · 상단 그라데이션 배경)
+   기존 AuthPage/LoginForm 구조·카피·로직은 그대로 두고, 모달 안에서만
+   (.auth-overlay .auth-modal) 시각 레이어를 덧입힌다.
+   ========================================================================= */
+
+/* 오버레이: 기본 disclaimer-overlay보다 살짝 더 어둡고 흐리게.
+   같은 클래스 특이도의 .disclaimer-overlay 배경을 확실히 덮으려 복합 선택자 사용. */
+.disclaimer-overlay.auth-overlay {
+  background: rgba(6, 8, 12, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.auth-overlay .auth-modal {
+  width: min(100%, 404px);
+}
+
+/* 카드: 그라데이션 배경 레이어를 아래에 깔기 위해 relative + overflow hidden. */
+.auth-overlay .auth-card {
+  position: relative;
+  max-width: none;
+  padding: 0 30px 30px;
+  overflow: hidden;
+  border: 1px solid #2c3444;
+  border-radius: 16px;
+  background: #1c212b;
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.72);
+}
+
+/* 레이어 1: 컬러 그라데이션(반투명). 위→아래로 카드 색이 비쳐 보이며 사라짐. */
+.auth-overlay .auth-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 46%;
+  background: linear-gradient(
+    180deg,
+    rgba(43, 60, 102, 0.62) 0%,
+    rgba(39, 58, 99, 0.46) 42%,
+    rgba(33, 44, 66, 0.28) 78%,
+    rgba(28, 33, 43, 0) 100%
+  );
+  pointer-events: none;
+}
+
+/* 레이어 2: 글라스 톤 워시 + 상단 1px 하이라이트(파랑+보라 유리 질감). */
+.auth-overlay .auth-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 46%;
+  background:
+    linear-gradient(150deg, rgba(120, 150, 240, 0.16) 0%, transparent 42%),
+    radial-gradient(140% 80% at 90% 4%, rgba(150, 120, 230, 0.15), transparent 55%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+/* 콘텐츠는 배경 레이어 위로. */
+.auth-overlay .auth-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 헤더(그라데이션 위). */
+.auth-overlay .auth-card__header {
+  padding: 34px 16px 22px 0;
+}
+
+.auth-overlay .auth-card h1 {
+  margin: 0 0 6px;
+  color: #f4f6fa;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.auth-overlay .auth-subtitle {
+  margin: 0;
+  color: #a9b4c6;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* 닫기 버튼: 어두운 알약. */
+.auth-overlay .auth-modal-close {
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #d7deea;
+}
+
+.auth-overlay .auth-modal-close:hover,
+.auth-overlay .auth-modal-close:focus-visible {
+  background: rgba(0, 0, 0, 0.45);
+  color: #f4f6fa;
+}
+
+/* Google 버튼. */
+.auth-overlay .google-btn {
+  min-height: 47px;
+  border: 1px solid #3a4252;
+  border-radius: 10px;
+  background: #20252f;
+  color: #e8eaed;
+  font-weight: 600;
+}
+
+.auth-overlay .google-btn:hover:not(:disabled),
+.auth-overlay .google-btn:focus-visible {
+  border-color: #4a5468;
+  background: #262c38;
+}
+
+/* 구분선 "또는". */
+.auth-overlay .auth-divider {
+  margin: 20px 0;
+  color: #7a8494;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-overlay .auth-divider::before,
+.auth-overlay .auth-divider::after {
+  background: #2c3444;
+}
+
+/* 입력 필드: 모노폰트 → 본문 폰트(Pretendard), 어두운 배경. */
+.auth-overlay .auth-form {
+  gap: 15px;
+}
+
+.auth-overlay .auth-form .field {
+  gap: 7px;
+}
+
+.auth-overlay .auth-form .field > span {
+  color: #c2c9d6;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.auth-overlay .auth-form .field input {
+  min-height: 46px;
+  padding: 0 15px;
+  border: 1px solid #333c4c;
+  border-radius: 10px;
+  background: #161a22;
+  color: #e8eaed;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.auth-overlay .auth-form .field input:focus {
+  border-color: #5b8def;
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.18);
+}
+
+/* "비밀번호를 잊으셨나요?" 링크 + 모드 전환 링크. */
+.auth-overlay .auth-forgot {
+  margin-top: -4px;
+}
+
+.auth-overlay .auth-switch__btn {
+  color: #8fb0f2;
+}
+
+.auth-overlay .auth-switch {
+  margin-top: 22px;
+  color: #9aa3b2;
+}
+
+/* 로그인/제출 버튼(primary): 그라데이션 + 승격 그림자. */
+.auth-overlay .auth-form .btn-primary {
+  min-height: 47px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #5b8def, #4a7de0);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px -10px rgba(91, 141, 239, 0.8);
+  transition:
+    filter var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.auth-overlay .auth-form .btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #5b8def, #4a7de0);
+}
+
+@media (max-width: 480px) {
+  .auth-overlay .auth-card {
+    padding: 0 20px 24px;
+  }
+
+  .auth-overlay .auth-card__header {
+    padding: 28px 16px 18px 0;
+  }
+}

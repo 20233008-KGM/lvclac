@@ -51,6 +51,23 @@ describe('number set detail modal', () => {
   })
 })
 
+describe('records detail modal', () => {
+  it('renders the ledger row detail as a front modal through the document body portal', () => {
+    const text = source('src/components/RecordsArchivePage.tsx')
+
+    expect(text).toContain("import { createPortal } from 'react-dom'")
+    expect(text).toContain("import { useModalFocusRestore } from '../hooks/useModalFocusRestore'")
+    expect(text).toContain('document.body.style.overflow')
+    expect(text).toContain('return createPortal(modal, document.body)')
+    expect(text).toContain('disclaimer-modal records-detail-modal')
+    expect(text).toContain('role="dialog"')
+    expect(text).toContain('aria-modal="true"')
+    // ESC로 닫히고, 조회형 모달 규칙대로 우상단 X를 유지한다.
+    expect(text).toContain("e.key === 'Escape'")
+    expect(text).toContain('auth-modal-close')
+  })
+})
+
 describe('records context menu', () => {
   it('renders the ledger right-click menu through the document body portal', () => {
     const text = source('src/components/RecordsContextMenu.tsx')

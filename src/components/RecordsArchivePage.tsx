@@ -1,5 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from 'react'
+import { createPortal } from 'react-dom'
+import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 import { MY_PAGE_PATH } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -21,6 +23,7 @@ import {
 } from '../utils/format'
 import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
+import '../styles/auth-dialog.css'
 
 const BulkDeleteConfirmModal = lazy(() =>
   import('./BulkDeleteConfirmModal').then((mod) => ({ default: mod.BulkDeleteConfirmModal })),
@@ -132,28 +135,65 @@ function DetailSummary({
   )
 }
 
+/**
+ * 기록 상세 — 화면 전면 모달(body 포털). 조회형이라 우상단 X를 유지하고
+ * ESC·오버레이 클릭으로 닫는다. 열려 있는 동안 배경 스크롤을 잠근다.
+ * 포커스 복원은 마운트 시점의 activeElement(클릭한 카드)로 자동 복귀.
+ */
 function RecordsDetailPanel({
   detail,
   copy,
   closeLabel,
   onClose,
 }: {
-  detail: DetailSelection
+  detail: NonNullable<DetailSelection>
   copy: AccountRecordsCopy
   closeLabel: string
   onClose: () => void
 }) {
-  if (!detail) return null
+  useModalFocusRestore()
 
-  return (
-    <section className="records-detail-panel" aria-label={copy.detail}>
-      <div className="records-detail-head">
-        <h3>{copy.detail}</h3>
-        <button type="button" className="link-btn" onClick={onClose}>
-          {closeLabel}
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  const modal = (
+    <div
+      className="disclaimer-overlay"
+      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <section
+        className="disclaimer-modal records-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="records-detail-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="auth-modal-close"
+          onClick={onClose}
+          aria-label={closeLabel}
+        >
+          <span className="auth-modal-close__mark" aria-hidden="true" />
         </button>
-      </div>
-      {detail.type === 'order' ? (
+        <h3 id="records-detail-title">{copy.detail}</h3>
+        {detail.type === 'order' ? (
         <>
           <p className="records-detail-meta">
             {copy.side}: {detail.record.positionSide} · {copy.archiveOrderContracts}:{' '}
@@ -173,8 +213,11 @@ function RecordsDetailPanel({
           <DetailSummary title={copy.snapshotsTab} summary={detail.record.result} copy={copy} />
         </>
       )}
-    </section>
+      </section>
+    </div>
   )
+
+  return createPortal(modal, document.body)
 }
 
 function RecordSelectBox({
@@ -717,12 +760,14 @@ export function RecordsArchiveView({
             )}
           </section>
 
-          <RecordsDetailPanel
-            detail={detail}
-            copy={copy}
-            closeLabel={closeLabel ?? 'Close'}
-            onClose={onCloseDetail ?? (() => undefined)}
-          />
+          {detail && (
+            <RecordsDetailPanel
+              detail={detail}
+              copy={copy}
+              closeLabel={closeLabel ?? 'Close'}
+              onClose={onCloseDetail ?? (() => undefined)}
+            />
+          )}
         </main>
       </div>
       {menu && (

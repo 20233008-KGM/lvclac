@@ -18,7 +18,7 @@ import { useCalculator, type SaveStorageMode } from '../context/CalculatorContex
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { formatLeverage, formatNumber, formatSavedAtCompact } from '../utils/format'
+import { formatLeverageValue, formatNumber, formatSavedAtCompact } from '../utils/format'
 import { TooltipBody } from './TooltipBody'
 import type { SnapshotProGateMode } from './SnapshotProGateModal'
 
@@ -296,7 +296,8 @@ export function SaveDraftToggle() {
       side: inputs.positionSide,
       sideLabel: inputs.positionSide === 'short' ? t.short : t.long,
       equityText: equity != null ? formatNumber(equity) : null,
-      leverageText: leverageRatio != null ? formatLeverage(leverageRatio, t.leverageUnit) : null,
+      // 슬롯은 언어와 무관하게 'x' 표기(예: 20x). 본문 계산기의 '배'(t.leverageUnit)와 별개.
+      leverageText: leverageRatio != null ? `${formatLeverageValue(leverageRatio)}x` : null,
     }
   }
 

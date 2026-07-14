@@ -1986,13 +1986,19 @@ html[data-zone='about'] body {
 /* 기록 상세 모달 — 저장 당시 계산기(입력+결과 패널)를 통째로 보여주므로 데스크톱에선
    두 패널이 나란히 다 보이게 넓힌다. 카드 외형(배경·radius·패딩)은 표준 .disclaimer-modal이
    책임지고 여기선 폭·스크롤·내부 배치만. position: relative는 우상단 X(absolute)의 기준점 */
+/* 계산기 가독성 우선 — 오버레이·모달 여백을 최소로 줄여 축소율(zoom)을 끌어올린다 */
+.records-detail-overlay {
+  padding: var(--space-sm);
+}
+
 .records-detail-modal {
   position: relative;
   width: min(96vw, 1160px);
-  max-height: min(92vh, 900px);
+  max-height: min(96vh, 980px);
   display: grid;
   align-content: start;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  padding: var(--space-md);
   overflow-y: auto;
 }
 
@@ -2002,13 +2008,17 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
-/* 제목·메타를 한 줄에(기준선 정렬) — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
+/* 제목·메타·(주문이면)전후 토글까지 한 줄 — 우상단 X와 겹치지 않게 오른쪽 여백 확보 */
 .records-detail-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
-  padding-right: var(--space-xl);
+  padding-right: 48px;
+}
+
+.records-detail-head .records-detail-toggle {
+  margin-left: auto;
 }
 
 /* 주문 전/후 전환 세그먼트 — 언어 토글과 같은 필(pill) 문법으로 통일 */

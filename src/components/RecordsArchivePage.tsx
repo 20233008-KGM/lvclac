@@ -150,7 +150,7 @@ function RecordsDetailPanel({
     const apply = () => {
       calc.style.setProperty('zoom', '1')
       // 모달 상한(92vh, 900px 캡 — CSS와 동일)에서 헤더 등 계산기 외 높이를 뺀 가용분
-      const cap = Math.min(window.innerHeight * 0.92, 900)
+      const cap = Math.min(window.innerHeight * 0.96, 980)
       const chromeHeight = shell.scrollHeight - calc.offsetHeight
       // 서브픽셀 반올림 오차로 스크롤바가 생기지 않게 16px 여유 + 내림
       const available = cap - chromeHeight - 16
@@ -179,7 +179,7 @@ function RecordsDetailPanel({
 
   const modal = (
     <div
-      className="disclaimer-overlay"
+      className="disclaimer-overlay records-detail-overlay"
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -214,31 +214,31 @@ function RecordsDetailPanel({
               {copy.detailReadOnly}
             </p>
           )}
+          {detail.type === 'order' && (
+            <div
+              className="records-detail-toggle"
+              role="group"
+              aria-label={copy.orderSimulationLabel}
+            >
+              <button
+                type="button"
+                className={orderPhase === 'before' ? 'active' : ''}
+                aria-pressed={orderPhase === 'before'}
+                onClick={() => setOrderPhase('before')}
+              >
+                {copy.detailBefore}
+              </button>
+              <button
+                type="button"
+                className={orderPhase === 'after' ? 'active' : ''}
+                aria-pressed={orderPhase === 'after'}
+                onClick={() => setOrderPhase('after')}
+              >
+                {copy.detailAfter}
+              </button>
+            </div>
+          )}
         </div>
-        {detail.type === 'order' && (
-          <div
-            className="records-detail-toggle"
-            role="group"
-            aria-label={copy.orderSimulationLabel}
-          >
-            <button
-              type="button"
-              className={orderPhase === 'before' ? 'active' : ''}
-              aria-pressed={orderPhase === 'before'}
-              onClick={() => setOrderPhase('before')}
-            >
-              {copy.detailBefore}
-            </button>
-            <button
-              type="button"
-              className={orderPhase === 'after' ? 'active' : ''}
-              aria-pressed={orderPhase === 'after'}
-              onClick={() => setOrderPhase('after')}
-            >
-              {copy.detailAfter}
-            </button>
-          </div>
-        )}
         {/* key로 전/후 전환 시 패널을 재마운트 — 입력 패널이 내부 표시 상태를 갖고 있어
             props만 바뀌면 화면 문자열이 안 갱신된다(읽기 전용이라 재마운트 비용 무해) */}
         <div className="records-detail-calc" key={orderPhase} ref={calcRef}>

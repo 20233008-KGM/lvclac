@@ -2305,6 +2305,12 @@ html[data-zone='about'] body {
   color: var(--color-success);
 }
 
+/* 배지·감싸는 요소 없이 텍스트 색+체크 글리프만으로 연동 상태 구분(마크업 불변) */
+.my-page-linked-status.is-linked::before {
+  content: '✓';
+  margin-right: 4px;
+}
+
 .my-page-linked-status.is-unlinked {
   color: var(--color-text-muted);
 }
@@ -3454,12 +3460,17 @@ a.my-page-compare-card__action {
     width: 100%;
   }
 
-  /* 연동된 로그인 행: 아이콘+이름·상태 2열로 접고, 액션 버튼은 아래 전체 너비.
+  /* 연동된 로그인 행(모바일): [아이콘 | 이름/상태 스택 | 컴팩트 버튼] 한 줄 — 설정 목록 표준 패턴.
      자식 규칙은 .my-page-linked-row로 스코프(과거 전역 규칙이 새어 레이아웃 깨진 이력) */
   .my-page-linked-row,
   .my-page-account-hub__logins .my-page-linked-row {
-    grid-template-columns: 20px minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 2px var(--space-sm);
+    align-items: center;
+  }
+
+  .my-page-linked-row .my-page-linked-icon {
+    grid-row: 1 / span 2;
   }
 
   .my-page-linked-row .my-page-linked-name,
@@ -3468,12 +3479,9 @@ a.my-page-compare-card__action {
   }
 
   .my-page-linked-row .my-page-linked-action {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  .my-page-linked-row .my-page-linked-action .btn {
-    width: 100%;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: center;
   }
 
   .my-page-setting-row--nickname,

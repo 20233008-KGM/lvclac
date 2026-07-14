@@ -13,6 +13,10 @@ import {
 } from '../db/accountRecords'
 import { fetchNumberSets } from '../db/numberSets'
 import { useLanguage } from '../i18n'
+import { revertOrderScenarioState } from '../calc/mtmLink'
+import type { CalculatorInputs } from '../types'
+import { InputPanel } from './InputPanel'
+import { ResultPanel } from './ResultPanel'
 import { RecordsContextMenu, type RecordsContextMenuItem } from './RecordsContextMenu'
 import type { Messages } from '../i18n/types'
 import {
@@ -84,21 +88,6 @@ function shownCount(copy: AccountRecordsCopy, shown: number, total: number | nul
   return copy.shownCount.replace('{shown}', String(shown)).replace('{total}', String(total))
 }
 
-function SummaryCell({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
-  return (
-    <div className="records-detail-metric">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  )
-}
-
 function TimelineValue({
   value,
 }: {
@@ -109,35 +98,24 @@ function TimelineValue({
   )
 }
 
-function DetailSummary({
-  title,
-  summary,
-  copy,
-}: {
-  title: string
-  summary: AccountRecordSummary
-  copy: AccountRecordsCopy
-}) {
-  return (
-    <section>
-      <h4>{title}</h4>
-      <dl className="records-detail-grid">
-        <SummaryCell label={copy.summaryLiquidation} value={formatNumber(summary.liquidationPrice)} />
-        <SummaryCell
-          label={copy.summaryLiquidationBuffer}
-          value={formatPercent(summary.toleranceRate)}
-        />
-        <SummaryCell label={copy.summaryLeverage} value={formatLeverageValue(summary.leverageRatio)} />
-        <SummaryCell label={copy.summaryMaintenance} value={formatNumber(summary.maintenanceMargin)} />
-        <SummaryCell label={copy.summaryAvailable} value={formatNumber(summary.availableMargin)} />
-      </dl>
-    </section>
-  )
+/** 모달 안 계산기는 읽기 전용 — 입력 변경을 전부 무시한다. */
+const noopChange = () => undefined
+
+/**
+ * '주문 전' 화면용 입력값. 저장된 beforeInputs는 주문이 '반영 중'인 시나리오 상태라
+ * 입력 패널이 반영된(=주문 후와 같은) 값을 보여준다 — 시나리오를 벗겨(계산기 ESC 취소와
+ * 같은 함수) 주문 직전의 원래 값으로 되돌려 보여준다. 입력해둔 주문 자체는 남겨
+ * 주문 섹션에서 어떤 주문이었는지 보이게 한다.
+ */
+function rawBeforeInputs(inputs: CalculatorInputs): CalculatorInputs {
+  return { ...inputs, ...revertOrderScenarioState(inputs) }
 }
 
 /**
- * 기록 상세 — 화면 전면 모달(body 포털). 조회형이라 우상단 X를 유지하고
- * ESC·오버레이 클릭으로 닫는다. 열려 있는 동안 배경 스크롤을 잠근다.
+ * 기록 상세 — 화면 전면 모달(body 포털). 저장 당시 입력값이 채워진 계산기
+ * (입력+결과 패널)를 읽기 전용으로 통째로 보여준다. 주문 기록은 주문 전/후
+ * 입력이 모두 저장돼 있어 토글로 두 상태를 오간다. 조회형이라 우상단 X를
+ * 유지하고 ESC·오버레이 클릭으로 닫으며, 열려 있는 동안 배경 스크롤을 잠근다.
  * 포커스 복원은 마운트 시점의 activeElement(클릭한 카드)로 자동 복귀.
  */
 function RecordsDetailPanel({
@@ -152,6 +130,7 @@ function RecordsDetailPanel({
   onClose: () => void
 }) {
   useModalFocusRestore()
+  const [orderPhase, setOrderPhase] = useState<'before' | 'after'>('after')
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -168,6 +147,13 @@ function RecordsDetailPanel({
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
+
+  const calcInputs =
+    detail.type === 'order'
+      ? orderPhase === 'before'
+        ? rawBeforeInputs(detail.record.beforeInputs)
+        : detail.record.afterInputs
+      : detail.record.inputs
 
   const modal = (
     <div
@@ -194,25 +180,47 @@ function RecordsDetailPanel({
         </button>
         <h3 id="records-detail-title">{copy.detail}</h3>
         {detail.type === 'order' ? (
-        <>
+          <>
+            <p className="records-detail-meta">
+              {copy.side}: {detail.record.positionSide} · {copy.archiveOrderContracts}:{' '}
+              {formatNumber(detail.record.orderContracts)} · {copy.archiveOrderPrice}:{' '}
+              {formatNumber(detail.record.orderPrice)} · {copy.detailReadOnly}
+            </p>
+            <div
+              className="records-detail-toggle"
+              role="group"
+              aria-label={copy.orderSimulationLabel}
+            >
+              <button
+                type="button"
+                className={orderPhase === 'before' ? 'active' : ''}
+                aria-pressed={orderPhase === 'before'}
+                onClick={() => setOrderPhase('before')}
+              >
+                {copy.detailBefore}
+              </button>
+              <button
+                type="button"
+                className={orderPhase === 'after' ? 'active' : ''}
+                aria-pressed={orderPhase === 'after'}
+                onClick={() => setOrderPhase('after')}
+              >
+                {copy.detailAfter}
+              </button>
+            </div>
+          </>
+        ) : (
           <p className="records-detail-meta">
-            {copy.side}: {detail.record.positionSide} · {copy.archiveOrderContracts}:{' '}
-            {formatNumber(detail.record.orderContracts)} · {copy.archiveOrderPrice}:{' '}
-            {formatNumber(detail.record.orderPrice)}
+            {detail.record.title} · {formatSavedAtCompact(detail.record.createdAt)} ·{' '}
+            {copy.detailReadOnly}
           </p>
-          <div className="records-detail-compare">
-            <DetailSummary title={copy.before} summary={detail.record.beforeResult} copy={copy} />
-            <DetailSummary title={copy.after} summary={detail.record.afterResult} copy={copy} />
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="records-detail-meta">
-            {detail.record.title} · {formatSavedAtCompact(detail.record.createdAt)}
-          </p>
-          <DetailSummary title={copy.snapshotsTab} summary={detail.record.result} copy={copy} />
-        </>
-      )}
+        )}
+        {/* key로 전/후 전환 시 패널을 재마운트 — 입력 패널이 내부 표시 상태를 갖고 있어
+            props만 바뀌면 화면 문자열이 안 갱신된다(읽기 전용이라 재마운트 비용 무해) */}
+        <div className="records-detail-calc" key={orderPhase}>
+          <InputPanel inputs={calcInputs} onChange={noopChange} />
+          <ResultPanel inputs={calcInputs} onChange={noopChange} />
+        </div>
       </section>
     </div>
   )

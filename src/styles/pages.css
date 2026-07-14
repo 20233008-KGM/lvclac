@@ -1983,14 +1983,15 @@ html[data-zone='about'] body {
   justify-self: center;
 }
 
-/* 기록 상세 모달 — 카드 외형(배경·radius·패딩)은 표준 .disclaimer-modal이 책임지고,
-   여기선 폭·스크롤·내부 배치만 얹는다. before/after 비교 2열이 있어 기본 420px보다 넓게.
-   position: relative는 우상단 X(.auth-modal-close, absolute)의 기준점 */
+/* 기록 상세 모달 — 저장 당시 계산기(입력+결과 패널)를 통째로 보여주므로 데스크톱에선
+   두 패널이 나란히 다 보이게 넓힌다. 카드 외형(배경·radius·패딩)은 표준 .disclaimer-modal이
+   책임지고 여기선 폭·스크롤·내부 배치만. position: relative는 우상단 X(absolute)의 기준점 */
 .records-detail-modal {
   position: relative;
-  width: min(100%, 560px);
-  max-height: min(88vh, 680px);
+  width: min(96vw, 1160px);
+  max-height: min(92vh, 900px);
   display: grid;
+  align-content: start;
   gap: var(--space-md);
   overflow-y: auto;
 }
@@ -2001,10 +2002,53 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
-.records-detail-compare {
-  display: flex;
+/* 주문 전/후 전환 세그먼트 — 언어 토글과 같은 필(pill) 문법으로 통일 */
+.records-detail-toggle {
+  display: inline-flex;
+  gap: 2px;
+  justify-self: start;
+  padding: 2px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+}
+
+.records-detail-toggle button {
+  min-height: 30px;
+  padding: 0 var(--space-md);
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.records-detail-toggle button.active {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* 모달 안 계산기: 읽기 전용 — 포인터를 통째로 차단해 입력·버튼을 비활성화 */
+.records-detail-calc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-md);
-  align-items: flex-start;
+  align-items: start;
+  pointer-events: none;
+}
+
+/* 기록을 보던 중 또 기록(스냅샷 저장)하거나 수식 페이지로 이탈하는 헤드 액션은 숨긴다 */
+.records-detail-modal .result-panel__head-actions {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .records-detail-calc {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .records-detail-compare > section {
@@ -2016,35 +2060,6 @@ html[data-zone='about'] body {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-}
-
-.records-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-xs);
-  margin: var(--space-sm) 0 0;
-}
-
-.records-detail-metric {
-  min-width: 0;
-  padding: var(--space-xs);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
-}
-
-.records-detail-metric dt {
-  color: var(--color-text-dim);
-  font-size: var(--font-size-xs);
-}
-
-.records-detail-metric dd {
-  margin: 3px 0 0;
-  overflow-wrap: anywhere;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
 }
 
 .my-page-billing-status-card {
@@ -3485,12 +3500,6 @@ a.my-page-compare-card__action {
 
   .records-timeline-cell {
     grid-row: 2;
-  }
-
-  /* 상세 모달의 주문 전/후 비교는 좁은 화면에서 세로로 쌓는다 */
-  .records-detail-compare {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .records-timeline-card--snapshot,

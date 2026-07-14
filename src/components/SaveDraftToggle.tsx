@@ -11,13 +11,14 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { calculateEvaluate } from '../calc/leverage'
 import { BILLING_PATH, MY_PAGE_PATH } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import { useCalculator, type SaveStorageMode } from '../context/CalculatorContext'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { formatSavedAtCompact } from '../utils/format'
+import { formatLeverage, formatNumber, formatSavedAtCompact } from '../utils/format'
 import { TooltipBody } from './TooltipBody'
 import type { SnapshotProGateMode } from './SnapshotProGateModal'
 
@@ -283,14 +284,20 @@ export function SaveDraftToggle() {
           : 'guest'
         : null
 
-  // 아이템 메타 줄: 마지막 저장 시각 · 방향 · 계약수(있을 때).
-  const formatNumberSetMeta = (numberSet: (typeof menuNumberSets)[number]): string[] => {
-    const parts: string[] = []
-    if (numberSet.updatedAt) parts.push(formatSavedAtCompact(numberSet.updatedAt))
-    const side = numberSet.inputs.positionSide === 'short' ? t.short : t.long
-    const contracts = numberSet.inputs.contracts
-    parts.push(contracts != null ? `${side} · ${contracts}${t.contractsUnit}` : side)
-    return parts
+  // 슬롯 메타: 방향(색점) · 계좌평가금 · 레버리지.
+  // 계좌평가금(accountEval)은 저장된 입력값이라 그대로 쓰고, 레버리지는 저장값이 아니라
+  // 입력으로부터 계산해 얻는 파생값이라 calculateEvaluate로 뽑는다(순수 산술, 세트 수만큼 반복해도 무해).
+  // 입력이 불완전한 세트는 값이 null → 해당 칸을 비우되 고정폭은 CSS가 유지해 정렬은 안 흔들린다.
+  const describeNumberSet = (numberSet: (typeof menuNumberSets)[number]) => {
+    const { inputs } = numberSet
+    const equity = inputs.accountEval ?? null
+    const leverageRatio = calculateEvaluate(inputs).leverageRatio
+    return {
+      side: inputs.positionSide,
+      sideLabel: inputs.positionSide === 'short' ? t.short : t.long,
+      equityText: equity != null ? formatNumber(equity) : null,
+      leverageText: leverageRatio != null ? formatLeverage(leverageRatio, t.leverageUnit) : null,
+    }
   }
 
   const openEnableModal = (mode: SaveStorageMode = storageMode) => {
@@ -574,7 +581,7 @@ export function SaveDraftToggle() {
         </div>
         {groupSets.map((numberSet) => {
           const active = saveEnabled && storageMode === mode && activeNumberSetId === numberSet.id
-          const meta = formatNumberSetMeta(numberSet)
+          const { side, sideLabel, equityText, leverageText } = describeNumberSet(numberSet)
           return (
             <button
               key={`${mode}:${numberSet.id}`}
@@ -586,27 +593,21 @@ export function SaveDraftToggle() {
               aria-checked={active}
               onClick={() => handleNumberSetSelect(numberSet.storageMode, numberSet.id)}
             >
-              <span className="draft-number-set-menu__tile" aria-hidden="true">
-                <StorageGlyph mode={mode} />
-              </span>
+              <span
+                className={`draft-number-set-menu__side-dot draft-number-set-menu__side-dot--${side}`}
+                aria-hidden="true"
+              />
               <span className="draft-number-set-menu__copy">
                 <strong>{numberSet.title}</strong>
-                <span className="draft-number-set-menu__meta">
-                  {meta.map((part, index) => (
-                    <span key={part}>
-                      {index > 0 && (
-                        <span className="draft-number-set-menu__meta-dot" aria-hidden="true" />
-                      )}
-                      {part}
-                    </span>
-                  ))}
-                </span>
+                <span className="draft-number-set-menu__sr-side">{sideLabel}</span>
               </span>
-              {active && (
-                <span className="draft-number-set-menu__check" aria-hidden="true">
-                  ✓
+              <span className="draft-number-set-menu__stats">
+                <span className="draft-number-set-menu__equity">{equityText ?? ''}</span>
+                <span className="draft-number-set-menu__stats-dot" aria-hidden="true">
+                  {equityText != null && leverageText != null ? '·' : ''}
                 </span>
-              )}
+                <span className="draft-number-set-menu__leverage">{leverageText ?? ''}</span>
+              </span>
             </button>
           )
         })}

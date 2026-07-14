@@ -2698,14 +2698,14 @@ input:focus:not(:focus-visible) {
   font-weight: 600;
 }
 
-/* 아이템: [아이콘 타일][카피][체크] */
+/* 아이템(원라인): [방향점][제목][금액·레버리지] */
 .draft-number-set-menu__item {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 9px;
   align-items: center;
   width: 100%;
-  padding: 8px 10px 8px 8px;
+  padding: 7px 10px 7px 9px;
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
@@ -2724,98 +2724,87 @@ input:focus:not(:focus-visible) {
   outline: none;
 }
 
-.draft-number-set-menu__tile {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
-  background: var(--color-surface-2);
-  color: var(--color-text-dim);
+/* 방향 색점 — 롱/숏(색으로 구분, 라벨은 스크린리더 전용으로 별도 제공) */
+.draft-number-set-menu__side-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-dim);
 }
 
-.draft-number-set-menu__tile svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
+.draft-number-set-menu__side-dot--long {
+  background: var(--color-long);
 }
 
-.draft-number-set-menu__tile .draft-save-slot__fill {
-  fill: none;
+.draft-number-set-menu__side-dot--short {
+  background: var(--color-short);
 }
 
 .draft-number-set-menu__copy {
   min-width: 0;
-  display: grid;
-  gap: 3px;
 }
 
 .draft-number-set-menu__copy strong {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #cfd4dc;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
 }
 
-.draft-number-set-menu__meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* 방향 라벨 — 시각은 색점이 담당하므로 스크린리더에만 노출 */
+.draft-number-set-menu__sr-side {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 숫자 블록: [금액 우측정렬][·][레버리지] — 레버리지 칸을 고정폭으로 잡아
+   배수 자릿수(5배·50배…)가 달라도 금액 끝(·)과 정렬이 흔들리지 않게 한다. */
+.draft-number-set-menu__stats {
+  display: inline-grid;
+  grid-template-columns: auto 9px 32px;
+  align-items: baseline;
   color: var(--color-text-dim);
   font-family: var(--font-mono);
   font-size: 11px;
   white-space: nowrap;
 }
 
-.draft-number-set-menu__meta > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.draft-number-set-menu__equity {
+  text-align: right;
 }
 
-.draft-number-set-menu__meta-dot {
-  flex-shrink: 0;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #4a5464;
+.draft-number-set-menu__stats-dot {
+  text-align: center;
+  color: #4a5464;
 }
 
-/* 활성 아이템: 좌측 액센트 바 + 타일 강조 + 체크 서클 */
+.draft-number-set-menu__leverage {
+  text-align: right;
+}
+
+/* 활성 아이템: 좌측 액센트 바 + 제목/숫자 강조(방향점은 방향색 유지) */
 .draft-number-set-menu__item--active {
   border-color: color-mix(in srgb, var(--color-success) 45%, transparent);
   background: color-mix(in srgb, var(--color-success) 12%, transparent);
   box-shadow: inset 3px 0 0 var(--color-success);
 }
 
-.draft-number-set-menu__item--active .draft-number-set-menu__tile {
-  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
-  background: color-mix(in srgb, var(--color-success) 13%, transparent);
-  color: var(--color-success);
-}
-
 .draft-number-set-menu__item--active .draft-number-set-menu__copy strong {
   color: #f0f2f5;
 }
 
-.draft-number-set-menu__check {
-  display: grid;
-  place-items: center;
-  width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  background: var(--color-success);
-  color: #12151c;
-  font-size: 11px;
-  font-weight: 900;
+.draft-number-set-menu__item--active .draft-number-set-menu__stats {
+  color: var(--color-success);
 }
 
 /* 빈 상태 */

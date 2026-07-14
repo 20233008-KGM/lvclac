@@ -158,7 +158,7 @@ describe('draft save slot UI', () => {
   it('shows a compact checkmark timestamp inline with the save slots', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
 
-    expect(text).toContain("import { formatSavedAtCompact } from '../utils/format'")
+    expect(text).toMatch(/import \{[^}]*formatSavedAtCompact[^}]*\} from '\.\.\/utils\/format'/)
     expect(text).toContain('formatSavedAtCompact(savedAt)')
     expect(text).toContain('<div className="draft-save-row">')
     expect(text).not.toContain('draft-save-status--icon-only')

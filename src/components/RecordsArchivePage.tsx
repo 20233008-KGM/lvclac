@@ -6,7 +6,6 @@ import { MY_PAGE_PATH } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import {
   createAccountRecordsRepository,
-  type AccountRecordSummary,
   type AccountSnapshotRecord,
   type NumberSetFilter,
   type OrderHistoryRecord,

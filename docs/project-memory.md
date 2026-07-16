@@ -91,22 +91,28 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 > **로그가 아니라, 항상 최신 전체 그림으로 덮어쓰는 요약.** 2,000자 내외로 유지(넘치면 오래된 서술을 쳐내 다이어트). 새 세션은 이거 하나만 읽어도 프로젝트 전체 흐름·현재 상태를 파악한다. 상세 진행은 아래 '최근 근황'에서 본다.
 
-**제품**: LiqGuard — 선물·파생상품 **청산가(강제청산 가격) 계산기** 웹앱. 운영 도메인 liqguard.com(Porkbun 등록·Vercel 연결·SSL). 정식 공개 전이라 robots 전체 Disallow + noindex로 검색 차단 중. 회사 도메인 farfield.software는 별도 보유.
+**제품/배포**: LiqGuard는 공개 제품과 개발 제품을 영구 분리한다. `main → liqguard.com`은 로그인 없는 무료 계산기·단일 로컬 저장·광고 자리·`/terms`·`/privacy`만 제공한다. `dev → lvclac-dev → devpilgrm.liqguard.com`은 로그인·클라우드·기록·결제·크론 등 전체 기능을 보존한다. 두 환경 모두 정식 공개 전 `noindex`; 개발 사이트는 항상 `DEV` 배지를 표시한다.
 
-**스택/인프라**: React + TypeScript + Vite 프런트, Supabase(DB·Auth), Vercel(호스팅·`/api/*` 서버리스 함수·크론). 인증메일 발신 auth@liqguard.com(Resend, 한/영 분기). 테스트 vitest 620개. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 반드시 `.js` 확장자**(serverEsmImports.test.ts가 자동 검사).
+**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 592개다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 620개다. Supabase Auth Site URL은 개발 도메인으로 전환됨. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
 
-**핵심 기능**: ①청산가 계산기(상품군별 용어 프리셋 오버레이 — 라벨만 바뀌고 계산 로직 불변) ②계좌 스냅샷(수동 버튼 + 자동: pg_cron 15분 폴링으로 due 슬롯 처리, **값이 바뀐 날만 저장**) ③숫자세트(로컬=무료·클라우드=Pro) ④마이페이지(계정·데이터·환경설정, Free/Pro 비교 카드) ⑤첫방문 온보딩(면책 흡수) ⑥롤오버(만기 이월) 인앱 알림. 요금제 Free/Pro 존재하나 **결제(Paddle) 환경변수 미설정 → 실결제 불가**(크래시는 해소됨, 현재는 /billing 유도만).
+**핵심 기능**: 공개 사이트는 청산가 계산기, 상품군별 용어 프리셋, 주문 시나리오, undo/redo, 면책, 광고 레이아웃, 단일 브라우저 저장만 제공한다. 기존 활성 로컬 숫자세트는 공개 단일 저장 키로 1회 마이그레이션한다. 개발 사이트에는 계좌 스냅샷, 다중 숫자세트, 마이페이지, 온보딩, 롤오버, 피드백·관리자·Paddle 준비 기능이 남아 있다.
 
 **디자인**: 다크 UI, variables.css 토큰 기반. 모달 3계층(base·auth·snapshot)을 단일 규칙(R1–R6)으로 수렴 완료. 개선 접근: 레퍼런스 캡처 → 토큰 준수 → 여백 4·8·16·24 리듬 → 실제 화면 검증.
 
 **법인**: 주식회사 파필드소프트웨어 설립 중 — startbiz 서식 13종 완료, **일괄 전자서명(김규민 + 누나 감사 김에림) → 파주등기소 제출**만 남음(9~17시 운영시간 처리).
 
-**다음/미해결**: 결제(Paddle) env 설정, 롤오버 이메일/푸시 알림(현재 인앱만), 법인 등기 마무리.
+**다음/미해결**: Porkbun에 `A devpilgrm 76.76.21.21` 추가 후 개발 도메인 SSL·로그인·클라우드·cron smoke test. 8/7 공개 직전 AdSense/CMP·법적 문구 확인 후 `ALLOW_INDEXING=true`. Paddle·법인·롤오버 알림은 dev 유료기능 트랙으로 계속 진행.
 
 ## 최근 근황
 
-- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,000토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
+- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,150토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
 - **운영 규칙**: 근황은 **최신 5개만** 여기 둔다. 새 항목을 맨 위에 추가해 6개가 되면 **가장 오래된 1개를 [`docs/project-history.md`](./project-history.md)로 잘라 이동**(요약 말고 원문 그대로). 전체 흐름은 위 Live Summary가 책임지므로, 근황은 마음 놓고 짧게 유지한다.
+
+**2026-07-16 — `main` 무료 실배포 / `dev` 전체 개발환경 영구 분리** (main 04f4ed3, dev a342674)
+- `dev`를 기존 전체 기능 브랜치로 만들고 별도 Vercel `lvclac-dev`의 Production Branch로 지정. Supabase·service role·cron env와 Auth Site URL/Redirect URL을 `devpilgrm.liqguard.com` 기준으로 이관하고 `DEV` 배지를 추가했다. Vercel 파일단위 TypeScript 오류(Node 타입, middleware `.js`, cron union narrowing)를 수정해 dev Production이 오류 없이 Ready.
+- `main`은 로그인/AuthProvider·클라우드·다중 숫자세트·마이페이지·기록·결제·피드백·관리자·가이드/공식/소개/UI키트/복구 진입을 제거. `/terms`, `/privacy`만 유지하고 제거 경로는 홈으로 이동. billing/cron API와 Vercel cron, Production Supabase/service-role/cron env도 제거.
+- 공개 저장은 단일 `localStorage` 슬롯. 기존 active 로컬 숫자세트를 `leverage_calculator_draft`로 1회 마이그레이션하고 저장 일시정지와 데이터 삭제를 분리했다. 광고 값이 없으면 기존 자리표시를 유지한다.
+- 검증: public vitest 592/592·build, dev 620/620·build, 양쪽 Vercel Ready. `liqguard.com` 홈/terms/privacy 200, 제거 경로 307→홈, billing API 404, robots 전체 차단 확인. 남은 외부 작업은 Porkbun `A devpilgrm 76.76.21.21` 한 건과 이후 SSL/기능 smoke test.
 
 **2026-07-16 — 기록 장부 시안 레이아웃·중앙 기준일을 실제 /records에 적용 + 6열 정렬 복원**
 - 범위 착오 수정: 처음에는 `docs/design/2026-07-16-records-date-anchor-mockup.html`만 다듬어 운영 도메인이 바뀌지 않았음. 사용자 확인 후 실제 `RecordsArchivePage.tsx`·`pages.css`에 시안 방향을 적용.
@@ -132,11 +138,5 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - **정렬 고정**(사용자 핵심 요구): 우측 숫자를 `[금액 우측정렬][·][레버리지]` 3칸 inline-grid, **레버리지 칸 32px 고정폭 우측정렬** → 배수 자릿수(5x·50x·125x) 달라도 3축 안 흔들림(실측: 전 행 금액끝568·점577·레버끝609px 동일, 칸폭 32 불변). 통화기호(₩) 제거·천단위 콤마·레버리지 단위 `x`(본문은 '배', 슬롯만 x).
 - **레버리지는 파생값**: CalculatorInputs에 레버리지 입력 필드 없음(국내 선물식 — 평가금·약정금액서 도출). 세트엔 원천 입력만 저장되고 `calculateEvaluate(inputs).leverageRatio`로 매번 계산(순수 산술, 20개 무해). 따로 저장 안 하는 게 원천값 변경 시 유령값 방지로 더 안전. 값 null(입력 불완전)이면 칸 비우되 고정폭 유지. `formatNumberSetMeta`(시각·방향·계약수) → `describeNumberSet`(방향·평가금·레버리지)로 교체.
 - 검증: tsc·vitest 605/605(워크트리 제외). dev(5223)에 로컬세트 6종 주입 후 DOM 실측 — 렌더·레버리지(20/50/5/10/125/15x)·active 하이라이트·3축 정렬 확인. **스크린샷은 이 환경 캡처도구 타임아웃(JS 실행은 정상) → DOM 측정으로 대체**. saveDraftSlotUi 테스트의 format import 정확문자열 검사를 정규식으로 완화(import 확장 대응). 남의 세션 project-memory.md 미커밋 1줄(Live Summary 자수 1,000→2,000) 동반 커밋됨.
-
-**2026-07-15 — 마이페이지 레거시 유령 CSS 200줄 전면 삭제** (커밋 548032d)
-- 2f45d57 잔여 후보였던 `my-page-setting-row` 계열(마이페이지 v3 이전 시스템) 정리. src 전체(ts/tsx/test) grep 참조 0건 전수 확인 — 참조처럼 보인 곳은 `.recovery/` 백업과 일회성 복구 스크립트뿐, CSS 소스를 읽는 테스트 3개(autoSnapshotSettingHint·myPageLayout·myPageNumberSetsUi)도 미검사.
-- 조사 중 추가 유령 발견해 함께 삭제(사용자 승인): `.my-page-nickname-form` 본체+오버라이드 4블록(현행 폼은 `my-page-nickname-edit`라 "legacy를 덮어쓴다"던 오버라이드까지 전부 매칭 대상 없는 죽은 코드), `.my-page-account-settings-meta`. `.my-page-settings-list`(@deprecated)·`.my-page-settings-note`·모바일 미디어쿼리 블록 포함 총 5구간 200줄, 렌더링 변화 0.
-- 검증: vitest 604/604(main rebase 후 재실행), dev /my에서 CSSOM 유령 규칙 0·실사용 규칙(linked-row/setting-line/inline-control) 유지·데스크톱 1265px/모바일 428px 가로 오버플로 없음·콘솔 에러 0. 게스트 화면 실측(로그인 화면 쪽은 참조 0건으로 코드 레벨 보장).
-- 함정: 포트 5199를 다른 세션 dev 서버가 점유 → launch.json 임시 5198로 검증 후 원복. harness 워크트리 세션이라 워크트리 커밋→main rebase→ff-merge로 main 반영(97e2302 모바일 linked-row 개편과 충돌 없음 확인).
 
 <!-- 근황은 최신 5개만. 더 오래된 기록은 docs/project-history.md 참조. -->

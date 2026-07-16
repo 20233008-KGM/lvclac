@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { next } from '@vercel/functions'
 import { PRIVACY_PATH, TERMS_PATH } from './src/config/routes.js'
 

@@ -39,8 +39,8 @@ function resolveSource(fromFile: string, spec: string): string | null {
   return null
 }
 
-describe('서버(api/) ESM import 확장자', () => {
-  it('api 진입점에서 도달 가능한 모든 상대 import는 .js 확장자를 가진다', () => {
+describe('public-lite 서버 표면', () => {
+  it('실배포 브랜치에는 billing/cron API 진입점이 없다', () => {
     const queue = listTsFiles(join(ROOT, 'api'))
     const visited = new Set<string>()
     const violations: string[] = []
@@ -59,7 +59,7 @@ describe('서버(api/) ESM import 확장자', () => {
       }
     }
 
-    expect(visited.size).toBeGreaterThan(10) // 그래프 순회가 실제로 작동하는지 sanity check
+    expect(visited.size).toBe(0)
     expect(violations, '상대 import에 .js 확장자를 붙여야 Vercel ESM 런타임에서 살아남는다').toEqual([])
   })
 })

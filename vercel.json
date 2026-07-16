@@ -1,9 +1,17 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/account-snapshots",
-      "schedule": "0 0 * * *"
-    }
+  "redirects": [
+    { "source": "/guide", "destination": "/", "permanent": false },
+    { "source": "/formulas", "destination": "/", "permanent": false },
+    { "source": "/about", "destination": "/", "permanent": false },
+    { "source": "/my", "destination": "/", "permanent": false },
+    { "source": "/billing", "destination": "/", "permanent": false },
+    { "source": "/records", "destination": "/", "permanent": false },
+    { "source": "/admin/:path*", "destination": "/", "permanent": false },
+    { "source": "/boards/:path*", "destination": "/", "permanent": false },
+    { "source": "/product", "destination": "/", "permanent": false },
+    { "source": "/pricing", "destination": "/", "permanent": false },
+    { "source": "/refund-policy", "destination": "/", "permanent": false },
+    { "source": "/kit", "destination": "/", "permanent": false }
   ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }

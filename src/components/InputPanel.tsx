@@ -9,7 +9,6 @@ import {
   readSkipAccountSettingGuard,
   setSkipAccountSettingGuard,
 } from './accountSettingGuard'
-import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
@@ -329,7 +328,6 @@ export function ScenarioPriceField({
           text={field.hint}
           label={tooltipLabel}
           highlight={false}
-          guideHref={GUIDE_PATH}
           guideLinkLabel={tooltipGuideLink}
         />
       </span>
@@ -708,7 +706,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             label={f.accountEquity.label}
             tooltip={f.accountEquity.hint}
             tooltipLabel={t.fieldTooltipLabel}
-            tooltipGuideHref={GUIDE_PATH}
             tooltipGuideLinkLabel={t.tooltipGuideLink}
             className={`${frozenFieldClass} fh-equity`.trim()}
           >
@@ -771,7 +768,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               stepUpLabel={t.stepUp}
               stepDownLabel={t.stepDown}
               tooltipLabel={t.fieldTooltipLabel}
-              tooltipGuideHref={GUIDE_PATH}
               tooltipGuideLinkLabel={t.tooltipGuideLink}
               disabled={scenarioModeActive}
               rollPnlOnChange={setupComplete}

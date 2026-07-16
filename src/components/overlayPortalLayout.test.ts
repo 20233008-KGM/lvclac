@@ -12,7 +12,7 @@ describe('calculator modal overlays', () => {
 
     expect(text).toContain("import { createPortal } from 'react-dom'")
     expect(text).toContain('document.body.style.overflow')
-    expect(text).toContain('return createPortal(modal, document.body)')
+    expect(text).toContain('createPortal(modal, document.body)')
   })
 
   it('renders clear-all confirmation through the document body portal', () => {

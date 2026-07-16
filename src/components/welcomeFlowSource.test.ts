@@ -31,14 +31,16 @@ describe('WelcomeFlow 접근성/구조', () => {
 })
 
 describe('DisclaimerProvider 게이트 배선', () => {
-  it('welcome XOR disclaimer 배타 렌더', () => {
-    expect(provider).toContain('welcomeOpen ?')
-    expect(provider).toContain('<WelcomeFlow onComplete={handleWelcomeComplete} />')
+  it('공개 계산기는 온보딩 없이 면책 확인만 렌더', () => {
+    expect(provider).not.toContain('welcomeOpen ?')
+    expect(provider).not.toContain('<WelcomeFlow')
+    expect(provider).toContain('{open && (')
+    expect(provider).toContain('<DisclaimerModalContent')
   })
 
-  it('완료 시 면책 ack/skip + 온보딩 완료 플래그 커밋', () => {
+  it('완료 시 면책 ack/skip만 저장', () => {
     expect(provider).toContain('writeDisclaimerAck(sessionStorage)')
     expect(provider).toContain('writeDisclaimerSkip(localStorage, true)')
-    expect(provider).toContain('writeWelcomeCompleted(localStorage)')
+    expect(provider).not.toContain('writeWelcomeCompleted(localStorage)')
   })
 })

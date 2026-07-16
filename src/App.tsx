@@ -1,6 +1,4 @@
 import {
-  Suspense,
-  lazy,
   useEffect,
   useMemo,
   useRef,
@@ -19,28 +17,13 @@ import {
   readTraderStage,
   writeFieldHintDismissed,
 } from './components/fieldHint'
-import { AuthButton } from './components/auth/AuthButton'
-import { useAuth } from './context/AuthContext'
-import { HowToUseButton } from './components/HowToUseButton'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
-import { parseBoardPath } from './config/boards'
-import {
-  isAboutPath,
-  isAdminFeedbackPath,
-  isBillingPath,
-  isFormulasPath,
-  isGuidePath,
-  isLegalPath,
-  isKitPath,
-  isMyPagePath,
-  isPricingPath,
-  isProductPath,
-  isRecordsPath,
-} from './config/routes'
+import { PublicLegalPage } from './components/PublicLegalPage'
+import { isLegalPath } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
-import { useCalculator } from './context/CalculatorContext'
+import { usePublicCalculator } from './context/PublicCalculatorContext'
 import type { CalculatorHistoryMove } from './context/calculatorHistory'
 import { usePathname } from './hooks/usePathname'
 import { useGridResize } from './hooks/useGridResize'
@@ -51,48 +34,6 @@ import type { Messages } from './i18n/types'
 import type { CalculatorInputs } from './types'
 import { formatNumber } from './utils/format'
 import './App.css'
-
-const FeedbackBoardPage = lazy(() =>
-  import('./components/FeedbackBoardPage').then((mod) => ({ default: mod.FeedbackBoardPage })),
-)
-const AdminFeedbackPage = lazy(() =>
-  import('./components/AdminFeedbackPage').then((mod) => ({ default: mod.AdminFeedbackPage })),
-)
-const FormulasPage = lazy(() =>
-  import('./components/FormulasPage').then((mod) => ({ default: mod.FormulasPage })),
-)
-const GuidePage = lazy(() =>
-  import('./components/GuidePage').then((mod) => ({ default: mod.GuidePage })),
-)
-const AboutPage = lazy(() =>
-  import('./components/AboutPage').then((mod) => ({ default: mod.AboutPage })),
-)
-const MyPage = lazy(() =>
-  import('./components/MyPage').then((mod) => ({ default: mod.MyPage })),
-)
-const BillingPage = lazy(() =>
-  import('./components/billing/BillingPage').then((mod) => ({ default: mod.BillingPage })),
-)
-const RecordsArchivePage = lazy(() =>
-  import('./components/RecordsArchivePage').then((mod) => ({ default: mod.RecordsArchivePage })),
-)
-const ProductReviewPage = lazy(() =>
-  import('./components/PaddleReviewPages').then((mod) => ({ default: mod.ProductReviewPage })),
-)
-const PricingReviewPage = lazy(() =>
-  import('./components/PaddleReviewPages').then((mod) => ({ default: mod.PricingReviewPage })),
-)
-const PublicLegalPage = lazy(() =>
-  import('./components/PaddleReviewPages').then((mod) => ({ default: mod.PublicLegalPage })),
-)
-const ResetPasswordScreen = lazy(() =>
-  import('./components/auth/ResetPasswordScreen').then((mod) => ({
-    default: mod.ResetPasswordScreen,
-  })),
-)
-const KitGallery = lazy(() =>
-  import('./components/KitGallery').then((mod) => ({ default: mod.KitGallery })),
-)
 
 type CalculatorHistoryCopy = Messages['calculatorHistory']
 
@@ -309,7 +250,7 @@ function CalculatorApp() {
     redoHistory,
     jumpHistory,
     saveEnabled,
-  } = useCalculator()
+  } = usePublicCalculator()
   const previewMode = isPreviewModeActive(inputs)
   const fitRootRef = useRef<HTMLDivElement>(null)
 
@@ -411,8 +352,6 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
-                  <HowToUseButton />
-                  <AuthButton variant="header" />
                 </div>
               </header>
               {fieldHintOn && traderStage && (
@@ -456,128 +395,25 @@ function CalculatorApp() {
 
 function AppRouter() {
   const pathname = usePathname()
-  const boardId = parseBoardPath(pathname)
   const legalKind = isLegalPath(pathname)
 
-  // 컴포넌트 전시장(UI 키트) — Figma export용. 미링크·noindex라 일반 사용자에겐 노출되지 않지만,
-  // 배포본 URL로 html.to.design가 가져올 수 있도록 프로덕션에서도 라우팅한다.
-  // TODO: 정식 공개(런칭) 전 제거 또는 재게이팅.
-  if (isKitPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <KitGallery />
-      </Suspense>
-    )
+  useEffect(() => {
+    if (pathname !== '/' && legalKind !== 'terms' && legalKind !== 'privacy') {
+      window.history.replaceState(null, '', '/')
+    }
+  }, [legalKind, pathname])
+
+  if (legalKind === 'terms' || legalKind === 'privacy') {
+    return <PublicLegalPage kind={legalKind} />
   }
-  if (isAdminFeedbackPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter">
-          <AdminFeedbackPage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (boardId) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter route-enter--contact">
-          <FeedbackBoardPage boardId={boardId} />
-        </div>
-      </Suspense>
-    )
-  }
-  if (isFormulasPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <FormulasPage />
-      </Suspense>
-    )
-  }
-  if (isGuidePath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <GuidePage />
-      </Suspense>
-    )
-  }
-  if (isAboutPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter route-enter--contact">
-          <AboutPage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (isMyPagePath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter">
-          <MyPage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (isBillingPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter">
-          <BillingPage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (isRecordsPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter">
-          <RecordsArchivePage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (isProductPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter route-enter--contact">
-          <ProductReviewPage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (isPricingPath(pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter route-enter--contact">
-          <PricingReviewPage />
-        </div>
-      </Suspense>
-    )
-  }
-  if (legalKind) {
-    return (
-      <Suspense fallback={null}>
-        <div key={pathname} className="route-enter route-enter--contact">
-          <PublicLegalPage kind={legalKind} />
-        </div>
-      </Suspense>
-    )
-  }
+
   return <CalculatorApp />
 }
 
 function App() {
-  const { recoveryMode } = useAuth()
   return (
     <DisclaimerProvider>
-      {recoveryMode ? (
-        <Suspense fallback={null}>
-          <ResetPasswordScreen />
-        </Suspense>
-      ) : (
-        <AppRouter />
-      )}
+      <AppRouter />
     </DisclaimerProvider>
   )
 }

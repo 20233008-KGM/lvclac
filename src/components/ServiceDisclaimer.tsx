@@ -18,9 +18,6 @@ import {
   writeDisclaimerAck,
   writeDisclaimerSkip,
 } from './serviceDisclaimerLogic'
-import { shouldShowWelcome, writeWelcomeCompleted } from './welcomeFlowLogic'
-import { WelcomeFlow } from './WelcomeFlow'
-import { isKitPath } from '../config/routes'
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
@@ -126,17 +123,8 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
 
 export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  // 컴포넌트 전시장(/kit, 개발·export 전용)에선 온보딩·면책 오버레이를 띄우지 않는다.
-  const suppressOverlays = isKitPath(pathname)
-  // 신규 방문자는 환영 플로우가 유일한 첫 관문. 환영이 뜨는 동안 면책 모달은 배타적으로 숨긴다.
-  const [welcomeOpen, setWelcomeOpen] = useState(() =>
-    !suppressOverlays && shouldShowWelcome(pathname, localStorage, sessionStorage),
-  )
   const [open, setOpen] = useState(
-    () =>
-      !suppressOverlays &&
-      !shouldShowWelcome(pathname, localStorage, sessionStorage) &&
-      shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
+    () => shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
   )
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
@@ -146,38 +134,22 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
     setOpen(true)
   }
 
-  // 환영 플로우 완료. persist=true면 면책 ack/skip + 온보딩 완료 플래그를 남겨 다시 안 뜨게 한다.
-  // persist=false('저장 안 함' 선택)면 아무 억제 플래그도 남기지 않아 다음 새로고침에 환영이 다시 뜬다.
-  const handleWelcomeComplete = (persist: boolean) => {
-    if (persist) {
-      writeDisclaimerAck(sessionStorage)
-      writeDisclaimerSkip(localStorage, true)
-      writeWelcomeCompleted(localStorage)
-      setSkipActive(true)
-    }
-    setWelcomeOpen(false)
-  }
-
   return (
     <DisclaimerContext.Provider value={{ skipActive, showAgain }}>
       {children}
-      {welcomeOpen ? (
-        <WelcomeFlow onComplete={handleWelcomeComplete} />
-      ) : (
-        open && (
-          <DisclaimerModalContent
-            mode={mode}
-            onClose={() => setOpen(false)}
-            onAcknowledge={(dontShowAgain) => {
-              writeDisclaimerAck(sessionStorage)
-              if (dontShowAgain) {
-                writeDisclaimerSkip(localStorage, true)
-                setSkipActive(true)
-              }
-              setOpen(false)
-            }}
-          />
-        )
+      {open && (
+        <DisclaimerModalContent
+          mode={mode}
+          onClose={() => setOpen(false)}
+          onAcknowledge={(dontShowAgain) => {
+            writeDisclaimerAck(sessionStorage)
+            if (dontShowAgain) {
+              writeDisclaimerSkip(localStorage, true)
+              setSkipActive(true)
+            }
+            setOpen(false)
+          }}
+        />
       )}
     </DisclaimerContext.Provider>
   )

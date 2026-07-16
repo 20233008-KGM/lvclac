@@ -17,22 +17,9 @@ import {
   type CalculatorInputPatch,
 } from '../calc/mtmLink'
 import type { CalculatorHistoryOptions } from '../context/calculatorHistory'
-import {
-  beginOrderHistorySave,
-  completeOrderHistorySave,
-} from '../context/orderHistoryUndoSync'
-import {
-  buildAccountSnapshotPayload,
-  buildOrderHistoryPayload,
-  createAccountRecordsRepository,
-} from '../db/accountRecords'
 import type { CalculatorInputs, EvaluateResult, OrderResult, TotalMarginKind } from '../types'
 import { maxAddableLabel } from '../utils/positionLabels'
-import { BILLING_PATH, FORMULAS_PATH, GUIDE_PATH, MY_PAGE_PATH } from '../config/routes'
-import { useNavigate } from '../hooks/usePathname'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
-import { useAuth } from '../context/AuthContext'
-import { useCalculator } from '../context/CalculatorContext'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
@@ -65,19 +52,6 @@ import {
   calcEntryPriceReturnRate,
   calcPositionUnrealizedPnl,
 } from '../calc/positionMetrics'
-import { MemoEditorWindow } from './MemoEditorWindow'
-
-const SnapshotSavedModal = lazy(() =>
-  import('./SnapshotSavedModal').then((mod) => ({ default: mod.SnapshotSavedModal })),
-)
-
-const SnapshotProGateModal = lazy(() =>
-  import('./SnapshotProGateModal').then((mod) => ({ default: mod.SnapshotProGateModal })),
-)
-
-const AuthModal = lazy(() =>
-  import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })),
-)
 
 const MarginKindAskModal = lazy(() =>
   import('./MarginKindAskModal').then((mod) => ({ default: mod.MarginKindAskModal })),
@@ -578,7 +552,6 @@ function OrderInputs({
               <FieldLabelTooltip
                 text={priceField.hint}
                 label={tooltipLabel}
-                guideHref={GUIDE_PATH}
                 guideLinkLabel={tooltipGuideLink}
               />
             </span>
@@ -745,31 +718,10 @@ function OrderResults({
 
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
-  const { user, isPro } = useAuth()
-  const navigate = useNavigate()
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
-  const userId = user?.id ?? null
-  const { storageMode, activeNumberSetId } = useCalculator()
-  // 기록을 어느 슬롯에서 만들었는지 태그. 클라우드 슬롯일 때만 실제 number_sets.id이고,
-  // 로컬 모드/미선택이면 null('미분류'). FK 위반 방지를 위해 로컬 id는 태그하지 않는다.
-  const activeCloudNumberSetId = storageMode === 'cloud' ? activeNumberSetId : null
-  const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
-  const [snapshotBusy, setSnapshotBusy] = useState(false)
-  const [snapshotSavedModalOpen, setSnapshotSavedModalOpen] = useState(false)
-  const [savedSnapshotId, setSavedSnapshotId] = useState<string | null>(null)
-  const [snapshotSaveNotice, setSnapshotSaveNotice] = useState<string | null>(null)
-  // 비로그인/무료 유저가 스냅샷 저장을 눌렀을 때 뜨는 Pro 유도 모달의 모드.
-  // null이면 닫힘, 'guest'=비로그인, 'free'=로그인·무료.
-  const [snapshotGateMode, setSnapshotGateMode] = useState<'guest' | 'free' | null>(null)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [orderSaveNotice, setOrderSaveNotice] = useState<string | null>(null)
-  const [savedOrderId, setSavedOrderId] = useState<string | null>(null)
-  const [memoTarget, setMemoTarget] = useState<{ type: 'snapshot' | 'order'; id: string } | null>(null)
   const [marginKindModalOpen, setMarginKindModalOpen] = useState(false)
   const [dontShowAgainMarginKind, setDontShowAgainMarginKind] = useState(false)
-  const snapshotButtonRef = useRef<HTMLButtonElement>(null)
-  const activeRecordsUserIdRef = useRef(userId)
 
   const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
   const entryReturnRate = calcEntryPriceReturnRate(evalInputs)
@@ -787,84 +739,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
 
   const orderScenarioActive = isOrderScenarioModeActive(inputs)
   const orderChipText = formatOrderScenarioChip(inputs, t.orderScenarioChip)
-
-  const saveSnapshot = useCallback(async () => {
-    if (!userId) return
-
-    setSnapshotBusy(true)
-    setSnapshotSaveNotice(null)
-    const payload = buildAccountSnapshotPayload(
-      inputs,
-      evaluateResult,
-      t.accountRecords.snapshotsTab,
-      { numberSetId: activeCloudNumberSetId },
-    )
-    const result = await recordsRepository.createAccountSnapshot(userId, payload)
-    if (activeRecordsUserIdRef.current !== userId) {
-      setSnapshotBusy(false)
-      return
-    }
-    if (result.error !== null) {
-      setSnapshotSaveNotice(t.accountRecords.snapshotSaveError)
-      setSnapshotBusy(false)
-      return
-    }
-
-    setSavedSnapshotId(result.data.id)
-    setSnapshotSavedModalOpen(true)
-    setSnapshotBusy(false)
-  }, [activeCloudNumberSetId, evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
-
-  // 스냅샷 저장은 Pro 전용. 비로그인이면 로그인 유도, 로그인·무료면 Pro 유도 모달을 띄우고,
-  // Pro 유저만 실제 저장으로 진행한다.
-  const handleSnapshotClick = useCallback(() => {
-    if (!userId) {
-      setSnapshotGateMode('guest')
-      return
-    }
-    if (!isPro) {
-      setSnapshotGateMode('free')
-      return
-    }
-    void saveSnapshot()
-  }, [isPro, saveSnapshot, userId])
-
-  const saveOrderRecord = useCallback<OrderApplyHandler>(
-    (beforeInputs, afterInputs, result) => {
-      if (!userId || !user?.autoSaveOrderHistory) return
-
-      const payload = buildOrderHistoryPayload(beforeInputs, afterInputs, result, activeCloudNumberSetId)
-      const saveGeneration = beginOrderHistorySave()
-      setOrderSaveNotice(null)
-      void recordsRepository.createOrderHistory(userId, payload).then((created) => {
-        if (activeRecordsUserIdRef.current !== userId) return
-        if (created.error !== null) {
-          setOrderSaveNotice(t.accountRecords.orderSaveError)
-          return
-        }
-        if (!created.data) return
-        setSavedOrderId(created.data.id)
-        setOrderSaveNotice(t.accountRecords.orderSaved)
-        window.setTimeout(() => {
-          setSavedOrderId((id) => (id === created.data.id ? null : id))
-          setOrderSaveNotice((notice) => (notice === t.accountRecords.orderSaved ? null : notice))
-        }, 6000)
-
-        const race = completeOrderHistorySave(saveGeneration, created.data.id)
-        if (race.deleteImmediately) {
-          void recordsRepository.deleteOrderHistory(userId, race.deleteImmediately)
-        }
-      })
-    },
-    [
-      activeCloudNumberSetId,
-      recordsRepository,
-      t.accountRecords.orderSaveError,
-      t.accountRecords.orderSaved,
-      user?.autoSaveOrderHistory,
-      userId,
-    ],
-  )
 
   // 주문 미리보기(Enter)로 진입하는 순간, 총액 모드이고 증거금 성격이 아직
   // 확정되지 않았으면 역산 안내 모달을 띄운다. 실시간 타이핑 중엔 뜨지 않는다.
@@ -908,41 +782,11 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [orderScenarioActive, onChange])
 
-  useEffect(() => {
-    activeRecordsUserIdRef.current = userId
-  }, [userId])
-
   return (
     <div className="result-column">
       <section className="panel result-panel">
         <div className="result-panel__head">
           <h2>{t.result}</h2>
-          <div className="result-panel__head-actions">
-            <button
-              type="button"
-              ref={snapshotButtonRef}
-              className="result-panel__head-btn"
-              disabled={snapshotBusy}
-              onClick={handleSnapshotClick}
-            >
-              {snapshotBusy ? t.accountRecords.savingSnapshot : t.accountRecords.saveSnapshot}
-            </button>
-            <a
-              className="result-panel__head-btn"
-              href={FORMULAS_PATH}
-              onClick={(event) => {
-                event.preventDefault()
-                navigate(FORMULAS_PATH)
-              }}
-            >
-              {t.formulas.title}
-            </a>
-          </div>
-          {snapshotSaveNotice && (
-            <p className="account-records-error" role="alert">
-              {snapshotSaveNotice}
-            </p>
-          )}
         </div>
         <EvaluateResults
           key={positionSide}
@@ -967,7 +811,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
             <FieldLabelTooltip
               text={t.orderScenarioHint}
               label={t.fieldTooltipLabel}
-              guideHref={GUIDE_PATH}
               guideLinkLabel={t.tooltipGuideLink}
               highlight={orderScenarioActive}
             />
@@ -997,103 +840,13 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           commitLabel={t.orderScenarioCommit}
           clearLabel={t.orderScenarioClear}
           applyLabel={t.orderScenarioApply}
-          onApplyOrderScenario={saveOrderRecord}
         />
         <OrderResults
           key={`${positionSide}-${orderContracts ?? 'empty'}-${orderPrice ?? 'mark'}`}
           result={orderResult}
           orderBlocked={orderBlocked}
         />
-        {orderSaveNotice && (
-          <div className="account-record-order-notice" role="status">
-            <span>{orderSaveNotice}</span>
-            {savedOrderId && (
-              <button
-                type="button"
-                className="link-btn"
-                onClick={() => setMemoTarget({ type: 'order', id: savedOrderId })}
-              >
-                {t.accountRecords.memoAdd}
-              </button>
-            )}
-          </div>
-        )}
       </section>
-
-      {snapshotSavedModalOpen && (
-        <Suspense fallback={null}>
-          <SnapshotSavedModal
-            copy={{
-              eyebrow: t.accountRecords.savedModalEyebrow,
-              title: t.accountRecords.savedModalTitle,
-              body: t.accountRecords.snapshotSaved,
-              goToRecords: t.accountRecords.savedModalGoToRecords,
-              addMemo: t.accountRecords.memoAdd,
-              close: t.close,
-            }}
-            restoreFocusRef={snapshotButtonRef}
-            onClose={() => setSnapshotSavedModalOpen(false)}
-            onAddMemo={() => {
-              if (!savedSnapshotId) return
-              setSnapshotSavedModalOpen(false)
-              setMemoTarget({ type: 'snapshot', id: savedSnapshotId })
-            }}
-            onGoToRecords={() => {
-              setSnapshotSavedModalOpen(false)
-              navigate(MY_PAGE_PATH)
-            }}
-          />
-        </Suspense>
-      )}
-      {memoTarget && userId && (
-        <MemoEditorWindow
-          key={`${memoTarget.type}:${memoTarget.id}`}
-          title={memoTarget.type === 'snapshot' ? t.accountRecords.memoSnapshotTitle : t.accountRecords.memoOrderTitle}
-          onSave={async (memo) => {
-            const result =
-              memoTarget.type === 'snapshot'
-                ? await recordsRepository.updateAccountSnapshotMemo(userId, memoTarget.id, memo)
-                : await recordsRepository.updateOrderHistoryMemo(userId, memoTarget.id, memo)
-            return result.error
-          }}
-          onClose={() => setMemoTarget(null)}
-        />
-      )}
-
-      {snapshotGateMode && (
-        <Suspense fallback={null}>
-          <SnapshotProGateModal
-            mode={snapshotGateMode}
-            copy={{
-              eyebrow: t.accountRecords.snapshotGateEyebrow,
-              title: t.accountRecords.snapshotGateTitle,
-              guestBody: t.accountRecords.snapshotGateGuestBody,
-              freeBody: t.accountRecords.snapshotGateFreeBody,
-              loginCta: t.accountRecords.snapshotGateLoginCta,
-              viewPlansCta: t.accountRecords.snapshotGateViewPlansCta,
-              upgradeCta: t.accountRecords.snapshotGateUpgradeCta,
-              close: t.close,
-              benefits: t.myPage.billing.page.benefits.slice(0, 3),
-            }}
-            restoreFocusRef={snapshotButtonRef}
-            onClose={() => setSnapshotGateMode(null)}
-            onLogin={() => {
-              setSnapshotGateMode(null)
-              setAuthModalOpen(true)
-            }}
-            onUpgrade={() => {
-              setSnapshotGateMode(null)
-              navigate(BILLING_PATH)
-            }}
-          />
-        </Suspense>
-      )}
-
-      {authModalOpen && (
-        <Suspense fallback={null}>
-          <AuthModal onClose={() => setAuthModalOpen(false)} />
-        </Suspense>
-      )}
 
       {marginKindModalOpen && (
         <Suspense fallback={null}>

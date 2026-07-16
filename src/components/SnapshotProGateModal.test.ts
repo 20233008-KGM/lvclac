@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest'
 // project's Vitest environment has no DOM. Structural/behavioral guarantees are verified
 // via source inspection, matching SnapshotSavedModal.test.ts / overlayPortalLayout.test.ts.
 const source = readFileSync(resolve('src/components/SnapshotProGateModal.tsx'), 'utf8')
-const resultPanelSource = readFileSync(resolve('src/components/ResultPanel.tsx'), 'utf8')
 
 describe('SnapshotProGateModal', () => {
   it('imports the close-button stylesheet shared with AuthModal', () => {
@@ -40,26 +39,5 @@ describe('SnapshotProGateModal', () => {
     expect(source).toContain('{copy.upgradeCta}')
     // 모드 분기
     expect(source).toContain("const isGuest = mode === 'guest'")
-  })
-})
-
-describe('ResultPanel snapshot Pro gating', () => {
-  it('routes snapshot clicks by auth/pro state instead of saving unconditionally', () => {
-    // 비로그인 → guest 게이트
-    expect(resultPanelSource).toMatch(/if \(!userId\) \{\s*setSnapshotGateMode\('guest'\)/)
-    // 로그인·무료 → free 게이트
-    expect(resultPanelSource).toMatch(/if \(!isPro\) \{\s*setSnapshotGateMode\('free'\)/)
-    // Pro만 실제 저장
-    expect(resultPanelSource).toContain('void saveSnapshot()')
-  })
-
-  it('binds the snapshot button to the gating handler and no longer hides it behind login', () => {
-    expect(resultPanelSource).toContain('onClick={handleSnapshotClick}')
-    expect(resultPanelSource).not.toContain('{userId && (\n              <button')
-  })
-
-  it('login CTA opens the auth modal; upgrade CTA navigates to billing', () => {
-    expect(resultPanelSource).toContain('setAuthModalOpen(true)')
-    expect(resultPanelSource).toContain('navigate(BILLING_PATH)')
   })
 })

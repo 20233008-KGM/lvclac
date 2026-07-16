@@ -1,20 +1,8 @@
 import { next } from '@vercel/functions'
-import {
-  PRICING_PATH,
-  PRIVACY_PATH,
-  PRODUCT_PATH,
-  REFUND_POLICY_PATH,
-  TERMS_PATH,
-} from './src/config/routes'
+import { PRIVACY_PATH, TERMS_PATH } from './src/config/routes.js'
 
 const NO_INDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
-const PUBLIC_REVIEW_PATHS = [
-  PRODUCT_PATH,
-  PRICING_PATH,
-  TERMS_PATH,
-  PRIVACY_PATH,
-  REFUND_POLICY_PATH,
-]
+const PUBLIC_PATHS = ['/', TERMS_PATH, PRIVACY_PATH]
 
 function allowIndexing(): boolean {
   return process.env.ALLOW_INDEXING === 'true'
@@ -25,32 +13,21 @@ function siteUrlFromRequest(request: Request): string {
   return (process.env.VITE_SITE_URL || process.env.SITE_URL || url.origin).replace(/\/$/, '')
 }
 
-function normalizePath(pathname: string): string {
-  if (pathname === '/') return pathname
-  return pathname.replace(/\/$/, '')
-}
-
-function isPublicReviewPath(pathname: string): boolean {
-  return PUBLIC_REVIEW_PATHS.includes(normalizePath(pathname))
-}
-
-export function shouldNoIndexPath(pathname: string, indexingAllowed = allowIndexing()): boolean {
-  return !indexingAllowed && !isPublicReviewPath(pathname)
+export function shouldNoIndexPath(_pathname: string, indexingAllowed = allowIndexing()): boolean {
+  return !indexingAllowed
 }
 
 export function robotsBody(request: Request, indexingAllowed = allowIndexing()): string {
   const siteUrl = siteUrlFromRequest(request)
   if (!indexingAllowed) {
-    const allowed = PUBLIC_REVIEW_PATHS.map((path) => `Allow: ${path}`).join('\n')
-    return `User-agent: *\n${allowed}\nDisallow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
+    return `User-agent: *\nDisallow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
   }
   return `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
 }
 
 export function sitemapBody(request: Request, indexingAllowed = allowIndexing()): string {
   const siteUrl = siteUrlFromRequest(request)
-  const paths = indexingAllowed ? ['/', ...PUBLIC_REVIEW_PATHS] : PUBLIC_REVIEW_PATHS
-  const urls = paths
+  const urls = (indexingAllowed ? PUBLIC_PATHS : [])
     .map((path) => {
       const loc = path === '/' ? siteUrl : `${siteUrl}${path}`
       return `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n  </url>`

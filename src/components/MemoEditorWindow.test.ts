@@ -25,9 +25,9 @@ describe('MemoEditorWindow production contract', () => {
     expect(css).toContain('.memo-editor-window{inset:12px')
   })
 
-  it('offers number-set memos only on cloud slots', () => {
-    expect(slotSource).toContain("mode === 'cloud' && (")
-    expect(slotSource).toContain('cloudNumberSets.find((set) => set.id === memoSetId)')
-    expect(slotSource).toContain("setNumberSetMemo('cloud', numberSet.id, memo)")
+  it('does not expose number-set memos from the public save slot', () => {
+    expect(slotSource).not.toContain("mode === 'cloud'")
+    expect(slotSource).not.toContain('cloudNumberSets')
+    expect(slotSource).not.toContain('setNumberSetMemo')
   })
 })

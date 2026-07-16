@@ -8,7 +8,6 @@ import {
   loadLocalNumberSets,
   renameLocalNumberSet,
   resolveActiveLocalNumberSetId,
-  updateLocalNumberSetMemo,
   upsertLocalNumberSet,
   writeLocalNumberSets,
   writeActiveLocalNumberSetId,
@@ -42,7 +41,6 @@ describe('local number sets', () => {
         id: DEFAULT_LOCAL_NUMBER_SET_ID,
         title: '기본 세트',
         inputs: sampleInputs,
-        memo: null,
         updatedAt: '2026-07-10T01:02:03.000Z',
       },
     ])
@@ -92,12 +90,23 @@ describe('local number sets', () => {
     })
   })
 
-  it('stores a memo on one local set and clears it with empty text', () => {
-    const first = appendLocalNumberSet([], defaultInputs, { id: 'local-a' })
-    const withMemo = updateLocalNumberSetMemo(first.sets, 'local-a', '변동성 확대')
-    expect(withMemo[0].memo).toBe('변동성 확대')
+  it('drops memo data written by the short-lived local memo experiment', () => {
+    const storage = new MemoryStorage()
+    storage.setItem(
+      LOCAL_NUMBER_SETS_KEY,
+      JSON.stringify([
+        {
+          id: 'local-a',
+          title: '기본 세트',
+          inputs: defaultInputs,
+          memo: '로컬에는 남기지 않음',
+          updatedAt: '2026-07-10T01:00:00.000Z',
+        },
+      ]),
+    )
 
-    const cleared = updateLocalNumberSetMemo(withMemo, 'local-a', '   ')
-    expect(cleared[0].memo).toBeNull()
+    const result = loadLocalNumberSets(storage, null, null)
+    expect(result.sets[0]).not.toHaveProperty('memo')
+    expect(storage.getItem(LOCAL_NUMBER_SETS_KEY)).not.toContain('memo')
   })
 })

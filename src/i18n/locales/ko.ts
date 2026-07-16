@@ -199,7 +199,7 @@ export const ko: Messages = {
     memoNone: '메모 없음',
     memoSnapshotTitle: '스냅샷 메모',
     memoOrderTitle: '주문기록 메모',
-    memoNumberSetTitle: '숫자세트 메모',
+    memoNumberSetTitle: '클라우드 숫자세트 메모',
     memoSaving: '저장 중…',
     memoSaved: '모든 변경사항 저장됨',
     memoEmptySaved: '빈 메모로 저장됨',

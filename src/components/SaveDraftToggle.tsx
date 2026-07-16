@@ -592,7 +592,7 @@ export function SaveDraftToggle() {
               key={`${mode}:${numberSet.id}`}
               className={`draft-number-set-menu__item${
                 active ? ' draft-number-set-menu__item--active' : ''
-              }`}
+              }${mode === 'cloud' ? ' draft-number-set-menu__item--memo' : ''}`}
               role="menuitemradio"
               tabIndex={0}
               aria-checked={active}
@@ -619,11 +619,13 @@ export function SaveDraftToggle() {
                 </span>
                 <span className="draft-number-set-menu__leverage">{leverageText ?? ''}</span>
               </span>
-              <MemoButton
-                memo={numberSet.memo}
-                label={`${numberSet.title} ${numberSet.memo ? t.accountRecords.memoEdit : t.accountRecords.memoAdd}`}
-                onClick={() => setMemoSetId(numberSet.id)}
-              />
+              {mode === 'cloud' && (
+                <MemoButton
+                  memo={numberSet.memo}
+                  label={`${numberSet.title} ${numberSet.memo ? t.accountRecords.memoEdit : t.accountRecords.memoAdd}`}
+                  onClick={() => setMemoSetId(numberSet.id)}
+                />
+              )}
             </div>
           )
         })}
@@ -846,14 +848,14 @@ export function SaveDraftToggle() {
       </div>
       {numberSetMenu}
       {memoSetId && (() => {
-        const numberSet = menuNumberSets.find((set) => set.id === memoSetId)
+        const numberSet = cloudNumberSets.find((set) => set.id === memoSetId)
         if (!numberSet) return null
         return (
           <MemoEditorWindow
             key={`${numberSet.storageMode}:${numberSet.id}`}
             title={`${numberSet.title} · ${t.accountRecords.memoNumberSetTitle}`}
             initialMemo={numberSet.memo}
-            onSave={(memo) => setNumberSetMemo(numberSet.storageMode, numberSet.id, memo)}
+            onSave={(memo) => setNumberSetMemo('cloud', numberSet.id, memo)}
             onClose={() => setMemoSetId(null)}
           />
         )

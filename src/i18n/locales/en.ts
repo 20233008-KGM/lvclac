@@ -203,7 +203,7 @@ export const en: Messages = {
     memoNone: 'No memo',
     memoSnapshotTitle: 'Snapshot memo',
     memoOrderTitle: 'Order record memo',
-    memoNumberSetTitle: 'Number set memo',
+    memoNumberSetTitle: 'Cloud number set memo',
     memoSaving: 'Saving…',
     memoSaved: 'All changes saved',
     memoEmptySaved: 'Empty memo saved',

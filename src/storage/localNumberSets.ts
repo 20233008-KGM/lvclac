@@ -10,7 +10,6 @@ export interface LocalNumberSetRecord {
   id: string
   title: string
   inputs: CalculatorInputs
-  memo: string | null
   updatedAt: string
 }
 
@@ -23,7 +22,6 @@ interface StorageLike {
 interface LocalNumberSetSeed {
   id?: string
   title?: string
-  memo?: string | null
   updatedAt?: string
 }
 
@@ -50,7 +48,6 @@ function parseLocalNumberSet(value: unknown): LocalNumberSetRecord | null {
     id: row.id,
     title: sanitizeTitle(row.title),
     inputs,
-    memo: typeof row.memo === 'string' && row.memo.trim() ? row.memo.slice(0, 500) : null,
     updatedAt: typeof row.updatedAt === 'string' && row.updatedAt ? row.updatedAt : timestamp(),
   }
 }
@@ -109,7 +106,11 @@ export function loadLocalNumberSets(
   legacySavedAt: string | null,
 ): { sets: LocalNumberSetRecord[]; migrated: boolean } {
   const stored = readStoredLocalNumberSets(storage)
-  if (stored.length > 0) return { sets: stored, migrated: false }
+  if (stored.length > 0) {
+    // 과거 시험 버전이 로컬 슬롯에 memo를 저장했더라도 정규화된 구조로 다시 써서 제거한다.
+    writeLocalNumberSets(storage, stored)
+    return { sets: stored, migrated: false }
+  }
   if (!legacyDraft) return { sets: [], migrated: false }
 
   const migrated = [
@@ -117,7 +118,6 @@ export function loadLocalNumberSets(
       id: DEFAULT_LOCAL_NUMBER_SET_ID,
       title: DEFAULT_NUMBER_SET_TITLE,
       inputs: legacyDraft,
-      memo: null,
       updatedAt: legacySavedAt ?? timestamp(),
     },
   ]
@@ -135,7 +135,6 @@ export function appendLocalNumberSet(
     id: seed.id ?? makeLocalId(),
     title: sanitizeTitle(seed.title),
     inputs,
-    memo: seed.memo?.trim() ? seed.memo.slice(0, 500) : null,
     updatedAt: seed.updatedAt ?? timestamp(),
   }
   return { sets: [...sets, set], set }
@@ -153,7 +152,6 @@ export function upsertLocalNumberSet(
     id: targetId,
     title: sanitizeTitle(seed.title ?? existing?.title),
     inputs,
-    memo: seed.memo === undefined ? existing?.memo ?? null : seed.memo?.trim() ? seed.memo.slice(0, 500) : null,
     updatedAt: seed.updatedAt ?? timestamp(),
   }
   if (!existing) return [updated, ...sets]
@@ -167,17 +165,6 @@ export function renameLocalNumberSet(
 ): LocalNumberSetRecord[] {
   return sets.map((set) =>
     set.id === setId ? { ...set, title: sanitizeTitle(title), updatedAt: timestamp() } : set,
-  )
-}
-
-export function updateLocalNumberSetMemo(
-  sets: LocalNumberSetRecord[],
-  setId: string,
-  memo: string,
-): LocalNumberSetRecord[] {
-  const normalized = memo.trim() ? memo.slice(0, 500) : null
-  return sets.map((set) =>
-    set.id === setId ? { ...set, memo: normalized, updatedAt: timestamp() } : set,
   )
 }
 

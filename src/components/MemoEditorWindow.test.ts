@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve('src/components/MemoEditorWindow.tsx'), 'utf8')
+const slotSource = readFileSync(resolve('src/components/SaveDraftToggle.tsx'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
 
 describe('MemoEditorWindow production contract', () => {
@@ -22,5 +23,11 @@ describe('MemoEditorWindow production contract', () => {
     expect(source).toContain("window.matchMedia('(max-width: 720px)').matches")
     expect(css).toContain('.memo-editor-window__head')
     expect(css).toContain('.memo-editor-window{inset:12px')
+  })
+
+  it('offers number-set memos only on cloud slots', () => {
+    expect(slotSource).toContain("mode === 'cloud' && (")
+    expect(slotSource).toContain('cloudNumberSets.find((set) => set.id === memoSetId)')
+    expect(slotSource).toContain("setNumberSetMemo('cloud', numberSet.id, memo)")
   })
 })

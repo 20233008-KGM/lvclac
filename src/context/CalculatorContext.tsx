@@ -47,7 +47,6 @@ import {
   readActiveLocalNumberSetId,
   resolveActiveLocalNumberSetId,
   renameLocalNumberSet,
-  updateLocalNumberSetMemo,
   upsertLocalNumberSet,
   writeActiveLocalNumberSetId,
   writeLocalNumberSets,
@@ -731,7 +730,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
         setSyncStatus('saving')
         setSyncError(null)
-        const localSet = readActiveLocalNumberSet()
         const result = await saveNumberSet(activeUserId, localDraft, cloudSetIdRef.current)
         if (result.error) {
           setSyncStatus('error')
@@ -744,17 +742,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return 'number_set_save_empty'
         }
 
-        let savedSet = result.data
-        if (localSet?.memo) {
-          const memoResult = await updateCloudNumberSetMemo(activeUserId, savedSet.id, localSet.memo)
-          if (memoResult.error) {
-            setSyncStatus('error')
-            setSyncError(memoResult.error)
-            return memoResult.error
-          }
-          if (!memoResult.data) return 'number_set_not_found'
-          savedSet = memoResult.data
-        }
+        const savedSet = result.data
         cloudSetIdRef.current = savedSet.id
         setCloudSetId(savedSet.id)
         setHasCloudDraft(true)
@@ -803,16 +791,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return 'local_draft_save_failed'
         }
 
-        if (result.data.memo) {
-          const localSets = readLocalNumberSetState()
-          const localSetId = resolveActiveLocalNumberSetId(localStorage, localSets)
-          if (localSetId) {
-            writeLocalNumberSets(
-              localStorage,
-              updateLocalNumberSetMemo(localSets, localSetId, result.data.memo),
-            )
-          }
-        }
         cloudSetIdRef.current = result.data.id
         setCloudSetId(result.data.id)
         setHasCloudDraft(true)
@@ -961,10 +939,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const setNumberSetMemo = useCallback(
     async (mode: SaveStorageMode, setId: string, memo: string): Promise<string | null> => {
       if (mode === 'local') {
-        const nextSets = updateLocalNumberSetMemo(readLocalNumberSetState(), setId, memo)
-        writeLocalNumberSets(localStorage, nextSets)
-        refreshLocalNumberSetState()
-        return null
+        return 'local_number_set_memo_unsupported'
       }
 
       if (!activeUserId) return 'not_logged_in'
@@ -977,7 +952,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       )
       return null
     },
-    [activeUserId, refreshLocalNumberSetState],
+    [activeUserId],
   )
 
   const setNumberSetAutoSnapshot = useCallback(

@@ -1616,13 +1616,14 @@ html[data-zone='about'] body {
 
 @media (min-width: 1024px) {
   .records-archive-page .records-archive {
-    width: min(100%, 1600px);
+    width: 100%;
+    max-width: none;
     display: grid;
-    grid-template-columns: minmax(360px, 1fr) minmax(720px, 1040px);
+    grid-template-columns: minmax(360px, 1fr) minmax(900px, 1120px);
     gap: clamp(32px, 3.25vw, 52px);
     align-items: start;
-    padding-right: clamp(28px, 5vw, 96px);
-    padding-left: clamp(28px, 5vw, 96px);
+    padding-right: clamp(28px, 4.5vw, 92px);
+    padding-left: clamp(28px, 4.5vw, 92px);
   }
 
   .records-archive .my-page-header {
@@ -1638,7 +1639,7 @@ html[data-zone='about'] body {
 
   .records-archive .my-page-console {
     justify-self: end;
-    width: min(100%, 1040px);
+    width: min(100%, 1120px);
     margin-top: 110px;
   }
 }

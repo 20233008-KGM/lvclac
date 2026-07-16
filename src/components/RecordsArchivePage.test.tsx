@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AccountRecordSummary, AccountSnapshotRecord, OrderHistoryRecord } from '../db/accountRecords'
 import { en } from '../i18n/locales/en'
 import { sampleInputs } from '../types'
-import { RecordsArchiveView, toTimelineRecords } from './RecordsArchivePage'
+import { RecordsArchiveView, resolveTimelineAnchorDate, toTimelineRecords } from './RecordsArchivePage'
 
 const summary: AccountRecordSummary = {
   liquidationPrice: 232_927,
@@ -76,6 +76,16 @@ describe('toTimelineRecords', () => {
       },
     ])
   })
+
+  it('uses the latest record date at first load and preserves a date jump as the timeline anchor', () => {
+    const timeline = toTimelineRecords(
+      [orderRecord('order-older', '2026-07-08T06:00:00.000Z')],
+      [snapshotRecord('snapshot-newest', '2026-07-09T06:03:00.000Z')],
+    )
+
+    expect(resolveTimelineAnchorDate(null, timeline)).toBe('2026-07-09')
+    expect(resolveTimelineAnchorDate('2026-07-05', timeline)).toBe('2026-07-05')
+  })
 })
 
 describe('RecordsArchiveView', () => {
@@ -105,6 +115,24 @@ describe('RecordsArchiveView', () => {
     expect(html).toContain('records-timeline-row--order')
     expect(html).not.toContain('account-record-tabs')
     expect(html).not.toContain('records-archive-table')
+  })
+
+  it('renders the initial latest-record date as a centered timeline anchor', () => {
+    const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+
+    expect(html).toContain('records-timeline-anchor-spacer')
+    expect(html).toContain('data-timeline-anchor-date="2026-07-09"')
+    expect(html).toContain(en.accountRecords.timelineAnchorLabel.replace('{date}', '2026.07.09'))
+  })
+
+  it('moves a selected date into the timeline anchor and keeps a latest reset there', () => {
+    const html = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} dateAnchor="2026-07-05" onDateAnchorChange={vi.fn()} />,
+    )
+
+    expect(html).toContain('data-timeline-anchor-date="2026-07-05"')
+    expect(html).toContain(en.accountRecords.backToLatest)
+    expect(html).not.toContain('records-date-anchor-bar')
   })
 
   it('places snapshot records in the left lane and order records in the right lane', () => {

@@ -270,7 +270,7 @@ export const ko: Messages = {
     slotFilterAria: '슬롯별로 기록 보기',
     jumpToDate: '날짜로 이동',
     jumpToDateAria: '선택한 날짜 이전 기록 보기',
-    dateAnchorLabel: '{date} 이전 기록',
+    timelineAnchorLabel: '{date} 기준',
     backToLatest: '최신으로',
   },
   myPage: {

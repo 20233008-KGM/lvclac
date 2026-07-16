@@ -277,7 +277,7 @@ export const en: Messages = {
     slotFilterAria: 'Filter records by slot',
     jumpToDate: 'Jump to date',
     jumpToDateAria: 'Show records on or before a date',
-    dateAnchorLabel: 'Records on or before {date}',
+    timelineAnchorLabel: '{date} anchor',
     backToLatest: 'Back to latest',
   },
   myPage: {

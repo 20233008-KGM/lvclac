@@ -92,6 +92,21 @@ export function toTimelineRecords(
   })
 }
 
+/**
+ * 처음 열 때는 가장 최근 기록일을 기준점으로 삼고, 날짜 점프 뒤에는 사용자가 고른
+ * 날짜를 그대로 유지한다. 기준점보다 위쪽은 아직 오지 않은 미래 영역으로 비워 둔다.
+ */
+export function resolveTimelineAnchorDate(
+  dateAnchor: string | null,
+  timelineRecords: TimelineRecord[],
+): string | null {
+  if (dateAnchor) return dateAnchor
+  const latestRecord = timelineRecords[0]
+  if (!latestRecord) return null
+  const latestDate = new Date(latestRecord.createdAt)
+  return Number.isFinite(latestDate.getTime()) ? toDateInputValue(latestDate) : null
+}
+
 function TimelineValue({
   value,
 }: {
@@ -481,6 +496,9 @@ export function RecordsArchiveView({
   onDateAnchorChange?: (date: string | null) => void
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
+  const timelineAnchorDate = resolveTimelineAnchorDate(dateAnchor, timelineRecords)
+  const newestTimelineKey = timelineRecords[0] ? timelineKey(timelineRecords[0]) : null
+  const timelineScrollRef = useRef<HTMLDivElement>(null)
   const loadMoreSentinelRef = useInfiniteScroll<HTMLDivElement>({
     onLoadMore: () => onLoadOlderRecords?.(),
     enabled: Boolean(onLoadOlderRecords) && !loadingOlderRecords,
@@ -494,6 +512,14 @@ export function RecordsArchiveView({
   const [menu, setMenu] = useState<{ x: number; y: number; entry: TimelineRecord } | null>(null)
   const [toolbarMenu, setToolbarMenu] = useState<{ x: number; y: number } | null>(null)
   const [slotMenu, setSlotMenu] = useState<{ x: number; y: number } | null>(null)
+
+  // 날짜 선택/초기 조회 때 기준점이 늘 중앙에 보이게 한다. 오래된 기록을 추가 로드할 때는
+  // newestTimelineKey가 바뀌지 않아 사용자가 읽고 있던 스크롤 위치를 유지한다.
+  useLayoutEffect(() => {
+    if (!newestTimelineKey) return
+    const scroll = timelineScrollRef.current
+    if (scroll) scroll.scrollTop = 0
+  }, [dateAnchor, newestTimelineKey])
 
   const emitSelection = (next: Set<string>) => onSelectedKeysChange?.(next)
 
@@ -694,21 +720,6 @@ export function RecordsArchiveView({
                   </div>
                 </div>
 
-                {dateAnchor && onDateAnchorChange && (
-                  <div className="records-date-anchor-bar" role="status">
-                    <span className="records-date-anchor-label">
-                      {copy.dateAnchorLabel.replace('{date}', dateAnchor.replace(/-/g, '.'))}
-                    </span>
-                    <button
-                      type="button"
-                      className="link-btn records-date-anchor-clear"
-                      onClick={() => onDateAnchorChange(null)}
-                    >
-                      {copy.backToLatest}
-                    </button>
-                  </div>
-                )}
-
                 {selectedCount > 0 && (
                   <div className="records-selection-bar" role="status">
                     <span className="records-selection-bar-count">
@@ -778,10 +789,34 @@ export function RecordsArchiveView({
                         <span className="records-timeline-head-memo" aria-hidden="true" />
                       </div>
                     </div>
-                    <div className="records-timeline-scroll">
+                    <div ref={timelineScrollRef} className="records-timeline-scroll">
                       <div
                         className={`records-timeline-grid${selectedCount > 0 ? ' records-timeline-grid--selecting' : ''}`}
                       >
+                        {timelineAnchorDate && (
+                          <>
+                            <div className="records-timeline-anchor-spacer" aria-hidden="true" />
+                            <div
+                              className="records-timeline-anchor"
+                              data-timeline-anchor-date={timelineAnchorDate}
+                            >
+                              <span className="records-timeline-anchor-line" aria-hidden="true" />
+                              <span className="records-timeline-anchor-label">
+                                {copy.timelineAnchorLabel.replace('{date}', timelineAnchorDate.replace(/-/g, '.'))}
+                                {dateAnchor && onDateAnchorChange && (
+                                  <button
+                                    type="button"
+                                    className="link-btn records-timeline-anchor-clear"
+                                    onClick={() => onDateAnchorChange(null)}
+                                  >
+                                    {copy.backToLatest}
+                                  </button>
+                                )}
+                              </span>
+                              <span className="records-timeline-anchor-line" aria-hidden="true" />
+                            </div>
+                          </>
+                        )}
                         {timelineRecords.map((entry, index) => {
                           const entryKey = timelineKey(entry)
                           const selected = selectedKeys.has(entryKey)

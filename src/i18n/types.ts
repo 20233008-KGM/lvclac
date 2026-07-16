@@ -275,7 +275,7 @@ export interface Messages {
     slotFilterAria: string
     jumpToDate: string
     jumpToDateAria: string
-    dateAnchorLabel: string
+    timelineAnchorLabel: string
     backToLatest: string
   }
   myPage: {

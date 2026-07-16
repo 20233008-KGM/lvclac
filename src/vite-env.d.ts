@@ -14,6 +14,7 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY?: string
   readonly VITE_SUPABASE_ENABLED?: string
   readonly VITE_SITE_URL?: string
+  readonly VITE_DEPLOYMENT_CHANNEL?: 'dev' | 'production'
 }
 
 interface ImportMeta {

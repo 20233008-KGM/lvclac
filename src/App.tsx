@@ -297,6 +297,7 @@ function CalculatorHistoryMenu({
 
 function CalculatorApp() {
   const { t } = useLanguage()
+  const isDevDeployment = import.meta.env.VITE_DEPLOYMENT_CHANNEL === 'dev'
   const {
     inputs,
     updateInputs,
@@ -383,6 +384,7 @@ function CalculatorApp() {
                 <div className="header-left">
                   <div className="site-title-row">
                     <h1>{t.siteTitle}</h1>
+                    {isDevDeployment && <span className="deployment-badge">DEV</span>}
                     <SiteTitleTooltip />
                   </div>
                   <p className="app-intro">{t.appIntro}</p>

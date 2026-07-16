@@ -404,6 +404,20 @@ input:focus:not(:focus-visible) {
   min-width: 0;
 }
 
+.deployment-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--color-warning) 65%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  color: var(--color-warning);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 .app-header h1 {
   margin: 0;
   font-size: var(--font-size-lg);

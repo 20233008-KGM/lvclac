@@ -271,6 +271,10 @@ function isFocusLeavingHistory(root: HTMLElement, event: FocusEvent<HTMLElement>
   return !(next instanceof Node && root.contains(next))
 }
 
+function supportsHover(): boolean {
+  return window.matchMedia?.('(hover: hover)').matches ?? false
+}
+
 export function CalculatorHistoryMenu({
   messages,
   undoHistory,
@@ -304,7 +308,7 @@ export function CalculatorHistoryMenu({
   }, [menuOpen])
 
   function handleButtonClick() {
-    if (window.matchMedia?.('(hover: hover)').matches) {
+    if (supportsHover()) {
       setMenuOpen(true)
       return
     }
@@ -363,8 +367,12 @@ export function CalculatorHistoryMenu({
     <div
       className="calculator-history"
       ref={rootRef}
-      onMouseEnter={() => setMenuOpen(true)}
-      onMouseLeave={() => setMenuOpen(false)}
+      onMouseEnter={() => {
+        if (supportsHover()) setMenuOpen(true)
+      }}
+      onMouseLeave={() => {
+        if (supportsHover()) setMenuOpen(false)
+      }}
       onFocus={() => setMenuOpen(true)}
       onBlur={(event) => {
         if (isFocusLeavingHistory(event.currentTarget, event)) setMenuOpen(false)

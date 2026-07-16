@@ -27,6 +27,8 @@ describe('calculator history menu', () => {
     expect(source).toContain('onBlur')
     expect(source).toContain('onClick={handleButtonClick}')
     expect(source).toContain("window.matchMedia?.('(hover: hover)').matches")
+    expect(source).toContain('if (supportsHover()) setMenuOpen(true)')
+    expect(source).toContain('if (supportsHover()) setMenuOpen(false)')
   })
 
   it('exposes full truncated descriptions through title and aria-label', () => {

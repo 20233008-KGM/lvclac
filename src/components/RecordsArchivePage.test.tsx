@@ -87,10 +87,6 @@ describe('RecordsArchiveView', () => {
     notice: null,
     orderRecords: [orderRecord('order-1', '2026-07-09T06:02:00.000Z')],
     snapshotRecords: [snapshotRecord('snapshot-1', '2026-07-09T06:03:00.000Z')],
-    orderShownCount: 1,
-    orderTotalCount: 1,
-    snapshotShownCount: 1,
-    snapshotTotalCount: 1,
     onRetry: vi.fn(),
     onDeleteOrder: vi.fn(),
     onDeleteSnapshot: vi.fn(),
@@ -208,6 +204,13 @@ describe('RecordsArchiveView', () => {
     expect(html).not.toContain(en.accountRecords.bulkDeleteOrders)
     expect(html).not.toContain(en.accountRecords.bulkDeleteSnapshots)
     expect(html).toContain(en.accountRecords.loadOlderRecords)
+  })
+
+  it('keeps the toolbar focused on controls without record-count copy', () => {
+    const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+
+    expect(html).not.toContain('records-timeline-counts')
+    expect(html).not.toContain(en.accountRecords.shownCount.replace('{shown}', '1').replace('{total}', '1'))
   })
 
   it('turns each record card into an activatable button and drops the standalone detail button', () => {

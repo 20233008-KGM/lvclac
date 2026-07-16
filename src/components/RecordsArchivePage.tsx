@@ -92,11 +92,6 @@ export function toTimelineRecords(
   })
 }
 
-function shownCount(copy: AccountRecordsCopy, shown: number, total: number | null): string {
-  if (total == null) return String(shown)
-  return copy.shownCount.replace('{shown}', String(shown)).replace('{total}', String(total))
-}
-
 function TimelineValue({
   value,
 }: {
@@ -424,10 +419,6 @@ export function RecordsArchiveView({
   notice,
   orderRecords,
   snapshotRecords,
-  orderShownCount,
-  orderTotalCount,
-  snapshotShownCount,
-  snapshotTotalCount,
   onRetry,
   onDeleteOrder,
   onDeleteSnapshot,
@@ -463,10 +454,6 @@ export function RecordsArchiveView({
   notice: string | null
   orderRecords: OrderHistoryRecord[]
   snapshotRecords: AccountSnapshotRecord[]
-  orderShownCount?: number
-  orderTotalCount?: number | null
-  snapshotShownCount?: number
-  snapshotTotalCount?: number | null
   onRetry: () => void
   onDeleteOrder: (id: string) => void
   onDeleteSnapshot: (id: string) => void
@@ -663,14 +650,6 @@ export function RecordsArchiveView({
             ) : (
               <>
                 <div className="records-timeline-toolbar">
-                  <div className="records-timeline-counts" aria-label={copy.recordsArchiveTitle}>
-                    <span>
-                      {copy.snapshotsTab}: {shownCount(copy, snapshotShownCount ?? snapshotRecords.length, snapshotTotalCount ?? null)}
-                    </span>
-                    <span>
-                      {copy.orderHistoryTab}: {shownCount(copy, orderShownCount ?? orderRecords.length, orderTotalCount ?? null)}
-                    </span>
-                  </div>
                   <div className="records-timeline-actions">
                     {onDateAnchorChange && (
                       <label className="records-date-jump">
@@ -1268,10 +1247,6 @@ export function RecordsArchivePage() {
         notice={notice}
         orderRecords={orderRecords}
         snapshotRecords={snapshotRecords}
-        orderShownCount={orderRecords.length}
-        orderTotalCount={orderTotal}
-        snapshotShownCount={snapshotRecords.length}
-        snapshotTotalCount={snapshotTotal}
         onRetry={() => void loadRecords()}
         onDeleteOrder={deleteOrderRecord}
         onDeleteSnapshot={deleteSnapshotRecord}

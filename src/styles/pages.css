@@ -1619,10 +1619,10 @@ html[data-zone='about'] body {
     width: 100%;
     max-width: none;
     display: grid;
-    grid-template-columns: minmax(360px, 1fr) minmax(900px, 1120px);
+    grid-template-columns: minmax(360px, 1fr) minmax(900px, 1060px);
     gap: clamp(32px, 3.25vw, 52px);
     align-items: start;
-    padding-right: clamp(28px, 4.5vw, 92px);
+    padding-right: clamp(16px, 1vw, 24px);
     padding-left: clamp(28px, 4.5vw, 92px);
   }
 
@@ -1639,7 +1639,7 @@ html[data-zone='about'] body {
 
   .records-archive .my-page-console {
     justify-self: end;
-    width: min(100%, 1120px);
+    width: min(100%, 1060px);
     margin-top: 110px;
   }
 }
@@ -1670,8 +1670,7 @@ html[data-zone='about'] body {
 }
 
 .records-timeline-toolbar,
-.records-timeline-actions,
-.records-timeline-counts {
+.records-timeline-actions {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -1707,17 +1706,11 @@ html[data-zone='about'] body {
 
 .records-timeline-toolbar {
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-end;
   min-height: 56px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--color-border-subtle);
   background: color-mix(in srgb, var(--color-bg-elevated) 86%, var(--color-surface));
-}
-
-.records-timeline-counts {
-  flex-wrap: wrap;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
 }
 
 .records-timeline-actions {
@@ -1908,8 +1901,9 @@ html[data-zone='about'] body {
 }
 
 .records-timeline-scroll {
-  max-height: min(calc(100dvh - 255px), 520px);
-  min-height: 420px;
+  height: max(420px, calc(100dvh - 280px));
+  max-height: none;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 12px 20px 18px;
@@ -3672,6 +3666,7 @@ a.my-page-compare-card__action {
   }
 
   .records-timeline-scroll {
+    height: auto;
     max-height: none;
     min-height: 0;
     overflow: visible;

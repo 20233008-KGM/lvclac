@@ -17,11 +17,11 @@ describe('records archive layout contract', () => {
 
   it('keeps desktop records in a right-side ledger with an internal scrolling body', () => {
     expect(css).toMatch(
-      /\.records-archive-page \.records-archive\s*\{[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*grid-template-columns: minmax\(360px, 1fr\) minmax\(900px, 1120px\);/,
+      /\.records-archive-page \.records-archive\s*\{[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*grid-template-columns: minmax\(360px, 1fr\) minmax\(900px, 1060px\);/,
     )
-    expect(css).toMatch(/\.records-archive \.my-page-console\s*\{[\s\S]*width: min\(100%, 1120px\);/)
+    expect(css).toMatch(/\.records-archive \.my-page-console\s*\{[\s\S]*width: min\(100%, 1060px\);/)
     expect(css).toMatch(
-      /\.records-timeline-scroll\s*\{[\s\S]*max-height: min\(calc\(100dvh - 255px\), 520px\);[\s\S]*overflow-y: auto;/,
+      /\.records-timeline-scroll\s*\{[\s\S]*height: max\(420px, calc\(100dvh - 280px\)\);[\s\S]*max-height: none;[\s\S]*overflow-y: auto;/,
     )
   })
 })

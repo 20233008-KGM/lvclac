@@ -13,6 +13,7 @@ import { dirname, join, resolve } from 'node:path'
 const ROOT = resolve(__dirname, '..')
 
 function listTsFiles(dir: string): string[] {
+  if (!existsSync(dir)) return []
   return readdirSync(dir).flatMap((name) => {
     const full = join(dir, name)
     if (statSync(full).isDirectory()) return listTsFiles(full)

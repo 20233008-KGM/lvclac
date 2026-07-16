@@ -346,7 +346,7 @@ async function processDueSetting(
         sourceLocalDate,
       )
       const marked = await deps.markSlotRolledOver(slot.numberSetId, nextDate)
-      if (marked.ok) {
+      if (marked.ok === true) {
         skipped += 1
         lastError = 'rollover_pending'
       } else {
@@ -380,7 +380,7 @@ async function processDueSetting(
       numberSetId: slot.numberSetId,
     })
     const inserted = await deps.insertAutoSnapshot(setting.userId, payload)
-    if (inserted.ok) {
+    if (inserted.ok === true) {
       processed += 1
       anySuccess = true
     } else if (inserted.duplicate) {

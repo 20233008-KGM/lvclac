@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { next } from '@vercel/functions'
 import {
   PRICING_PATH,
@@ -5,7 +7,7 @@ import {
   PRODUCT_PATH,
   REFUND_POLICY_PATH,
   TERMS_PATH,
-} from './src/config/routes'
+} from './src/config/routes.js'
 
 const NO_INDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
 const PUBLIC_REVIEW_PATHS = [

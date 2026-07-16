@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createBillingDeps, readBillingConfig } from '../../scripts/billing/billingConfig.js'
 import { handleCheckout } from '../../scripts/billing/billingHandlers.js'

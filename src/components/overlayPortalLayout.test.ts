@@ -7,12 +7,13 @@ function source(path: string) {
 }
 
 describe('calculator modal overlays', () => {
-  it('renders draft-save modals through the document body portal', () => {
-    const text = source('src/components/SaveDraftToggle.tsx')
+  it('renders the public save-consent modal at the app overlay root', () => {
+    const text = source('src/components/ServiceDisclaimer.tsx')
 
-    expect(text).toContain("import { createPortal } from 'react-dom'")
+    expect(text).toContain('<PublicSaveConsentModal')
     expect(text).toContain('document.body.style.overflow')
-    expect(text).toContain('createPortal(modal, document.body)')
+    expect(text).toContain('className="disclaimer-overlay"')
+    expect(text).toContain('className="disclaimer-modal draft-save-modal public-save-consent-modal"')
   })
 
   it('renders clear-all confirmation through the document body portal', () => {

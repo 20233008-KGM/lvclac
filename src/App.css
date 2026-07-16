@@ -3108,6 +3108,15 @@ input:focus:not(:focus-visible) {
   flex-shrink: 0;
 }
 
+.public-save-consent-modal .account-setting-guard-actions {
+  margin-top: var(--space-sm);
+}
+
+.public-save-consent-modal .draft-save-modal-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .account-setting-guard-actions {
   display: flex;
   gap: var(--space-md);

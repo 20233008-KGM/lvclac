@@ -11,7 +11,13 @@ import {
   TERMS_PATH,
 } from '../config/routes'
 import { usePathname } from '../hooks/usePathname'
+import { usePublicCalculator } from '../context/PublicCalculatorContext'
 import { useLanguage, type Locale } from '../i18n'
+import {
+  shouldShowPublicSaveConsent,
+  writePublicSaveConsent,
+  type PublicSaveConsent,
+} from './publicSaveConsent'
 import {
   readDisclaimerSkip,
   shouldAutoShowDisclaimer,
@@ -126,8 +132,13 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(
     () => shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
   )
+  const [saveConsentResolved, setSaveConsentResolved] = useState(false)
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
+  const saveConsentOpen =
+    !open &&
+    !saveConsentResolved &&
+    shouldShowPublicSaveConsent(pathname, localStorage)
 
   const showAgain = () => {
     setMode('info')
@@ -151,7 +162,82 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
           }}
         />
       )}
+      {saveConsentOpen && (
+        <PublicSaveConsentModal
+          onDecision={(decision) => {
+            writePublicSaveConsent(localStorage, decision)
+            setSaveConsentResolved(true)
+          }}
+        />
+      )}
     </DisclaimerContext.Provider>
+  )
+}
+
+function PublicSaveConsentModal({
+  onDecision,
+}: {
+  onDecision: (decision: PublicSaveConsent) => void
+}) {
+  const { t } = useLanguage()
+  const { setSaveEnabled, pauseSaving } = usePublicCalculator()
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  const chooseOff = () => {
+    pauseSaving()
+    onDecision('off')
+  }
+
+  const chooseLocal = async () => {
+    setBusy(true)
+    await setSaveEnabled(true, 'local')
+    onDecision('local')
+  }
+
+  return (
+    <div className="disclaimer-overlay" role="presentation">
+      <div
+        className="disclaimer-modal draft-save-modal public-save-consent-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="public-save-consent-title"
+      >
+        <h2 id="public-save-consent-title" className="disclaimer-modal-title">
+          {t.draftSave.publicConsentTitle}
+        </h2>
+        <div className="draft-save-modal-body">
+          {t.draftSave.publicConsentBody.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+        <div className="account-setting-guard-actions">
+          <button
+            type="button"
+            className="btn btn-ghost draft-save-modal-btn"
+            disabled={busy}
+            onClick={chooseOff}
+          >
+            {t.draftSave.publicConsentOff}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary draft-save-modal-btn"
+            disabled={busy}
+            onClick={() => void chooseLocal()}
+          >
+            {t.draftSave.publicConsentLocal}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

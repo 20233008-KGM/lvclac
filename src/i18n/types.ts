@@ -132,6 +132,10 @@ export interface Messages {
     localMode: string
     cloudMode: string
     noSaveMode: string
+    publicConsentTitle: string
+    publicConsentBody: string[]
+    publicConsentOff: string
+    publicConsentLocal: string
     cleared: string
     enableModalTitle: string
     cloudEnableModalTitle: string

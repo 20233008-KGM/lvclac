@@ -1,14 +1,23 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { usePublicCalculator } from '../context/PublicCalculatorContext'
 import { useLanguage } from '../i18n'
 import { formatSavedAtCompact } from '../utils/format'
 
 function LocalComputerIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none">
-      <rect x="3.5" y="4.5" width="17" height="11" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 19.5h8M12 15.5v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <svg viewBox="0 0 28 28" aria-hidden="true">
+      <rect className="draft-save-slot__fill" x="7.4" y="6.2" width="13.2" height="10.8" rx="1.4" />
+      <rect x="6.1" y="4.9" width="15.8" height="13.4" rx="1.9" fill="none" />
+      <line x1="10.4" y1="22.1" x2="17.6" y2="22.1" />
+      <line x1="14" y1="18.4" x2="14" y2="22.1" />
+    </svg>
+  )
+}
+
+function OffIcon() {
+  return (
+    <svg viewBox="0 0 28 28" aria-hidden="true">
+      <circle cx="14" cy="14" r="8.4" fill="none" />
+      <line x1="8.1" y1="8.1" x2="19.9" y2="19.9" />
     </svg>
   )
 }
@@ -23,124 +32,71 @@ export function SaveDraftToggle() {
     localDraftSavedAt,
     setSaveEnabled,
     pauseSaving,
-    deleteSavedData,
   } = usePublicCalculator()
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-
-  useEffect(() => {
-    if (!deleteConfirmOpen) return
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [deleteConfirmOpen])
 
   const statusText =
-    syncStatus === 'saving'
-      ? t.draftSave.statusSaving
-      : syncStatus === 'error'
-        ? t.draftSave.statusError
-        : localDraftSavedAt
-          ? formatSavedAtCompact(localDraftSavedAt)
+    syncStatus === 'error'
+      ? t.draftSave.statusError
+      : localDraftSavedAt
+        ? formatSavedAtCompact(localDraftSavedAt)
+        : syncStatus === 'saving'
+          ? t.draftSave.statusSaving
           : null
-
-  async function toggleSaving() {
-    if (saveEnabled) {
-      pauseSaving()
-      return
-    }
-    await setSaveEnabled(true, 'local')
-  }
-
-  async function confirmDelete() {
-    await deleteSavedData()
-    setDeleteConfirmOpen(false)
-  }
-
-  const modal = deleteConfirmOpen ? (
-    <div
-      className="disclaimer-overlay"
-      role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) setDeleteConfirmOpen(false)
-      }}
-    >
-      <div
-        className="disclaimer-modal draft-save-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="public-draft-delete-title"
-      >
-        <h2 id="public-draft-delete-title" className="disclaimer-modal-title">
-          {t.draftSave.deleteConfirmTitle}
-        </h2>
-        <p className="disclaimer-modal-text">{t.draftSave.deleteConfirmBody}</p>
-        <div className="account-setting-guard-actions">
-          <button
-            type="button"
-            className="btn btn-ghost draft-save-modal-btn"
-            onClick={() => setDeleteConfirmOpen(false)}
-          >
-            {t.draftSave.deleteCancel}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary draft-save-modal-btn"
-            onClick={() => void confirmDelete()}
-          >
-            {t.draftSave.deleteConfirm}
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null
+  const showSavedCheck = syncStatus === 'saved' && Boolean(localDraftSavedAt) && !syncError
 
   return (
-    <>
-      <div className="draft-save">
-        <div className="draft-save-main">
-          <span className="draft-save-label">{t.draftSave.label}</span>
-          <div className="draft-save-slots" role="group" aria-label={t.draftSave.storageModeLabel}>
-            <button
-              type="button"
-              className={[
-                'draft-save-slot',
-                'draft-save-slot--local',
-                hasLocalDraft ? 'draft-save-slot--stored' : '',
-                saveEnabled ? 'draft-save-slot--active' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              aria-pressed={saveEnabled}
-              aria-label={saveEnabled ? t.draftSave.noSaveMode : t.draftSave.localMode}
-              title={saveEnabled ? t.draftSave.offHint : t.draftSave.hint}
-              onClick={() => void toggleSaving()}
-            >
-              <LocalComputerIcon />
-              <span className="draft-save-slot__sr-label">{t.draftSave.localMode}</span>
-            </button>
-            {hasLocalDraft && (
-              <button
-                type="button"
-                className="link-btn draft-save-delete"
-                onClick={() => setDeleteConfirmOpen(true)}
-              >
-                {t.draftSave.deleteConfirm}
-              </button>
-            )}
-          </div>
-          {statusText && (
-            <span className={`draft-save-status draft-save-status--${syncStatus}`}>
-              <span className="draft-save-status__check" aria-hidden="true">
-                {syncStatus === 'saved' && !syncError ? '✓' : ''}
-              </span>
-              <span className="draft-save-status__time">{statusText}</span>
-            </span>
-          )}
+    <div className="draft-save">
+      <div className="draft-save-row">
+        <div className="draft-save-slots" role="group" aria-label={t.draftSave.storageModeLabel}>
+          <button
+            type="button"
+            data-save-slot="off"
+            className={[
+              'draft-save-slot',
+              'draft-save-slot--off',
+              !saveEnabled ? 'draft-save-slot--active' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-pressed={!saveEnabled}
+            aria-label={t.draftSave.noSaveMode}
+            title={t.draftSave.noSaveMode}
+            onClick={pauseSaving}
+          >
+            <OffIcon />
+            <span className="draft-save-slot__sr-label">{t.draftSave.noSaveMode}</span>
+          </button>
+          <button
+            type="button"
+            data-save-slot="local"
+            className={[
+              'draft-save-slot',
+              'draft-save-slot--local',
+              hasLocalDraft ? 'draft-save-slot--stored' : '',
+              saveEnabled ? 'draft-save-slot--active' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-pressed={saveEnabled}
+            aria-label={t.draftSave.localMode}
+            title={t.draftSave.localMode}
+            onClick={() => {
+              if (!saveEnabled) void setSaveEnabled(true, 'local')
+            }}
+          >
+            <LocalComputerIcon />
+            <span className="draft-save-slot__sr-label">{t.draftSave.localMode}</span>
+          </button>
         </div>
+        {saveEnabled && statusText && (
+          <span className={`draft-save-status draft-save-status--${syncStatus}`}>
+            <span className="draft-save-status__check" aria-hidden="true">
+              {showSavedCheck ? '✓' : ''}
+            </span>
+            <span className="draft-save-status__time">{statusText}</span>
+          </span>
+        )}
       </div>
-      {modal && createPortal(modal, document.body)}
-    </>
+    </div>
   )
 }

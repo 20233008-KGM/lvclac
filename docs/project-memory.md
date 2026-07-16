@@ -91,22 +91,28 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 > **로그가 아니라, 항상 최신 전체 그림으로 덮어쓰는 요약.** 2,000자 내외로 유지(넘치면 오래된 서술을 쳐내 다이어트). 새 세션은 이거 하나만 읽어도 프로젝트 전체 흐름·현재 상태를 파악한다. 상세 진행은 아래 '최근 근황'에서 본다.
 
-**제품/배포**: LiqGuard는 공개 제품과 개발 제품을 영구 분리한다. `main → liqguard.com`은 로그인 없는 무료 계산기·단일 로컬 저장·광고 자리·`/terms`·`/privacy`만 제공한다. `dev → lvclac-dev → devpilgrm.liqguard.com`은 로그인·클라우드·기록·결제·크론 등 전체 기능을 보존한다. 두 환경 모두 정식 공개 전 `noindex`; 개발 사이트는 항상 `DEV` 배지를 표시한다.
+**제품/배포**: LiqGuard는 공개 제품과 개발 제품을 영구 분리한다. `main → liqguard.com`은 로그인 없는 무료 계산기·단일 로컬 저장·사용법·광고 자리·`/terms`·`/privacy`를 제공한다. `dev → lvclac-dev → devpilgrm.liqguard.com`은 로그인·클라우드·기록·결제·크론 등 전체 기능을 보존한다. 두 환경 모두 정식 공개 전 `noindex`; 개발 사이트는 항상 `DEV` 배지를 표시한다.
 
-**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 592개다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 620개다. Supabase Auth Site URL은 개발 도메인으로 전환됨. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
+**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 597개다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 620개다. Supabase Auth Site URL은 개발 도메인으로 전환됨. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
 
-**핵심 기능**: 공개 사이트는 청산가 계산기, 상품군별 용어 프리셋, 주문 시나리오, undo/redo, 면책, 광고 레이아웃, 단일 브라우저 저장만 제공한다. 기존 활성 로컬 숫자세트는 공개 단일 저장 키로 1회 마이그레이션한다. 개발 사이트에는 계좌 스냅샷, 다중 숫자세트, 마이페이지, 온보딩, 롤오버, 피드백·관리자·Paddle 준비 기능이 남아 있다.
+**핵심 기능**: 공개 사이트는 청산가 계산기, 상품군별 용어 프리셋, 주문 시나리오, undo/redo, 면책, 사용법 툴팁·`/guide`, 광고 레이아웃, 단일 브라우저 저장을 제공한다. 저장 UI는 `저장 안 함`·`로컬 저장` 2슬롯이며 첫 홈 방문에는 면책 확인 뒤 로컬 저장 여부와 계좌정보 보안 주의를 한 번 묻는다. 기존 활성 로컬 숫자세트는 공개 단일 저장 키로 1회 마이그레이션한다. 개발 사이트에는 계좌 스냅샷, 다중 숫자세트, 마이페이지, 온보딩, 롤오버, 피드백·관리자·Paddle 준비 기능이 남아 있다.
 
 **디자인**: 다크 UI, variables.css 토큰 기반. 모달 3계층(base·auth·snapshot)을 단일 규칙(R1–R6)으로 수렴 완료. 개선 접근: 레퍼런스 캡처 → 토큰 준수 → 여백 4·8·16·24 리듬 → 실제 화면 검증.
 
 **법인**: 주식회사 파필드소프트웨어 설립 중 — startbiz 서식 13종 완료, **일괄 전자서명(김규민 + 누나 감사 김에림) → 파주등기소 제출**만 남음(9~17시 운영시간 처리).
 
-**다음/미해결**: Porkbun에 `A devpilgrm 76.76.21.21` 추가 후 개발 도메인 SSL·로그인·클라우드·cron smoke test. 8/7 공개 직전 AdSense/CMP·법적 문구 확인 후 `ALLOW_INDEXING=true`. Paddle·법인·롤오버 알림은 dev 유료기능 트랙으로 계속 진행.
+**다음/미해결**: 개발 도메인 로그인·클라우드·cron smoke test. 8/7 공개 직전 AdSense/CMP·법적 문구 확인 후 `ALLOW_INDEXING=true`. Paddle·법인·롤오버 알림은 dev 유료기능 트랙으로 계속 진행.
 
 ## 최근 근황
 
-- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,150토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
+- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,120토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
 - **운영 규칙**: 근황은 **최신 5개만** 여기 둔다. 새 항목을 맨 위에 추가해 6개가 되면 **가장 오래된 1개를 [`docs/project-history.md`](./project-history.md)로 잘라 이동**(요약 말고 원문 그대로). 전체 흐름은 위 Live Summary가 책임지므로, 근황은 마음 놓고 짧게 유지한다.
+
+**2026-07-17 — 공개판 저장 2슬롯·첫 방문 로컬 저장 동의·사용법 복원**
+- `maintenance/public`의 축약 저장 UI를 dev 슬롯 스타일에 맞춰 **`저장 안 함`·`로컬 저장` 두 아이콘 슬롯**으로 정리했다. 입력 패널 하단의 한 줄 설명, 클라우드·숫자세트·도움말·별도 삭제 링크는 공개판에서 제거하고, 저장 중지 시 기존 로컬 값은 보존한다.
+- 신규·기존 방문자 모두 공개 홈에서 배포 후 한 번 로컬 저장 여부를 고른다. 기존 필수 면책을 먼저 확인한 뒤 `저장 안 함`/`로컬 저장`을 즉시 적용하며, 계좌 평가금·증거금률·계약 수가 브라우저 localStorage에만 저장되고 공용 기기·악성 프로그램·확장 프로그램 환경에서는 노출될 수 있음을 고지한다. 결정은 `leverage-public-save-consent-v1`에 기록하고 저장소 접근 실패는 앱 사용을 막지 않는다.
+- 헤더 `사용법` 초보자/트레이더 툴팁과 `/guide` 상세 페이지 라우팅을 공개판에 복원했다. 로그인·클라우드 코드는 되살리지 않았다.
+- 검증: public vitest **597/597**, production build 통과. 변경 파일 eslint는 기존 `ServiceDisclaimer.tsx`의 Fast Refresh 상수 export 기준선 1건만 남음. 로컬 Vite `127.0.0.1:5173` 200 및 Chrome `선물 계산기` 탭 오픈 확인. 현재 세션에 Chrome DOM 제어와 Notion 도구가 노출되지 않아 클릭 실측·Work Log/Task 기록은 미수행.
 
 **2026-07-16 — `main` 무료 실배포 / `dev` 전체 개발환경 영구 분리** (main 04f4ed3, dev a342674)
 - `dev`를 기존 전체 기능 브랜치로 만들고 별도 Vercel `lvclac-dev`의 Production Branch로 지정. Supabase·service role·cron env와 Auth Site URL/Redirect URL을 `devpilgrm.liqguard.com` 기준으로 이관하고 `DEV` 배지를 추가했다. Vercel 파일단위 TypeScript 오류(Node 타입, middleware `.js`, cron union narrowing)를 수정해 dev Production이 오류 없이 Ready.
@@ -132,11 +138,5 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - **합의 방침**: 방식은 **B안**(짧은링크+DB+서버 OG 이미지) — 카톡 링크 미리보기 카드가 바이럴 핵심(A안=URL에 다 담기는 미리보기 안 뜸). **프라이버시**: 계좌잔고·진입가·체결가·유지증거금률 등 개인정보는 화면서 전면 제외 → 노출값은 청산가/하락 여유%/방향/레버리지/현재가만. **CTA는 '내 포지션 점검하기'**(입력값 미공유라 남 계산기에 값 프리필 불가 → 받은 사람이 자기 포지션 넣게 유도). **톤**: 청산가 숫자 흰색, 빨강은 작은 점 표식만(겁주지 않게).
 - **재활용 확인**: 읽기전용 렌더는 `RecordsArchivePage.tsx`의 `RecordsDetailPanel`(InputPanel/ResultPanel onChange=noop + 주문 전/후 토글)을 모달 껍데기만 벗겨 재사용 가능. CalculatorInputs에 accountEval(계좌잔고) 등 민감필드 있어 공유용은 가림 필요.
 - 산출물: 시안 HTML을 repo에 보관 `docs/design/2026-07-15-share-feature-mockups.html`(4종+합의방침 헤더 주석). 백로그 등재 '계산결과·주문시나리오 공유 기능 (언젠가)' P3/Feature(예상 2~3일). **미결정**: ②결과우선형 vs ③계산기통째형 택1·③빨강 톤다운·④2열 계약수/레버리지 노출범위.
-
-**2026-07-15 — 숫자세트 열람 슬롯 원라인 심플화 + 계좌평가금·레버리지 노출** (커밋 13cf29a·07cdfc5)
-- 사용자 요청: 계산기 메인 "숫자세트 열람" 드롭다운(`draft-number-set-menu`) 슬롯을 심플하게(최대 10+10=20개 수용). 목업 5회 반복(show_widget)으로 방향 정한 뒤 구현 — 34px 아이콘타일+2줄(제목/메타)+체크서클(~52px) → **방향 색점 + 제목 + 우측 `계좌평가금·레버리지` 원라인(~32px)**. 20개 차도 세로 절반 이하.
-- **정렬 고정**(사용자 핵심 요구): 우측 숫자를 `[금액 우측정렬][·][레버리지]` 3칸 inline-grid, **레버리지 칸 32px 고정폭 우측정렬** → 배수 자릿수(5x·50x·125x) 달라도 3축 안 흔들림(실측: 전 행 금액끝568·점577·레버끝609px 동일, 칸폭 32 불변). 통화기호(₩) 제거·천단위 콤마·레버리지 단위 `x`(본문은 '배', 슬롯만 x).
-- **레버리지는 파생값**: CalculatorInputs에 레버리지 입력 필드 없음(국내 선물식 — 평가금·약정금액서 도출). 세트엔 원천 입력만 저장되고 `calculateEvaluate(inputs).leverageRatio`로 매번 계산(순수 산술, 20개 무해). 따로 저장 안 하는 게 원천값 변경 시 유령값 방지로 더 안전. 값 null(입력 불완전)이면 칸 비우되 고정폭 유지. `formatNumberSetMeta`(시각·방향·계약수) → `describeNumberSet`(방향·평가금·레버리지)로 교체.
-- 검증: tsc·vitest 605/605(워크트리 제외). dev(5223)에 로컬세트 6종 주입 후 DOM 실측 — 렌더·레버리지(20/50/5/10/125/15x)·active 하이라이트·3축 정렬 확인. **스크린샷은 이 환경 캡처도구 타임아웃(JS 실행은 정상) → DOM 측정으로 대체**. saveDraftSlotUi 테스트의 format import 정확문자열 검사를 정규식으로 완화(import 확장 대응). 남의 세션 project-memory.md 미커밋 1줄(Live Summary 자수 1,000→2,000) 동반 커밋됨.
 
 <!-- 근황은 최신 5개만. 더 오래된 기록은 docs/project-history.md 참조. -->

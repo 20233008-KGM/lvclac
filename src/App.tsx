@@ -11,6 +11,8 @@ import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
 import { FieldHintBanner } from './components/FieldHintBanner'
+import { GuidePage } from './components/GuidePage'
+import { HowToUseButton } from './components/HowToUseButton'
 import {
   fieldHintActive,
   readFieldHintDismissed,
@@ -20,7 +22,7 @@ import {
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { PublicLegalPage } from './components/PublicLegalPage'
-import { isLegalPath } from './config/routes'
+import { isGuidePath, isLegalPath } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
 import { usePublicCalculator } from './context/PublicCalculatorContext'
@@ -352,6 +354,7 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
+                  <HowToUseButton />
                 </div>
               </header>
               {fieldHintOn && traderStage && (
@@ -396,12 +399,17 @@ function CalculatorApp() {
 function AppRouter() {
   const pathname = usePathname()
   const legalKind = isLegalPath(pathname)
+  const guidePath = isGuidePath(pathname)
 
   useEffect(() => {
-    if (pathname !== '/' && legalKind !== 'terms' && legalKind !== 'privacy') {
+    if (pathname !== '/' && !guidePath && legalKind !== 'terms' && legalKind !== 'privacy') {
       window.history.replaceState(null, '', '/')
     }
-  }, [legalKind, pathname])
+  }, [guidePath, legalKind, pathname])
+
+  if (guidePath) {
+    return <GuidePage />
+  }
 
   if (legalKind === 'terms' || legalKind === 'privacy') {
     return <PublicLegalPage kind={legalKind} />

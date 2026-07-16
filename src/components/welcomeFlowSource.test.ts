@@ -31,11 +31,13 @@ describe('WelcomeFlow 접근성/구조', () => {
 })
 
 describe('DisclaimerProvider 게이트 배선', () => {
-  it('공개 계산기는 온보딩 없이 면책 확인만 렌더', () => {
+  it('공개 계산기는 온보딩 없이 면책 확인 뒤 로컬 저장 동의를 렌더', () => {
     expect(provider).not.toContain('welcomeOpen ?')
     expect(provider).not.toContain('<WelcomeFlow')
     expect(provider).toContain('{open && (')
     expect(provider).toContain('<DisclaimerModalContent')
+    expect(provider).toContain('{saveConsentOpen && (')
+    expect(provider).toContain('<PublicSaveConsentModal')
   })
 
   it('완료 시 면책 ack/skip만 저장', () => {

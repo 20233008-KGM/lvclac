@@ -7,33 +7,39 @@ function source(path: string) {
 }
 
 describe('public local draft UI', () => {
-  it('offers exactly one browser-local save slot', () => {
+  it('offers exactly off and browser-local save slots', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
 
+    expect(text.match(/data-save-slot=/g)).toHaveLength(2)
+    expect(text).toContain('data-save-slot="off"')
+    expect(text).toContain('data-save-slot="local"')
+    expect(text).toContain('draft-save-slot--off')
     expect(text).toContain('draft-save-slot--local')
     expect(text).toContain('usePublicCalculator')
     expect(text).not.toContain('draft-save-slot--cloud')
     expect(text).not.toContain('numberSet')
     expect(text).not.toContain('Auth')
     expect(text).not.toContain('billing')
+    expect(text).not.toContain('draft-save-label')
+    expect(text).not.toContain('draft-save-delete')
   })
 
   it('pauses autosave without deleting the stored draft', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
     const context = source('src/context/PublicCalculatorContext.tsx')
 
-    expect(text).toContain('pauseSaving()')
+    expect(text).toContain('onClick={pauseSaving}')
     expect(context).toContain("localStorage.setItem(SAVE_ENABLED_KEY, '0')")
     expect(context).toContain('function readInitialSaveEnabled')
     expect(context).not.toMatch(/function pauseSaving[\s\S]*clearDraft\(\)/)
   })
 
-  it('uses a separate confirmation action to delete browser data', () => {
+  it('does not expose a separate delete action in the compact public slots', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
 
-    expect(text).toContain('setDeleteConfirmOpen(true)')
-    expect(text).toContain('deleteSavedData()')
-    expect(text).toContain('createPortal(modal, document.body)')
+    expect(text).not.toContain('deleteSavedData')
+    expect(text).not.toContain('deleteConfirmOpen')
+    expect(text).not.toContain('createPortal')
   })
 
   it('migrates the active legacy local number set into the public draft key once', () => {

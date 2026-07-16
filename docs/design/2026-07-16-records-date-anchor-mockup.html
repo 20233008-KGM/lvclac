@@ -12,8 +12,8 @@
     .page-header { padding-top:0; }
     .eyebrow { margin:0 0 8px; color:#74a3dc; font-size:13px; font-weight:700; }
     h1 { margin:0 0 10px; font-size:34px; letter-spacing:-.8px; line-height:1.15; }
-    .description { max-width:340px; margin:0; color:var(--muted); font-size:14px; line-height:1.55; }
-    .ledger { justify-self:end; width:min(100%, 870px); margin-top:110px; overflow:hidden; border:1px solid #2d3c51; border-radius:8px; background:var(--panel); box-shadow:0 18px 45px rgb(0 0 0 / 22%); }
+    .description { width:max-content; max-width:none; margin:0; color:var(--muted); font-size:14px; line-height:1.55; white-space:nowrap; }
+    .ledger { justify-self:end; width:min(100%, 1120px); margin-top:110px; overflow:hidden; border:1px solid #2d3c51; border-radius:8px; background:var(--panel); box-shadow:0 18px 45px rgb(0 0 0 / 22%); }
     .toolbar { min-height:56px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:10px 16px; border-bottom:1px solid #2c3b50; background:#202a39; }
     .summary { color:#aebdd0; font-size:12px; white-space:nowrap; }
     .summary strong { color:#e9f0fb; }
@@ -39,7 +39,7 @@
     .date-anchor span { padding:5px 10px; border:1px solid #465874; border-radius:999px; background:#202b3b; color:#c7d2e1; font-size:12px; font-weight:700; white-space:nowrap; }
     .load-more { border:0; height:auto; padding:6px 10px; background:transparent; color:#8ba7cf; font-size:11px; }
     .load-more:hover { text-decoration:underline; }
-    @media (max-width:1100px) { .page { grid-template-columns:minmax(240px, .7fr) minmax(600px, 1.3fr); gap:30px; padding-inline:32px; } .ledger { margin-top:78px; } }
+    @media (max-width:1100px) { .page { grid-template-columns:minmax(240px, .7fr) minmax(600px, 1.3fr); gap:30px; padding-inline:32px; } .description { width:auto; max-width:340px; white-space:normal; } .ledger { margin-top:78px; } }
     @media (max-width:850px) { .page { display:block; padding:28px 18px; } .page-header { padding-bottom:24px; } .ledger { width:100%; margin-top:0; } .timeline { height:520px; padding-inline:10px; } .column-head, .row { grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr); gap:7px; } .record { gap:7px; font-size:11px; } .summary { overflow:hidden; text-overflow:ellipsis; } }
   </style>
 </head>

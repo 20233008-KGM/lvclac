@@ -60,6 +60,7 @@ export interface Messages {
     undoSection: string
     redoSection: string
     empty: string
+    changedValues: string
     diff: {
       accountEval: string
       currentPrice: string

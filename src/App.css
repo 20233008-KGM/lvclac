@@ -609,7 +609,7 @@ input:focus:not(:focus-visible) {
   top: calc(100% + var(--space-xs));
   right: 0;
   z-index: 100;
-  width: min(19rem, calc(100vw - 16px));
+  width: min(22rem, calc(100vw - 16px));
   max-height: min(28rem, calc(100vh - 96px));
   overflow-y: auto;
   padding: var(--space-xs);
@@ -617,6 +617,15 @@ input:focus:not(:focus-visible) {
   border-radius: var(--radius);
   background: var(--color-surface);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.calculator-history-menu::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: var(--space-xs);
 }
 
 .calculator-history-menu__title {
@@ -645,10 +654,9 @@ input:focus:not(:focus-visible) {
 }
 
 .calculator-history-menu__item {
-  display: flex;
-  align-items: center;
+  display: block;
   width: 100%;
-  min-height: 36px;
+  min-height: 52px;
   padding: var(--space-xs) var(--space-sm);
   border: none;
   border-radius: var(--radius-sm);
@@ -668,8 +676,40 @@ input:focus:not(:focus-visible) {
   outline: none;
 }
 
-.calculator-history-menu__item-main {
+.calculator-history-menu__item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.calculator-history-menu__item-label {
+  min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator-history-menu__item-value {
+  flex: 0 0 auto;
+  max-width: 48%;
+  overflow: hidden;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator-history-menu__item-detail {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

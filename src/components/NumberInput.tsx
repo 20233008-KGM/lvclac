@@ -29,6 +29,8 @@ export interface NumberInputHandle {
 
 export interface NumberInputChangeMeta {
   historyGroup?: string
+  historyCommit?: boolean
+  historyOnly?: boolean
 }
 
 interface NumberInputProps {
@@ -129,9 +131,12 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     historyGroupRef.current = `number-input-${inputInstanceIdRef.current}-${historyGroupSerialRef.current}`
   }
 
-  function currentChangeMeta(): NumberInputChangeMeta {
+  function currentChangeMeta(historyCommit = false): NumberInputChangeMeta {
     if (!historyGroupRef.current) beginHistoryGroup()
-    return { historyGroup: historyGroupRef.current ?? undefined }
+    return {
+      historyGroup: historyGroupRef.current ?? undefined,
+      historyCommit: historyCommit || undefined,
+    }
   }
 
   function endHistoryGroup() {
@@ -150,8 +155,8 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
         ? forceCommit || normalized !== value
         : normalized !== value
 
-    if (shouldCommit) {
-      handler(normalized, currentChangeMeta())
+    if (shouldCommit || historyGroupRef.current) {
+      handler(normalized, currentChangeMeta(true))
     }
     setText(formatValue(normalized))
     setFocused(false)
@@ -226,12 +231,13 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
               setTruncatedAttempt(false)
               const parsed = parseFormattedInput(text)
               if (parsed === '') {
+                onChange(undefined, currentChangeMeta(true))
                 setText(formatValue(value))
                 endHistoryGroup()
                 return
               }
               const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
-              if (normalized !== value) onChange(normalized, currentChangeMeta())
+              onChange(normalized, currentChangeMeta(true))
               setText(formatValue(normalized))
               endHistoryGroup()
               return

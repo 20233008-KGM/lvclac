@@ -4,6 +4,7 @@ import { calculateOrder, captureOrderScenarioBaseline } from '../calc/leverage'
 import { applyInputPatch, isOrderScenarioModeActive, isScenarioModeActive } from '../calc/mtmLink'
 import {
   CALCULATOR_HISTORY_LIMIT,
+  commitCalculatorHistoryGroup,
   createCalculatorHistory,
   getCalculatorHistoryMoves,
   jumpCalculatorHistory,
@@ -72,7 +73,7 @@ describe('calculator history', () => {
     expect(history.canRedo).toBe(false)
   })
 
-  it('coalesces repeated edits with the same history group into one step', () => {
+  it('keeps repeated edits pending until the history group is committed', () => {
     let history = createCalculatorHistory(inputs(100, 350))
 
     history = recordCalculatorHistory(history, inputs(100, 351), {
@@ -85,8 +86,15 @@ describe('calculator history', () => {
       historyGroup: 'current-price-gesture',
     })
 
+    expect(history.past).toHaveLength(0)
+    expect(history.pendingEdit?.before.currentPrice).toBe(350)
+    expect(getCalculatorHistoryMoves(history).undo).toHaveLength(0)
+
+    history = commitCalculatorHistoryGroup(history, 'current-price-gesture')
+
     expect(history.past).toHaveLength(1)
     expect(history.present.currentPrice).toBe(355)
+    expect(history.pendingEdit).toBeUndefined()
 
     history = undoCalculatorHistory(history)
     expect(history.present.currentPrice).toBe(350)
@@ -100,7 +108,9 @@ describe('calculator history', () => {
 
     history = recordCalculatorHistory(history, inputs(10, 101), { historyGroup: 'field-a' })
     history = recordCalculatorHistory(history, inputs(10, 102), { historyGroup: 'field-a' })
+    history = commitCalculatorHistoryGroup(history, 'field-a')
     history = recordCalculatorHistory(history, inputs(11, 102), { historyGroup: 'field-b' })
+    history = commitCalculatorHistoryGroup(history, 'field-b')
 
     expect(history.past).toHaveLength(2)
 
@@ -144,6 +154,10 @@ describe('calculator history', () => {
     expect(moves.undo.map((move) => move.target.accountEval)).toEqual([1])
     expect(moves.redo.map((move) => move.steps)).toEqual([1, 2])
     expect(moves.redo.map((move) => move.target.accountEval)).toEqual([3, 4])
+    expect(moves.redo.map((move) => [move.before.accountEval, move.after.accountEval])).toEqual([
+      [2, 3],
+      [3, 4],
+    ])
   })
 
   it('jumps multiple undo and redo steps while preserving stack order', () => {
@@ -176,10 +190,13 @@ describe('calculator history', () => {
     history = recordCalculatorHistory(history, inputs(100, 355), {
       historyGroup: 'current-price-gesture',
     })
+    history = commitCalculatorHistoryGroup(history, 'current-price-gesture')
 
     const moves = getCalculatorHistoryMoves(history)
     expect(moves.undo).toHaveLength(1)
     expect(moves.undo[0].target.currentPrice).toBe(350)
+    expect(moves.undo[0].before.currentPrice).toBe(350)
+    expect(moves.undo[0].after.currentPrice).toBe(355)
 
     history = jumpCalculatorHistory(history, 'undo', 1)
     expect(history.present.currentPrice).toBe(350)
@@ -247,6 +264,7 @@ describe('calculator history', () => {
         { historyGroup: 'mark-price-gesture' },
       )
     }
+    history = commitCalculatorHistoryGroup(history, 'mark-price-gesture')
 
     expect(history.present.currentPrice).toBe(355)
     expect(history.past).toHaveLength(1)
@@ -256,6 +274,53 @@ describe('calculator history', () => {
 
     history = redoCalculatorHistory(history)
     expect(history.present.currentPrice).toBe(355)
+  })
+
+  it('does not create history when a focus session returns to its starting value', () => {
+    let history = createCalculatorHistory(inputs(100, 350))
+
+    history = recordCalculatorHistory(history, inputs(100, 351), {
+      historyGroup: 'current-price-focus',
+    })
+    history = recordCalculatorHistory(history, inputs(100, 350), {
+      historyGroup: 'current-price-focus',
+    })
+    history = commitCalculatorHistoryGroup(history, 'current-price-focus')
+
+    expect(history.present.currentPrice).toBe(350)
+    expect(history.past).toHaveLength(0)
+    expect(history.canUndo).toBe(false)
+  })
+
+  it('preserves redo history when a pending edit returns to its starting value', () => {
+    let history = createCalculatorHistory(inputs(1))
+    history = recordCalculatorHistory(history, inputs(2))
+    history = undoCalculatorHistory(history)
+
+    history = recordCalculatorHistory(history, inputs(3), {
+      historyGroup: 'account-focus',
+    })
+    history = recordCalculatorHistory(history, inputs(1), {
+      historyGroup: 'account-focus',
+    })
+    history = commitCalculatorHistoryGroup(history, 'account-focus')
+
+    expect(history.present.accountEval).toBe(1)
+    expect(history.future.map((entry) => entry.accountEval)).toEqual([2])
+    expect(history.canRedo).toBe(true)
+  })
+
+  it('commits a deferred focus edit in one record call', () => {
+    let history = createCalculatorHistory(inputs(100, 350))
+
+    history = recordCalculatorHistory(history, inputs(100, 360), {
+      historyGroup: 'deferred-current-price',
+      historyCommit: true,
+    })
+
+    expect(history.present.currentPrice).toBe(360)
+    expect(history.past).toHaveLength(1)
+    expect(history.pendingEdit).toBeUndefined()
   })
 
   it('undoes and redoes scenario apply state', () => {

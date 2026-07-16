@@ -40,6 +40,7 @@ export const ko: Messages = {
     undoSection: '실행 취소',
     redoSection: '다시 실행',
     empty: '아직 실행 취소/다시 실행 기록이 없습니다',
+    changedValues: '{count}개 값',
     diff: {
       accountEval: '계좌 평가금액 {before} -> {after}',
       currentPrice: '현재가 {before} -> {after}',

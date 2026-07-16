@@ -43,6 +43,7 @@ export const en: Messages = {
     undoSection: 'Undo',
     redoSection: 'Redo',
     empty: 'No history yet',
+    changedValues: '{count} values',
     diff: {
       accountEval: 'Account equity {before} -> {after}',
       currentPrice: 'Current price {before} -> {after}',

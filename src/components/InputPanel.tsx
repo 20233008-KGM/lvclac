@@ -39,7 +39,13 @@ const RATE_FIELDS = new Set<keyof CalculatorInputs>([
 ])
 
 function historyOptions(meta?: NumberInputChangeMeta): CalculatorHistoryOptions | undefined {
-  return meta?.historyGroup ? { historyGroup: meta.historyGroup } : undefined
+  return meta?.historyGroup
+    ? {
+        historyGroup: meta.historyGroup,
+        historyCommit: meta.historyCommit,
+        historyOnly: meta.historyOnly,
+      }
+    : undefined
 }
 
 function Field({

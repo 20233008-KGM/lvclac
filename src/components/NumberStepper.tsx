@@ -170,6 +170,17 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     gestureHistoryGroupRef.current = null
   }, [])
 
+  const commitGestureHistoryGroup = useCallback(() => {
+    const historyGroup = gestureHistoryGroupRef.current
+    if (!historyGroup) return
+    onChangeRef.current(valueRef.current, {
+      historyGroup,
+      historyCommit: true,
+      historyOnly: true,
+    })
+    endGestureHistoryGroup()
+  }, [endGestureHistoryGroup])
+
   const emitChange = useCallback((next: number | undefined) => {
     const gestureStart = !gestureEmittedRef.current
     gestureEmittedRef.current = true
@@ -201,8 +212,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 
   const stopStepGesture = useCallback(() => {
     stopHold()
-    endGestureHistoryGroup()
-  }, [endGestureHistoryGroup, stopHold])
+    commitGestureHistoryGroup()
+  }, [commitGestureHistoryGroup, stopHold])
 
   const startHold = useCallback(
     (delta: number) => {
@@ -280,8 +291,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     }
 
     resetPointerSession()
-    endGestureHistoryGroup()
-  }, [bump, emitChange, endGestureHistoryGroup, minValue, resetPointerSession, scrubBaseValue, step, stopHold])
+    commitGestureHistoryGroup()
+  }, [bump, commitGestureHistoryGroup, emitChange, minValue, resetPointerSession, scrubBaseValue, step, stopHold])
 
   const scheduleHoldRepeat = useCallback(
     (delta: number) => {

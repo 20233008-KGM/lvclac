@@ -21,6 +21,7 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('redoCalculatorHistory')
     expect(text).toContain('getCalculatorHistoryMoves')
     expect(text).toContain('jumpCalculatorHistory')
+    expect(text).toContain('options?.historyOnly')
   })
 
   it('handles Ctrl+Z and Ctrl+Shift+Z once at the calculator app level', () => {
@@ -31,12 +32,16 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('e.shiftKey')
     expect(text).toContain('redoInputs()')
     expect(text).toContain('undoInputs()')
+    expect(text).toContain('isTextEditingTarget(e.target)')
   })
 
   it('wires a header history menu with hover, focus, and context-menu access', () => {
-    const text = source('src/App.tsx')
+    const app = source('src/App.tsx')
+    const text = source('src/components/CalculatorHistoryMenu.tsx')
 
-    expect(text).toContain('function CalculatorHistoryMenu')
+    expect(app).toContain("import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'")
+    expect(app).toContain('<CalculatorHistoryMenu')
+    expect(text).toContain('export function CalculatorHistoryMenu')
     expect(text).toContain('undoHistory')
     expect(text).toContain('redoHistory')
     expect(text).toContain('jumpHistory')
@@ -45,7 +50,7 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('onFocus')
     expect(text).toContain('onBlur')
     expect(text).toContain('onContextMenu')
-    expect(text).not.toContain('onClick={() => setMenuOpen((open) => !open)}')
+    expect(text).toContain('onClick={handleButtonClick}')
     expect(text).toContain('calculator-history-menu')
     expect(text).toContain('calculator-history-btn')
   })

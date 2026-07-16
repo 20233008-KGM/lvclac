@@ -375,7 +375,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     options?: CalculatorHistoryOptions,
   ) => {
     setHistory((prev) => {
-      const nextInputs = applyInputPatch(prev.present, patch)
+      const nextInputs = options?.historyOnly
+        ? prev.present
+        : applyInputPatch(prev.present, patch)
       return recordCalculatorHistory(prev, nextInputs, options)
     })
   }, [])

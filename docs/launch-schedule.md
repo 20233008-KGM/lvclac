@@ -44,7 +44,8 @@
 - [x] 실배포 billing/cron API와 Vercel cron 제거
 - [x] 실배포 Production의 Supabase·service-role·cron 환경변수 제거
 - [x] `liqguard.com` 배포, 제거 경로 리다이렉트, API 404, `noindex` 검증
-- [ ] Porkbun에 `A devpilgrm 76.76.21.21` DNS 레코드 추가 후 SSL 확인
+- [x] Porkbun에 `A devpilgrm 76.76.21.21` DNS 레코드 추가, 공개 DNS·SSL 확인
+- [ ] `devpilgrm.liqguard.com` 로그인·클라우드·cron smoke test
 - [ ] 8월 7일 공개 직전 AdSense/CMP 상태와 개인정보처리방침 최종 확인
 - [ ] 8월 7일 `ALLOW_INDEXING=true`, robots 허용, 공지·모니터링 실행
 
@@ -68,8 +69,8 @@
 
 | 날짜 | 사람 작업 | AI/Codex 작업 | 완료 기준 |
 | --- | --- | --- | --- |
-| **7/16 목** | Porkbun 로그인 가능 상태 확인 | 브랜치·Vercel 프로젝트 분리, public-lite 구현·배포 | 코드·Vercel 분리 완료 |
-| **7/17 금** | Porkbun `devpilgrm` A 레코드 추가 | DNS·SSL·개발 로그인·클라우드·cron smoke test | 개발 도메인 전체 기능 접근 가능 |
+| **7/16 목** | Porkbun 로그인·`devpilgrm` A 레코드 추가 | 브랜치·Vercel 프로젝트 분리, public-lite 구현·배포, 공개 DNS 확인 | 코드·Vercel 분리와 DNS 완료 |
+| **7/17 금** | 개발 도메인 실제 로그인 확인 | 개발 로그인·클라우드·cron smoke test | 개발 도메인 전체 기능 접근 가능 |
 | **7/18~7/24** | 모바일·데스크톱 실사용 피드백 | 계산기 핵심 P0/P1 회귀 수정, 양쪽 공통 수정은 선별 cherry-pick | 계산기 차단 버그 0건 |
 | **7/25~7/31** | 광고 신청·법적 문구 육안 확인 | 광고 자리 반응형 QA, 개인정보·쿠키 문구 정리 | 광고 미승인 상태에서도 레이아웃 고정 |
 | **8/1~8/3** | 실제 기기 저장·복원 확인 | public bundle·경로·네트워크·성능 최종 검사 | RC 후보 확정 |

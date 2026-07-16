@@ -30,3 +30,4 @@ dist-ssr
 emails/backup/
 
 .vercel
+supabase/.temp/

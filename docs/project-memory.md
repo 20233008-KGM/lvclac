@@ -105,8 +105,14 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 ## 최근 근황
 
-- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,150토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
+- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,190토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
 - **운영 규칙**: 근황은 **최신 5개만** 여기 둔다. 새 항목을 맨 위에 추가해 6개가 되면 **가장 오래된 1개를 [`docs/project-history.md`](./project-history.md)로 잘라 이동**(요약 말고 원문 그대로). 전체 흐름은 위 Live Summary가 책임지므로, 근황은 마음 놓고 짧게 유지한다.
+
+**2026-07-17 — 포커스 완료형 undo/redo 실행 기록 + 2줄 팝오버, main/dev 동시 반영** (main 48a366b·f674aeb·b62245d, dev 435cc98·c1fdb87·d992b8d)
+- 숫자 입력은 계산 결과를 계속 실시간 갱신하되, focus 동안 `pendingEdit`으로만 유지하고 blur·Enter 때 시작값과 최종값이 다를 때 한 번만 undo 스택에 커밋한다. 원래 값으로 돌아오면 기록하지 않고 기존 redo도 보존한다. 스테퍼 클릭·길게 누르기·드래그는 제스처 종료 시 한 단계로 확정한다.
+- 기록 항목은 누적 현재상태 비교를 폐기하고 각 커밋의 인접 `before/after`를 사용한다. 팝오버는 첫 줄 `필드명/최종값`, 둘째 줄 `이전값 → 최종값` 2줄 구조와 tabular 숫자 정렬을 사용하며, 주문·손익·현재가 갱신 등 다중 변경은 의미 있는 작업명으로 요약한다. hover/focus와 모바일 터치 진입, 100개 메모리 한도는 유지한다.
+- 입력창 내부 `Ctrl+Z`는 네이티브 텍스트 편집에 맡기고 blur 이후에만 전역 undo/redo가 작동한다. 공통 코어/UI 커밋을 dev에 cherry-pick하고 공개판 `PublicCalculatorContext`와 dev `CalculatorContext`를 별도 연결해 로그인·클라우드·자동 저장 주문기록 삭제 로직을 보존했다.
+- 검증: main vitest **607/607**·build, dev **630/630**·build. 로컬 Chromium QA 2/2 — 타이핑 중 결과 실시간 변경/목록 미생성, blur 후 단일 기록, 값 원복 무기록, 인접 diff, Ctrl+Z/redo, hover 연결, 390px 모바일 폭·터치 오픈 확인. 현재 세션에 Notion 도구가 노출되지 않아 Work Log/Task 기록은 repo 기록으로 대체했다.
 
 **2026-07-16 — Porkbun 개발 도메인 DNS 연결 완료**
 - AutoCorp Chrome으로 Porkbun `liqguard.com` DNS에 `A devpilgrm 76.76.21.21`(TTL 600)을 추가했다. 기존 11개 레코드는 유지되고 전체 12개로 증가했다.
@@ -131,11 +137,5 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - **재활용**: 페이지네이션 백엔드(offset+`.range()` N+1 오버페치·`hasMore`·`fetchRecordCounts`·로컬 offset 보정)는 이미 완성 → `loadOlderRecords`에 트리거만 붙임. 신규 훅 `src/hooks/useInfiniteScroll.ts`(IntersectionObserver sentinel, rootMargin 200px, onLoadMore ref로 최신참조, IO 미지원 시 no-op → jsdom 테스트 안전). 날짜는 조회 4함수에 선택적 `before?`(ISO 상한) 추가→`.lte('created_at', before)`, 슬롯 필터와 AND, 생략 시 하위호환.
 - 컨테이너: `dateAnchor`(YYYY-MM-DD)→`beforeBound`(그 날 끝 23:59:59.999 ISO) memo, load 함수 deps 포함→날짜 변경 시 첫 페이지 재조회+상세 닫음. UI는 툴바 네이티브 `<input type=date>`(max=오늘)+활성 시 "{date} 이전 기록" 칩+"최신으로" 해제. 시맨틱 '선택일 이하'라 빈 날 골라도 그 이전 이어짐.
 - 검증: tsc·vitest 608/608(워크트리 제외, accountRecords에 before→.lte 2건 추가). dev /records 로그인 실측 — 07-11 선택 시 스냅샷 6→4·07.14 제외·칩 표시, 최신으로 복귀 정상, 콘솔 에러 0, 패널 360px 툴바 줄바꿈·오버플로 0. **무한스크롤 자동로딩은 현재 계정 13개(20개 미만)라 hasMore 미발동 → sentinel/버튼 정상 부재로 실측 불가**(단위테스트+코드 커버). 공유 워크트리라 내 8파일만 명시 스테이징.
-
-**2026-07-15 — '계산결과/주문시나리오 공유' 기능 디자인 시안(방향 탐색만, 미구현)** (커밋 예정)
-- 사용자 요청: 공유 기능을 만들기 전 "받은 사람이 링크 누르면 뭐가 떠야 하나"부터 설계. Claude in Chrome에 로컬서버(HTML 목업) 띄워 시안 4종을 사용자 피드백 반복하며 다듬음. **구현은 안 함** — 백로그 등재 후 종료.
-- **합의 방침**: 방식은 **B안**(짧은링크+DB+서버 OG 이미지) — 카톡 링크 미리보기 카드가 바이럴 핵심(A안=URL에 다 담기는 미리보기 안 뜸). **프라이버시**: 계좌잔고·진입가·체결가·유지증거금률 등 개인정보는 화면서 전면 제외 → 노출값은 청산가/하락 여유%/방향/레버리지/현재가만. **CTA는 '내 포지션 점검하기'**(입력값 미공유라 남 계산기에 값 프리필 불가 → 받은 사람이 자기 포지션 넣게 유도). **톤**: 청산가 숫자 흰색, 빨강은 작은 점 표식만(겁주지 않게).
-- **재활용 확인**: 읽기전용 렌더는 `RecordsArchivePage.tsx`의 `RecordsDetailPanel`(InputPanel/ResultPanel onChange=noop + 주문 전/후 토글)을 모달 껍데기만 벗겨 재사용 가능. CalculatorInputs에 accountEval(계좌잔고) 등 민감필드 있어 공유용은 가림 필요.
-- 산출물: 시안 HTML을 repo에 보관 `docs/design/2026-07-15-share-feature-mockups.html`(4종+합의방침 헤더 주석). 백로그 등재 '계산결과·주문시나리오 공유 기능 (언젠가)' P3/Feature(예상 2~3일). **미결정**: ②결과우선형 vs ③계산기통째형 택1·③빨강 톤다운·④2열 계약수/레버리지 노출범위.
 
 <!-- 근황은 최신 5개만. 더 오래된 기록은 docs/project-history.md 참조. -->

@@ -17,9 +17,11 @@ import { DisclaimerShowAgainLink } from './ServiceDisclaimer'
 
 const footerCopy = {
   ko: {
+    description:
+      '선물 포지션의 청산 위험과 주문 이후 변화를 빠르게 검토하는 브라우저 기반 계산 보조 도구입니다.',
     columns: [
       {
-        title: '제품',
+        title: 'Product',
         links: [
           { label: '선물 계산기', href: '/' },
           { label: '사용 가이드', href: GUIDE_PATH },
@@ -27,26 +29,30 @@ const footerCopy = {
         ],
       },
       {
-        title: '회사',
+        title: 'Company',
         links: [
           { label: '서비스 소개', href: ABOUT_PATH },
           {
-            label: PUBLIC_OPERATOR_INFO.contactEmail,
+            label: '문의하기',
             href: `mailto:${PUBLIC_OPERATOR_INFO.contactEmail}`,
           },
         ],
       },
       {
-        title: '약관 및 정책',
+        title: 'Legal',
         links: [
           { label: '이용약관', href: TERMS_PATH },
           { label: '개인정보처리방침', href: PRIVACY_PATH },
         ],
       },
     ],
+    operatorHeading: 'Operator',
+    operatorBrandLabel: '운영 주체',
     privacySettings: '개인정보·쿠키 설정',
   },
   en: {
+    description:
+      'A browser-based calculation aid for reviewing futures liquidation risk and post-order changes.',
     columns: [
       {
         title: 'Product',
@@ -61,7 +67,7 @@ const footerCopy = {
         links: [
           { label: 'About', href: ABOUT_PATH },
           {
-            label: PUBLIC_OPERATOR_INFO.contactEmail,
+            label: 'Contact',
             href: `mailto:${PUBLIC_OPERATOR_INFO.contactEmail}`,
           },
         ],
@@ -74,6 +80,8 @@ const footerCopy = {
         ],
       },
     ],
+    operatorHeading: 'Operator',
+    operatorBrandLabel: 'Operator',
     privacySettings: 'Privacy and cookie settings',
   },
 } as const
@@ -87,16 +95,34 @@ export function SiteFooter() {
   const { openPrivacySettings } = useGoogleConsent()
   const navigate = useNavigate()
   const copy = footerCopy[locale]
-  const operatorDetails = publicOperatorDetails(locale)
+  const confirmedOperatorDetails = publicOperatorDetails(locale)
+  const operatorDetails = PUBLIC_OPERATOR_INFO.legalName
+    ? confirmedOperatorDetails
+    : [
+        {
+          label: copy.operatorBrandLabel,
+          value: publicOperatorDisplayName(),
+        },
+        ...confirmedOperatorDetails,
+      ]
 
   return (
     <footer className="site-footer">
       <div className="site-footer__panel">
         <div className="site-footer__main">
           <div className="site-footer__brand">
-            <p className="site-footer__company">{publicOperatorDisplayName()}</p>
-            <p className="site-footer__product">{PUBLIC_OPERATOR_INFO.productName}</p>
-            <p className="site-footer__tagline">{t.footer.tagline}</p>
+            <a
+              className="site-footer__wordmark"
+              href="/"
+              onClick={(event) => {
+                event.preventDefault()
+                navigate('/')
+              }}
+            >
+              <span className="site-footer__mark" aria-hidden="true" />
+              <span>{PUBLIC_OPERATOR_INFO.productName}</span>
+            </a>
+            <p className="site-footer__tagline">{copy.description}</p>
           </div>
 
           <nav className="site-footer__nav" aria-label={t.footer.navAriaLabel}>
@@ -139,18 +165,41 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <dl className="site-footer__operator">
-          {operatorDetails.map((detail) => (
-            <div key={detail.label} className="site-footer__operator-item">
-              <dt>{detail.label}</dt>
-              <dd>{detail.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="site-footer__operator-row">
+          <p className="site-footer__operator-heading">{copy.operatorHeading}</p>
+          <dl className="site-footer__operator">
+            {operatorDetails.map((detail) => (
+              <div key={detail.label} className="site-footer__operator-item">
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
 
         <div className="site-footer__bottom">
           <p className="site-footer__copy">{t.footer.copyright}</p>
           <div className="site-footer__bottom-actions">
+            <a
+              className="site-footer__bottom-link"
+              href={TERMS_PATH}
+              onClick={(event) => {
+                event.preventDefault()
+                navigate(TERMS_PATH)
+              }}
+            >
+              {copy.columns[2].links[0].label}
+            </a>
+            <a
+              className="site-footer__bottom-link"
+              href={PRIVACY_PATH}
+              onClick={(event) => {
+                event.preventDefault()
+                navigate(PRIVACY_PATH)
+              }}
+            >
+              {copy.columns[2].links[1].label}
+            </a>
             <DisclaimerShowAgainLink variant="footer" />
           </div>
         </div>

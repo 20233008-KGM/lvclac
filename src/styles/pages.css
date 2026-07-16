@@ -1032,11 +1032,7 @@ html[data-zone='about'] body {
 
 .about-zone .site-footer {
   margin-top: var(--space-xl);
-}
-
-.about-zone .site-footer__panel {
   border-color: var(--about-border);
-  background: rgba(255, 255, 255, 0.02);
 }
 
 @media (max-width: 520px) {

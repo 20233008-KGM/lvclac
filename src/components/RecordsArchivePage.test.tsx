@@ -175,6 +175,14 @@ describe('RecordsArchiveView', () => {
     expect(orderCard).not.toContain(en.accountRecords.archiveOrderPrice)
   })
 
+  it('reserves the same memo column in both lane headers as the record cards', () => {
+    const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+    const memoSpacers = html.match(/class="records-timeline-head-memo"/g) ?? []
+
+    expect(memoSpacers).toHaveLength(2)
+    expect(html).toContain('records-timeline-scroll')
+  })
+
   it('does not render a saved-time column label because the vertical axis already carries time', () => {
     const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
     const headerTime = firstMatch(html, /<span class="records-timeline-head-time"[\s\S]*?<\/span>/)

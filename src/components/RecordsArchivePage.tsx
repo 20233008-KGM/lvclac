@@ -786,6 +786,7 @@ export function RecordsArchiveView({
                           <span>{copy.summaryLiquidationBuffer}</span>
                           <span>{copy.summaryLeverage}</span>
                         </div>
+                        <span className="records-timeline-head-memo" aria-hidden="true" />
                       </div>
                       <span className="records-timeline-head-time" aria-hidden="true" />
                       <div className="records-timeline-lane-head records-timeline-lane-head--orders">
@@ -795,87 +796,90 @@ export function RecordsArchiveView({
                           <span>{copy.archiveOrderContracts}</span>
                           <span>{copy.archiveOrderPrice}</span>
                         </div>
+                        <span className="records-timeline-head-memo" aria-hidden="true" />
                       </div>
                     </div>
-                    <div
-                      className={`records-timeline-grid${selectedCount > 0 ? ' records-timeline-grid--selecting' : ''}`}
-                    >
-                      {timelineRecords.map((entry, index) => {
-                        const entryKey = timelineKey(entry)
-                        const selected = selectedKeys.has(entryKey)
-                        const contextActive = menu != null && timelineKey(menu.entry) === entryKey
-                        return (
+                    <div className="records-timeline-scroll">
+                      <div
+                        className={`records-timeline-grid${selectedCount > 0 ? ' records-timeline-grid--selecting' : ''}`}
+                      >
+                        {timelineRecords.map((entry, index) => {
+                          const entryKey = timelineKey(entry)
+                          const selected = selectedKeys.has(entryKey)
+                          const contextActive = menu != null && timelineKey(menu.entry) === entryKey
+                          return (
+                            <div
+                              key={`${entry.type}-${entry.id}`}
+                              className={`records-timeline-row records-timeline-row--${entry.type}`}
+                              data-record-type={entry.type}
+                            >
+                              {entry.type === 'snapshot' ? (
+                                <div className="records-timeline-cell records-timeline-cell--snapshots">
+                                  <SnapshotTimelineCard
+                                    copy={copy}
+                                    disabled={snapshotActionsLocked || selectionBusy}
+                                    record={entry.record}
+                                    selected={selected}
+                                    contextActive={contextActive}
+                                    onToggleSelect={() => toggleAt(index)}
+                                    onActivate={(event) => activateAt(entry, index, event)}
+                                    onContextMenu={(event) => openContextMenu(event, entry)}
+                                    onEditMemo={() => onEditMemo?.(entry)}
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className="records-timeline-cell records-timeline-cell--snapshots records-timeline-cell--empty"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <time className="records-timeline-time" dateTime={entry.createdAt}>
+                                {formatSavedAtCompact(entry.createdAt)}
+                              </time>
+                              {entry.type === 'order' ? (
+                                <div className="records-timeline-cell records-timeline-cell--orders">
+                                  <OrderTimelineCard
+                                    copy={copy}
+                                    disabled={orderActionsLocked || selectionBusy}
+                                    record={entry.record}
+                                    selected={selected}
+                                    contextActive={contextActive}
+                                    onToggleSelect={() => toggleAt(index)}
+                                    onActivate={(event) => activateAt(entry, index, event)}
+                                    onContextMenu={(event) => openContextMenu(event, entry)}
+                                    onEditMemo={() => onEditMemo?.(entry)}
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className="records-timeline-cell records-timeline-cell--orders records-timeline-cell--empty"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {onLoadOlderRecords && (
+                        <>
+                          {/* 스크롤이 이 지점 근처에 닿으면 자동으로 다음 페이지 로드(무한 스크롤).
+                              버튼은 접근성·observer 미지원 대비 폴백으로 유지. */}
                           <div
-                            key={`${entry.type}-${entry.id}`}
-                            className={`records-timeline-row records-timeline-row--${entry.type}`}
-                            data-record-type={entry.type}
+                            ref={loadMoreSentinelRef}
+                            className="records-timeline-sentinel"
+                            aria-hidden="true"
+                          />
+                          <button
+                            type="button"
+                            className="link-btn account-record-load-more records-timeline-load-more"
+                            disabled={loadingOlderRecords}
+                            onClick={onLoadOlderRecords}
                           >
-                            {entry.type === 'snapshot' ? (
-                              <div className="records-timeline-cell records-timeline-cell--snapshots">
-                                <SnapshotTimelineCard
-                                  copy={copy}
-                                  disabled={snapshotActionsLocked || selectionBusy}
-                                  record={entry.record}
-                                  selected={selected}
-                                  contextActive={contextActive}
-                                  onToggleSelect={() => toggleAt(index)}
-                                  onActivate={(event) => activateAt(entry, index, event)}
-                                  onContextMenu={(event) => openContextMenu(event, entry)}
-                                  onEditMemo={() => onEditMemo?.(entry)}
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className="records-timeline-cell records-timeline-cell--snapshots records-timeline-cell--empty"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <time className="records-timeline-time" dateTime={entry.createdAt}>
-                              {formatSavedAtCompact(entry.createdAt)}
-                            </time>
-                            {entry.type === 'order' ? (
-                              <div className="records-timeline-cell records-timeline-cell--orders">
-                                <OrderTimelineCard
-                                  copy={copy}
-                                  disabled={orderActionsLocked || selectionBusy}
-                                  record={entry.record}
-                                  selected={selected}
-                                  contextActive={contextActive}
-                                  onToggleSelect={() => toggleAt(index)}
-                                  onActivate={(event) => activateAt(entry, index, event)}
-                                  onContextMenu={(event) => openContextMenu(event, entry)}
-                                  onEditMemo={() => onEditMemo?.(entry)}
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className="records-timeline-cell records-timeline-cell--orders records-timeline-cell--empty"
-                                aria-hidden="true"
-                              />
-                            )}
-                          </div>
-                        )
-                      })}
+                            {loadingOlderRecords ? copy.loadingMore : copy.loadOlderRecords}
+                          </button>
+                        </>
+                      )}
                     </div>
-                    {onLoadOlderRecords && (
-                      <>
-                        {/* 스크롤이 이 지점 근처에 닿으면 자동으로 다음 페이지 로드(무한 스크롤).
-                            버튼은 접근성·observer 미지원 대비 폴백으로 유지. */}
-                        <div
-                          ref={loadMoreSentinelRef}
-                          className="records-timeline-sentinel"
-                          aria-hidden="true"
-                        />
-                        <button
-                          type="button"
-                          className="link-btn account-record-load-more records-timeline-load-more"
-                          disabled={loadingOlderRecords}
-                          onClick={onLoadOlderRecords}
-                        >
-                          {loadingOlderRecords ? copy.loadingMore : copy.loadOlderRecords}
-                        </button>
-                      </>
-                    )}
                   </>
                 ) : (
                   <p className="account-records-empty">{copy.timelineEmpty}</p>

@@ -1604,9 +1604,43 @@ html[data-zone='about'] body {
 
 .records-archive-panel {
   --records-select-column: 1.5rem;
+  --records-memo-column: 28px;
+  --records-control-gap: 6px;
+  --records-snapshot-columns: minmax(0, 1.1fr) minmax(0, 0.8fr) minmax(0, 0.7fr);
+  --records-order-columns: minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
   display: grid;
-  gap: var(--space-md);
+  gap: 0;
+  padding: 0;
   overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .records-archive-page .records-archive {
+    width: min(100%, 1600px);
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) minmax(720px, 1040px);
+    gap: clamp(32px, 3.25vw, 52px);
+    align-items: start;
+    padding-right: clamp(28px, 5vw, 96px);
+    padding-left: clamp(28px, 5vw, 96px);
+  }
+
+  .records-archive .my-page-header {
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .records-archive .my-page-hero p {
+    width: max-content;
+    max-width: none;
+    white-space: nowrap;
+  }
+
+  .records-archive .my-page-console {
+    justify-self: end;
+    width: min(100%, 1040px);
+    margin-top: 110px;
+  }
 }
 
 .records-selection-bar {
@@ -1673,6 +1707,10 @@ html[data-zone='about'] body {
 .records-timeline-toolbar {
   flex-wrap: wrap;
   justify-content: space-between;
+  min-height: 56px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-elevated) 86%, var(--color-surface));
 }
 
 .records-timeline-counts {
@@ -1774,6 +1812,14 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
+.records-archive-panel > .records-date-anchor-bar,
+.records-archive-panel > .records-selection-bar,
+.records-archive-panel > .account-records-notice,
+.records-archive-panel > .account-records-error,
+.records-archive-panel > .account-records-empty {
+  margin: var(--space-sm) var(--space-md) 0;
+}
+
 .records-date-anchor-label {
   font-size: var(--font-size-sm);
   font-weight: 700;
@@ -1794,7 +1840,7 @@ html[data-zone='about'] body {
 
 .records-timeline-head {
   align-items: end;
-  padding: 0 4px 4px;
+  padding: 9px 20px;
   border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-dim);
   font-size: 11px;
@@ -1803,25 +1849,44 @@ html[data-zone='about'] body {
 
 .records-timeline-lane-head {
   display: grid;
-  grid-template-columns: var(--records-select-column) minmax(0, 1fr);
+  grid-template-columns:
+    var(--records-select-column)
+    minmax(0, 1fr)
+    var(--records-memo-column);
   align-items: end;
-  gap: 6px;
+  gap: var(--records-control-gap);
   min-width: 0;
+  padding: 0 8px;
+  border-right: 1px solid transparent;
+  border-left: 3px solid transparent;
+}
+
+.records-timeline-lane-head--snapshots {
+  margin-right: 4px;
+}
+
+.records-timeline-lane-head--orders {
+  margin-left: 4px;
 }
 
 .records-timeline-head-select {
   min-height: 1px;
 }
 
+.records-timeline-head-memo {
+  width: var(--records-memo-column);
+  min-height: 1px;
+}
+
 .records-timeline-head-fields {
   display: grid;
   align-items: end;
-  gap: 6px;
+  gap: var(--records-control-gap);
 }
 
 .records-timeline-head-fields--snapshots,
 .records-timeline-card--snapshot .records-timeline-fields {
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.8fr) minmax(0, 0.7fr);
+  grid-template-columns: var(--records-snapshot-columns);
 }
 
 .records-timeline-head-time {
@@ -1831,13 +1896,24 @@ html[data-zone='about'] body {
 
 .records-timeline-head-fields--orders,
 .records-timeline-card--order .records-timeline-fields {
-  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: var(--records-order-columns);
 }
 
 .records-timeline-head-fields span {
   overflow: hidden;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.records-timeline-scroll {
+  max-height: min(calc(100dvh - 255px), 520px);
+  min-height: 420px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 20px 18px;
+  scrollbar-color: color-mix(in srgb, var(--color-text-muted) 60%, transparent) transparent;
+  scrollbar-width: thin;
 }
 
 .records-timeline-grid {
@@ -1888,9 +1964,12 @@ html[data-zone='about'] body {
 
 .records-timeline-card {
   display: grid;
-  grid-template-columns: var(--records-select-column) minmax(0, 1fr) 28px;
+  grid-template-columns:
+    var(--records-select-column)
+    minmax(0, 1fr)
+    var(--records-memo-column);
   align-items: center;
-  gap: 6px;
+  gap: var(--records-control-gap);
   padding: 6px 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -2065,6 +2144,7 @@ html[data-zone='about'] body {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 1.25;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3468,6 +3548,12 @@ a.my-page-compare-card__action {
     padding: calc(var(--space-lg) + 36px) var(--space-sm) var(--space-lg);
   }
 
+  .records-archive .my-page-hero p {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
   .my-page-hero {
     grid-template-columns: 1fr;
   }
@@ -3584,6 +3670,13 @@ a.my-page-compare-card__action {
     display: none;
   }
 
+  .records-timeline-scroll {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+    padding: 0;
+  }
+
   /* 양쪽 분기 타임라인을 한쪽 정렬로 접는다 — 날짜 칩은 스냅샷·주문 모두 카드 위(행 순서 강제),
      기록 사이는 넓게 벌려 '날짜+카드'가 한 덩어리로 읽히게(근접성). DOM 순서는 불변 */
   .records-timeline-grid {
@@ -3622,7 +3715,7 @@ a.my-page-compare-card__action {
   }
 
   .records-timeline-card {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) var(--records-memo-column);
     align-items: center;
   }
 }

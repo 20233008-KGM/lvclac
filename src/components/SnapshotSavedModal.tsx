@@ -6,6 +6,7 @@ import '../styles/auth-dialog.css'
 interface SnapshotSavedModalProps {
   onClose: () => void
   onGoToRecords: () => void
+  onAddMemo: () => void
   /** 포커스 복원 대상 ref. 트리거 버튼이 비동기 저장 중 disabled로 바뀌어
    * document.activeElement가 유실될 수 있어 명시적으로 전달받는다. */
   restoreFocusRef?: RefObject<HTMLElement | null>
@@ -14,6 +15,7 @@ interface SnapshotSavedModalProps {
     title: string
     body: string
     goToRecords: string
+    addMemo: string
     close: string
   }
 }
@@ -21,6 +23,7 @@ interface SnapshotSavedModalProps {
 export function SnapshotSavedModal({
   onClose,
   onGoToRecords,
+  onAddMemo,
   restoreFocusRef,
   copy,
 }: SnapshotSavedModalProps) {
@@ -79,13 +82,14 @@ export function SnapshotSavedModal({
           {copy.title}
         </h2>
         <p className="snap-body">{copy.body}</p>
-        <button
-          type="button"
-          className="btn btn-primary snap-primary"
-          onClick={onGoToRecords}
-        >
-          {copy.goToRecords}
-        </button>
+        <div className="snapshot-saved-modal__actions">
+          <button type="button" className="btn btn-ghost" onClick={onAddMemo}>
+            {copy.addMemo}
+          </button>
+          <button type="button" className="btn btn-primary snap-primary" onClick={onGoToRecords}>
+            {copy.goToRecords}
+          </button>
+        </div>
       </div>
     </div>
   )

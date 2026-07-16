@@ -201,6 +201,19 @@ export interface Messages {
     snapshotSaveError: string
     orderSaved: string
     orderSaveError: string
+    memoAdd: string
+    memoEdit: string
+    memoNone: string
+    memoSnapshotTitle: string
+    memoOrderTitle: string
+    memoNumberSetTitle: string
+    memoSaving: string
+    memoSaved: string
+    memoEmptySaved: string
+    memoSaveError: string
+    memoAutoSaveHint: string
+    memoClose: string
+    memoPlaceholder: string
     deleteError: string
     orderSimulationLabel: string
     before: string

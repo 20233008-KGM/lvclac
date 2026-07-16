@@ -20,6 +20,7 @@ import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { formatLeverageValue, formatNumber, formatSavedAtCompact } from '../utils/format'
 import { TooltipBody } from './TooltipBody'
+import { MemoButton, MemoEditorWindow } from './MemoEditorWindow'
 import type { SnapshotProGateMode } from './SnapshotProGateModal'
 
 // 게이트/로그인 모달은 실제로 열릴 때만 로드(코드 스플리팅 — ResultPanel과 동일 패턴).
@@ -217,6 +218,7 @@ export function SaveDraftToggle() {
     setStorageMode,
     selectNumberSet,
     createNumberSet,
+    setNumberSetMemo,
     copyDraftBetweenStorageModes,
   } = useCalculator()
   const { user, isPro } = useAuth()
@@ -233,6 +235,7 @@ export function SaveDraftToggle() {
   const [numberSetMenuStyle, setNumberSetMenuStyle] = useState<CSSProperties | null>(null)
   const [gateMode, setGateMode] = useState<SnapshotProGateMode | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [memoSetId, setMemoSetId] = useState<string | null>(null)
   const numberSetPickerRef = useRef<HTMLButtonElement>(null)
   const numberSetMenuRef = useRef<HTMLDivElement>(null)
   const isCloud = storageMode === 'cloud'
@@ -427,6 +430,7 @@ export function SaveDraftToggle() {
       if (!(target instanceof Node)) return
       if (numberSetPickerRef.current?.contains(target)) return
       if (numberSetMenuRef.current?.contains(target)) return
+      if (target instanceof Element && target.closest('.memo-editor-window')) return
       setNumberSetMenuOpen(false)
     }
     const onKeyDown = (event: KeyboardEvent) => {
@@ -584,15 +588,21 @@ export function SaveDraftToggle() {
           const active = saveEnabled && storageMode === mode && activeNumberSetId === numberSet.id
           const { side, sideLabel, equityText, leverageText } = describeNumberSet(numberSet)
           return (
-            <button
+            <div
               key={`${mode}:${numberSet.id}`}
-              type="button"
               className={`draft-number-set-menu__item${
                 active ? ' draft-number-set-menu__item--active' : ''
               }`}
               role="menuitemradio"
+              tabIndex={0}
               aria-checked={active}
               onClick={() => handleNumberSetSelect(numberSet.storageMode, numberSet.id)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  handleNumberSetSelect(numberSet.storageMode, numberSet.id)
+                }
+              }}
             >
               <span
                 className={`draft-number-set-menu__side-dot draft-number-set-menu__side-dot--${side}`}
@@ -609,7 +619,12 @@ export function SaveDraftToggle() {
                 </span>
                 <span className="draft-number-set-menu__leverage">{leverageText ?? ''}</span>
               </span>
-            </button>
+              <MemoButton
+                memo={numberSet.memo}
+                label={`${numberSet.title} ${numberSet.memo ? t.accountRecords.memoEdit : t.accountRecords.memoAdd}`}
+                onClick={() => setMemoSetId(numberSet.id)}
+              />
+            </div>
           )
         })}
       </div>
@@ -805,7 +820,6 @@ export function SaveDraftToggle() {
               )}
             </span>
           </div>
-          {numberSetMenu}
           {saveEnabled && statusText && (
             <span className={`draft-save-status draft-save-status--${syncStatus}`}>
               <span className="draft-save-status__check" aria-hidden="true">
@@ -830,6 +844,20 @@ export function SaveDraftToggle() {
           </button>
         )}
       </div>
+      {numberSetMenu}
+      {memoSetId && (() => {
+        const numberSet = menuNumberSets.find((set) => set.id === memoSetId)
+        if (!numberSet) return null
+        return (
+          <MemoEditorWindow
+            key={`${numberSet.storageMode}:${numberSet.id}`}
+            title={`${numberSet.title} · ${t.accountRecords.memoNumberSetTitle}`}
+            initialMemo={numberSet.memo}
+            onSave={(memo) => setNumberSetMemo(numberSet.storageMode, numberSet.id, memo)}
+            onClose={() => setMemoSetId(null)}
+          />
+        )
+      })()}
 
       {modal === 'enable' && (
         <DraftSaveModal

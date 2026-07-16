@@ -2701,7 +2701,7 @@ input:focus:not(:focus-visible) {
 /* 아이템(원라인): [방향점][제목][금액·레버리지] */
 .draft-number-set-menu__item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto 28px;
   gap: 9px;
   align-items: center;
   width: 100%;
@@ -7026,3 +7026,33 @@ a.site-footer__link:hover {
     grid-row: 1;
   }
 }
+/* 메모 편집기: 슬롯·스냅샷·주문기록 공통 */
+.memo-note-button{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text-muted);cursor:pointer;opacity:0;transition:opacity 120ms ease,color 120ms ease,border-color 120ms ease,background 120ms ease}
+.memo-note-button svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.memo-note-button--filled{color:var(--accent);opacity:1}
+.draft-number-set-menu__item:hover .memo-note-button,.draft-number-set-menu__item:focus-within .memo-note-button,.records-timeline-card:hover .memo-note-button,.records-timeline-card:focus-within .memo-note-button,.memo-note-button:focus-visible,.draft-number-set-menu__item--active .memo-note-button{opacity:1}
+.memo-note-button:hover,.memo-note-button:focus-visible{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 38%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);outline:none}
+.memo-editor-window{position:fixed;z-index:1600;top:96px;right:24px;width:min(560px,calc(100vw - 24px));height:min(653px,calc(100vh - 120px));display:flex;flex-direction:column;padding:20px;border:1px solid color-mix(in srgb,var(--border) 82%,white 8%);border-radius:16px;background:var(--panel-bg);box-shadow:0 28px 80px rgb(0 0 0 / 52%)}
+.memo-editor-window.is-dragging{box-shadow:0 32px 96px rgb(0 0 0 / 64%)}
+.memo-editor-window__head{display:flex;align-items:center;min-height:38px;gap:12px;padding-bottom:14px;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent);cursor:grab;user-select:none;touch-action:none}
+.memo-editor-window__head:active{cursor:grabbing}
+.memo-editor-window__title{min-width:0;display:flex;align-items:center;gap:8px;color:var(--text)}
+.memo-editor-window__title svg{width:17px;height:17px;flex:0 0 auto;color:var(--accent);stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.memo-editor-window__title strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.memo-editor-window__status{margin-left:auto;font-size:11px;color:var(--text-muted);white-space:nowrap}
+.memo-editor-window__status::before{content:'';display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent)}
+.memo-editor-window__status--saving::before{background:#f4bd62;box-shadow:0 0 0 3px rgb(244 189 98 / 12%)}
+.memo-editor-window__status--error{color:#ff9a9a}
+.memo-editor-window__status--error::before{background:#ff6b6b;box-shadow:0 0 0 3px rgb(255 107 107 / 12%)}
+.memo-editor-window__close{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer}
+.memo-editor-window__close:hover,.memo-editor-window__close:focus-visible{color:var(--text);background:color-mix(in srgb,var(--border) 45%,transparent);outline:none}
+.memo-editor-window__close svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.memo-editor-window__textarea{min-height:0;flex:1 1 auto;width:100%;margin-top:16px;padding:16px;resize:none;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font:inherit;font-size:14px;line-height:1.65}
+.memo-editor-window__textarea:focus{border-color:var(--accent);outline:2px solid color-mix(in srgb,var(--accent) 16%,transparent)}
+.memo-editor-window__foot{display:flex;justify-content:space-between;gap:16px;padding-top:12px;color:var(--text-muted);font-size:11px}
+@media (max-width:720px),(hover:none){.memo-note-button{opacity:1}}
+@media (max-width:720px){.memo-editor-window{inset:12px;width:auto;height:auto;padding:16px}.memo-editor-window__head,.memo-editor-window__head:active{cursor:default;touch-action:auto}.memo-editor-window__status{max-width:132px;overflow:hidden;text-overflow:ellipsis}.memo-editor-window__foot span:last-child{display:none}}
+.snapshot-saved-modal__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.snapshot-saved-modal__actions .btn{width:100%}
+.account-record-order-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--color-success) 36%,transparent);border-radius:8px;background:color-mix(in srgb,var(--color-success) 9%,transparent);color:var(--color-text-muted);font-size:12px}
+.account-record-order-notice .link-btn{color:var(--color-success);white-space:nowrap}

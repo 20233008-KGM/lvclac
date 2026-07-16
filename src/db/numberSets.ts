@@ -15,6 +15,7 @@ interface NumberSetRow {
   id: string
   title: string
   inputs: unknown
+  memo?: string | null
   updated_at: string
   auto_snapshot_enabled?: boolean | null
   rollover_reminder_enabled?: boolean | null
@@ -37,13 +38,14 @@ export interface NumberSetRecord {
   id: string
   title: string
   inputs: CalculatorInputs
+  memo: string | null
   updatedAt: string
   autoSnapshotEnabled: boolean
   rollover: RolloverSettings
 }
 
 const NUMBER_SET_COLUMNS =
-  'id,title,inputs,updated_at,auto_snapshot_enabled,' +
+  'id,title,inputs,memo,updated_at,auto_snapshot_enabled,' +
   'rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date,rollover_pending'
 
 type NumberSetResult<T> =
@@ -79,6 +81,7 @@ function rowToRecord(row: NumberSetRow): NumberSetRecord {
     id: row.id,
     title: row.title || DEFAULT_SET_TITLE,
     inputs: parseStoredCalculatorInputs(row.inputs) ?? { mode: 'evaluate', positionSide: 'long' },
+    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
     updatedAt: row.updated_at,
     autoSnapshotEnabled: row.auto_snapshot_enabled ?? false,
     rollover: rowToRollover(row),
@@ -178,6 +181,27 @@ export async function renameNumberSet(
   const { data, error } = await supabase
     .from('number_sets')
     .update({ title: normalizeTitle(title) })
+    .eq('id', setId)
+    .eq('user_id', userId)
+    .select(NUMBER_SET_COLUMNS)
+    .maybeSingle<NumberSetRow>()
+
+  if (error) return { data: null, error: mapError(error) }
+  if (!data) return { data: null, error: 'number_set_not_found' }
+  return { data: rowToRecord(data), error: null }
+}
+
+export async function updateNumberSetMemo(
+  userId: string,
+  setId: string,
+  memo: string,
+): Promise<NumberSetResult<NumberSetRecord>> {
+  if (!supabase) return unavailable()
+
+  const normalized = memo.trim() ? memo.slice(0, 500) : null
+  const { data, error } = await supabase
+    .from('number_sets')
+    .update({ memo: normalized })
     .eq('id', setId)
     .eq('user_id', userId)
     .select(NUMBER_SET_COLUMNS)

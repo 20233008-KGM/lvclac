@@ -65,6 +65,7 @@ import {
   calcEntryPriceReturnRate,
   calcPositionUnrealizedPnl,
 } from '../calc/positionMetrics'
+import { MemoEditorWindow } from './MemoEditorWindow'
 
 const SnapshotSavedModal = lazy(() =>
   import('./SnapshotSavedModal').then((mod) => ({ default: mod.SnapshotSavedModal })),
@@ -756,12 +757,15 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [snapshotBusy, setSnapshotBusy] = useState(false)
   const [snapshotSavedModalOpen, setSnapshotSavedModalOpen] = useState(false)
+  const [savedSnapshotId, setSavedSnapshotId] = useState<string | null>(null)
   const [snapshotSaveNotice, setSnapshotSaveNotice] = useState<string | null>(null)
   // 비로그인/무료 유저가 스냅샷 저장을 눌렀을 때 뜨는 Pro 유도 모달의 모드.
   // null이면 닫힘, 'guest'=비로그인, 'free'=로그인·무료.
   const [snapshotGateMode, setSnapshotGateMode] = useState<'guest' | 'free' | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [orderSaveNotice, setOrderSaveNotice] = useState<string | null>(null)
+  const [savedOrderId, setSavedOrderId] = useState<string | null>(null)
+  const [memoTarget, setMemoTarget] = useState<{ type: 'snapshot' | 'order'; id: string } | null>(null)
   const [marginKindModalOpen, setMarginKindModalOpen] = useState(false)
   const [dontShowAgainMarginKind, setDontShowAgainMarginKind] = useState(false)
   const snapshotButtonRef = useRef<HTMLButtonElement>(null)
@@ -806,6 +810,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       return
     }
 
+    setSavedSnapshotId(result.data.id)
     setSnapshotSavedModalOpen(true)
     setSnapshotBusy(false)
   }, [activeCloudNumberSetId, evaluateResult, inputs, recordsRepository, t.accountRecords, userId])
@@ -838,6 +843,12 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           return
         }
         if (!created.data) return
+        setSavedOrderId(created.data.id)
+        setOrderSaveNotice(t.accountRecords.orderSaved)
+        window.setTimeout(() => {
+          setSavedOrderId((id) => (id === created.data.id ? null : id))
+          setOrderSaveNotice((notice) => (notice === t.accountRecords.orderSaved ? null : notice))
+        }, 6000)
 
         const race = completeOrderHistorySave(saveGeneration, created.data.id)
         if (race.deleteImmediately) {
@@ -845,7 +856,14 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
         }
       })
     },
-    [activeCloudNumberSetId, recordsRepository, t.accountRecords.orderSaveError, user?.autoSaveOrderHistory, userId],
+    [
+      activeCloudNumberSetId,
+      recordsRepository,
+      t.accountRecords.orderSaveError,
+      t.accountRecords.orderSaved,
+      user?.autoSaveOrderHistory,
+      userId,
+    ],
   )
 
   // 주문 미리보기(Enter)로 진입하는 순간, 총액 모드이고 증거금 성격이 아직
@@ -987,9 +1005,18 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           orderBlocked={orderBlocked}
         />
         {orderSaveNotice && (
-          <p className="account-records-error" role="alert">
-            {orderSaveNotice}
-          </p>
+          <div className="account-record-order-notice" role="status">
+            <span>{orderSaveNotice}</span>
+            {savedOrderId && (
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => setMemoTarget({ type: 'order', id: savedOrderId })}
+              >
+                {t.accountRecords.memoAdd}
+              </button>
+            )}
+          </div>
         )}
       </section>
 
@@ -1001,16 +1028,36 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
               title: t.accountRecords.savedModalTitle,
               body: t.accountRecords.snapshotSaved,
               goToRecords: t.accountRecords.savedModalGoToRecords,
+              addMemo: t.accountRecords.memoAdd,
               close: t.close,
             }}
             restoreFocusRef={snapshotButtonRef}
             onClose={() => setSnapshotSavedModalOpen(false)}
+            onAddMemo={() => {
+              if (!savedSnapshotId) return
+              setSnapshotSavedModalOpen(false)
+              setMemoTarget({ type: 'snapshot', id: savedSnapshotId })
+            }}
             onGoToRecords={() => {
               setSnapshotSavedModalOpen(false)
               navigate(MY_PAGE_PATH)
             }}
           />
         </Suspense>
+      )}
+      {memoTarget && userId && (
+        <MemoEditorWindow
+          key={`${memoTarget.type}:${memoTarget.id}`}
+          title={memoTarget.type === 'snapshot' ? t.accountRecords.memoSnapshotTitle : t.accountRecords.memoOrderTitle}
+          onSave={async (memo) => {
+            const result =
+              memoTarget.type === 'snapshot'
+                ? await recordsRepository.updateAccountSnapshotMemo(userId, memoTarget.id, memo)
+                : await recordsRepository.updateOrderHistoryMemo(userId, memoTarget.id, memo)
+            return result.error
+          }}
+          onClose={() => setMemoTarget(null)}
+        />
       )}
 
       {snapshotGateMode && (

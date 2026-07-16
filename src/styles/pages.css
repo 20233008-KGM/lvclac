@@ -1888,7 +1888,7 @@ html[data-zone='about'] body {
 
 .records-timeline-card {
   display: grid;
-  grid-template-columns: var(--records-select-column) minmax(0, 1fr);
+  grid-template-columns: var(--records-select-column) minmax(0, 1fr) 28px;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
@@ -1898,6 +1898,32 @@ html[data-zone='about'] body {
   color: var(--color-text);
   cursor: pointer;
   transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.records-detail-memo {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 7px 9px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.records-detail-memo > span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-detail-memo .memo-note-button {
+  opacity: 1;
 }
 
 .records-timeline-card:hover {

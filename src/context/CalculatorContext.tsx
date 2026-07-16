@@ -31,6 +31,7 @@ import {
   fetchNumberSets,
   fetchLatestNumberSet,
   renameNumberSet as renameCloudNumberSet,
+  updateNumberSetMemo as updateCloudNumberSetMemo,
   setNumberSetAutoSnapshot as setCloudNumberSetAutoSnapshot,
   setNumberSetRollover as setCloudNumberSetRollover,
   clearNumberSetRolloverPending as clearCloudNumberSetRolloverPending,
@@ -46,6 +47,7 @@ import {
   readActiveLocalNumberSetId,
   resolveActiveLocalNumberSetId,
   renameLocalNumberSet,
+  updateLocalNumberSetMemo,
   upsertLocalNumberSet,
   writeActiveLocalNumberSetId,
   writeLocalNumberSets,
@@ -71,6 +73,7 @@ export interface CalculatorNumberSet {
   id: string
   title: string
   inputs: CalculatorInputs
+  memo?: string | null
   updatedAt: string | null
   storageMode: SaveStorageMode
   // 자동 스냅샷 대상 여부. 클라우드 슬롯에서만 의미가 있고 로컬은 항상 false.
@@ -118,6 +121,7 @@ interface CalculatorContextValue {
   selectNumberSet: (mode: SaveStorageMode, setId: string) => Promise<string | null>
   createNumberSet: (mode: SaveStorageMode) => Promise<string | null>
   renameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => Promise<string | null>
+  setNumberSetMemo: (mode: SaveStorageMode, setId: string, memo: string) => Promise<string | null>
   setNumberSetAutoSnapshot: (
     mode: SaveStorageMode,
     setId: string,
@@ -727,6 +731,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
         setSyncStatus('saving')
         setSyncError(null)
+        const localSet = readActiveLocalNumberSet()
         const result = await saveNumberSet(activeUserId, localDraft, cloudSetIdRef.current)
         if (result.error) {
           setSyncStatus('error')
@@ -739,7 +744,17 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return 'number_set_save_empty'
         }
 
-        const savedSet = result.data
+        let savedSet = result.data
+        if (localSet?.memo) {
+          const memoResult = await updateCloudNumberSetMemo(activeUserId, savedSet.id, localSet.memo)
+          if (memoResult.error) {
+            setSyncStatus('error')
+            setSyncError(memoResult.error)
+            return memoResult.error
+          }
+          if (!memoResult.data) return 'number_set_not_found'
+          savedSet = memoResult.data
+        }
         cloudSetIdRef.current = savedSet.id
         setCloudSetId(savedSet.id)
         setHasCloudDraft(true)
@@ -788,6 +803,16 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return 'local_draft_save_failed'
         }
 
+        if (result.data.memo) {
+          const localSets = readLocalNumberSetState()
+          const localSetId = resolveActiveLocalNumberSetId(localStorage, localSets)
+          if (localSetId) {
+            writeLocalNumberSets(
+              localStorage,
+              updateLocalNumberSetMemo(localSets, localSetId, result.data.memo),
+            )
+          }
+        }
         cloudSetIdRef.current = result.data.id
         setCloudSetId(result.data.id)
         setHasCloudDraft(true)
@@ -927,6 +952,28 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       if (!renamedSet) return 'number_set_not_found'
       setCloudNumberSets((sets) =>
         sets.map((set) => (set.id === renamedSet.id ? renamedSet : set)),
+      )
+      return null
+    },
+    [activeUserId, refreshLocalNumberSetState],
+  )
+
+  const setNumberSetMemo = useCallback(
+    async (mode: SaveStorageMode, setId: string, memo: string): Promise<string | null> => {
+      if (mode === 'local') {
+        const nextSets = updateLocalNumberSetMemo(readLocalNumberSetState(), setId, memo)
+        writeLocalNumberSets(localStorage, nextSets)
+        refreshLocalNumberSetState()
+        return null
+      }
+
+      if (!activeUserId) return 'not_logged_in'
+      const result = await updateCloudNumberSetMemo(activeUserId, setId, memo)
+      if (result.error) return result.error
+      if (!result.data) return 'number_set_not_found'
+      const updatedSet = result.data
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === updatedSet.id ? updatedSet : set)),
       )
       return null
     },
@@ -1196,6 +1243,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         selectNumberSet,
         createNumberSet,
         renameNumberSet,
+        setNumberSetMemo,
         setNumberSetAutoSnapshot,
         setNumberSetRollover,
         clearNumberSetRolloverPending,

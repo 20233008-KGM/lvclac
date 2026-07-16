@@ -215,11 +215,13 @@ export function KitGallery() {
         <SnapshotSavedModal
           onClose={noop}
           onGoToRecords={noop}
+          onAddMemo={noop}
           copy={{
             eyebrow: t.accountRecords.savedModalEyebrow,
             title: t.accountRecords.savedModalTitle,
             body: t.accountRecords.snapshotSaved,
             goToRecords: t.accountRecords.savedModalGoToRecords,
+            addMemo: t.accountRecords.memoAdd,
             close: t.close,
           }}
         />

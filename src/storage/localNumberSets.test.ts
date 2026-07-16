@@ -8,6 +8,7 @@ import {
   loadLocalNumberSets,
   renameLocalNumberSet,
   resolveActiveLocalNumberSetId,
+  updateLocalNumberSetMemo,
   upsertLocalNumberSet,
   writeLocalNumberSets,
   writeActiveLocalNumberSetId,
@@ -41,6 +42,7 @@ describe('local number sets', () => {
         id: DEFAULT_LOCAL_NUMBER_SET_ID,
         title: '기본 세트',
         inputs: sampleInputs,
+        memo: null,
         updatedAt: '2026-07-10T01:02:03.000Z',
       },
     ])
@@ -88,5 +90,14 @@ describe('local number sets', () => {
       inputs: sampleInputs,
       updatedAt: '2026-07-10T02:00:00.000Z',
     })
+  })
+
+  it('stores a memo on one local set and clears it with empty text', () => {
+    const first = appendLocalNumberSet([], defaultInputs, { id: 'local-a' })
+    const withMemo = updateLocalNumberSetMemo(first.sets, 'local-a', '변동성 확대')
+    expect(withMemo[0].memo).toBe('변동성 확대')
+
+    const cleared = updateLocalNumberSetMemo(withMemo, 'local-a', '   ')
+    expect(cleared[0].memo).toBeNull()
   })
 })

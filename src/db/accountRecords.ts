@@ -60,6 +60,7 @@ export interface OrderHistoryRow {
   before_result: unknown
   after_result: unknown
   number_set_id?: string | null
+  memo?: string | null
   created_at: string
 }
 
@@ -71,6 +72,7 @@ export interface AccountSnapshotRow {
   source?: unknown
   source_local_date?: string | null
   number_set_id?: string | null
+  memo?: string | null
   created_at: string
 }
 
@@ -97,6 +99,7 @@ export interface OrderHistoryRecord {
   beforeResult: AccountRecordSummary
   afterResult: AccountRecordSummary
   numberSetId?: string | null
+  memo?: string | null
   createdAt: string
 }
 
@@ -108,6 +111,7 @@ export interface AccountSnapshotRecord {
   source?: AccountSnapshotSource
   sourceLocalDate?: string | null
   numberSetId?: string | null
+  memo?: string | null
   createdAt: string
 }
 
@@ -186,6 +190,7 @@ export function rowToOrderHistoryRecord(row: OrderHistoryRow): OrderHistoryRecor
     beforeResult: summaryFromUnknown(row.before_result),
     afterResult: summaryFromUnknown(row.after_result),
     numberSetId: row.number_set_id ?? null,
+    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
     createdAt: row.created_at,
   }
 }
@@ -200,6 +205,7 @@ export function rowToAccountSnapshotRecord(row: AccountSnapshotRow): AccountSnap
     source,
     sourceLocalDate: row.source_local_date ?? null,
     numberSetId: row.number_set_id ?? null,
+    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
     createdAt: row.created_at,
   }
 }
@@ -282,7 +288,7 @@ export function createAccountRecordsRepository(
       let query = client
         .from('order_history')
         .select(
-          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,created_at',
+          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,memo,created_at',
         )
         .eq('user_id', userId)
       if (filter.kind === 'slot') query = query.eq('number_set_id', filter.id)
@@ -316,7 +322,7 @@ export function createAccountRecordsRepository(
 
       let query = client
         .from('account_snapshots')
-        .select('id,title,inputs,result,source,source_local_date,number_set_id,created_at')
+        .select('id,title,inputs,result,source,source_local_date,number_set_id,memo,created_at')
         .eq('user_id', userId)
       if (filter.kind === 'slot') query = query.eq('number_set_id', filter.id)
       else if (filter.kind === 'unassigned') query = query.is('number_set_id', null)
@@ -419,7 +425,7 @@ export function createAccountRecordsRepository(
         .from('order_history')
         .insert(orderPayloadToInsert(userId, payload))
         .select(
-          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,created_at',
+          'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,memo,created_at',
         )
         .single<OrderHistoryRow>()
 
@@ -436,7 +442,7 @@ export function createAccountRecordsRepository(
       const { data, error } = await client
         .from('account_snapshots')
         .insert(snapshotPayloadToInsert(userId, payload))
-        .select('id,title,inputs,result,source,source_local_date,number_set_id,created_at')
+        .select('id,title,inputs,result,source,source_local_date,number_set_id,memo,created_at')
         .single<AccountSnapshotRow>()
 
       if (error) return { data: null, error: mapError(error) }
@@ -511,6 +517,44 @@ export function createAccountRecordsRepository(
 
       if (error) return { data: null, error: mapError(error) }
       return { data: true, error: null }
+    },
+
+    async updateOrderHistoryMemo(
+      userId: string,
+      id: string,
+      memo: string,
+    ): Promise<AccountRecordResult<string | null>> {
+      if (!client) return unavailable()
+      const normalized = memo.trim() ? memo.slice(0, 500) : null
+      const { data, error } = await client
+        .from('order_history')
+        .update({ memo: normalized })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select('memo')
+        .maybeSingle<{ memo: string | null }>()
+      if (error) return { data: null, error: mapError(error) }
+      if (!data) return { data: null, error: 'order_history_not_found' }
+      return { data: data.memo, error: null }
+    },
+
+    async updateAccountSnapshotMemo(
+      userId: string,
+      id: string,
+      memo: string,
+    ): Promise<AccountRecordResult<string | null>> {
+      if (!client) return unavailable()
+      const normalized = memo.trim() ? memo.slice(0, 500) : null
+      const { data, error } = await client
+        .from('account_snapshots')
+        .update({ memo: normalized })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select('memo')
+        .maybeSingle<{ memo: string | null }>()
+      if (error) return { data: null, error: mapError(error) }
+      if (!data) return { data: null, error: 'account_snapshot_not_found' }
+      return { data: data.memo, error: null }
     },
 
     async deleteAccountSnapshot(

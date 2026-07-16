@@ -18,6 +18,7 @@ import type { CalculatorInputs } from '../types'
 import { InputPanel } from './InputPanel'
 import { ResultPanel } from './ResultPanel'
 import { RecordsContextMenu, type RecordsContextMenuItem } from './RecordsContextMenu'
+import { MemoButton, MemoEditorWindow } from './MemoEditorWindow'
 import type { Messages } from '../i18n/types'
 import {
   formatLeverageValue,
@@ -131,11 +132,13 @@ function RecordsDetailPanel({
   copy,
   closeLabel,
   onClose,
+  onEditMemo,
 }: {
   detail: NonNullable<DetailSelection>
   copy: AccountRecordsCopy
   closeLabel: string
   onClose: () => void
+  onEditMemo: () => void
 }) {
   useModalFocusRestore()
   const [orderPhase, setOrderPhase] = useState<'before' | 'after'>('after')
@@ -245,6 +248,14 @@ function RecordsDetailPanel({
               </button>
             </div>
           )}
+          <div className="records-detail-memo">
+            <span>{detail.record.memo || copy.memoNone}</span>
+            <MemoButton
+              memo={detail.record.memo}
+              label={detail.record.memo ? copy.memoEdit : copy.memoAdd}
+              onClick={onEditMemo}
+            />
+          </div>
         </div>
         {/* key로 기록이 바뀌면 패널을 재마운트 — 입력 패널이 내부 표시 상태를 갖고 있어
             props만 바뀌면 화면 문자열이 안 갱신된다(읽기 전용이라 재마운트 비용 무해) */}
@@ -310,6 +321,7 @@ function SnapshotTimelineCard({
   onToggleSelect,
   onActivate,
   onContextMenu,
+  onEditMemo,
 }: {
   copy: AccountRecordsCopy
   disabled: boolean
@@ -319,6 +331,7 @@ function SnapshotTimelineCard({
   onToggleSelect: () => void
   onActivate: (event: ActivationEvent) => void
   onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void
+  onEditMemo: () => void
 }) {
   return (
     <article
@@ -341,6 +354,11 @@ function SnapshotTimelineCard({
         <TimelineValue value={formatPercent(record.result.toleranceRate)} />
         <TimelineValue value={formatLeverageValue(record.result.leverageRatio)} />
       </dl>
+      <MemoButton
+        memo={record.memo}
+        label={record.memo ? copy.memoEdit : copy.memoAdd}
+        onClick={onEditMemo}
+      />
     </article>
   )
 }
@@ -354,6 +372,7 @@ function OrderTimelineCard({
   onToggleSelect,
   onActivate,
   onContextMenu,
+  onEditMemo,
 }: {
   copy: AccountRecordsCopy
   disabled: boolean
@@ -363,6 +382,7 @@ function OrderTimelineCard({
   onToggleSelect: () => void
   onActivate: (event: ActivationEvent) => void
   onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void
+  onEditMemo: () => void
 }) {
   return (
     <article
@@ -385,6 +405,11 @@ function OrderTimelineCard({
         <TimelineValue value={formatNumber(record.orderContracts)} />
         <TimelineValue value={formatNumber(record.orderPrice)} />
       </dl>
+      <MemoButton
+        memo={record.memo}
+        label={record.memo ? copy.memoEdit : copy.memoAdd}
+        onClick={onEditMemo}
+      />
     </article>
   )
 }
@@ -418,6 +443,7 @@ export function RecordsArchiveView({
   onOpenSnapshotDetail,
   detail = null,
   onCloseDetail,
+  onEditMemo,
   selectedKeys = EMPTY_SELECTION,
   onSelectedKeysChange,
   onDeleteSelected,
@@ -456,6 +482,7 @@ export function RecordsArchiveView({
   onOpenSnapshotDetail: (record: AccountSnapshotRecord) => void
   detail?: DetailSelection
   onCloseDetail?: () => void
+  onEditMemo?: (entry: TimelineRecord) => void
   selectedKeys?: Set<string>
   onSelectedKeysChange?: (next: Set<string>) => void
   onDeleteSelected?: () => void
@@ -794,6 +821,7 @@ export function RecordsArchiveView({
                                   onToggleSelect={() => toggleAt(index)}
                                   onActivate={(event) => activateAt(entry, index, event)}
                                   onContextMenu={(event) => openContextMenu(event, entry)}
+                                  onEditMemo={() => onEditMemo?.(entry)}
                                 />
                               </div>
                             ) : (
@@ -816,6 +844,7 @@ export function RecordsArchiveView({
                                   onToggleSelect={() => toggleAt(index)}
                                   onActivate={(event) => activateAt(entry, index, event)}
                                   onContextMenu={(event) => openContextMenu(event, entry)}
+                                  onEditMemo={() => onEditMemo?.(entry)}
                                 />
                               </div>
                             ) : (
@@ -861,6 +890,21 @@ export function RecordsArchiveView({
               copy={copy}
               closeLabel={closeLabel ?? 'Close'}
               onClose={onCloseDetail ?? (() => undefined)}
+              onEditMemo={() =>
+                detail.type === 'snapshot'
+                  ? onEditMemo?.({
+                      type: 'snapshot',
+                      id: detail.record.id,
+                      createdAt: detail.record.createdAt,
+                      record: detail.record,
+                    })
+                  : onEditMemo?.({
+                      type: 'order',
+                      id: detail.record.id,
+                      createdAt: detail.record.createdAt,
+                      record: detail.record,
+                    })
+              }
             />
           )}
         </main>
@@ -927,6 +971,7 @@ export function RecordsArchivePage() {
   const [numberSetFilter, setNumberSetFilter] = useState<NumberSetFilter>({ kind: 'all' })
   const [slots, setSlots] = useState<{ id: string; title: string }[]>([])
   const [dateAnchor, setDateAnchor] = useState<string | null>(null)
+  const [memoEntry, setMemoEntry] = useState<TimelineRecord | null>(null)
 
   // 날짜 점프: 선택한 날(YYYY-MM-DD)의 끝(로컬 23:59:59.999)을 상한으로 삼아
   // 그 시각 이하의 기록만 조회한다. null이면 상한 없음(최신부터).
@@ -1240,6 +1285,7 @@ export function RecordsArchivePage() {
         onOpenSnapshotDetail={(record) => setDetail({ type: 'snapshot', record })}
         detail={detail}
         onCloseDetail={() => setDetail(null)}
+        onEditMemo={setMemoEntry}
         selectedKeys={selectedKeys}
         onSelectedKeysChange={setSelectedKeys}
         onDeleteSelected={selectedKeys.size > 0 ? () => setSelectionDeleteConfirm(true) : undefined}
@@ -1256,6 +1302,50 @@ export function RecordsArchivePage() {
           setDetail(null)
         }}
       />
+      {memoEntry && user && (
+        <MemoEditorWindow
+          key={`${memoEntry.type}:${memoEntry.id}`}
+          title={memoEntry.type === 'snapshot' ? t.accountRecords.memoSnapshotTitle : t.accountRecords.memoOrderTitle}
+          initialMemo={memoEntry.record.memo}
+          onSave={async (memo) => {
+            const result =
+              memoEntry.type === 'snapshot'
+                ? await recordsRepository.updateAccountSnapshotMemo(user.id, memoEntry.id, memo)
+                : await recordsRepository.updateOrderHistoryMemo(user.id, memoEntry.id, memo)
+            if (result.error !== null) return result.error
+            const savedMemo = result.data
+            if (memoEntry.type === 'snapshot') {
+              setSnapshotRecords((records) =>
+                records.map((record) =>
+                  record.id === memoEntry.id ? { ...record, memo: savedMemo } : record,
+                ),
+              )
+            } else {
+              setOrderRecords((records) =>
+                records.map((record) =>
+                  record.id === memoEntry.id ? { ...record, memo: savedMemo } : record,
+                ),
+              )
+            }
+            setDetail((current) =>
+              current?.type === 'snapshot' && memoEntry.type === 'snapshot' && current.record.id === memoEntry.id
+                ? { type: 'snapshot', record: { ...current.record, memo: savedMemo } }
+                : current?.type === 'order' && memoEntry.type === 'order' && current.record.id === memoEntry.id
+                  ? { type: 'order', record: { ...current.record, memo: savedMemo } }
+                  : current,
+            )
+            setMemoEntry((current) =>
+              current?.type === 'snapshot'
+                ? { ...current, record: { ...current.record, memo: savedMemo } }
+                : current?.type === 'order'
+                  ? { ...current, record: { ...current.record, memo: savedMemo } }
+                  : current,
+            )
+            return null
+          }}
+          onClose={() => setMemoEntry(null)}
+        />
+      )}
       <SiteFooter />
       {bulkDeleteConfirm && (
         <Suspense fallback={null}>

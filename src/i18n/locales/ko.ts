@@ -49,6 +49,7 @@ export const ko: Messages = {
       orderApply: '주문 계좌 반영',
       scenarioPreview: '시나리오 미리보기',
       scenarioApply: '손익 반영',
+      markUpdate: '현재가 갱신',
       multiple: '{count}개 입력값 변경',
       generic: '계산기 입력값 변경',
     },

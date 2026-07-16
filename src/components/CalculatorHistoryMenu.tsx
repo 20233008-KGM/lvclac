@@ -203,6 +203,7 @@ function historyActionLabel(
   before: CalculatorInputs,
   after: CalculatorInputs,
   messages: Messages,
+  diffs: VisibleHistoryDiff[],
 ): string | null {
   const copy = messages.calculatorHistory.diff
   if (!before.orderScenarioRevertSnapshot && after.orderScenarioRevertSnapshot) {
@@ -217,13 +218,19 @@ function historyActionLabel(
   if (before.scenarioRevertSnapshot && !after.scenarioRevertSnapshot) {
     return copy.scenarioApply
   }
+  if (
+    diffs.some((diff) => diff.key === 'currentPrice')
+    && diffs.some((diff) => diff.key === 'accountEval')
+  ) {
+    return copy.markUpdate
+  }
   return null
 }
 
 function describeHistoryMove(move: CalculatorHistoryMove, messages: Messages) {
   const copy = messages.calculatorHistory
   const diffs = visibleHistoryDiffs(move.before, move.after, messages)
-  const actionLabel = historyActionLabel(move.before, move.after, messages)
+  const actionLabel = historyActionLabel(move.before, move.after, messages, diffs)
 
   if (actionLabel) {
     const value = diffs.length > 0

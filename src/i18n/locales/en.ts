@@ -52,6 +52,7 @@ export const en: Messages = {
       orderApply: 'Order applied',
       scenarioPreview: 'Scenario preview',
       scenarioApply: 'P&L applied',
+      markUpdate: 'Mark updated',
       multiple: '{count} fields changed',
       generic: 'Calculator inputs changed',
     },

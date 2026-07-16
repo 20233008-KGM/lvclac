@@ -69,6 +69,7 @@ export interface Messages {
       orderApply: string
       scenarioPreview: string
       scenarioApply: string
+      markUpdate: string
       multiple: string
       generic: string
     }

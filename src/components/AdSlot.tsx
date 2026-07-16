@@ -5,6 +5,7 @@ import {
   isAdSenseConfigured,
   type AdVariant,
 } from '../config/ads'
+import { useGoogleConsent } from '../context/googleConsentState'
 import { ensureAdSenseScript } from '../lib/adsense'
 
 interface AdSlotProps {
@@ -27,10 +28,11 @@ function getSidebarStyle(variant: AdVariant): CSSProperties {
 }
 
 export function AdSlot({ slotId, variant = 'banner', label }: AdSlotProps) {
+  const { adsAllowed } = useGoogleConsent()
   const insRef = useRef<HTMLModElement>(null)
   const pushedRef = useRef(false)
   const adUnitId = getAdSlotUnitId(slotId)
-  const isLive = isAdSenseConfigured(slotId)
+  const isLive = isAdSenseConfigured(slotId) && adsAllowed
 
   useEffect(() => {
     if (!isLive || !insRef.current || pushedRef.current) return

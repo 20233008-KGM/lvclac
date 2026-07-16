@@ -91,9 +91,9 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 > **로그가 아니라, 항상 최신 전체 그림으로 덮어쓰는 요약.** 2,000자 내외로 유지(넘치면 오래된 서술을 쳐내 다이어트). 새 세션은 이거 하나만 읽어도 프로젝트 전체 흐름·현재 상태를 파악한다. 상세 진행은 아래 '최근 근황'에서 본다.
 
-**제품/배포**: LiqGuard는 공개 제품과 개발 제품을 영구 분리한다. `main → liqguard.com`은 로그인 없는 무료 계산기·단일 로컬 저장·사용법·광고 자리·`/terms`·`/privacy`를 제공한다. `dev → lvclac-dev → devpilgrm.liqguard.com`은 로그인·클라우드·기록·결제·크론 등 전체 기능을 보존한다. 두 환경 모두 정식 공개 전 `noindex`; 개발 사이트는 항상 `DEV` 배지를 표시한다.
+**제품/배포**: LiqGuard는 공개 제품과 개발 제품을 영구 분리한다. `main → liqguard.com`은 로그인 없는 무료 계산기·단일 로컬 저장·광고 자리와 `/guide`·`/formulas`·`/about`·`/terms`·`/privacy`를 제공한다. `dev → lvclac-dev → devpilgrm.liqguard.com`은 로그인·클라우드·기록·결제·크론 등 전체 기능을 보존한다. 두 환경 모두 정식 공개 전 `noindex`; 개발 사이트는 항상 `DEV` 배지를 표시한다.
 
-**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 597개다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 620개다. Supabase Auth Site URL은 개발 도메인으로 전환됨. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
+**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 617개다. 공개판은 Consent Mode v2 기본 거부, Google CMP 재진입, 동의 후 GA4·AdSense 실행, 자동 AdSense 메타·`ads.txt`, 운영자 정보 런칭 검사를 갖춘다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 620개다. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
 
 **핵심 기능**: 공개 사이트는 청산가 계산기, 상품군별 용어 프리셋, 주문 시나리오, undo/redo, 면책, 사용법 툴팁·`/guide`, 광고 레이아웃, 단일 브라우저 저장을 제공한다. 저장 UI는 `저장 안 함`·`로컬 저장` 2슬롯이며 첫 홈 방문에는 면책 확인 뒤 로컬 저장 여부와 계좌정보 보안 주의를 한 번 묻는다. 기존 활성 로컬 숫자세트는 공개 단일 저장 키로 1회 마이그레이션한다. 개발 사이트에는 계좌 스냅샷, 다중 숫자세트, 마이페이지, 온보딩, 롤오버, 피드백·관리자·Paddle 준비 기능이 남아 있다.
 
@@ -101,12 +101,19 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 **법인**: 주식회사 파필드소프트웨어 설립 중 — startbiz 서식 13종 완료, **일괄 전자서명(김규민 + 누나 감사 김에림) → 파주등기소 제출**만 남음(9~17시 운영시간 처리).
 
-**다음/미해결**: 개발 도메인 로그인·클라우드·cron smoke test. 8/7 공개 직전 AdSense/CMP·법적 문구 확인 후 `ALLOW_INDEXING=true`. Paddle·법인·롤오버 알림은 dev 유료기능 트랙으로 계속 진행.
+**다음/미해결**: 실제 법인명·대표자·본점 주소·사업자등록번호·개인정보 보호책임자 입력, AdSense/GA4 ID 입력, Google CMP(TCF v2.3) 게시, Vercel·Google 국외 이전 정보 법무 확인. 그 뒤 CMP 허용·거부·철회 실배포 네트워크 QA와 `ALLOW_INDEXING=true` 전환. 개발 도메인 로그인·클라우드·cron smoke test도 별도 남아 있다.
 
 ## 최근 근황
 
-- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,120토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
+- **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,320토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
 - **운영 규칙**: 근황은 **최신 5개만** 여기 둔다. 새 항목을 맨 위에 추가해 6개가 되면 **가장 오래된 1개를 [`docs/project-history.md`](./project-history.md)로 잘라 이동**(요약 말고 원문 그대로). 전체 흐름은 위 Live Summary가 책임지므로, 근황은 마음 놓고 짧게 유지한다.
+
+**2026-07-17 — v1 푸터·공개 콘텐츠·법무·AdSense/GA4 동의 준비**
+- 푸터를 제품·회사·법무 3영역으로 복구하고 계산기·가이드·수식·소개·약관·개인정보·개인정보/쿠키 설정과 문의 이메일을 연결했다. 실제 법인 정보는 `PublicOperatorInfo` 환경변수에서 한 번만 읽고 미확정 값은 숨긴다. `/about`은 로그인 없이 운영 주체·목적·수식 투명성·계산 한계·문의처를 설명하며 `/guide`는 로컬 브라우저 저장만 안내한다.
+- 약관·개인정보처리방침을 한영으로 확장해 계산 보조 도구 범위, 투자자문 아님, 결과 검증, localStorage 위험, Vercel 호스팅/Web Analytics, GA4, AdSense 광고 쿠키, 처리위탁·국외 이전·권리·보호책임자·구제 절차를 표로 공개한다. Vercel 집계 차원과 Google 광고 쿠키/맞춤광고 해제도 명시했다.
+- Consent Mode v2 네 항목을 Google 태그보다 먼저 기본 거부하고, Google CMP 결과가 미확정이면 GA4·광고 요청을 막는다. 비규제 지역도 명시 선택 전에는 막고 자체 설정창을 제공하며, 규제 지역은 Google CMP 철회 메시지를 재호출한다. AdSense 요청은 `pauseAdRequests=1` 뒤 동의 시에만 `push()`·재개한다.
+- 공개 6경로 sitemap·canonical·페이지별 title/description/OG를 추가하고 Vercel 리다이렉트를 해제했다. `ALLOW_INDEXING=true` 또는 실 AdSense 설정인데 필수 법인 정보가 비면 production build가 실패하며, 올바른 client ID에서 AdSense account meta와 `ads.txt`를 자동 생성한다. 외부 입력값과 대시보드 작업은 `docs/public-launch-checklist.md`에 정리했다.
+- 검증: vitest **617/617**, production build, 변경 파일 eslint, 누락 법인정보 build 차단, 테스트 publisher ID의 noindex 제거·메타·`ads.txt` 생성 확인. 전체 eslint는 기존 `.recovery` 파싱 오류와 dev 전용 기존 규칙 위반으로 실패. 현재 세션에는 브라우저 제어 실행 도구와 Notion 도구가 없어 모바일/데스크톱 클릭 QA와 Work Log/Task 갱신은 미수행.
 
 **2026-07-17 — 공개판 저장 2슬롯·첫 방문 로컬 저장 동의·사용법 복원**
 - `maintenance/public`의 축약 저장 UI를 dev 슬롯 스타일에 맞춰 **`저장 안 함`·`로컬 저장` 두 아이콘 슬롯**으로 정리했다. 입력 패널 하단의 한 줄 설명, 클라우드·숫자세트·도움말·별도 삭제 링크는 공개판에서 제거하고, 저장 중지 시 기존 로컬 값은 보존한다.
@@ -132,11 +139,5 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - **재활용**: 페이지네이션 백엔드(offset+`.range()` N+1 오버페치·`hasMore`·`fetchRecordCounts`·로컬 offset 보정)는 이미 완성 → `loadOlderRecords`에 트리거만 붙임. 신규 훅 `src/hooks/useInfiniteScroll.ts`(IntersectionObserver sentinel, rootMargin 200px, onLoadMore ref로 최신참조, IO 미지원 시 no-op → jsdom 테스트 안전). 날짜는 조회 4함수에 선택적 `before?`(ISO 상한) 추가→`.lte('created_at', before)`, 슬롯 필터와 AND, 생략 시 하위호환.
 - 컨테이너: `dateAnchor`(YYYY-MM-DD)→`beforeBound`(그 날 끝 23:59:59.999 ISO) memo, load 함수 deps 포함→날짜 변경 시 첫 페이지 재조회+상세 닫음. UI는 툴바 네이티브 `<input type=date>`(max=오늘)+활성 시 "{date} 이전 기록" 칩+"최신으로" 해제. 시맨틱 '선택일 이하'라 빈 날 골라도 그 이전 이어짐.
 - 검증: tsc·vitest 608/608(워크트리 제외, accountRecords에 before→.lte 2건 추가). dev /records 로그인 실측 — 07-11 선택 시 스냅샷 6→4·07.14 제외·칩 표시, 최신으로 복귀 정상, 콘솔 에러 0, 패널 360px 툴바 줄바꿈·오버플로 0. **무한스크롤 자동로딩은 현재 계정 13개(20개 미만)라 hasMore 미발동 → sentinel/버튼 정상 부재로 실측 불가**(단위테스트+코드 커버). 공유 워크트리라 내 8파일만 명시 스테이징.
-
-**2026-07-15 — '계산결과/주문시나리오 공유' 기능 디자인 시안(방향 탐색만, 미구현)** (커밋 예정)
-- 사용자 요청: 공유 기능을 만들기 전 "받은 사람이 링크 누르면 뭐가 떠야 하나"부터 설계. Claude in Chrome에 로컬서버(HTML 목업) 띄워 시안 4종을 사용자 피드백 반복하며 다듬음. **구현은 안 함** — 백로그 등재 후 종료.
-- **합의 방침**: 방식은 **B안**(짧은링크+DB+서버 OG 이미지) — 카톡 링크 미리보기 카드가 바이럴 핵심(A안=URL에 다 담기는 미리보기 안 뜸). **프라이버시**: 계좌잔고·진입가·체결가·유지증거금률 등 개인정보는 화면서 전면 제외 → 노출값은 청산가/하락 여유%/방향/레버리지/현재가만. **CTA는 '내 포지션 점검하기'**(입력값 미공유라 남 계산기에 값 프리필 불가 → 받은 사람이 자기 포지션 넣게 유도). **톤**: 청산가 숫자 흰색, 빨강은 작은 점 표식만(겁주지 않게).
-- **재활용 확인**: 읽기전용 렌더는 `RecordsArchivePage.tsx`의 `RecordsDetailPanel`(InputPanel/ResultPanel onChange=noop + 주문 전/후 토글)을 모달 껍데기만 벗겨 재사용 가능. CalculatorInputs에 accountEval(계좌잔고) 등 민감필드 있어 공유용은 가림 필요.
-- 산출물: 시안 HTML을 repo에 보관 `docs/design/2026-07-15-share-feature-mockups.html`(4종+합의방침 헤더 주석). 백로그 등재 '계산결과·주문시나리오 공유 기능 (언젠가)' P3/Feature(예상 2~3일). **미결정**: ②결과우선형 vs ③계산기통째형 택1·③빨강 톤다운·④2열 계약수/레버리지 노출범위.
 
 <!-- 근황은 최신 5개만. 더 오래된 기록은 docs/project-history.md 참조. -->

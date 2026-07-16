@@ -1,13 +1,17 @@
 import { useEffect } from 'react'
 import { CONTACT_EMAIL } from '../config/site'
+import {
+  PUBLIC_OPERATOR_INFO,
+  publicOperatorDetails,
+  publicOperatorDisplayName,
+} from '../config/operator'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { AuthButton } from './auth/AuthButton'
-import { LegalLinks } from './ServiceDisclaimer'
+import { SiteFooter } from './SiteFooter'
 import '../styles/pages.css'
 
 export function AboutPage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const navigate = useNavigate()
   const about = t.about
 
@@ -29,14 +33,11 @@ export function AboutPage() {
           >
             {about.backToHome}
           </button>
-          <div className="about-header__actions">
-            <AuthButton variant="header" />
-          </div>
         </div>
 
         <div className="about-header__brand">
           <div className="about-header__meta">
-            <p className="about-header__company">{about.company}</p>
+            <p className="about-header__company">{publicOperatorDisplayName()}</p>
             <p className="about-header__label">{about.title}</p>
           </div>
           <h1 className="about-header__headline">{about.tagline}</h1>
@@ -58,15 +59,31 @@ export function AboutPage() {
           ))}
         </div>
 
+        <section className="about-panel about-operator">
+          <h2 className="about-panel__title">
+            {locale === 'ko' ? '운영 정보' : 'Operator information'}
+          </h2>
+          <dl className="about-operator__list">
+            {publicOperatorDetails(locale).map((detail) => (
+              <div key={detail.label}>
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="about-panel__paragraph">
+            {locale === 'ko'
+              ? `${PUBLIC_OPERATOR_INFO.productName}는 ${PUBLIC_OPERATOR_INFO.brandName}가 설계·운영합니다.`
+              : `${PUBLIC_OPERATOR_INFO.productName} is designed and operated by ${PUBLIC_OPERATOR_INFO.brandName}.`}
+          </p>
+        </section>
+
         <p className="about-contact">
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>
       </main>
 
-      <footer className="about-footer">
-        <p className="about-footer__copy">{t.footer.copyright}</p>
-        <LegalLinks variant="footer" />
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

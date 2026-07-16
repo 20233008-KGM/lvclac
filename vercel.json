@@ -1,8 +1,5 @@
 {
   "redirects": [
-    { "source": "/guide", "destination": "/", "permanent": false },
-    { "source": "/formulas", "destination": "/", "permanent": false },
-    { "source": "/about", "destination": "/", "permanent": false },
     { "source": "/my", "destination": "/", "permanent": false },
     { "source": "/billing", "destination": "/", "permanent": false },
     { "source": "/records", "destination": "/", "permanent": false },

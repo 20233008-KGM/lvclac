@@ -1,22 +1,37 @@
 import { loadEnv } from 'vite'
 import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import {
+  adsTxtContent,
+  transformPublicIndexHtml,
+} from './scripts/publicLaunchAssets'
+import { assertPublicLaunchReady } from './scripts/publicLaunchValidation'
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const allowIndexing = env.ALLOW_INDEXING === 'true'
+  const adsenseClient = env.VITE_ADSENSE_CLIENT?.trim()
+  const generatedAdsTxt = adsTxtContent(adsenseClient)
+
+  if (command === 'build' && mode === 'production') {
+    assertPublicLaunchReady(env)
+  }
 
   return {
     plugins: [
       react(),
       {
-        name: 'html-robots-meta',
+        name: 'public-launch-assets',
         transformIndexHtml(html) {
-          if (allowIndexing || html.includes('name="robots"')) return html
-          return html.replace(
-            '<head>',
-            '<head>\n    <meta name="robots" content="noindex, nofollow" />',
-          )
+          return transformPublicIndexHtml(html, { allowIndexing, adsenseClient })
+        },
+        generateBundle() {
+          if (!generatedAdsTxt) return
+          this.emitFile({
+            type: 'asset',
+            fileName: 'ads.txt',
+            source: generatedAdsTxt,
+          })
         },
       },
     ],

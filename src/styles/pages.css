@@ -948,6 +948,32 @@ html[data-zone='about'] body {
   margin-top: 0.65em;
 }
 
+.about-operator__list {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+}
+
+.about-operator__list > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.42fr) minmax(0, 1fr);
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--about-border);
+  font-size: var(--font-size-sm);
+  line-height: 1.65;
+}
+
+.about-operator__list dt {
+  color: var(--about-text-dim);
+}
+
+.about-operator__list dd {
+  margin: 0;
+  color: var(--about-text-muted);
+  overflow-wrap: anywhere;
+}
+
 .about-contact {
   margin: var(--space-sm) 0 0;
   font-size: var(--font-size-sm);
@@ -1002,6 +1028,22 @@ html[data-zone='about'] body {
 
 .about-zone .about-footer .site-footer__legal .link-btn:hover {
   color: var(--about-accent);
+}
+
+.about-zone .site-footer {
+  margin-top: var(--space-xl);
+}
+
+.about-zone .site-footer__panel {
+  border-color: var(--about-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 520px) {
+  .about-operator__list > div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
 }
 
 .my-page-shell {

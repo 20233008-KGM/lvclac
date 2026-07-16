@@ -6,15 +6,19 @@ function source(path: string) {
   return readFileSync(resolve(path), 'utf8')
 }
 
-describe('public guide entry points', () => {
-  it('renders the header how-to button and routes /guide to GuidePage', () => {
+describe('public content entry points', () => {
+  it('renders the header how-to button and routes all public content pages', () => {
     const app = source('src/App.tsx')
     const button = source('src/components/HowToUseButton.tsx')
 
     expect(app).toContain("import { HowToUseButton } from './components/HowToUseButton'")
     expect(app).toContain('<HowToUseButton />')
     expect(app).toContain('const guidePath = isGuidePath(pathname)')
-    expect(app).toContain('return <GuidePage />')
+    expect(app).toContain('<GuidePage />')
+    expect(app).toContain('const formulasPath = isFormulasPath(pathname)')
+    expect(app).toContain('<FormulasPage />')
+    expect(app).toContain('const aboutPath = isAboutPath(pathname)')
+    expect(app).toContain('<AboutPage />')
     expect(button).toContain('href={GUIDE_PATH}')
     expect(button).toContain('navigate(GUIDE_PATH)')
   })

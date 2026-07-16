@@ -1,10 +1,23 @@
 /// <reference types="node" />
 
 import { next } from '@vercel/functions'
-import { PRIVACY_PATH, TERMS_PATH } from './src/config/routes.js'
+import {
+  ABOUT_PATH,
+  FORMULAS_PATH,
+  GUIDE_PATH,
+  PRIVACY_PATH,
+  TERMS_PATH,
+} from './src/config/routes.js'
 
 const NO_INDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
-const PUBLIC_PATHS = ['/', TERMS_PATH, PRIVACY_PATH]
+const PUBLIC_PATHS = [
+  '/',
+  GUIDE_PATH,
+  FORMULAS_PATH,
+  ABOUT_PATH,
+  TERMS_PATH,
+  PRIVACY_PATH,
+]
 
 function allowIndexing(): boolean {
   return process.env.ALLOW_INDEXING === 'true'

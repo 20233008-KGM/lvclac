@@ -24,6 +24,26 @@
     />
     <meta property="og:locale" content="ko_KR" />
     <meta property="og:locale:alternate" content="en_US" />
+    <script>
+      window.dataLayer = window.dataLayer || []
+      window.gtag =
+        window.gtag ||
+        function () {
+          window.dataLayer.push(arguments)
+        }
+      window.gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 2000,
+      })
+      window.gtag('set', 'ads_data_redaction', true)
+      window.adsbygoogle = window.adsbygoogle || []
+      window.adsbygoogle.pauseAdRequests = 1
+      window.googlefc = window.googlefc || {}
+      window.googlefc.callbackQueue = window.googlefc.callbackQueue || []
+    </script>
     <style>
       :root {
         color-scheme: dark;

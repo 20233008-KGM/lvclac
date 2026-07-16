@@ -12,6 +12,8 @@ import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
 import { FieldHintBanner } from './components/FieldHintBanner'
 import { GuidePage } from './components/GuidePage'
+import { FormulasPage } from './components/FormulasPage'
+import { AboutPage } from './components/AboutPage'
 import { HowToUseButton } from './components/HowToUseButton'
 import {
   fieldHintActive,
@@ -22,7 +24,13 @@ import {
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { PublicLegalPage } from './components/PublicLegalPage'
-import { isGuidePath, isLegalPath } from './config/routes'
+import { PublicPageMetadata } from './components/PublicPageMetadata'
+import {
+  isAboutPath,
+  isFormulasPath,
+  isGuidePath,
+  isLegalPath,
+} from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
 import { usePublicCalculator } from './context/PublicCalculatorContext'
@@ -400,22 +408,66 @@ function AppRouter() {
   const pathname = usePathname()
   const legalKind = isLegalPath(pathname)
   const guidePath = isGuidePath(pathname)
+  const formulasPath = isFormulasPath(pathname)
+  const aboutPath = isAboutPath(pathname)
 
   useEffect(() => {
-    if (pathname !== '/' && !guidePath && legalKind !== 'terms' && legalKind !== 'privacy') {
+    if (
+      pathname !== '/' &&
+      !guidePath &&
+      !formulasPath &&
+      !aboutPath &&
+      legalKind !== 'terms' &&
+      legalKind !== 'privacy'
+    ) {
       window.history.replaceState(null, '', '/')
     }
-  }, [guidePath, legalKind, pathname])
+  }, [aboutPath, formulasPath, guidePath, legalKind, pathname])
+
+  const metadata = <PublicPageMetadata pathname={pathname} />
 
   if (guidePath) {
-    return <GuidePage />
+    return (
+      <>
+        {metadata}
+        <GuidePage />
+      </>
+    )
+  }
+
+  if (formulasPath) {
+    return (
+      <>
+        {metadata}
+        <FormulasPage />
+      </>
+    )
+  }
+
+  if (aboutPath) {
+    return (
+      <>
+        {metadata}
+        <AboutPage />
+      </>
+    )
   }
 
   if (legalKind === 'terms' || legalKind === 'privacy') {
-    return <PublicLegalPage kind={legalKind} />
+    return (
+      <>
+        {metadata}
+        <PublicLegalPage kind={legalKind} />
+      </>
+    )
   }
 
-  return <CalculatorApp />
+  return (
+    <>
+      {metadata}
+      <CalculatorApp />
+    </>
+  )
 }
 
 function App() {

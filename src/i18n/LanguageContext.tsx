@@ -101,9 +101,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!t) return
     document.documentElement.lang = t.htmlLang
-    document.title = t.siteTitle
-    const meta = document.querySelector('meta[name="description"]')
-    if (meta) meta.setAttribute('content', t.siteDescription)
   }, [t])
 
   useEffect(() => {

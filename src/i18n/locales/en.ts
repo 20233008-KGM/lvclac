@@ -1173,9 +1173,9 @@ export const en: Messages = {
       {
         title: 'Saving inputs',
         paragraphs: [
-          'When signed out, “Save inputs” keeps values in this browser only.',
-          'When signed in, choose This device or Cloud before enabling saving.',
-          'Turning it off deletes values in the currently selected storage location.',
+          'The public version has no sign-in or cloud storage. Inputs are kept in this browser localStorage only when you choose local saving.',
+          'Switching to “Don’t save” pauses automatic saving but keeps the existing draft. Clear all inputs to remove both the visible values and saved calculator draft.',
+          'On shared devices or in an environment with malicious software or browser extensions, saved account-related information may be exposed. Choose carefully.',
           'Pairs well with “Daily mark-to-market”: keep yesterday’s contracts and margin, then update only the mark price.',
         ],
       },
@@ -1185,29 +1185,30 @@ export const en: Messages = {
   },
   about: {
     company: 'Farfield Software',
-    title: 'About us',
-    tagline: 'The best experience—for a few',
+    title: 'About the service',
+    tagline: 'Complex risk calculations, made verifiable',
     lead:
-      'We build products that are truly needed, and make the world a little better through them. Farfield Software builds software that a smaller group of people use for a long time—not tools everyone tries once.',
+      'LiqGuard is a calculation aid for quickly reviewing estimated futures liquidation price and margin headroom. It works without placing your inputs in a server account, and publishes the formulas and limitations behind its results.',
     sections: [
       {
-        title: 'What we do',
+        title: 'Why it exists',
         paragraphs: [
-          'We design and ship productivity tools for real workflows. Accuracy and responsiveness matter more than long feature lists.',
+          'Reviewing futures risk requires combining equity, price, contract, and margin figures from several broker screens. LiqGuard puts that repeatable check into one workspace.',
+          'The calculator does not make trading decisions for you. Always verify figures against official exchange and broker information before placing an order.',
         ],
       },
       {
-        title: 'How we work',
+        title: 'Transparent calculations',
         paragraphs: [
-          'We do not build for everyone. We focus on a small audience and tailor the experience deeply for them.',
-          'We care more that existing users get better than that more people sign up. Before adding features, we make what exists more precise and faster.',
+          'The formulas used for liquidation, margin, and leverage are published on a dedicated page. Direct margin inputs and rate-based or fixed margin modes are treated separately.',
+          'We clearly state where results can differ, including fees, cross margin, multiple simultaneous instruments, broker rounding, and liquidation policy.',
         ],
       },
       {
-        title: 'What’s next',
+        title: 'Privacy and operations',
         paragraphs: [
-          'We are a small team building software that fits the people who need it.',
-          'Dev requests, bug reports, and suggestions are always welcome.',
+          'The public version does not require an account or cloud storage. If you choose saving, inputs remain in this browser, while analytics and advertising choices are managed separately.',
+          'You can use the public contact email for error reports, calculation questions, or privacy requests.',
         ],
       },
     ],

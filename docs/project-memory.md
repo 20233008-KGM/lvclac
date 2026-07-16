@@ -93,7 +93,7 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 
 **제품/배포**: LiqGuard는 공개 제품과 개발 제품을 영구 분리한다. `main → liqguard.com`은 로그인 없는 무료 계산기·단일 로컬 저장·광고 자리·`/terms`·`/privacy`만 제공한다. `dev → lvclac-dev → devpilgrm.liqguard.com`은 로그인·클라우드·기록·결제·크론 등 전체 기능을 보존한다. 두 환경 모두 정식 공개 전 `noindex`; 개발 사이트는 항상 `DEV` 배지를 표시한다.
 
-**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 592개다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 620개다. Supabase Auth Site URL은 개발 도메인으로 전환됨. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
+**스택/인프라**: React + TypeScript + Vite, Vercel 프로젝트 2개. `main` Production에는 Supabase/service-role/cron env와 billing/cron API가 없고 public 테스트는 627개다. `dev`는 Supabase(DB·Auth), Vercel 서버리스 함수·크론, Paddle 준비 코드를 유지하며 테스트 630개다. Supabase Auth Site URL은 개발 도메인으로 전환됨. **주의: Vercel은 api/ TS를 파일단위 컴파일만 함 → 서버 상대 import는 `.js`, API/middleware는 Node 타입 참조 필요**.
 
 **핵심 기능**: 공개 사이트는 청산가 계산기, 상품군별 용어 프리셋, 주문 시나리오, undo/redo, 면책, 광고 레이아웃, 단일 브라우저 저장만 제공한다. 기존 활성 로컬 숫자세트는 공개 단일 저장 키로 1회 마이그레이션한다. 개발 사이트에는 계좌 스냅샷, 다중 숫자세트, 마이페이지, 온보딩, 롤오버, 피드백·관리자·Paddle 준비 기능이 남아 있다.
 
@@ -108,11 +108,11 @@ Notion을 최신 기준으로 사용합니다. 작업 결과는 관련 Task, Rel
 - **읽기 비용 게이지**: 위 'Live Summary' + 아래 근황 5개 합산 대략 **≈2,190토큰** (한글 글자수 ÷ 2.5로 어림 — 정확한 계량 아님, 매 세션 갱신). 이 값이 크게 넘으면 근황을 더 쳐내라는 신호.
 - **운영 규칙**: 근황은 **최신 5개만** 여기 둔다. 새 항목을 맨 위에 추가해 6개가 되면 **가장 오래된 1개를 [`docs/project-history.md`](./project-history.md)로 잘라 이동**(요약 말고 원문 그대로). 전체 흐름은 위 Live Summary가 책임지므로, 근황은 마음 놓고 짧게 유지한다.
 
-**2026-07-17 — 포커스 완료형 undo/redo 실행 기록 + 2줄 팝오버, main/dev 동시 반영** (main 48a366b·f674aeb·b62245d, dev 435cc98·c1fdb87·d992b8d)
+**2026-07-17 — 포커스 완료형 undo/redo 실행 기록 + 2줄 팝오버, main/dev 동시 반영** (main 4493269·3dddcde·023cbb6·4fa2e70, dev 435cc98·c1fdb87·d992b8d·bc3ff2a)
 - 숫자 입력은 계산 결과를 계속 실시간 갱신하되, focus 동안 `pendingEdit`으로만 유지하고 blur·Enter 때 시작값과 최종값이 다를 때 한 번만 undo 스택에 커밋한다. 원래 값으로 돌아오면 기록하지 않고 기존 redo도 보존한다. 스테퍼 클릭·길게 누르기·드래그는 제스처 종료 시 한 단계로 확정한다.
 - 기록 항목은 누적 현재상태 비교를 폐기하고 각 커밋의 인접 `before/after`를 사용한다. 팝오버는 첫 줄 `필드명/최종값`, 둘째 줄 `이전값 → 최종값` 2줄 구조와 tabular 숫자 정렬을 사용하며, 주문·손익·현재가 갱신 등 다중 변경은 의미 있는 작업명으로 요약한다. hover/focus와 모바일 터치 진입, 100개 메모리 한도는 유지한다.
 - 입력창 내부 `Ctrl+Z`는 네이티브 텍스트 편집에 맡기고 blur 이후에만 전역 undo/redo가 작동한다. 공통 코어/UI 커밋을 dev에 cherry-pick하고 공개판 `PublicCalculatorContext`와 dev `CalculatorContext`를 별도 연결해 로그인·클라우드·자동 저장 주문기록 삭제 로직을 보존했다.
-- 검증: main vitest **607/607**·build, dev **630/630**·build. 로컬 Chromium QA 2/2 — 타이핑 중 결과 실시간 변경/목록 미생성, blur 후 단일 기록, 값 원복 무기록, 인접 diff, Ctrl+Z/redo, hover 연결, 390px 모바일 폭·터치 오픈 확인. 현재 세션에 Notion 도구가 노출되지 않아 Work Log/Task 기록은 repo 기록으로 대체했다.
+- 검증: main vitest **627/627**·build, dev **630/630**·build. 로컬 Chromium QA — 타이핑 중 결과 실시간 변경/목록 미생성, blur 후 단일 기록, 값 원복 무기록, 인접 diff, Ctrl+Z/redo, hover 연결, 390px 모바일 폭·터치 오픈 확인. 터치가 합성한 `mouseenter`가 메뉴를 즉시 닫던 문제도 실제 hover 지원 기기에서만 hover 이벤트를 처리하도록 수정했다. 현재 세션에 Notion 도구가 노출되지 않아 Work Log/Task 기록은 repo 기록으로 대체했다.
 
 **2026-07-16 — Porkbun 개발 도메인 DNS 연결 완료**
 - AutoCorp Chrome으로 Porkbun `liqguard.com` DNS에 `A devpilgrm 76.76.21.21`(TTL 600)을 추가했다. 기존 11개 레코드는 유지되고 전체 12개로 증가했다.

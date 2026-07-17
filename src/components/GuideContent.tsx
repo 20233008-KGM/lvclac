@@ -9,12 +9,6 @@ interface GuideContentProps {
 export function GuideContent({ guide }: GuideContentProps) {
   return (
     <div className="guide-content">
-      {guide.description.split('\n').map((line, lineIndex) => (
-        <p key={lineIndex} className="guide-page__desc">
-          {line}
-        </p>
-      ))}
-
       {guide.sections.map((section, sectionIndex) => (
         <section
           key={`${sectionIndex}-${section.title}`}

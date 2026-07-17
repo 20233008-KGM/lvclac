@@ -1,51 +1,26 @@
-import { useEffect } from 'react'
 import { CONTACT_EMAIL } from '../config/site'
+import { ABOUT_PATH } from '../config/routes'
 import {
   PUBLIC_OPERATOR_INFO,
   publicOperatorDetails,
   publicOperatorDisplayName,
 } from '../config/operator'
-import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { SiteFooter } from './SiteFooter'
-import '../styles/pages.css'
+import { PublicInfoShell } from './PublicInfoShell'
 
 export function AboutPage() {
   const { t, locale } = useLanguage()
-  const navigate = useNavigate()
   const about = t.about
 
-  useEffect(() => {
-    document.documentElement.dataset.zone = 'about'
-    return () => {
-      delete document.documentElement.dataset.zone
-    }
-  }, [])
-
   return (
-    <div className="about-zone">
-      <header className="about-header">
-        <div className="about-header__top">
-          <button
-            type="button"
-            className="about-header__back"
-            onClick={() => navigate('/')}
-          >
-            {about.backToHome}
-          </button>
-        </div>
-
-        <div className="about-header__brand">
-          <div className="about-header__meta">
-            <p className="about-header__company">{publicOperatorDisplayName()}</p>
-            <p className="about-header__label">{about.title}</p>
-          </div>
-          <h1 className="about-header__headline">{about.tagline}</h1>
-          <p className="about-header__lead">{about.lead}</p>
-        </div>
-      </header>
-
-      <main className="about-main">
+    <PublicInfoShell
+      activePath={ABOUT_PATH}
+      tone="company"
+      eyebrow={`${publicOperatorDisplayName()} · ${about.title}`}
+      title={about.tagline}
+      lead={about.lead}
+    >
+      <div className="about-main">
         <div className="about-sections">
           {about.sections.map((section) => (
             <section key={section.title} className="about-panel">
@@ -81,9 +56,7 @@ export function AboutPage() {
         <p className="about-contact">
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </div>
+    </PublicInfoShell>
   )
 }

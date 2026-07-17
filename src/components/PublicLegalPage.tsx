@@ -4,8 +4,9 @@ import {
   publicOperatorDisplayName,
 } from '../config/operator'
 import type { LegalPageKind } from '../config/routes'
+import { PRIVACY_PATH, TERMS_PATH } from '../config/routes'
 import { useLanguage, type Locale } from '../i18n'
-import { SiteFooter } from './SiteFooter'
+import { PublicInfoShell } from './PublicInfoShell'
 
 type PublicLegalKind = Extract<LegalPageKind, 'terms' | 'privacy'>
 
@@ -485,20 +486,20 @@ export function PublicLegalPage({ kind }: { kind: PublicLegalKind }) {
   const { locale } = useLanguage()
   const page = buildDocuments(locale)[kind]
   const homeLabel = locale === 'ko' ? '계산기로 돌아가기' : 'Back to calculator'
+  const eyebrow = locale === 'ko' ? 'LiqGuard · 법적 고지' : 'LiqGuard · Legal'
+  const activePath = kind === 'terms' ? TERMS_PATH : PRIVACY_PATH
 
   return (
-    <>
-      <main className="public-legal-page">
-        <article className="public-legal-card">
-          <header className="public-legal-header">
-            <p className="public-legal-brand">
-              {PUBLIC_OPERATOR_INFO.brandName} · {PUBLIC_OPERATOR_INFO.productName}
-            </p>
-            <h1>{page.title}</h1>
-            <p className="public-legal-effective">{page.effective}</p>
-            <p className="public-legal-intro">{page.intro}</p>
-          </header>
-          <div className="public-legal-sections">
+    <PublicInfoShell
+      activePath={activePath}
+      tone="legal"
+      eyebrow={eyebrow}
+      title={page.title}
+      lead={page.intro}
+    >
+      <div className="public-legal-document">
+        <p className="public-legal-effective">{page.effective}</p>
+        <div className="public-legal-sections">
             {page.sections.map((section) => (
               <section key={section.title}>
                 <h2>{section.title}</h2>
@@ -548,15 +549,11 @@ export function PublicLegalPage({ kind }: { kind: PublicLegalKind }) {
                 )}
               </section>
             ))}
-          </div>
-          <a className="btn btn-primary public-legal-home" href="/">
-            {homeLabel}
-          </a>
-        </article>
-      </main>
-      <div className="public-legal-footer">
-        <SiteFooter />
+        </div>
+        <a className="btn btn-primary public-legal-home" href="/">
+          {homeLabel}
+        </a>
       </div>
-    </>
+    </PublicInfoShell>
   )
 }

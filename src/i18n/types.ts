@@ -148,8 +148,11 @@ export interface Messages {
     publicConsentActionLabel: string
     publicConsentOff: string
     publicConsentOffDescription: string
+    publicConsentOffConfirm: string
     publicConsentLocal: string
     publicConsentLocalDescription: string
+    publicConsentLocalConfirm: string
+    publicConsentSelectPrompt: string
     publicConsentFootnote: string
     cleared: string
     enableModalTitle: string

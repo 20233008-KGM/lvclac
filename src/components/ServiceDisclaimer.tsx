@@ -182,7 +182,10 @@ function PublicSaveConsentModal({
 }) {
   const { t } = useLanguage()
   const { setSaveEnabled, pauseSaving } = usePublicCalculator()
+  const [selectedDecision, setSelectedDecision] = useState<PublicSaveConsent | null>(null)
   const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const copy = t.draftSave
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -192,18 +195,42 @@ function PublicSaveConsentModal({
     }
   }, [])
 
-  const chooseOff = () => {
-    pauseSaving()
-    onDecision('off')
+  const selectDecision = (decision: PublicSaveConsent) => {
+    setSelectedDecision(decision)
+    setSubmitError(null)
   }
 
-  const chooseLocal = async () => {
+  const confirmDecision = async () => {
+    if (!selectedDecision || busy) return
+
+    setSubmitError(null)
+    if (selectedDecision === 'off') {
+      pauseSaving()
+      onDecision('off')
+      return
+    }
+
     setBusy(true)
-    await setSaveEnabled(true, 'local')
-    onDecision('local')
+    try {
+      const error = await setSaveEnabled(true, 'local')
+      if (error) {
+        setSubmitError(copy.statusError)
+        setBusy(false)
+        return
+      }
+      onDecision('local')
+    } catch {
+      setSubmitError(copy.statusError)
+      setBusy(false)
+    }
   }
 
-  const copy = t.draftSave
+  const confirmLabel =
+    selectedDecision === 'off'
+      ? copy.publicConsentOffConfirm
+      : selectedDecision === 'local'
+        ? copy.publicConsentLocalConfirm
+        : copy.publicConsentSelectPrompt
 
   return (
     <div className="disclaimer-overlay" role="presentation">
@@ -278,15 +305,22 @@ function PublicSaveConsentModal({
 
         <div
           className="public-save-consent-actions"
-          role="group"
+          role="radiogroup"
           aria-label={copy.publicConsentActionLabel}
         >
-          <button
-            type="button"
-            className="public-save-consent-choice"
-            disabled={busy}
-            onClick={chooseOff}
+          <label
+            className={`public-save-consent-choice ${
+              selectedDecision === 'off' ? 'public-save-consent-choice--selected' : ''
+            }`}
           >
+            <input
+              type="radio"
+              name="public-save-consent"
+              value="off"
+              checked={selectedDecision === 'off'}
+              disabled={busy}
+              onChange={() => selectDecision('off')}
+            />
             <span className="public-save-consent-choice-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
                 <path d="M5 5 19 19" />
@@ -297,14 +331,25 @@ function PublicSaveConsentModal({
               <strong>{copy.publicConsentOff}</strong>
               <span>{copy.publicConsentOffDescription}</span>
             </span>
-          </button>
-          <button
-            type="button"
-            className="public-save-consent-choice public-save-consent-choice--primary"
-            disabled={busy}
-            onClick={() => void chooseLocal()}
-            aria-busy={busy}
+            <span className="public-save-consent-choice-check" aria-hidden="true">
+              <svg viewBox="0 0 12 12" fill="none">
+                <path d="m2.5 6 2.1 2.1 4.9-5" />
+              </svg>
+            </span>
+          </label>
+          <label
+            className={`public-save-consent-choice ${
+              selectedDecision === 'local' ? 'public-save-consent-choice--selected' : ''
+            }`}
           >
+            <input
+              type="radio"
+              name="public-save-consent"
+              value="local"
+              checked={selectedDecision === 'local'}
+              disabled={busy}
+              onChange={() => selectDecision('local')}
+            />
             <span className="public-save-consent-choice-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
                 <path d="M5 4h11l3 3v13H5z" />
@@ -316,8 +361,27 @@ function PublicSaveConsentModal({
               <strong>{copy.publicConsentLocal}</strong>
               <span>{copy.publicConsentLocalDescription}</span>
             </span>
-          </button>
+            <span className="public-save-consent-choice-check" aria-hidden="true">
+              <svg viewBox="0 0 12 12" fill="none">
+                <path d="m2.5 6 2.1 2.1 4.9-5" />
+              </svg>
+            </span>
+          </label>
         </div>
+        {submitError && (
+          <p className="public-save-consent-error" role="alert">
+            {submitError}
+          </p>
+        )}
+        <button
+          type="button"
+          className="btn btn-primary public-save-consent-confirm"
+          disabled={!selectedDecision || busy}
+          aria-busy={busy}
+          onClick={() => void confirmDecision()}
+        >
+          {busy ? copy.statusSaving : confirmLabel}
+        </button>
         <p className="public-save-consent-footnote">{copy.publicConsentFootnote}</p>
       </div>
     </div>

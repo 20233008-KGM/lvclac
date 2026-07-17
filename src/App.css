@@ -3454,17 +3454,19 @@ input:focus:not(:focus-visible) {
 }
 
 .public-save-consent-choice {
+  position: relative;
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   min-width: 0;
   min-height: 68px;
-  padding: 12px;
+  padding: 12px 38px 12px 12px;
   border: 1px solid var(--color-border-subtle);
   border-radius: 11px;
   background: color-mix(in srgb, var(--color-bg) 40%, transparent);
   color: var(--color-text);
+  font: inherit;
   text-align: left;
   cursor: pointer;
   transition:
@@ -3474,18 +3476,34 @@ input:focus:not(:focus-visible) {
     box-shadow var(--transition-fast);
 }
 
-.public-save-consent-choice:hover:not(:disabled) {
+.public-save-consent-choice > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.public-save-consent-choice:not(:has(input:disabled)):hover {
   border-color: var(--color-border);
   background: var(--color-surface-2);
   transform: translateY(-1px);
 }
 
-.public-save-consent-choice:disabled {
+.public-save-consent-choice:has(input:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 68%, transparent);
+  outline-offset: 2px;
+}
+
+.public-save-consent-choice:has(input:disabled) {
   cursor: not-allowed;
   opacity: 0.62;
 }
 
-.public-save-consent-choice--primary {
+.public-save-consent-choice--selected {
   border-color: color-mix(in srgb, var(--color-primary) 72%, transparent);
   background: linear-gradient(
     145deg,
@@ -3497,7 +3515,7 @@ input:focus:not(:focus-visible) {
     inset 0 1px rgba(255, 255, 255, 0.035);
 }
 
-.public-save-consent-choice--primary:hover:not(:disabled) {
+.public-save-consent-choice--selected:not(:has(input:disabled)):hover {
   border-color: var(--color-primary-hover);
   background: linear-gradient(
     145deg,
@@ -3518,7 +3536,7 @@ input:focus:not(:focus-visible) {
   color: var(--color-text-dim);
 }
 
-.public-save-consent-choice--primary .public-save-consent-choice-icon {
+.public-save-consent-choice--selected .public-save-consent-choice-icon {
   border-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
   background: var(--color-primary-muted);
   color: color-mix(in srgb, var(--color-primary) 70%, #fff 30%);
@@ -3554,12 +3572,65 @@ input:focus:not(:focus-visible) {
   line-height: 1.4;
 }
 
-.public-save-consent-choice--primary strong + span {
+.public-save-consent-choice--selected strong + span {
   color: color-mix(in srgb, var(--color-primary) 52%, var(--color-text-muted));
 }
 
+.public-save-consent-choice-check {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  color: transparent;
+  transform: translateY(-50%);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.public-save-consent-choice-check svg {
+  width: 10px;
+  height: 10px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.public-save-consent-choice--selected .public-save-consent-choice-check {
+  border-color: color-mix(in srgb, var(--color-primary) 78%, transparent);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.public-save-consent-error {
+  margin: 10px 0 0;
+  color: var(--color-danger);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.public-save-consent-confirm {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+}
+
+.public-save-consent-confirm:disabled {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.48;
+}
+
 .public-save-consent-footnote {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   color: color-mix(in srgb, var(--color-text-dim) 82%, transparent);
   font-size: 10.5px;
   line-height: 1.5;

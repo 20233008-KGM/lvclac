@@ -18,6 +18,11 @@ describe('calculator modal overlays', () => {
     expect(text).toContain('<CloudIcon')
     expect(text).toContain('public-save-consent-trust-row')
     expect(text).toContain('public-save-consent-warning')
+    expect(text).toContain('useState<PublicSaveConsent | null>(null)')
+    expect(text.match(/type="radio"/g)).toHaveLength(2)
+    expect(text).toContain('confirmDecision')
+    expect(text).toContain('disabled={!selectedDecision || busy}')
+    expect(text).not.toContain('onClick={chooseOff}')
   })
 
   it('renders clear-all confirmation through the document body portal', () => {

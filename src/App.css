@@ -743,6 +743,15 @@ input:focus:not(:focus-visible) {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+.calculator-history-menu::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: var(--space-xs);
+}
+
 .calculator-history-menu__title {
   padding: var(--space-sm);
   border-bottom: 1px solid var(--color-border-subtle);

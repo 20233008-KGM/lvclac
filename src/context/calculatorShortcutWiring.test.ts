@@ -35,6 +35,7 @@ describe('calculator undo/redo shortcut wiring', () => {
 
   it('wires a header history menu with hover, focus, and context-menu access', () => {
     const text = source('src/App.tsx')
+    const css = source('src/App.css')
 
     expect(text).toContain('function CalculatorHistoryMenu')
     expect(text).toContain('undoHistory')
@@ -48,6 +49,9 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).not.toContain('onClick={() => setMenuOpen((open) => !open)}')
     expect(text).toContain('calculator-history-menu')
     expect(text).toContain('calculator-history-btn')
+    expect(css).toMatch(
+      /\.calculator-history-menu::before\s*\{[^}]*bottom:\s*100%;[^}]*height:\s*var\(--space-xs\);/s,
+    )
   })
 
   it('removes component-local z shortcut listeners that block Shift+Z', () => {

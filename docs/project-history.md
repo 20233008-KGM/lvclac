@@ -9,6 +9,12 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-17 — 공개 푸터 SaaS형 리디자인 적용 + AutoCorp screenshot 복구**
+- 실제 계산기 화면을 기준으로 푸터 시안을 반복 조정한 뒤 `SiteFooter.tsx`·`App.css`에 적용했다. 카드형 외곽을 제거하고 LiqGuard 로고/설명, Product·Company·Legal 3열, 확정값만 표시하는 Operator 한 줄, 저작권·약관·개인정보·면책 재진입을 319~321px 높이로 정리했다. Google CMP 재호출과 내부 라우팅 동작은 보존했다.
+- 구버전 푸터는 런타임에 죽은 코드를 남기지 않고 적용 직전 HEAD를 annotated Git tag `archive/public-footer-before-2026-07-redesign`로 보존했다. 필요 시 해당 태그의 `SiteFooter.tsx`와 CSS를 파일 단위로 복원할 수 있다.
+- 병행 수정: AutoCorp Chrome의 `Page.captureScreenshot` 무한 대기에 단계별 timeout·오래된 debugger detach·1회 재시도를 추가하고 개인 플러그인 `0.2.0+codex.20260716195100`으로 재설치했다(autocorp-chrome 커밋 `191407b`). 실캡처가 기존 20초 timeout에서 약 0.17~0.2초 PNG 반환으로 정상화됐다.
+- 검증: public vitest **617/617**, production build, 대상 eslint 통과. 새 AutoCorp 탭에서 런타임 합성 없는 실제 React 푸터 높이 321px·브랜드/설명 간격 11px·Operator/3열 탐색을 DOM과 PNG로 확인했다.
+
 **2026-07-17 — 공개판 저장 2슬롯·첫 방문 로컬 저장 동의·사용법 복원**
 - `maintenance/public`의 축약 저장 UI를 dev 슬롯 스타일에 맞춰 **`저장 안 함`·`로컬 저장` 두 아이콘 슬롯**으로 정리했다. 입력 패널 하단의 한 줄 설명, 클라우드·숫자세트·도움말·별도 삭제 링크는 공개판에서 제거하고, 저장 중지 시 기존 로컬 값은 보존한다.
 - 신규·기존 방문자 모두 공개 홈에서 배포 후 한 번 로컬 저장 여부를 고른다. 기존 필수 면책을 먼저 확인한 뒤 `저장 안 함`/`로컬 저장`을 즉시 적용하며, 계좌 평가금·증거금률·계약 수가 브라우저 localStorage에만 저장되고 공용 기기·악성 프로그램·확장 프로그램 환경에서는 노출될 수 있음을 고지한다. 결정은 `leverage-public-save-consent-v1`에 기록하고 저장소 접근 실패는 앱 사용을 막지 않는다.

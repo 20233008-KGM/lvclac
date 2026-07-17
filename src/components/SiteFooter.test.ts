@@ -47,16 +47,17 @@ describe('public-lite footer links', () => {
 
   it('keeps the footer brand mark optically balanced with the wordmark', () => {
     expect(css).toMatch(/\.site-footer__wordmark \{[\s\S]*?gap: 9px;/)
-    expect(css).toMatch(/\.site-footer__mark \{[^}]*width: 22px;[^}]*height: 22px;/)
+    expect(css).toMatch(/\.site-footer__mark \{[^}]*width: 20px;[^}]*height: 20px;/)
     expect(css).not.toMatch(/\.site-footer__mark \{[^}]*filter:/)
     expect(css).not.toMatch(/\.site-footer__mark \{[^}]*opacity:/)
   })
 
-  it('uses a footer-specific indigo and plum palette instead of dimming the favicon', () => {
-    expect(footerMark).toContain('#7785d6')
-    expect(footerMark).toContain('#806179')
-    expect(footerMark).toContain('#eef1f7')
-    expect(footerMark).not.toContain('#ff1005')
+  it('uses a footer-specific charcoal palette with a restrained red accent', () => {
+    expect(footerMark).toContain('#65708a')
+    expect(footerMark).toContain('#404857')
+    expect(footerMark).toContain('#a84b4a')
+    expect(footerMark).toContain('#e15e52')
+    expect(footerMark).toContain('#eef0f4')
   })
 
   it('does not restore removed paid-plan destinations', () => {

@@ -6555,8 +6555,8 @@ body.scrub-drag-active * {
 .site-footer__mark {
   display: block;
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
 
 .site-footer__tagline {

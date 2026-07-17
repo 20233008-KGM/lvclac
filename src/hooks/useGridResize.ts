@@ -28,6 +28,7 @@ import {
   measureMinColumnWidths,
   MIN_CALC_MID_FALLBACK,
   MIN_EDGE_X,
+  reconcileLayoutForColumnMins,
   scaleGeometry,
   scaleGridLayout,
   sideVars,
@@ -136,7 +137,7 @@ function setAdColumnA11y(hidden: { left: boolean; right: boolean }) {
   }
 }
 
-export function useGridResize(persist: boolean) {
+export function useGridResize(persist: boolean, contentVersion?: unknown) {
   const containerRef = useRef<HTMLElement | null>(null)
   const geometryRef = useRef<Geometry | null>(null)
   const layoutRef = useRef<GridLayout>(DEFAULT_LAYOUT)
@@ -167,6 +168,32 @@ export function useGridResize(persist: boolean) {
       minMid: Math.ceil(GRID_HANDLE_WIDTH * 3 + inputMin + resultMin),
     }
   }, [])
+
+  const reconcileColumnMins = useCallback(() => {
+    refreshColumnMins()
+    const cols = columnMinsRef.current
+    if (!cols) return
+
+    let geo = geometryRef.current
+    if (!geo) {
+      geo = measureGeometry(containerRef.current)
+      geometryRef.current = geo
+    }
+    if (!geo) return
+
+    const current = layoutRef.current
+    const next = reconcileLayoutForColumnMins(
+      current,
+      geo,
+      viewportWidth(),
+      cols.inputMin,
+      cols.resultMin,
+    )
+    if (next === current) return
+
+    layoutRef.current = next
+    setLayout(next)
+  }, [refreshColumnMins])
 
   const hasGaps = hasCustomGaps(layout)
   const isCustom = isLayoutCustom(layout)
@@ -320,23 +347,8 @@ export function useGridResize(persist: boolean) {
     if (viewportWidth() < DESKTOP_MIN) return
     if (dragRef.current) return
 
-    refreshColumnMins()
-    const geo = geometryRef.current
-    const cols = columnMinsRef.current
-    if (!geo || !cols) return
-
-    const current = layoutRef.current
-    const W = viewportWidth()
-    const leftX = current.leftX ?? geo.leftX0
-    const rightX = current.rightX ?? geo.rightX0
-    const mid = W - leftX - rightX
-    if (mid <= 0) return
-
-    const split = clampSplitForColumnMins(current.split, mid, cols.inputMin, cols.resultMin)
-    if (split !== current.split) {
-      setLayout((prev) => ({ ...prev, split }))
-    }
-  }, [geoVersion, layoutVersion, refreshColumnMins])
+    reconcileColumnMins()
+  }, [contentVersion, geoVersion, layoutVersion, reconcileColumnMins])
 
   const applyDrag = useCallback((handle: GridResizeHandle, clientX: number) => {
     const geo = geometryRef.current
@@ -355,20 +367,21 @@ export function useGridResize(persist: boolean) {
       if (handle === 'left') {
         const maxLeftX = W - rightX - minMid
         const nextLeftX = clamp(clientX, MIN_EDGE_X, maxLeftX)
-        const mid = W - nextLeftX - rightX
-        const split = clampSplitForColumnMins(prev.split, mid, inputMin, resultMin)
+        const columnMid = Math.max(0, W - nextLeftX - rightX - GRID_HANDLE_WIDTH * 3)
+        const split = clampSplitForColumnMins(prev.split, columnMid, inputMin, resultMin)
         return { ...prev, manual, leftX: nextLeftX, rightX, split }
       }
       if (handle === 'right') {
         const maxRightX = W - leftX - minMid
         const nextRightX = clamp(W - clientX, MIN_EDGE_X, maxRightX)
-        const mid = W - leftX - nextRightX
-        const split = clampSplitForColumnMins(prev.split, mid, inputMin, resultMin)
+        const columnMid = Math.max(0, W - leftX - nextRightX - GRID_HANDLE_WIDTH * 3)
+        const split = clampSplitForColumnMins(prev.split, columnMid, inputMin, resultMin)
         return { ...prev, manual, leftX, rightX: nextRightX, split }
       }
       const mid = W - leftX - rightX
       if (mid <= 0) return { ...prev, manual }
-      const { minSplit, maxSplit } = computeSplitBounds(mid, inputMin, resultMin)
+      const columnMid = Math.max(0, mid - GRID_HANDLE_WIDTH * 3)
+      const { minSplit, maxSplit } = computeSplitBounds(columnMid, inputMin, resultMin)
       const split = clamp((clientX - leftX) / mid, minSplit, maxSplit)
       return { ...prev, manual, split }
     })
@@ -387,23 +400,8 @@ export function useGridResize(persist: boolean) {
     window.removeEventListener('pointerup', onPointerUp.current)
 
     if (!wasDragging) return
-    refreshColumnMins()
-    const geo = geometryRef.current
-    const cols = columnMinsRef.current
-    if (!geo || !cols) return
-
-    const current = layoutRef.current
-    const W = viewportWidth()
-    const leftX = current.leftX ?? geo.leftX0
-    const rightX = current.rightX ?? geo.rightX0
-    const mid = W - leftX - rightX
-    if (mid <= 0) return
-
-    const split = clampSplitForColumnMins(current.split, mid, cols.inputMin, cols.resultMin)
-    if (split !== current.split) {
-      setLayout((prev) => ({ ...prev, split }))
-    }
-  }, [refreshColumnMins])
+    reconcileColumnMins()
+  }, [reconcileColumnMins])
 
   onPointerMove.current = (e: globalThis.PointerEvent) => {
     if (!dragRef.current) return

@@ -6555,10 +6555,8 @@ body.scrub-drag-active * {
 .site-footer__mark {
   display: block;
   flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
-  filter: saturate(0.62) brightness(0.92);
-  opacity: 0.9;
+  width: 22px;
+  height: 22px;
 }
 
 .site-footer__tagline {

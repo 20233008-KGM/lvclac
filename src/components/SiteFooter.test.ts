@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
+const footerMark = readFileSync(resolve('public/footer-brand-mark.svg'), 'utf8')
 
 describe('public-lite footer links', () => {
   it('publishes the product, company, and legal destinations', () => {
@@ -26,7 +27,7 @@ describe('public-lite footer links', () => {
     expect(source).toContain('publicFooterOperatorDetails(locale)')
     expect(source).not.toContain('site-footer__operator-heading')
     expect(source).toContain('site-footer__wordmark')
-    expect(source).toContain('src="/favicon.svg"')
+    expect(source).toContain('src="/footer-brand-mark.svg"')
     expect(source).toContain('alt=""')
     expect(css).not.toContain('.site-footer__mark::before')
     expect(css).not.toContain('.site-footer__mark::after')
@@ -46,9 +47,16 @@ describe('public-lite footer links', () => {
 
   it('keeps the footer brand mark optically balanced with the wordmark', () => {
     expect(css).toMatch(/\.site-footer__wordmark \{[\s\S]*?gap: 9px;/)
-    expect(css).toMatch(
-      /\.site-footer__mark \{[\s\S]*?width: 24px;[\s\S]*?height: 24px;[\s\S]*?filter: saturate\(0\.62\) brightness\(0\.92\);[\s\S]*?opacity: 0\.9;/,
-    )
+    expect(css).toMatch(/\.site-footer__mark \{[^}]*width: 22px;[^}]*height: 22px;/)
+    expect(css).not.toMatch(/\.site-footer__mark \{[^}]*filter:/)
+    expect(css).not.toMatch(/\.site-footer__mark \{[^}]*opacity:/)
+  })
+
+  it('uses a footer-specific indigo and plum palette instead of dimming the favicon', () => {
+    expect(footerMark).toContain('#7785d6')
+    expect(footerMark).toContain('#806179')
+    expect(footerMark).toContain('#eef1f7')
+    expect(footerMark).not.toContain('#ff1005')
   })
 
   it('does not restore removed paid-plan destinations', () => {

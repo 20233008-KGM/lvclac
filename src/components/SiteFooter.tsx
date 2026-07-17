@@ -107,7 +107,7 @@ export function SiteFooter() {
             >
               <img
                 className="site-footer__mark"
-                src="/favicon.svg"
+                src="/footer-brand-mark.svg"
                 alt=""
                 aria-hidden="true"
               />

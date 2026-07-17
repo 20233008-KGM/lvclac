@@ -6373,7 +6373,7 @@ body.scrub-drag-active * {
   overflow: hidden;
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius) var(--radius) 0 0;
-  background: var(--color-bg-elevated);
+  background: var(--color-surface);
   isolation: isolate;
 }
 

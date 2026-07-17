@@ -17,16 +17,16 @@ describe('public information shell navigation', () => {
 
   it('provides localized labels for every route', () => {
     expect(publicInfoNavigation('ko').map((item) => item.label)).toEqual([
+      '서비스 소개',
       '사용 가이드',
       '수식 정의',
-      '서비스 소개',
       '이용약관',
       '개인정보',
     ])
     expect(publicInfoNavigation('en').map((item) => item.label)).toEqual([
+      'About',
       'User guide',
       'Formulas',
-      'About',
       'Terms',
       'Privacy',
     ])

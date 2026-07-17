@@ -6449,7 +6449,7 @@ body.scrub-drag-active * {
 .site-footer {
   position: relative;
   width: 100%;
-  margin-top: clamp(34px, 4vw, 52px);
+  margin-top: 0;
   overflow: hidden;
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius) var(--radius) 0 0;
@@ -6622,7 +6622,7 @@ a.site-footer__link:hover {
 }
 
 .content-risk-notice {
-  margin: clamp(54px, 6vw, 78px) 0 0;
+  margin: var(--space-md) 0 0;
   padding: 0;
   text-align: center;
 }

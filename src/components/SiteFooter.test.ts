@@ -44,6 +44,13 @@ describe('public-lite footer links', () => {
     )
   })
 
+  it('keeps the footer brand mark optically balanced with the wordmark', () => {
+    expect(css).toMatch(/\.site-footer__wordmark \{[\s\S]*?gap: 9px;/)
+    expect(css).toMatch(
+      /\.site-footer__mark \{[\s\S]*?width: 24px;[\s\S]*?height: 24px;[\s\S]*?filter: saturate\(0\.62\) brightness\(0\.92\);[\s\S]*?opacity: 0\.9;/,
+    )
+  })
+
   it('does not restore removed paid-plan destinations', () => {
     expect(source).not.toContain('PRICING_PATH')
     expect(source).not.toContain('REFUND_POLICY_PATH')

@@ -9,6 +9,12 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-17 — 공개판 저장 2슬롯·첫 방문 로컬 저장 동의·사용법 복원**
+- `maintenance/public`의 축약 저장 UI를 dev 슬롯 스타일에 맞춰 **`저장 안 함`·`로컬 저장` 두 아이콘 슬롯**으로 정리했다. 입력 패널 하단의 한 줄 설명, 클라우드·숫자세트·도움말·별도 삭제 링크는 공개판에서 제거하고, 저장 중지 시 기존 로컬 값은 보존한다.
+- 신규·기존 방문자 모두 공개 홈에서 배포 후 한 번 로컬 저장 여부를 고른다. 기존 필수 면책을 먼저 확인한 뒤 `저장 안 함`/`로컬 저장`을 즉시 적용하며, 계좌 평가금·증거금률·계약 수가 브라우저 localStorage에만 저장되고 공용 기기·악성 프로그램·확장 프로그램 환경에서는 노출될 수 있음을 고지한다. 결정은 `leverage-public-save-consent-v1`에 기록하고 저장소 접근 실패는 앱 사용을 막지 않는다.
+- 헤더 `사용법` 초보자/트레이더 툴팁과 `/guide` 상세 페이지 라우팅을 공개판에 복원했다. 로그인·클라우드 코드는 되살리지 않았다.
+- 검증: public vitest **597/597**, production build 통과. 변경 파일 eslint는 기존 `ServiceDisclaimer.tsx`의 Fast Refresh 상수 export 기준선 1건만 남음. 로컬 Vite `127.0.0.1:5173` 200 및 Chrome `선물 계산기` 탭 오픈 확인. 현재 세션에 Chrome DOM 제어와 Notion 도구가 노출되지 않아 클릭 실측·Work Log/Task 기록은 미수행.
+
 **2026-07-16 — `main` 무료 실배포 / `dev` 전체 개발환경 영구 분리** (main 04f4ed3, dev a342674)
 - `dev`를 기존 전체 기능 브랜치로 만들고 별도 Vercel `lvclac-dev`의 Production Branch로 지정. Supabase·service role·cron env와 Auth Site URL/Redirect URL을 `devpilgrm.liqguard.com` 기준으로 이관하고 `DEV` 배지를 추가했다. Vercel 파일단위 TypeScript 오류(Node 타입, middleware `.js`, cron union narrowing)를 수정해 dev Production이 오류 없이 Ready.
 - `main`은 로그인/AuthProvider·클라우드·다중 숫자세트·마이페이지·기록·결제·피드백·관리자·가이드/공식/소개/UI키트/복구 진입을 제거. `/terms`, `/privacy`만 유지하고 제거 경로는 홈으로 이동. billing/cron API와 Vercel cron, Production Supabase/service-role/cron env도 제거.

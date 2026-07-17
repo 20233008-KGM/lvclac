@@ -5888,10 +5888,18 @@ body.scrub-drag-active * {
   margin-top: clamp(34px, 4vw, 52px);
   overflow: hidden;
   border-top: 1px solid var(--color-border);
+  border-radius: var(--radius) var(--radius) 0 0;
   background:
     radial-gradient(circle at 8% -5%, rgba(91, 141, 239, 0.1), transparent 25rem),
     linear-gradient(180deg, var(--color-bg-elevated), var(--color-bg));
   isolation: isolate;
+}
+
+@media (min-width: 1024px) {
+  .site-footer {
+    width: calc(100% - 20px);
+    margin-inline: 10px;
+  }
 }
 
 .site-footer::before {

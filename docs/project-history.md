@@ -127,3 +127,11 @@
 - Consent Mode v2 네 항목을 Google 태그보다 먼저 기본 거부하고, Google CMP 결과가 미확정이면 GA4·광고 요청을 막는다. 비규제 지역도 명시 선택 전에는 막고 자체 설정창을 제공하며, 규제 지역은 Google CMP 철회 메시지를 재호출한다. AdSense 요청은 `pauseAdRequests=1` 뒤 동의 시에만 `push()`·재개한다.
 - 공개 6경로 sitemap·canonical·페이지별 title/description/OG를 추가하고 Vercel 리다이렉트를 해제했다. `ALLOW_INDEXING=true` 또는 실 AdSense 설정인데 필수 법인 정보가 비면 production build가 실패하며, 올바른 client ID에서 AdSense account meta와 `ads.txt`를 자동 생성한다. 외부 입력값과 대시보드 작업은 `docs/public-launch-checklist.md`에 정리했다.
 - 검증: vitest **617/617**, production build, 변경 파일 eslint, 누락 법인정보 build 차단, 테스트 publisher ID의 noindex 제거·메타·`ads.txt` 생성 확인. 전체 eslint는 기존 `.recovery` 파싱 오류와 dev 전용 기존 규칙 위반으로 실패. 현재 세션에는 브라우저 제어 실행 도구와 Notion 도구가 없어 모바일/데스크톱 클릭 QA와 Work Log/Task 갱신은 미수행.
+
+**2026-07-17 — 공개 푸터 받침대형 라운딩·차콜 글로우·계산기 카드선 정렬**
+- 기존 SaaS형 푸터의 콘텐츠·높이는 그대로 두고 상단 두 모서리에 계산기와 같은 8px radius를 적용했다. 하단은 flush로 남겨 독립 카드가 아니라 계산기 아래 받침대처럼 보이게 했다. 후속 피드백으로 푸터에만 있던 파란 radial·세로 그라데이션을 제거하고 입력·결과 패널과 같은 `var(--color-surface)` 단색으로 통일했다. 상단 1px 파란 accent는 유지한다.
+- 1024px 이상에서는 리사이저 손잡이 폭과 같은 좌우 10px을 inset해 푸터 외곽이 입력·결과 카드의 `x=218 / right=1047` 선에 정확히 맞는다. 1023px 이하에서는 푸터와 계산기 그리드가 기존처럼 같은 전체 폭을 유지한다.
+- 검증: public vitest **623/623**, SiteFooter 2/2, production build. 브라우저 실측 1280px·1023px·390px에서 가로 오버플로 0건, 모바일 한영 푸터 텍스트 오버플로 0건. 최종 computed style은 푸터·입력·결과 모두 `background-color: rgb(30, 35, 45)`, 푸터 `background-image: none`으로 확인했고 PNG를 Codex visualizations에 보관했다.
+- 적용 커밋 `maintenance/public` **8a9cf32**(받침대형), **68a721f**(그라데이션 제거), **ab1b2d7**(계산기 패널색 일치).
+- 실제 계산기 화면에 fixed 토글을 주입해 단색 4종·그라데이션 4종을 비교한 뒤, 최종적으로 `radial-gradient(70% 120% at 16% 0%, rgb(142 130 255 / 6%), transparent 64%)`와 `#1d212a → #15181f` 차콜 세로 그라데이션을 선택했다. 기존 상단 파란 accent·8px 상단 radius·데스크톱 10px inset은 유지한다.
+- 최종 검증: public vitest **623/623**, production build, Chrome 실제 소스 새로고침에서 보라빛 시작점 `16% 0%`·불투명도 `6%`, 가로 오버플로·콘솔 오류 0건을 확인했다. 적용 커밋 `maintenance/public` **050fbcc**.

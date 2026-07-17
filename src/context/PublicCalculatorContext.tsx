@@ -175,9 +175,21 @@ export function PublicCalculatorProvider({ children }: { children: ReactNode }) 
 
   const updateInputs = useCallback(
     (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => {
-      setHistory((current) =>
-        recordCalculatorHistory(current, applyInputPatch(current.present, patch), options),
-      )
+      setHistory((current) => {
+        const nextInputs = options?.historyOnly
+          ? current.present
+          : applyInputPatch(current.present, patch)
+        const resolvedOptions =
+          options?.historyTransient && options.historyTransient !== 'cancel'
+            ? {
+                ...options,
+                historyTransientTarget: applyInputPatch(nextInputs, {
+                  clearOrderScenario: true,
+                }),
+              }
+            : options
+        return recordCalculatorHistory(current, nextInputs, resolvedOptions)
+      })
     },
     [],
   )

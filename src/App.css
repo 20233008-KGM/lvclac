@@ -6449,7 +6449,7 @@ body.scrub-drag-active * {
 .site-footer {
   position: relative;
   width: 100%;
-  margin-top: var(--space-md);
+  margin-top: var(--space-xl);
   overflow: hidden;
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius) var(--radius) 0 0;
@@ -6622,7 +6622,7 @@ a.site-footer__link:hover {
 }
 
 .content-risk-notice {
-  margin: var(--space-xl) 0 0;
+  margin: calc(var(--space-xl) + var(--space-md)) 0 0;
   padding: 0;
   text-align: center;
 }

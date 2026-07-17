@@ -43,6 +43,9 @@ describe('public information shell navigation', () => {
     )
     expect(pagesCss).not.toMatch(/\.public-info-zone\[data-info-tone=/)
     expect(pagesCss).toMatch(/\.public-info-zone \.page-content\s*{[^}]*max-width:\s*920px;/s)
+    expect(pagesCss).toMatch(
+      /\.public-info-document::before\s*{[^}]*top:\s*-1px;[^}]*width:\s*min\(210px, 32%\);[^}]*background:\s*linear-gradient\(90deg, var\(--color-primary\), transparent\);/s,
+    )
     expect(pagesCss).toMatch(/\.public-info-hero\s*{[^}]*min-height:\s*264px;/s)
     expect(pagesCss).toMatch(/html\[lang='en'\] \.public-info-hero\s*{[^}]*min-height:\s*340px;/s)
     expect(pagesCss).toMatch(

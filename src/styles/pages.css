@@ -361,13 +361,14 @@ html[data-zone='public-info'] body {
 
 .public-info-document::before {
   position: absolute;
-  top: 0;
+  z-index: 1;
+  top: -1px;
   left: 0;
-  width: min(260px, 38%);
+  width: min(210px, 32%);
   height: 1px;
   content: '';
-  background: linear-gradient(90deg, var(--public-info-accent), transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--public-info-accent) 36%, transparent);
+  background: linear-gradient(90deg, var(--color-primary), transparent);
+  box-shadow: 0 0 18px rgb(91 141 239 / 35%);
 }
 
 .public-info-header {

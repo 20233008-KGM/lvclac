@@ -29,6 +29,14 @@ export function isAboutPath(pathname: string): boolean {
   return matchesPath(pathname, ABOUT_PATH)
 }
 
+export function isAdFreePublicInfoPath(pathname: string): boolean {
+  return (
+    isAboutPath(pathname) ||
+    matchesPath(pathname, TERMS_PATH) ||
+    matchesPath(pathname, PRIVACY_PATH)
+  )
+}
+
 export function isMyPagePath(pathname: string): boolean {
   return matchesPath(pathname, MY_PAGE_PATH)
 }

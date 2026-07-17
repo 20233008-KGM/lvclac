@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from 'react'
 import { ADSENSE_CLIENT } from '../config/ads'
+import { isAdFreePublicInfoPath } from '../config/routes'
+import { usePathname } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { ensureAdSenseScript, setAdRequestsPaused } from '../lib/adsense'
 import { initAnalytics } from '../lib/analytics'
@@ -36,6 +38,8 @@ function queueGoogleCallback(key: string, callback: () => void): void {
 
 export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const { locale } = useLanguage()
+  const pathname = usePathname()
+  const adFreePath = isAdFreePublicInfoPath(pathname)
   const [decision, setDecision] = useState<GoogleConsentDecision>(INITIAL_DECISION)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const configured = Boolean(ADSENSE_CLIENT)
@@ -43,9 +47,13 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const applyDecision = useCallback((next: GoogleConsentDecision) => {
     setDecision(next)
     applyGoogleConsentMode(next)
-    setAdRequestsPaused(!next.adsAllowed)
+    setAdRequestsPaused(adFreePath || !next.adsAllowed)
     if (next.analyticsAllowed) initAnalytics()
-  }, [])
+  }, [adFreePath])
+
+  useEffect(() => {
+    setAdRequestsPaused(adFreePath || !decision.adsAllowed)
+  }, [adFreePath, decision.adsAllowed])
 
   const syncGoogleDecision = useCallback(() => {
     const values = window.googlefc?.getGoogleConsentModeValues?.()
@@ -107,10 +115,11 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       ...decision,
+      adsAllowed: decision.adsAllowed && !adFreePath,
       configured,
       openPrivacySettings,
     }),
-    [configured, decision, openPrivacySettings],
+    [adFreePath, configured, decision, openPrivacySettings],
   )
 
   const copy =

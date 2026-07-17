@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isAdFreePublicInfoPath,
   isLegalPath,
   isAdminFeedbackPath,
   isMyPagePath,
@@ -12,6 +13,19 @@ import {
 } from './routes'
 
 describe('routes', () => {
+  it('keeps company and legal information pages ad-free', () => {
+    expect(isAdFreePublicInfoPath('/about')).toBe(true)
+    expect(isAdFreePublicInfoPath('/about/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/terms')).toBe(true)
+    expect(isAdFreePublicInfoPath('/terms/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/privacy')).toBe(true)
+    expect(isAdFreePublicInfoPath('/privacy/')).toBe(true)
+
+    expect(isAdFreePublicInfoPath('/')).toBe(false)
+    expect(isAdFreePublicInfoPath('/guide')).toBe(false)
+    expect(isAdFreePublicInfoPath('/formulas')).toBe(false)
+  })
+
   it('recognizes the my page route with optional trailing slash', () => {
     expect(MY_PAGE_PATH).toBe('/my')
     expect(isMyPagePath('/my')).toBe(true)

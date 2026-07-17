@@ -6444,7 +6444,13 @@ body.scrub-drag-active * {
   overflow: hidden;
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius) var(--radius) 0 0;
-  background: var(--color-surface);
+  background:
+    radial-gradient(
+      70% 120% at 16% 0%,
+      rgb(142 130 255 / 6%),
+      transparent 64%
+    ),
+    linear-gradient(180deg, #1d212a 0%, #15181f 100%);
   isolation: isolate;
 }
 

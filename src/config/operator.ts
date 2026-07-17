@@ -7,6 +7,7 @@ function optional(value: string | undefined): string | undefined {
 
 export interface PublicOperatorInfo {
   brandName: string
+  companyName: string
   productName: string
   legalName?: string
   representative?: string
@@ -19,6 +20,7 @@ export interface PublicOperatorInfo {
 
 export const PUBLIC_OPERATOR_INFO: PublicOperatorInfo = {
   brandName: 'Farfield Software',
+  companyName: 'Farfield Software Inc.',
   productName: 'LiqGuard',
   legalName: optional(import.meta.env.VITE_PUBLIC_OPERATOR_LEGAL_NAME),
   representative: optional(import.meta.env.VITE_PUBLIC_OPERATOR_REPRESENTATIVE),
@@ -88,5 +90,50 @@ export function publicOperatorDetails(
       ? { label: labels.privacyOfficer, value: operator.privacyOfficer }
       : null,
     { label: labels.contactEmail, value: operator.contactEmail },
+  ].filter((item): item is { label: string; value: string } => item !== null)
+}
+
+export function publicFooterOperatorDetails(
+  locale: 'ko' | 'en',
+  operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
+): { label: string; value: string }[] {
+  const labels =
+    locale === 'ko'
+      ? {
+          companyName: '회사',
+          representative: '대표자',
+          contactEmail: '문의',
+          address: '주소',
+          businessRegistrationNumber: '사업자등록번호',
+          commerceRegistrationNumber: '통신판매업 신고번호',
+        }
+      : {
+          companyName: 'Company',
+          representative: 'Representative',
+          contactEmail: 'Contact',
+          address: 'Address',
+          businessRegistrationNumber: 'Business registration no.',
+          commerceRegistrationNumber: 'E-commerce registration no.',
+        }
+
+  return [
+    { label: labels.companyName, value: operator.companyName },
+    operator.representative
+      ? { label: labels.representative, value: operator.representative }
+      : null,
+    { label: labels.contactEmail, value: operator.contactEmail },
+    operator.address ? { label: labels.address, value: operator.address } : null,
+    operator.businessRegistrationNumber
+      ? {
+          label: labels.businessRegistrationNumber,
+          value: operator.businessRegistrationNumber,
+        }
+      : null,
+    operator.commerceRegistrationNumber
+      ? {
+          label: labels.commerceRegistrationNumber,
+          value: operator.commerceRegistrationNumber,
+        }
+      : null,
   ].filter((item): item is { label: string; value: string } => item !== null)
 }

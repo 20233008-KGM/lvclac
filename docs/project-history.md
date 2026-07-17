@@ -9,6 +9,12 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-17 — 언어·용어 전환 시 리사이저 최소 폭 재측정**
+- 한글에서 계산기 폭을 최소까지 줄인 뒤 더 긴 영어로 전환하면 입력 라벨이 패널 밖으로 넘치던 문제를 수정했다. 원인은 DOM 기반 열 최소 폭이 `useGridResize` ref에 캐시되지만 실제 번역 메시지·용어 프리셋 변경이 재측정 조건에 없고, 수동 모드에서는 자동 오버플로 보정도 꺼지는 구조였다.
+- 실제 적용된 번역 메시지 객체를 콘텐츠 버전으로 전달하고, 변경 후 입력·결과 최소 폭을 다시 측정한다. 부족하면 계산기 중심을 유지하며 좌우 여백을 필요한 만큼만 줄이고, 한쪽이 먼저 소진되면 반대쪽이 나머지를 부담한다. 짧은 문구로 돌아갈 때는 사용자 폭을 자동 축소하지 않는다.
+- 적용 커밋은 `maintenance/public` d9b685a, `dev` 8c34bda. `dev`는 이미 `C:/Users/rlarb/김규민/code/lvclac-worktrees/dev` worktree(당시 이름 `history-dev`)에 체크아웃되어 있어 현재 폴더에서 checkout하지 않고 해당 worktree에 cherry-pick했다.
+- 검증: public vitest **623/623**, dev **636/636**, 양쪽 production build. 브라우저에서 한글 최소 축소→영어 전환 및 영어 6개 프리셋 모두 입력·결과 오버플로 0건. 전체 lint는 기존 기준선 오류로 실패했으며 변경 App·유틸·테스트 lint는 통과했다. Notion 완료 Task와 Work Log 기록 완료.
+
 **2026-07-17 — 프로젝트 메모리를 Git 브랜치 밖의 단일 기준본으로 전환**
 - 브랜치마다 `docs/project-memory.md`가 달라지는 문제를 없애기 위해 최신 작업본을 `C:/Users/rlarb/Documents/lvclac-project-memory.md`로 이동했다. 앞으로 `main`·`dev`·`maintenance/public` 모두 이 외부 파일 하나를 읽고 갱신한다.
 - `AGENTS.md`, `CLAUDE.md`, Cursor 규칙과 활성·레거시 문서의 운영 참조를 새 절대경로로 바꿨다. 외부 메모리 안에서 repo 문서를 가리키던 상대 링크도 저장소 절대경로로 보정했다.

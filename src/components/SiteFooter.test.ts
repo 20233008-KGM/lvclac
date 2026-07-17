@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
+const css = readFileSync(resolve('src/App.css'), 'utf8')
 
 describe('public-lite footer links', () => {
   it('publishes the product, company, and legal destinations', () => {
@@ -22,7 +23,21 @@ describe('public-lite footer links', () => {
     expect(source).toContain('PUBLIC_OPERATOR_INFO.contactEmail')
     expect(source).toContain('openPrivacySettings')
     expect(source).toContain('site-footer__operator-row')
+    expect(source).toContain('publicFooterOperatorDetails(locale)')
+    expect(source).not.toContain('site-footer__operator-heading')
     expect(source).toContain('site-footer__wordmark')
+  })
+
+  it('uses the shared compact type scale for structured company details', () => {
+    expect(css).toMatch(
+      /\.site-footer__operator \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/,
+    )
+    expect(css).toMatch(
+      /\.site-footer__operator dt \{[\s\S]*?font-size: var\(--font-size-xs\);/,
+    )
+    expect(css).toMatch(
+      /\.site-footer__operator dd \{[\s\S]*?font-size: var\(--font-size-xs\);/,
+    )
   })
 
   it('does not restore removed paid-plan destinations', () => {

@@ -7,8 +7,7 @@ import {
 } from '../config/routes'
 import {
   PUBLIC_OPERATOR_INFO,
-  publicOperatorDetails,
-  publicOperatorDisplayName,
+  publicFooterOperatorDetails,
 } from '../config/operator'
 import { useGoogleConsent } from '../context/googleConsentState'
 import { useNavigate } from '../hooks/usePathname'
@@ -46,8 +45,6 @@ const footerCopy = {
         ],
       },
     ],
-    operatorHeading: 'Operator',
-    operatorBrandLabel: '운영 주체',
     privacySettings: '개인정보·쿠키 설정',
   },
   en: {
@@ -80,8 +77,6 @@ const footerCopy = {
         ],
       },
     ],
-    operatorHeading: 'Operator',
-    operatorBrandLabel: 'Operator',
     privacySettings: 'Privacy and cookie settings',
   },
 } as const
@@ -95,16 +90,7 @@ export function SiteFooter() {
   const { openPrivacySettings } = useGoogleConsent()
   const navigate = useNavigate()
   const copy = footerCopy[locale]
-  const confirmedOperatorDetails = publicOperatorDetails(locale)
-  const operatorDetails = PUBLIC_OPERATOR_INFO.legalName
-    ? confirmedOperatorDetails
-    : [
-        {
-          label: copy.operatorBrandLabel,
-          value: publicOperatorDisplayName(),
-        },
-        ...confirmedOperatorDetails,
-      ]
+  const operatorDetails = publicFooterOperatorDetails(locale)
 
   return (
     <footer className="site-footer">
@@ -166,7 +152,6 @@ export function SiteFooter() {
         </div>
 
         <div className="site-footer__operator-row">
-          <p className="site-footer__operator-heading">{copy.operatorHeading}</p>
           <dl className="site-footer__operator">
             {operatorDetails.map((detail) => (
               <div key={detail.label} className="site-footer__operator-item">

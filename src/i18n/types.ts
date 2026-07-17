@@ -132,10 +132,25 @@ export interface Messages {
     localMode: string
     cloudMode: string
     noSaveMode: string
+    publicConsentEyebrow: string
     publicConsentTitle: string
-    publicConsentBody: string[]
+    publicConsentIntro: string
+    publicConsentSummaryLabel: string
+    publicConsentBrowserOnlyTitle: string
+    publicConsentBrowserOnlyBody: string
+    publicConsentNoServerTitle: string
+    publicConsentNoServerBody: string
+    publicConsentSavedLabel: string
+    publicConsentSavedItems: string[]
+    publicConsentSharedDeviceLabel: string
+    publicConsentSharedDeviceTitle: string
+    publicConsentSharedDeviceBody: string
+    publicConsentActionLabel: string
     publicConsentOff: string
+    publicConsentOffDescription: string
     publicConsentLocal: string
+    publicConsentLocalDescription: string
+    publicConsentFootnote: string
     cleared: string
     enableModalTitle: string
     cloudEnableModalTitle: string

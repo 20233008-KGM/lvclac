@@ -24,6 +24,7 @@ import {
   writeDisclaimerAck,
   writeDisclaimerSkip,
 } from './serviceDisclaimerLogic'
+import { CloudIcon, LocalComputerIcon } from './StorageModeIcons'
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
@@ -202,6 +203,8 @@ function PublicSaveConsentModal({
     onDecision('local')
   }
 
+  const copy = t.draftSave
+
   return (
     <div className="disclaimer-overlay" role="presentation">
       <div
@@ -209,33 +212,113 @@ function PublicSaveConsentModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="public-save-consent-title"
+        aria-describedby="public-save-consent-intro"
       >
-        <h2 id="public-save-consent-title" className="disclaimer-modal-title">
-          {t.draftSave.publicConsentTitle}
-        </h2>
-        <div className="draft-save-modal-body">
-          {t.draftSave.publicConsentBody.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
+        <header className="public-save-consent-header">
+          <span className="public-save-consent-icon-tile" aria-hidden="true">
+            <LocalComputerIcon className="public-save-consent-storage-icon" />
+            <span className="public-save-consent-icon-status">
+              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="m2.5 6 2.1 2.1 4.9-5" />
+              </svg>
+            </span>
+          </span>
+          <span>
+            <span className="public-save-consent-eyebrow">{copy.publicConsentEyebrow}</span>
+            <h2 id="public-save-consent-title" className="public-save-consent-title">
+              {copy.publicConsentTitle}
+            </h2>
+          </span>
+        </header>
+
+        <p id="public-save-consent-intro" className="public-save-consent-intro">
+          {copy.publicConsentIntro}
+        </p>
+
+        <div
+          className="public-save-consent-trust-row"
+          aria-label={copy.publicConsentSummaryLabel}
+        >
+          <div className="public-save-consent-trust-fact">
+            <span className="public-save-consent-trust-icon" aria-hidden="true">
+              <LocalComputerIcon className="public-save-consent-storage-icon" />
+            </span>
+            <span>
+              <strong>{copy.publicConsentBrowserOnlyTitle}</strong>
+              <span>{copy.publicConsentBrowserOnlyBody}</span>
+            </span>
+          </div>
+          <div className="public-save-consent-trust-fact">
+            <span className="public-save-consent-trust-icon" aria-hidden="true">
+              <CloudIcon className="public-save-consent-storage-icon" />
+            </span>
+            <span>
+              <strong>{copy.publicConsentNoServerTitle}</strong>
+              <span>{copy.publicConsentNoServerBody}</span>
+            </span>
+          </div>
         </div>
-        <div className="account-setting-guard-actions">
+
+        <div className="public-save-consent-saved-summary">
+          <p>{copy.publicConsentSavedLabel}</p>
+          <div className="public-save-consent-chips">
+            {copy.publicConsentSavedItems.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="public-save-consent-warning">
+          <span>{copy.publicConsentSharedDeviceLabel}</span>
+          <p>
+            <strong>{copy.publicConsentSharedDeviceTitle}</strong>{' '}
+            {copy.publicConsentSharedDeviceBody}
+          </p>
+        </div>
+
+        <div
+          className="public-save-consent-actions"
+          role="group"
+          aria-label={copy.publicConsentActionLabel}
+        >
           <button
             type="button"
-            className="btn btn-ghost draft-save-modal-btn"
+            className="public-save-consent-choice"
             disabled={busy}
             onClick={chooseOff}
           >
-            {t.draftSave.publicConsentOff}
+            <span className="public-save-consent-choice-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M5 5 19 19" />
+                <path d="M7 4h9l3 3v10l-2 2H7l-2-2V7" />
+              </svg>
+            </span>
+            <span>
+              <strong>{copy.publicConsentOff}</strong>
+              <span>{copy.publicConsentOffDescription}</span>
+            </span>
           </button>
           <button
             type="button"
-            className="btn btn-primary draft-save-modal-btn"
+            className="public-save-consent-choice public-save-consent-choice--primary"
             disabled={busy}
             onClick={() => void chooseLocal()}
+            aria-busy={busy}
           >
-            {t.draftSave.publicConsentLocal}
+            <span className="public-save-consent-choice-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M5 4h11l3 3v13H5z" />
+                <path d="M8 4v6h8V4" />
+                <path d="M8 20v-6h8v6" />
+              </svg>
+            </span>
+            <span>
+              <strong>{copy.publicConsentLocal}</strong>
+              <span>{copy.publicConsentLocalDescription}</span>
+            </span>
           </button>
         </div>
+        <p className="public-save-consent-footnote">{copy.publicConsentFootnote}</p>
       </div>
     </div>
   )

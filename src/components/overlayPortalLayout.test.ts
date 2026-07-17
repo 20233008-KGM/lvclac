@@ -14,6 +14,10 @@ describe('calculator modal overlays', () => {
     expect(text).toContain('document.body.style.overflow')
     expect(text).toContain('className="disclaimer-overlay"')
     expect(text).toContain('className="disclaimer-modal draft-save-modal public-save-consent-modal"')
+    expect(text).toContain('<LocalComputerIcon')
+    expect(text).toContain('<CloudIcon')
+    expect(text).toContain('public-save-consent-trust-row')
+    expect(text).toContain('public-save-consent-warning')
   })
 
   it('renders clear-all confirmation through the document body portal', () => {

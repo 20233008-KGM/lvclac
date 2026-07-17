@@ -102,3 +102,10 @@
 - 조사 중 추가 유령 발견해 함께 삭제(사용자 승인): `.my-page-nickname-form` 본체+오버라이드 4블록(현행 폼은 `my-page-nickname-edit`라 "legacy를 덮어쓴다"던 오버라이드까지 전부 매칭 대상 없는 죽은 코드), `.my-page-account-settings-meta`. `.my-page-settings-list`(@deprecated)·`.my-page-settings-note`·모바일 미디어쿼리 블록 포함 총 5구간 200줄, 렌더링 변화 0.
 - 검증: vitest 604/604(main rebase 후 재실행), dev /my에서 CSSOM 유령 규칙 0·실사용 규칙(linked-row/setting-line/inline-control) 유지·데스크톱 1265px/모바일 428px 가로 오버플로 없음·콘솔 에러 0. 게스트 화면 실측(로그인 화면 쪽은 참조 0건으로 코드 레벨 보장).
 - 함정: 포트 5199를 다른 세션 dev 서버가 점유 → launch.json 임시 5198로 검증 후 원복. harness 워크트리 세션이라 워크트리 커밋→main rebase→ff-merge로 main 반영(97e2302 모바일 linked-row 개편과 충돌 없음 확인).
+
+**2026-07-17 — v1 푸터·공개 콘텐츠·법무·AdSense/GA4 동의 준비**
+- 푸터를 제품·회사·법무 3영역으로 복구하고 계산기·가이드·수식·소개·약관·개인정보·개인정보/쿠키 설정과 문의 이메일을 연결했다. 실제 법인 정보는 `PublicOperatorInfo` 환경변수에서 한 번만 읽고 미확정 값은 숨긴다. `/about`은 로그인 없이 운영 주체·목적·수식 투명성·계산 한계·문의처를 설명하며 `/guide`는 로컬 브라우저 저장만 안내한다.
+- 약관·개인정보처리방침을 한영으로 확장해 계산 보조 도구 범위, 투자자문 아님, 결과 검증, localStorage 위험, Vercel 호스팅/Web Analytics, GA4, AdSense 광고 쿠키, 처리위탁·국외 이전·권리·보호책임자·구제 절차를 표로 공개한다. Vercel 집계 차원과 Google 광고 쿠키/맞춤광고 해제도 명시했다.
+- Consent Mode v2 네 항목을 Google 태그보다 먼저 기본 거부하고, Google CMP 결과가 미확정이면 GA4·광고 요청을 막는다. 비규제 지역도 명시 선택 전에는 막고 자체 설정창을 제공하며, 규제 지역은 Google CMP 철회 메시지를 재호출한다. AdSense 요청은 `pauseAdRequests=1` 뒤 동의 시에만 `push()`·재개한다.
+- 공개 6경로 sitemap·canonical·페이지별 title/description/OG를 추가하고 Vercel 리다이렉트를 해제했다. `ALLOW_INDEXING=true` 또는 실 AdSense 설정인데 필수 법인 정보가 비면 production build가 실패하며, 올바른 client ID에서 AdSense account meta와 `ads.txt`를 자동 생성한다. 외부 입력값과 대시보드 작업은 `docs/public-launch-checklist.md`에 정리했다.
+- 검증: vitest **617/617**, production build, 변경 파일 eslint, 누락 법인정보 build 차단, 테스트 publisher ID의 noindex 제거·메타·`ads.txt` 생성 확인. 전체 eslint는 기존 `.recovery` 파싱 오류와 dev 전용 기존 규칙 위반으로 실패. 현재 세션에는 브라우저 제어 실행 도구와 Notion 도구가 없어 모바일/데스크톱 클릭 QA와 Work Log/Task 갱신은 미수행.

@@ -327,6 +327,71 @@ export function clampSplitForColumnMins(
   return clamp(split, minSplit, maxSplit)
 }
 
+/**
+ * 번역·용어 변경으로 열 최소 폭이 커졌을 때 현재 사용자 레이아웃을 최소한으로 확장한다.
+ * 문구가 짧아진 경우에는 사용자가 만든 폭을 다시 줄이지 않는다.
+ */
+export function reconcileLayoutForColumnMins(
+  layout: GridLayout,
+  geo: Geometry,
+  viewportWidth: number,
+  inputMin: number,
+  resultMin: number,
+  handleWidth = GRID_HANDLE_WIDTH,
+): GridLayout {
+  const safeViewportWidth = Math.max(0, viewportWidth)
+  const safeInputMin = Math.max(0, inputMin)
+  const safeResultMin = Math.max(0, resultMin)
+  const handleTotal = Math.max(0, handleWidth) * 3
+  const requiredMid = Math.ceil(handleTotal + safeInputMin + safeResultMin)
+
+  const resolvedLeftX = Math.max(MIN_EDGE_X, layout.leftX ?? geo.leftX0)
+  const resolvedRightX = Math.max(MIN_EDGE_X, layout.rightX ?? geo.rightX0)
+  let leftX = resolvedLeftX
+  let rightX = resolvedRightX
+
+  const currentMid = Math.max(0, safeViewportWidth - leftX - rightX)
+  let remainingDeficit = Math.min(
+    Math.max(0, requiredMid - currentMid),
+    leftX + rightX,
+  )
+
+  // 계산기 중심을 최대한 유지하면서 양쪽 여백을 같은 양부터 줄인다.
+  const sharedReduction = Math.min(remainingDeficit / 2, leftX, rightX)
+  leftX -= sharedReduction
+  rightX -= sharedReduction
+  remainingDeficit -= sharedReduction * 2
+
+  // 한쪽 여백이 먼저 소진되면 다른 쪽이 남은 부족분을 맡는다.
+  const leftReduction = Math.min(leftX, remainingDeficit)
+  leftX -= leftReduction
+  remainingDeficit -= leftReduction
+
+  const rightReduction = Math.min(rightX, remainingDeficit)
+  rightX -= rightReduction
+
+  const widened = leftX !== resolvedLeftX || rightX !== resolvedRightX
+  const columnMid = Math.max(0, safeViewportWidth - leftX - rightX - handleTotal)
+  const split = clampSplitForColumnMins(
+    layout.split,
+    columnMid,
+    safeInputMin,
+    safeResultMin,
+  )
+
+  const nextLeftX = widened ? leftX : layout.leftX
+  const nextRightX = widened ? rightX : layout.rightX
+  if (
+    nextLeftX === layout.leftX &&
+    nextRightX === layout.rightX &&
+    split === layout.split
+  ) {
+    return layout
+  }
+
+  return { ...layout, leftX: nextLeftX, rightX: nextRightX, split }
+}
+
 /** calc-grid 중간 영역(입력+결과+핸들) 최소 px — 라벨 nowrap 기준 */
 export function measureMinCalculatorMid(container: HTMLElement): number {
   const handleW =

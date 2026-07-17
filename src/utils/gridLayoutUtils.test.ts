@@ -9,6 +9,7 @@ import {
   computeExpandStep,
   computeSplitBounds,
   isLayoutCustom,
+  reconcileLayoutForColumnMins,
   sumGridColumnMins,
   scaleGeometry,
   scaleGridLayout,
@@ -162,6 +163,56 @@ describe('gridLayoutUtils', () => {
       1 - resultMin / mid,
       5,
     )
+  })
+
+  it('reconcileLayoutForColumnMins — 폭이 충분하면 레이아웃 유지', () => {
+    const layout: GridLayout = { leftX: 200, rightX: 200, split: 0.5, manual: true }
+    const reconciled = reconcileLayoutForColumnMins(layout, geo, 1200, 300, 250)
+
+    expect(reconciled).toBe(layout)
+  })
+
+  it('reconcileLayoutForColumnMins — 부족한 폭만큼 양쪽 여백을 균등 축소', () => {
+    const layout: GridLayout = { leftX: 200, rightX: 200, split: 0.5, manual: true }
+    const reconciled = reconcileLayoutForColumnMins(layout, geo, 1000, 350, 300)
+
+    expect(reconciled.leftX).toBe(160)
+    expect(reconciled.rightX).toBe(160)
+    expect(reconciled.manual).toBe(true)
+    expect(reconciled.split).toBeCloseTo(350 / 650, 5)
+  })
+
+  it('reconcileLayoutForColumnMins — 한쪽 여백 소진 후 반대쪽에서 부족분 확보', () => {
+    const layout: GridLayout = { leftX: 20, rightX: 200, split: 0.5, manual: true }
+    const reconciled = reconcileLayoutForColumnMins(layout, geo, 800, 350, 300)
+
+    expect(reconciled.leftX).toBe(0)
+    expect(reconciled.rightX).toBe(120)
+  })
+
+  it('reconcileLayoutForColumnMins — 화면 전체로 부족하면 양쪽 여백을 0으로 제한', () => {
+    const layout: GridLayout = { leftX: 100, rightX: 100, split: 0.5, manual: true }
+    const reconciled = reconcileLayoutForColumnMins(layout, geo, 500, 350, 300)
+
+    expect(reconciled.leftX).toBe(0)
+    expect(reconciled.rightX).toBe(0)
+    expect(Number.isFinite(reconciled.split)).toBe(true)
+  })
+
+  it('reconcileLayoutForColumnMins — 짧은 문구로 바뀌어도 폭을 다시 줄이지 않음', () => {
+    const layout: GridLayout = { leftX: 100, rightX: 100, split: 0.5, manual: true }
+    const reconciled = reconcileLayoutForColumnMins(layout, geo, 1000, 100, 100)
+
+    expect(reconciled).toBe(layout)
+  })
+
+  it('reconcileLayoutForColumnMins — 전체 폭이 충분하면 gap 없이 split만 재제한', () => {
+    const layout: GridLayout = { leftX: 100, rightX: 100, split: 0.4, manual: true }
+    const reconciled = reconcileLayoutForColumnMins(layout, geo, 1000, 500, 200)
+
+    expect(reconciled.leftX).toBe(100)
+    expect(reconciled.rightX).toBe(100)
+    expect(reconciled.split).toBeCloseTo(500 / 770, 5)
   })
 
   it('sumGridColumnMins — 2열 라벨 min 합 + gap', () => {

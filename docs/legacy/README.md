@@ -5,7 +5,7 @@
 > **현재 규칙으로 따르지 말고, 맥락 파악용으로만 참고한다.**
 >
 > 현재 기준 문서:
-> - [`docs/project-memory.md`](../project-memory.md) — 장기 메모리
+> - [`lvclac-project-memory.md`](C:/Users/rlarb/Documents/lvclac-project-memory.md) — 장기 메모리
 > - [`docs/product-core-design.md`](../product-core-design.md) — 제품 원칙
 > - [`docs/launch-schedule.md`](../launch-schedule.md) — 런칭 일정
 > - [`docs/bugs.md`](../bugs.md) — 알려진 버그

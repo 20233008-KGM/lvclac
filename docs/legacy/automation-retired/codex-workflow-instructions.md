@@ -1,6 +1,6 @@
 # 개인 Codex 지침 (퇴역 보존본)
 
-> AutoCorp Studio / 개인 Codex 워크플로용 지침입니다. 현재 운영 기준은 [`docs/project-memory.md`](../../project-memory.md)를 따릅니다.
+> AutoCorp Studio / 개인 Codex 워크플로용 지침입니다. 현재 운영 기준은 [`lvclac-project-memory.md`](C:/Users/rlarb/Documents/lvclac-project-memory.md)를 따릅니다.
 
 ## 소통
 

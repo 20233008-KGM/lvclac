@@ -18,7 +18,7 @@
 
 ## 의사결정 기준
 
-제품 방향이 흔들릴 때는 [`docs/project-memory.md`](./project-memory.md)와 이 문서를 우선 기준으로 삼고, 필요한 경우 사용자에게 결정을 요청한다.
+제품 방향이 흔들릴 때는 [`lvclac-project-memory.md`](C:/Users/rlarb/Documents/lvclac-project-memory.md)와 이 문서를 우선 기준으로 삼고, 필요한 경우 사용자에게 결정을 요청한다.
 
 다음 관점은 제품 검토 체크리스트로 사용한다.
 
@@ -80,7 +80,7 @@
 
 현재 기준 문서는 `docs/` 루트에 최소로 둔다.
 
-- `docs/project-memory.md`: 에이전트 공유 장기 메모리
+- `C:/Users/rlarb/Documents/lvclac-project-memory.md`: 에이전트 공유 장기 메모리
 - `docs/product-core-design.md`: 제품 핵심 설계
 - `docs/launch-schedule.md`: 런칭 일정
 

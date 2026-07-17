@@ -6449,7 +6449,7 @@ body.scrub-drag-active * {
 .site-footer {
   position: relative;
   width: 100%;
-  margin-top: var(--space-xl);
+  margin-top: var(--space-md);
   overflow: hidden;
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius) var(--radius) 0 0;

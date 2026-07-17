@@ -9,6 +9,12 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-17 — 프로젝트 메모리를 Git 브랜치 밖의 단일 기준본으로 전환**
+- 브랜치마다 `docs/project-memory.md`가 달라지는 문제를 없애기 위해 최신 작업본을 `C:/Users/rlarb/Documents/lvclac-project-memory.md`로 이동했다. 앞으로 `main`·`dev`·`maintenance/public` 모두 이 외부 파일 하나를 읽고 갱신한다.
+- `AGENTS.md`, `CLAUDE.md`, Cursor 규칙과 활성·레거시 문서의 운영 참조를 새 절대경로로 바꿨다. 외부 메모리 안에서 repo 문서를 가리키던 상대 링크도 저장소 절대경로로 보정했다.
+- 검증: 기존 파일의 미커밋 최신 내용이 외부 파일에 보존됐고, 세 브랜치 모두 저장소의 현재 운영 참조에서 `docs/project-memory.md` 경로가 제거됐다. 적용 커밋은 `maintenance/public` 4ae4c35, `main` 5c0cbd1, `dev` 0090bee.
+- Notion: 완료 Task `LV-31`과 Work Log에 변경·검증·외부 파일 백업 주의를 기록했다.
+
 **2026-07-17 — 공개 푸터 SaaS형 리디자인 적용 + AutoCorp screenshot 복구**
 - 실제 계산기 화면을 기준으로 푸터 시안을 반복 조정한 뒤 `SiteFooter.tsx`·`App.css`에 적용했다. 카드형 외곽을 제거하고 LiqGuard 로고/설명, Product·Company·Legal 3열, 확정값만 표시하는 Operator 한 줄, 저작권·약관·개인정보·면책 재진입을 319~321px 높이로 정리했다. Google CMP 재호출과 내부 라우팅 동작은 보존했다.
 - 구버전 푸터는 런타임에 죽은 코드를 남기지 않고 적용 직전 HEAD를 annotated Git tag `archive/public-footer-before-2026-07-redesign`로 보존했다. 필요 시 해당 태그의 `SiteFooter.tsx`와 CSS를 파일 단위로 복원할 수 있다.

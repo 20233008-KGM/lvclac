@@ -844,7 +844,7 @@ Expected: targeted tests and build remain green after each fix.
 
 - [ ] **Step 8: Record final status if a durable risk remains**
 
-If any auth risk remains out of scope, record it in `docs/project-memory.md` or the relevant active feature document. The old repo-internal persona memory is retired and should not receive new active task state.
+If any auth risk remains out of scope, record it in `C:/Users/rlarb/Documents/lvclac-project-memory.md` or the relevant active feature document. The old repo-internal persona memory is retired and should not receive new active task state.
 
 ```md
 ## 2026-07-05 Auth UI

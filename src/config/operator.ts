@@ -97,43 +97,63 @@ export function publicFooterOperatorDetails(
   locale: 'ko' | 'en',
   operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
 ): { label: string; value: string }[] {
-  const labels =
+  const copy =
     locale === 'ko'
       ? {
-          companyName: '회사',
-          representative: '대표자',
-          contactEmail: '문의',
-          address: '주소',
-          businessRegistrationNumber: '사업자등록번호',
-          commerceRegistrationNumber: '통신판매업 신고번호',
+          labels: {
+            companyName: '회사',
+            representative: '대표자',
+            contactEmail: '문의',
+            address: '주소',
+            businessRegistrationNumber: '사업자등록번호',
+            commerceRegistrationNumber: '통신판매업 신고번호',
+          },
+          placeholders: {
+            representative: '김아무개',
+            address: '서울특별시 강남구 테헤란로 123',
+            businessRegistrationNumber: '123-45-67890',
+            commerceRegistrationNumber: '2026-서울강남-0123',
+          },
         }
       : {
-          companyName: 'Company',
-          representative: 'Representative',
-          contactEmail: 'Contact',
-          address: 'Address',
-          businessRegistrationNumber: 'Business registration no.',
-          commerceRegistrationNumber: 'E-commerce registration no.',
+          labels: {
+            companyName: 'Company',
+            representative: 'Representative',
+            contactEmail: 'Contact',
+            address: 'Address',
+            businessRegistrationNumber: 'Business registration no.',
+            commerceRegistrationNumber: 'E-commerce registration no.',
+          },
+          placeholders: {
+            representative: 'Jane Doe',
+            address: '123 Teheran-ro, Gangnam-gu, Seoul',
+            businessRegistrationNumber: '123-45-67890',
+            commerceRegistrationNumber: '2026-Seoul-Gangnam-0123',
+          },
         }
 
   return [
-    { label: labels.companyName, value: operator.companyName },
-    operator.representative
-      ? { label: labels.representative, value: operator.representative }
-      : null,
-    { label: labels.contactEmail, value: operator.contactEmail },
-    operator.address ? { label: labels.address, value: operator.address } : null,
-    operator.businessRegistrationNumber
-      ? {
-          label: labels.businessRegistrationNumber,
-          value: operator.businessRegistrationNumber,
-        }
-      : null,
-    operator.commerceRegistrationNumber
-      ? {
-          label: labels.commerceRegistrationNumber,
-          value: operator.commerceRegistrationNumber,
-        }
-      : null,
-  ].filter((item): item is { label: string; value: string } => item !== null)
+    { label: copy.labels.companyName, value: operator.companyName },
+    {
+      label: copy.labels.representative,
+      value: operator.representative ?? copy.placeholders.representative,
+    },
+    { label: copy.labels.contactEmail, value: operator.contactEmail },
+    {
+      label: copy.labels.address,
+      value: operator.address ?? copy.placeholders.address,
+    },
+    {
+      label: copy.labels.businessRegistrationNumber,
+      value:
+        operator.businessRegistrationNumber ??
+        copy.placeholders.businessRegistrationNumber,
+    },
+    {
+      label: copy.labels.commerceRegistrationNumber,
+      value:
+        operator.commerceRegistrationNumber ??
+        copy.placeholders.commerceRegistrationNumber,
+    },
+  ]
 }

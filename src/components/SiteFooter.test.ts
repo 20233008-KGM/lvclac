@@ -26,6 +26,10 @@ describe('public-lite footer links', () => {
     expect(source).toContain('publicFooterOperatorDetails(locale)')
     expect(source).not.toContain('site-footer__operator-heading')
     expect(source).toContain('site-footer__wordmark')
+    expect(source).toContain('src="/favicon.svg"')
+    expect(source).toContain('alt=""')
+    expect(css).not.toContain('.site-footer__mark::before')
+    expect(css).not.toContain('.site-footer__mark::after')
   })
 
   it('uses the shared compact type scale for structured company details', () => {

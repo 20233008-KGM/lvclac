@@ -105,7 +105,12 @@ export function SiteFooter() {
                 navigate('/')
               }}
             >
-              <span className="site-footer__mark" aria-hidden="true" />
+              <img
+                className="site-footer__mark"
+                src="/favicon.svg"
+                alt=""
+                aria-hidden="true"
+              />
               <span>{PUBLIC_OPERATOR_INFO.productName}</span>
             </a>
             <p className="site-footer__tagline">{copy.description}</p>

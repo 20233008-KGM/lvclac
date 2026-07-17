@@ -321,30 +321,16 @@ html[data-zone='public-info'] body {
 }
 
 .public-info-zone {
-  --public-info-accent: var(--color-primary);
-  --public-info-accent-muted: var(--color-primary-muted);
-  --public-info-rule: color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
-
-  min-height: 100dvh;
-  color: var(--color-text);
-}
-
-.public-info-zone[data-info-tone='company'] {
-  --public-info-accent: color-mix(in srgb, var(--color-primary) 72%, #8f82ff 28%);
-  --public-info-accent-muted: color-mix(
-    in srgb,
-    var(--color-primary-muted) 72%,
-    rgb(142 130 255 / 14%) 28%
-  );
-}
-
-.public-info-zone[data-info-tone='legal'] {
   --public-info-accent: color-mix(in srgb, var(--color-primary) 64%, var(--color-text-muted) 36%);
   --public-info-accent-muted: color-mix(
     in srgb,
     var(--color-primary-muted) 62%,
     rgb(154 163 178 / 10%) 38%
   );
+  --public-info-rule: color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+
+  min-height: 100dvh;
+  color: var(--color-text);
 }
 
 .public-info-zone .page-shell {
@@ -352,6 +338,7 @@ html[data-zone='public-info'] body {
 }
 
 .public-info-zone .page-content {
+  max-width: 920px;
   gap: var(--space-lg);
 }
 
@@ -453,7 +440,12 @@ html[data-zone='public-info'] body {
 
 .public-info-hero {
   max-width: 720px;
+  min-height: 264px;
   padding: clamp(40px, 7vw, 68px) 0 clamp(32px, 5vw, 48px);
+}
+
+html[lang='en'] .public-info-hero {
+  min-height: 340px;
 }
 
 .public-info-eyebrow {
@@ -699,7 +691,12 @@ html[data-zone='public-info'] body {
   }
 
   .public-info-hero {
+    min-height: 280px;
     padding: 36px 0 30px;
+  }
+
+  html[lang='en'] .public-info-hero {
+    min-height: 340px;
   }
 
   .public-info-content {

@@ -207,3 +207,7 @@
 **2026-07-18 — 계약승수 툴팁 예시 순서를 나스닥→KOSPI200→원자재로 통일**
 - 한글·영문 계약승수 도움말의 예시를 나스닥 E-mini, KOSPI200, 원유 순서로 정리하고 순서 회귀 테스트를 추가했다. 계산식·필드 의미·예시 수치는 변경하지 않았다.
 - 검증: 관련 **6/6**·전체 Vitest **676/676**, 변경 파일 ESLint, production build, diff check 통과. 브라우저 실행 도구가 세션에 노출되지 않아 실제 hover 화면 QA는 미수행이다. 같은 worktree의 동시 작업 커밋 과정에서 문구는 **f9544b1**에 포함됐고, 회귀 테스트는 **cd6db28**로 분리해 커밋했다. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81f19547d95ce52a3a98)와 [Work Log](https://app.notion.com/p/3a126e6d586f813c886ed6dfa64cdfa3) 기록 완료. 운영 배포는 수행하지 않았다.
+
+**2026-07-18 — `/updates` 10개 단위 URL 페이지네이션 구현**
+- 한영 업데이트를 id·ISO 날짜·분류·제목·요약의 단일 정적 데이터 모델로 통합하고 최신순 10개씩 표시하도록 했다. `/updates?page=2` URL 상태, page=1 제거, lang 등 다른 쿼리 보존, 잘못된 값·범위 초과 보정, 뒤로가기·앞으로가기와 목록 시작점 스크롤을 지원한다. 데스크톱 숫자 최대 5개, 모바일 3개와 `« ‹ › »` 이동, 접근성 라벨·현재 페이지·비활성 상태를 제공한다. 10개 이하에서는 컨트롤을 숨기고 실제 데이터 0개에서는 빈 상태를 유지한다. 네비게이션 제거 뒤 남은 hero 고정 높이·본문 상단 중복 여백도 해제했다.
+- 검증: 관련 18/18·전체 Vitest **680/680**, 변경 파일 ESLint, production build, diff check 통과. 23개 임시 데이터로 10/10/3 분할, page 2·last·back, 영문 `?lang=en&page=2`, invalid/out-of-range normalization, 모바일 40×40px 7개 버튼·overflow 0을 확인한 뒤 가짜 데이터를 제거했다. 최종 빈 상태에서 table/pagination/nav 0, canonical·console error 0. 구현 `maintenance/public` **71dead1**, 병행 스테이징 분리 **dee0729**. Notion 완료 [Task LV-51](https://app.notion.com/p/3a126e6d586f81ea8671e1544d4b89f0)와 [Work Log](https://app.notion.com/p/3a126e6d586f8144935cdb225fbfd547) 기록 완료. 운영 배포는 수행하지 않았다.

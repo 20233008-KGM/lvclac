@@ -14,7 +14,6 @@ export function FormulasPage() {
       eyebrow="LiqGuard · Reference"
       title={f.title}
       lead={f.description}
-      withAds
     >
       <FormulasContent formulas={f} variant="page" />
     </PublicInfoShell>

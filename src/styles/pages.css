@@ -333,15 +333,6 @@ html[data-zone='public-info'] body {
   color: var(--color-text);
 }
 
-.public-info-zone .page-shell {
-  padding-top: clamp(24px, 4vw, 52px);
-}
-
-.public-info-zone .page-content {
-  max-width: 920px;
-  gap: var(--space-lg);
-}
-
 .public-info-standalone {
   width: min(920px, calc(100% - 32px));
   margin: 0 auto;
@@ -665,10 +656,6 @@ html[lang='en'] .public-info-hero {
   .public-info-standalone {
     width: min(100% - 20px, 920px);
     padding-top: 110px;
-  }
-
-  .public-info-zone .page-shell {
-    padding: 110px 10px 10px;
   }
 
   .public-info-header {

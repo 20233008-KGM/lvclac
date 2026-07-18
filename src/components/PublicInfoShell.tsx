@@ -2,7 +2,6 @@ import { useEffect, type ReactNode } from 'react'
 import { PUBLIC_OPERATOR_INFO } from '../config/operator'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { PageShell } from './PageShell'
 import {
   publicInfoAriaCurrent,
   publicInfoNavigation,
@@ -19,7 +18,6 @@ interface PublicInfoShellProps {
   eyebrow: string
   title: string
   lead?: string
-  withAds?: boolean
   children: ReactNode
 }
 
@@ -29,7 +27,6 @@ export function PublicInfoShell({
   eyebrow,
   title,
   lead,
-  withAds = false,
   children,
 }: PublicInfoShellProps) {
   const { locale } = useLanguage()
@@ -120,11 +117,7 @@ export function PublicInfoShell({
 
   return (
     <div className="public-info-zone" data-info-tone={tone}>
-      {withAds ? (
-        <PageShell>{content}</PageShell>
-      ) : (
-        <div className="public-info-standalone">{content}</div>
-      )}
+      <div className="public-info-standalone">{content}</div>
     </div>
   )
 }

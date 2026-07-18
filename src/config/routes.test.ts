@@ -20,10 +20,12 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/terms/')).toBe(true)
     expect(isAdFreePublicInfoPath('/privacy')).toBe(true)
     expect(isAdFreePublicInfoPath('/privacy/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/guide')).toBe(true)
+    expect(isAdFreePublicInfoPath('/guide/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/formulas')).toBe(true)
+    expect(isAdFreePublicInfoPath('/formulas/')).toBe(true)
 
     expect(isAdFreePublicInfoPath('/')).toBe(false)
-    expect(isAdFreePublicInfoPath('/guide')).toBe(false)
-    expect(isAdFreePublicInfoPath('/formulas')).toBe(false)
   })
 
   it('recognizes the my page route with optional trailing slash', () => {

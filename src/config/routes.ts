@@ -31,6 +31,8 @@ export function isAboutPath(pathname: string): boolean {
 
 export function isAdFreePublicInfoPath(pathname: string): boolean {
   return (
+    isGuidePath(pathname) ||
+    isFormulasPath(pathname) ||
     isAboutPath(pathname) ||
     matchesPath(pathname, TERMS_PATH) ||
     matchesPath(pathname, PRIVACY_PATH)

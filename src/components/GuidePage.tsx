@@ -13,7 +13,6 @@ export function GuidePage() {
       eyebrow="LiqGuard · Guide"
       title={t.guide.title}
       lead={t.guide.description}
-      withAds
     >
       <GuideContent guide={t.guide} />
     </PublicInfoShell>

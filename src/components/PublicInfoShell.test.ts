@@ -42,7 +42,7 @@ describe('public information shell navigation', () => {
       /\.public-info-zone\s*{[^}]*--public-info-accent:\s*color-mix\(in srgb, var\(--color-primary\) 64%, var\(--color-text-muted\) 36%\);/s,
     )
     expect(pagesCss).not.toMatch(/\.public-info-zone\[data-info-tone=/)
-    expect(pagesCss).toMatch(/\.public-info-zone \.page-content\s*{[^}]*max-width:\s*920px;/s)
+    expect(pagesCss).toMatch(/\.public-info-standalone\s*{[^}]*width:\s*min\(920px,/s)
     expect(pagesCss).toMatch(
       /\.public-info-document::before\s*{[^}]*top:\s*-1px;[^}]*width:\s*min\(210px, 32%\);[^}]*background:\s*linear-gradient\(90deg, var\(--color-primary\), transparent\);/s,
     )

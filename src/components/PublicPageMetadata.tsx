@@ -32,6 +32,11 @@ const PAGE_METADATA = {
       description:
         '예상 청산가, 증거금 여유와 주문 이후 변화를 한 화면에서 살펴보는 LiqGuard의 제품 배경과 운영 원칙을 소개합니다.',
     },
+    '/company': {
+      title: '회사 소개 | LiqGuard',
+      description:
+        'LiqGuard를 만들고 운영하는 Farfield Software의 운영 원칙과 회사 정보를 소개합니다.',
+    },
     '/terms': {
       title: '이용약관 | LiqGuard',
       description: 'LiqGuard 무료 선물 계산기 이용 조건과 책임 범위를 안내합니다.',
@@ -66,6 +71,11 @@ const PAGE_METADATA = {
       title: 'About | LiqGuard',
       description:
         'Learn why LiqGuard brings estimated liquidation price, margin headroom, and post-order changes into one browser-based workspace.',
+    },
+    '/company': {
+      title: 'About Farfield Software | LiqGuard',
+      description:
+        'Learn about Farfield Software, the company that builds and operates LiqGuard.',
     },
     '/terms': {
       title: 'Terms of Use | LiqGuard',

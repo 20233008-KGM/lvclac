@@ -19,7 +19,18 @@ describe('public content entry points', () => {
     expect(app).toContain('<FormulasPage />')
     expect(app).toContain('const aboutPath = isAboutPath(pathname)')
     expect(app).toContain('<AboutPage />')
+    expect(app).toContain('const companyPath = isCompanyPath(pathname)')
+    expect(app).toContain('<CompanyPage />')
     expect(button).toContain('href={GUIDE_PATH}')
     expect(button).toContain('navigate(GUIDE_PATH)')
+  })
+
+  it('links the result header to the formula reference', () => {
+    const resultPanel = source('src/components/ResultPanel.tsx')
+
+    expect(resultPanel).toContain('href={FORMULAS_PATH}')
+    expect(resultPanel).toContain('navigate(FORMULAS_PATH)')
+    expect(resultPanel).toContain('{t.formulas.title}')
+    expect(resultPanel).toContain('result-panel__head-actions')
   })
 })

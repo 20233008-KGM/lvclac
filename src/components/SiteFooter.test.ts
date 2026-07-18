@@ -8,16 +8,17 @@ const footerMark = readFileSync(resolve('public/footer-brand-mark.svg'), 'utf8')
 
 describe('public-lite footer links', () => {
   it('publishes the product, company, and legal destinations', () => {
-    expect(source).toContain("{ label: '사용 가이드', href: GUIDE_PATH }")
-    expect(source).toContain("{ label: '수식 정의', href: FORMULAS_PATH }")
-    expect(source).toContain("{ label: '업데이트', href: UPDATES_PATH }")
     expect(source).toContain("{ label: '서비스 소개', href: ABOUT_PATH }")
+    expect(source).toContain("{ label: '사용 가이드', href: GUIDE_PATH }")
+    expect(source).toContain("{ label: '업데이트', href: UPDATES_PATH }")
+    expect(source).toContain("{ label: '회사 소개', href: COMPANY_PATH }")
     expect(source).toContain("label: '문의하기'")
+    expect(source).toContain("{ label: 'Service overview', href: ABOUT_PATH }")
     expect(source).toContain("{ label: 'User guide', href: GUIDE_PATH }")
-    expect(source).toContain("{ label: 'Formula reference', href: FORMULAS_PATH }")
     expect(source).toContain("{ label: 'Updates', href: UPDATES_PATH }")
-    expect(source).toContain("{ label: 'About', href: ABOUT_PATH }")
+    expect(source).toContain("{ label: 'About us', href: COMPANY_PATH }")
     expect(source).toContain("label: 'Contact'")
+    expect(source).not.toContain('FORMULAS_PATH')
     expect(source).toContain("bottomTerms: '이용약관'")
     expect(source).toContain("bottomPrivacy: '개인정보처리방침'")
     expect(source).toContain("bottomTerms: 'Terms'")
@@ -38,6 +39,15 @@ describe('public-lite footer links', () => {
     expect(source).toContain('alt=""')
     expect(css).not.toContain('.site-footer__mark::before')
     expect(css).not.toContain('.site-footer__mark::after')
+  })
+
+  it('keeps the requested first-row ordering in product and company columns', () => {
+    expect(source.indexOf("{ label: '서비스 소개', href: ABOUT_PATH }")).toBeLessThan(
+      source.indexOf("{ label: '사용 가이드', href: GUIDE_PATH }"),
+    )
+    expect(source.indexOf("{ label: '회사 소개', href: COMPANY_PATH }")).toBeLessThan(
+      source.indexOf("label: '문의하기'"),
+    )
   })
 
   it('uses the shared compact type scale for structured company details', () => {

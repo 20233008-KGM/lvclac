@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 const source = readFileSync(resolve('src/components/PublicPageMetadata.tsx'), 'utf8')
 
 describe('public page metadata', () => {
-  it.each(['/', '/guide', '/formulas', '/updates', '/about', '/terms', '/privacy'])(
+  it.each(['/', '/guide', '/formulas', '/updates', '/about', '/company', '/terms', '/privacy'])(
     'defines title, description, and canonical handling for %s',
     (path) => {
       expect(source).toContain(`'${path}': {`)

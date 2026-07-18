@@ -1,6 +1,6 @@
 import {
   ABOUT_PATH,
-  FORMULAS_PATH,
+  COMPANY_PATH,
   GUIDE_PATH,
   PRIVACY_PATH,
   TERMS_PATH,
@@ -24,8 +24,8 @@ const footerCopy = {
         id: 'product',
         title: 'Product',
         links: [
+          { label: '서비스 소개', href: ABOUT_PATH },
           { label: '사용 가이드', href: GUIDE_PATH },
-          { label: '수식 정의', href: FORMULAS_PATH },
           { label: '업데이트', href: UPDATES_PATH },
         ],
       },
@@ -33,7 +33,7 @@ const footerCopy = {
         id: 'company',
         title: 'Company',
         links: [
-          { label: '서비스 소개', href: ABOUT_PATH },
+          { label: '회사 소개', href: COMPANY_PATH },
           {
             label: '문의하기',
             href: `mailto:${PUBLIC_OPERATOR_INFO.contactEmail}`,
@@ -58,8 +58,8 @@ const footerCopy = {
         id: 'product',
         title: 'Product',
         links: [
+          { label: 'Service overview', href: ABOUT_PATH },
           { label: 'User guide', href: GUIDE_PATH },
-          { label: 'Formula reference', href: FORMULAS_PATH },
           { label: 'Updates', href: UPDATES_PATH },
         ],
       },
@@ -67,7 +67,7 @@ const footerCopy = {
         id: 'company',
         title: 'Company',
         links: [
-          { label: 'About', href: ABOUT_PATH },
+          { label: 'About us', href: COMPANY_PATH },
           {
             label: 'Contact',
             href: `mailto:${PUBLIC_OPERATOR_INFO.contactEmail}`,

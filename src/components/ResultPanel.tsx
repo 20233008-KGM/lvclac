@@ -18,6 +18,8 @@ import {
 } from '../calc/mtmLink'
 import type { CalculatorHistoryOptions } from '../context/calculatorHistory'
 import type { CalculatorInputs, EvaluateResult, OrderResult, TotalMarginKind } from '../types'
+import { FORMULAS_PATH } from '../config/routes'
+import { useNavigate } from '../hooks/usePathname'
 import { maxAddableLabel } from '../utils/positionLabels'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
@@ -750,6 +752,7 @@ function OrderResults({
 
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const { t } = useLanguage()
+  const navigate = useNavigate()
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
   const [marginKindModalOpen, setMarginKindModalOpen] = useState(false)
@@ -825,6 +828,18 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       <section className="panel result-panel">
         <div className="result-panel__head">
           <h2>{t.result}</h2>
+          <div className="result-panel__head-actions">
+            <a
+              className="result-panel__head-btn"
+              href={FORMULAS_PATH}
+              onClick={(event) => {
+                event.preventDefault()
+                navigate(FORMULAS_PATH)
+              }}
+            >
+              {t.formulas.title}
+            </a>
+          </div>
         </div>
         <EvaluateResults
           key={positionSide}

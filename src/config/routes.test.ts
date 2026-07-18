@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   isAdFreePublicInfoPath,
+  isCompanyPath,
   isLegalPath,
   isAdminFeedbackPath,
   isMyPagePath,
@@ -17,6 +18,8 @@ describe('routes', () => {
   it('keeps company and legal information pages ad-free', () => {
     expect(isAdFreePublicInfoPath('/about')).toBe(true)
     expect(isAdFreePublicInfoPath('/about/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/company')).toBe(true)
+    expect(isAdFreePublicInfoPath('/company/')).toBe(true)
     expect(isAdFreePublicInfoPath('/terms')).toBe(true)
     expect(isAdFreePublicInfoPath('/terms/')).toBe(true)
     expect(isAdFreePublicInfoPath('/privacy')).toBe(true)
@@ -29,6 +32,12 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/updates/')).toBe(true)
 
     expect(isAdFreePublicInfoPath('/')).toBe(false)
+  })
+
+  it('recognizes the public company route with optional trailing slash', () => {
+    expect(isCompanyPath('/company')).toBe(true)
+    expect(isCompanyPath('/company/')).toBe(true)
+    expect(isCompanyPath('/company/team')).toBe(false)
   })
 
   it('recognizes the public updates route with optional trailing slash', () => {

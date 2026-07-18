@@ -68,14 +68,22 @@ export function ContentRiskNotice() {
   )
 }
 
-export function DisclaimerShowAgainLink({ variant = 'default' }: { variant?: 'default' | 'footer' }) {
+export function DisclaimerShowAgainLink({
+  variant = 'default',
+}: {
+  variant?: 'default' | 'footer' | 'footer-nav'
+}) {
   const { t } = useLanguage()
   const ctx = useContext(DisclaimerContext)
 
-  if (!ctx?.skipActive) return null
+  if (!ctx || (variant !== 'footer-nav' && !ctx.skipActive)) return null
 
   const className =
-    variant === 'footer' ? 'link-btn site-footer__legal-extra' : 'link-btn legal-show-again'
+    variant === 'footer'
+      ? 'link-btn site-footer__legal-extra'
+      : variant === 'footer-nav'
+        ? 'site-footer__link site-footer__link-button'
+        : 'link-btn legal-show-again'
 
   return (
     <button type="button" className={className} onClick={ctx.showAgain}>

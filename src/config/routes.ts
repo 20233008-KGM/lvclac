@@ -1,6 +1,7 @@
 export const FORMULAS_PATH = '/formulas'
 export const GUIDE_PATH = '/guide'
 export const ABOUT_PATH = '/about'
+export const UPDATES_PATH = '/updates'
 export const MY_PAGE_PATH = '/my'
 export const BILLING_PATH = '/billing'
 export const RECORDS_PATH = '/records'
@@ -29,11 +30,16 @@ export function isAboutPath(pathname: string): boolean {
   return matchesPath(pathname, ABOUT_PATH)
 }
 
+export function isUpdatesPath(pathname: string): boolean {
+  return matchesPath(pathname, UPDATES_PATH)
+}
+
 export function isAdFreePublicInfoPath(pathname: string): boolean {
   return (
     isGuidePath(pathname) ||
     isFormulasPath(pathname) ||
     isAboutPath(pathname) ||
+    isUpdatesPath(pathname) ||
     matchesPath(pathname, TERMS_PATH) ||
     matchesPath(pathname, PRIVACY_PATH)
   )

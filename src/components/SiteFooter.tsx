@@ -4,6 +4,7 @@ import {
   GUIDE_PATH,
   PRIVACY_PATH,
   TERMS_PATH,
+  UPDATES_PATH,
 } from '../config/routes'
 import {
   PUBLIC_OPERATOR_INFO,
@@ -20,14 +21,16 @@ const footerCopy = {
       '선물 포지션의 청산 위험과 주문 이후 변화를 빠르게 검토하는 브라우저 기반 계산 보조 도구입니다.',
     columns: [
       {
+        id: 'product',
         title: 'Product',
         links: [
-          { label: '선물 계산기', href: '/' },
           { label: '사용 가이드', href: GUIDE_PATH },
           { label: '수식 정의', href: FORMULAS_PATH },
+          { label: '업데이트', href: UPDATES_PATH },
         ],
       },
       {
+        id: 'company',
         title: 'Company',
         links: [
           { label: '서비스 소개', href: ABOUT_PATH },
@@ -38,28 +41,30 @@ const footerCopy = {
         ],
       },
       {
+        id: 'legal',
         title: 'Legal',
-        links: [
-          { label: '이용약관', href: TERMS_PATH },
-          { label: '개인정보처리방침', href: PRIVACY_PATH },
-        ],
+        links: [],
       },
     ],
     privacySettings: '개인정보·쿠키 설정',
+    bottomTerms: '이용약관',
+    bottomPrivacy: '개인정보처리방침',
   },
   en: {
     description:
       'A browser-based calculation aid for reviewing futures liquidation risk and post-order changes.',
     columns: [
       {
+        id: 'product',
         title: 'Product',
         links: [
-          { label: 'Calculator', href: '/' },
           { label: 'User guide', href: GUIDE_PATH },
           { label: 'Formula reference', href: FORMULAS_PATH },
+          { label: 'Updates', href: UPDATES_PATH },
         ],
       },
       {
+        id: 'company',
         title: 'Company',
         links: [
           { label: 'About', href: ABOUT_PATH },
@@ -70,14 +75,14 @@ const footerCopy = {
         ],
       },
       {
+        id: 'legal',
         title: 'Legal',
-        links: [
-          { label: 'Terms', href: TERMS_PATH },
-          { label: 'Privacy', href: PRIVACY_PATH },
-        ],
+        links: [],
       },
     ],
     privacySettings: 'Privacy and cookie settings',
+    bottomTerms: 'Terms',
+    bottomPrivacy: 'Privacy',
   },
 } as const
 
@@ -139,16 +144,21 @@ export function SiteFooter() {
                       </a>
                     </li>
                   ))}
-                  {column.title === copy.columns[2].title && (
-                    <li>
-                      <button
-                        type="button"
-                        className="site-footer__link site-footer__link-button"
-                        onClick={openPrivacySettings}
-                      >
-                        {copy.privacySettings}
-                      </button>
-                    </li>
+                  {column.id === 'legal' && (
+                    <>
+                      <li>
+                        <button
+                          type="button"
+                          className="site-footer__link site-footer__link-button"
+                          onClick={openPrivacySettings}
+                        >
+                          {copy.privacySettings}
+                        </button>
+                      </li>
+                      <li>
+                        <DisclaimerShowAgainLink variant="footer-nav" />
+                      </li>
+                    </>
                   )}
                 </ul>
               </div>
@@ -178,7 +188,7 @@ export function SiteFooter() {
                 navigate(TERMS_PATH)
               }}
             >
-              {copy.columns[2].links[0].label}
+              {copy.bottomTerms}
             </a>
             <a
               className="site-footer__bottom-link"
@@ -188,9 +198,8 @@ export function SiteFooter() {
                 navigate(PRIVACY_PATH)
               }}
             >
-              {copy.columns[2].links[1].label}
+              {copy.bottomPrivacy}
             </a>
-            <DisclaimerShowAgainLink variant="footer" />
           </div>
         </div>
       </div>

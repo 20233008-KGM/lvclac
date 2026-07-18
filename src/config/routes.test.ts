@@ -7,6 +7,7 @@ import {
   isPricingPath,
   isProductPath,
   isRecordsPath,
+  isUpdatesPath,
   ADMIN_FEEDBACK_PATH,
   MY_PAGE_PATH,
   RECORDS_PATH,
@@ -24,8 +25,16 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/guide/')).toBe(true)
     expect(isAdFreePublicInfoPath('/formulas')).toBe(true)
     expect(isAdFreePublicInfoPath('/formulas/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/updates')).toBe(true)
+    expect(isAdFreePublicInfoPath('/updates/')).toBe(true)
 
     expect(isAdFreePublicInfoPath('/')).toBe(false)
+  })
+
+  it('recognizes the public updates route with optional trailing slash', () => {
+    expect(isUpdatesPath('/updates')).toBe(true)
+    expect(isUpdatesPath('/updates/')).toBe(true)
+    expect(isUpdatesPath('/updates/archive')).toBe(false)
   })
 
   it('recognizes the my page route with optional trailing slash', () => {

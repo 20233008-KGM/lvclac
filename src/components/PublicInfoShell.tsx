@@ -13,7 +13,7 @@ import '../styles/pages.css'
 export type PublicInfoTone = 'product-doc' | 'company' | 'legal'
 
 interface PublicInfoShellProps {
-  activePath: PublicInfoPath
+  activePath: PublicInfoPath | null
   tone: PublicInfoTone
   eyebrow: string
   title: string

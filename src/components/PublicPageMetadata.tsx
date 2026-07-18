@@ -23,6 +23,10 @@ const PAGE_METADATA = {
       description:
         'LiqGuard가 예상 청산가, 증거금, 레버리지와 주문 반영값을 계산할 때 사용하는 수식을 공개합니다.',
     },
+    '/updates': {
+      title: '업데이트 | LiqGuard',
+      description: 'LiqGuard의 새로운 기능과 주요 개선 사항을 안내합니다.',
+    },
     '/about': {
       title: '서비스 소개 | LiqGuard',
       description:
@@ -53,6 +57,10 @@ const PAGE_METADATA = {
       title: 'Formula Reference | LiqGuard',
       description:
         'Review the formulas LiqGuard uses for estimated liquidation price, margin, leverage, and order previews.',
+    },
+    '/updates': {
+      title: 'Updates | LiqGuard',
+      description: 'New features and notable improvements to LiqGuard.',
     },
     '/about': {
       title: 'About | LiqGuard',

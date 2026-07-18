@@ -35,6 +35,7 @@ describe('public information shell navigation', () => {
   it('marks only the active route as the current page', () => {
     expect(publicInfoAriaCurrent('/about', '/about')).toBe('page')
     expect(publicInfoAriaCurrent('/guide', '/about')).toBeUndefined()
+    expect(publicInfoAriaCurrent('/guide', null)).toBeUndefined()
   })
 
   it('shares the legal gradient, legal width, and stable localized hero heights', () => {

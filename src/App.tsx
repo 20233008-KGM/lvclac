@@ -25,11 +25,13 @@ import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { PublicLegalPage } from './components/PublicLegalPage'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
+import { UpdatesPage } from './components/UpdatesPage'
 import {
   isAboutPath,
   isFormulasPath,
   isGuidePath,
   isLegalPath,
+  isUpdatesPath,
 } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
@@ -214,6 +216,7 @@ function AppRouter() {
   const guidePath = isGuidePath(pathname)
   const formulasPath = isFormulasPath(pathname)
   const aboutPath = isAboutPath(pathname)
+  const updatesPath = isUpdatesPath(pathname)
 
   useEffect(() => {
     if (
@@ -221,12 +224,13 @@ function AppRouter() {
       !guidePath &&
       !formulasPath &&
       !aboutPath &&
+      !updatesPath &&
       legalKind !== 'terms' &&
       legalKind !== 'privacy'
     ) {
       window.history.replaceState(null, '', '/')
     }
-  }, [aboutPath, formulasPath, guidePath, legalKind, pathname])
+  }, [aboutPath, formulasPath, guidePath, legalKind, pathname, updatesPath])
 
   const metadata = <PublicPageMetadata pathname={pathname} />
 
@@ -253,6 +257,15 @@ function AppRouter() {
       <>
         {metadata}
         <AboutPage />
+      </>
+    )
+  }
+
+  if (updatesPath) {
+    return (
+      <>
+        {metadata}
+        <UpdatesPage />
       </>
     )
   }

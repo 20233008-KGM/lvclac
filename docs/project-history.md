@@ -146,3 +146,7 @@
 - 적용 커밋 `maintenance/public` **8a9cf32**(받침대형), **68a721f**(그라데이션 제거), **ab1b2d7**(계산기 패널색 일치).
 - 실제 계산기 화면에 fixed 토글을 주입해 단색 4종·그라데이션 4종을 비교한 뒤, 최종적으로 `radial-gradient(70% 120% at 16% 0%, rgb(142 130 255 / 6%), transparent 64%)`와 `#1d212a → #15181f` 차콜 세로 그라데이션을 선택했다. 기존 상단 파란 accent·8px 상단 radius·데스크톱 10px inset은 유지한다.
 - 최종 검증: public vitest **623/623**, production build, Chrome 실제 소스 새로고침에서 보라빛 시작점 `16% 0%`·불투명도 `6%`, 가로 오버플로·콘솔 오류 0건을 확인했다. 적용 커밋 `maintenance/public` **050fbcc**.
+
+**2026-07-17 — 푸터 상단 투자 위험 문구 여백 토큰 정렬**
+- 투자 위험 문구가 `clamp(54px, 6vw, 78px)`, 푸터가 `clamp(34px, 4vw, 52px)`의 독립 마진을 가져 상위 레이아웃 간격과 중첩되던 문제를 수정했다. 범위 재확인 결과 계산기→문구만 확 띄우는 것이 의도였다. 문구 상단은 `var(--space-xl) × 2 + var(--space-md)`로 80px, 푸터 상단은 `var(--space-md)`로 두어 상위 레이아웃 간격 포함 문구→푸터는 기존 32px을 유지한다.
+- 기존 푸터 차콜 글로우와 실행기록 hover 연결 구역은 보존했다. 검증: 관련 Vitest 4개, production build, 1280×900·390×844 브라우저 실측에서 계산기→문구 80px·문구→푸터 32px, 가로 오버플로·콘솔 오류 0건. 최종 적용 커밋 `maintenance/public` **c8d45e1**. Notion 완료 Task와 Work Log도 최종 80px/32px 기준으로 갱신했다.

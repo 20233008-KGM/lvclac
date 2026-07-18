@@ -52,12 +52,13 @@ describe('public-lite footer links', () => {
     expect(css).not.toMatch(/\.site-footer__mark \{[^}]*opacity:/)
   })
 
-  it('uses a footer-specific charcoal palette with a restrained red accent', () => {
-    expect(footerMark).toContain('#65708a')
-    expect(footerMark).toContain('#404857')
-    expect(footerMark).toContain('#a84b4a')
-    expect(footerMark).toContain('#e15e52')
-    expect(footerMark).toContain('#eef0f4')
+  it('uses a footer-specific cool blue palette with a clear red accent', () => {
+    expect(footerMark).toContain('#7183b8')
+    expect(footerMark).toContain('#596a94')
+    expect(footerMark).toContain('#46516a')
+    expect(footerMark).toContain('#bd5551')
+    expect(footerMark).toContain('#ef6657')
+    expect(footerMark).toContain('#f5f7fa')
   })
 
   it('does not restore removed paid-plan destinations', () => {

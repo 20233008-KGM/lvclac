@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
   <defs>
     <linearGradient id="footer-mark" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#65708a" />
-      <stop offset="0.58" stop-color="#4e586d" />
-      <stop offset="0.72" stop-color="#404857" />
-      <stop offset="0.8" stop-color="#a84b4a" />
-      <stop offset="1" stop-color="#e15e52" />
+      <stop offset="0" stop-color="#7183b8" />
+      <stop offset="0.58" stop-color="#596a94" />
+      <stop offset="0.72" stop-color="#46516a" />
+      <stop offset="0.78" stop-color="#bd5551" />
+      <stop offset="1" stop-color="#ef6657" />
     </linearGradient>
   </defs>
   <path
@@ -14,7 +14,7 @@
   />
   <path
     fill="none"
-    stroke="#eef0f4"
+    stroke="#f5f7fa"
     stroke-width="3.6"
     stroke-linecap="round"
     stroke-linejoin="round"

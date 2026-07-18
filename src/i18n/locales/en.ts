@@ -859,7 +859,7 @@ export const en: Messages = {
     },
     orderContracts: {
       label: 'Order size (contracts)',
-      hint: '# Order size (contracts)\nAdditional contracts to simulate at fill.\n\n+ expands the position, − reduces it.',
+      hint: '# Order size (contracts)\nAdditional contracts to simulate at fill.\n\nPositive (+) expands the current position; negative (−) reduces it.\n\nLong: + buy / − sell\nShort: + sell / − buy to cover',
       placeholder: '+/-0',
     },
     orderPrice: {

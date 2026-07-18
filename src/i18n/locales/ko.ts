@@ -846,7 +846,7 @@ export const ko: Messages = {
     },
     orderContracts: {
       label: '추가 주문 계약수',
-      hint: '# 추가 주문 계약수\n체결을 가정하는 추가 계약 수입니다.\n\n+ 확장, − 축소',
+      hint: '# 추가 주문 계약수\n체결을 가정하는 추가 계약 수입니다.\n\n양수(+)는 현재 포지션을 늘리고, 음수(−)는 줄입니다.\n\n롱: + 매수 / − 매도\n숏: + 매도 / − 매수(환매)',
       placeholder: '+/-0',
     },
     orderPrice: {

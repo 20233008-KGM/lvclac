@@ -53,4 +53,10 @@ describe('public information shell navigation', () => {
       /@media \(max-width: 520px\)[\s\S]*\.public-info-hero\s*{[^}]*min-height:\s*280px;/,
     )
   })
+
+  it('aligns the footer edges with the public document shell', () => {
+    expect(pagesCss).toMatch(
+      /\.public-info-zone \.site-footer\s*{[^}]*width:\s*100%;[^}]*margin-top:\s*var\(--space-xl\);[^}]*margin-inline:\s*0;/s,
+    )
+  })
 })

@@ -223,3 +223,8 @@
 **2026-07-18 — 추가 주문 계약수 툴팁의 롱·숏 부호 의미 명확화**
 - 한영 추가 주문 계약수 도움말에 양수는 선택한 포지션 확대, 음수는 축소라는 기준을 명시하고, 롱은 `+ 매수 / − 매도`, 숏은 `+ 매도 / − 매수(환매)`로 실제 방향을 구분했다. 계산 로직·가이드·반대 포지션 전환 제한은 변경하지 않고 양 언어 회귀 테스트를 추가했다.
 - 검증: 전용 **2/2**·전체 Vitest **682/682**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 1280×720·390×844 한영에서 320px 툴팁 문구, 화면 내 배치, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **d3a2758**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f819c84e1dd6942893138)와 [Work Log](https://app.notion.com/p/3a126e6d586f81a68948d9f41772c7f0) 기록 완료. 운영 배포는 수행하지 않았다.
+
+**2026-07-18 — 업데이트 페이지네이션에 차분한 페이지 전환 모션 적용**
+- 페이지 번호를 누르면 목록이 즉시 바뀌던 흐름을 현재 목록 160ms 퇴장 → URL·목록 교체 → 새 목록 240ms 진입으로 바꿨다. 목록 전체가 8px 위로 빠졌다가 새 페이지가 12px 아래에서 들어오며, `aria-busy`로 전환 상태를 노출한다. 뒤로가기 중 기존 모션이 진행 중이면 예약을 취소하고 실제 URL 상태 기준으로 새 전환을 시작한다.
+- `prefers-reduced-motion`에서는 JavaScript 지연과 CSS 모션을 모두 제거해 즉시 전환한다. 23개 임시 데이터로 10/10/3 페이지를 만든 뒤 데스크톱·390×844 모바일, 한영, page 1→2→3, 모션 감소, 40px 버튼·가로 오버플로를 검수하고 임시 데이터는 제거했다.
+- 검증: 관련 **15/15**·전체 Vitest **686/686**, 변경 파일 ESLint, production build, diff check 통과. 실제 전환 중 퇴장 `opacity 0.86/translateY -1.1px`, 진입 `opacity 0.29/translateY 8.5px`, 종료 `idle`, 모바일 overflow 0, 콘솔 오류·경고 0을 확인했다. 적용 커밋 `maintenance/public` **f113203**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f811c8957f0505502595a), [Work Log](https://app.notion.com/p/3a126e6d586f811e8fedce0509267496), Release Notes 기록 완료. 운영 배포는 수행하지 않았다.

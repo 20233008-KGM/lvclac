@@ -540,7 +540,9 @@ html[lang='en'] .public-info-hero {
 }
 
 .public-info-zone .site-footer {
+  width: 100%;
   margin-top: var(--space-xl);
+  margin-inline: 0;
 }
 
 .public-info-zone .guide-content,

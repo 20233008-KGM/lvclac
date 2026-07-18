@@ -55,6 +55,11 @@ const sortedUpdates = [...UPDATE_ENTRIES].sort((left, right) =>
   right.publishedAt.localeCompare(left.publishedAt),
 )
 
+type UpdatesTransitionState = 'idle' | 'leaving' | 'entering'
+
+const UPDATES_LEAVE_DURATION_MS = 160
+const UPDATES_ENTER_DURATION_MS = 240
+
 function formatUpdateDate(publishedAt: string, locale: Locale): string {
   return new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', {
     year: 'numeric',
@@ -68,7 +73,12 @@ export function UpdatesPage() {
   const { locale } = useLanguage()
   const copy = updatesCopy[locale]
   const listRef = useRef<HTMLDivElement>(null)
+  const leaveTimerRef = useRef<number | null>(null)
+  const enterTimerRef = useRef<number | null>(null)
+  const frameRef = useRef<number | null>(null)
+  const transitionInProgressRef = useRef(false)
   const [search, setSearch] = useState(() => window.location.search)
+  const [transitionState, setTransitionState] = useState<UpdatesTransitionState>('idle')
   const resolvedPage = useMemo(
     () => resolveUpdatesPage(search, sortedUpdates.length),
     [search],
@@ -83,14 +93,65 @@ export function UpdatesPage() {
     listRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' })
   }, [])
 
+  const clearTransitionSchedule = useCallback(() => {
+    if (leaveTimerRef.current !== null) window.clearTimeout(leaveTimerRef.current)
+    if (enterTimerRef.current !== null) window.clearTimeout(enterTimerRef.current)
+    if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current)
+    leaveTimerRef.current = null
+    enterTimerRef.current = null
+    frameRef.current = null
+  }, [])
+
+  const runPageTransition = useCallback(
+    (commitNavigation: () => void, restartActiveTransition = false) => {
+      if (transitionInProgressRef.current) {
+        if (!restartActiveTransition) return
+        clearTransitionSchedule()
+        transitionInProgressRef.current = false
+      }
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (reduceMotion) {
+        setTransitionState('idle')
+        commitNavigation()
+        frameRef.current = window.requestAnimationFrame(scrollToUpdates)
+        return
+      }
+
+      transitionInProgressRef.current = true
+      setTransitionState('leaving')
+
+      leaveTimerRef.current = window.setTimeout(() => {
+        commitNavigation()
+        frameRef.current = window.requestAnimationFrame(() => {
+          scrollToUpdates()
+          setTransitionState('entering')
+          enterTimerRef.current = window.setTimeout(() => {
+            transitionInProgressRef.current = false
+            setTransitionState('idle')
+          }, UPDATES_ENTER_DURATION_MS)
+        })
+      }, UPDATES_LEAVE_DURATION_MS)
+    },
+    [clearTransitionSchedule, scrollToUpdates],
+  )
+
   useEffect(() => {
     const onPopState = () => {
-      setSearch(window.location.search)
-      window.requestAnimationFrame(scrollToUpdates)
+      const nextSearch = window.location.search
+      runPageTransition(() => setSearch(nextSearch), true)
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
-  }, [scrollToUpdates])
+  }, [runPageTransition])
+
+  useEffect(
+    () => () => {
+      clearTransitionSchedule()
+      transitionInProgressRef.current = false
+    },
+    [clearTransitionSchedule],
+  )
 
   useEffect(() => {
     if (!resolvedPage.needsNormalization) return
@@ -101,8 +162,10 @@ export function UpdatesPage() {
     const href = updatesHrefForPage(page, window.location.search)
     const currentHref = `${window.location.pathname}${window.location.search}`
     if (href === currentHref) return
-    window.history.pushState(null, '', href)
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    runPageTransition(() => {
+      window.history.pushState(null, '', href)
+      setSearch(window.location.search)
+    })
   }
 
   return (
@@ -117,7 +180,12 @@ export function UpdatesPage() {
       {sortedUpdates.length === 0 ? (
         <p className="updates-empty">{copy.empty}</p>
       ) : (
-        <div ref={listRef} className="updates-list">
+        <div
+          ref={listRef}
+          className="updates-list"
+          data-transition-state={transitionState}
+          aria-busy={transitionState !== 'idle'}
+        >
           <div className="updates-table-wrap">
             <table className="updates-table" aria-label={copy.tableLabel}>
               <thead>

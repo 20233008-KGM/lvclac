@@ -203,3 +203,7 @@
 - 서비스 안내·로컬 저장·개인정보/쿠키 설정을 공용 `TrustModalFrame`으로 통합했다. 포털, 배경 스크롤 잠금, 제목 초기 포커스, 내부 순환, 종료 후 복원과 모달별 Escape·배경 클릭 정책을 공통화하고, 16px 차콜 카드·얇은 경계·저채도 블루·4/8/16/24 간격으로 금융 도구다운 차분한 위계를 적용했다.
 - 첫 방문 Provider 순서를 서비스 안내 → 저장 선택 → 비규제 지역 개인정보 설정으로 고정해 동시에 겹치지 않게 했다. 저장 선택→확인, 기존 저장 키·동의 데이터·Consent Mode 기본 거부·GA4/AdSense 적용·규제 지역 Google CMP 위임은 유지했다. 개인정보 모달은 기본 기능과 선택 기능, 현재 상태(기본 차단/거부/허용), 같은 무게의 거부·허용 버튼을 한영 i18n으로 제공한다.
 - 검증: 전체 Vitest **674/674**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 1280×900·390×844 한영에서 3단 순서, 모달 폭 560/480/440px, 내부 스크롤·가로 오버플로·콘솔 오류 0, 허용 상태 재진입·Escape 닫기·포커스 복원을 확인했다. 적용 커밋 `maintenance/public` **f9544b1**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81f7a91ddf623ab3b1b8), [Work Log](https://app.notion.com/p/3a126e6d586f818daf25c11221d45a01), [Design & Decision Log](https://app.notion.com/p/3a126e6d586f817596c6e4bb3fa8e83d), Release Notes 기록 완료. 운영 배포는 수행하지 않았다.
+
+**2026-07-18 — 계약승수 툴팁 예시 순서를 나스닥→KOSPI200→원자재로 통일**
+- 한글·영문 계약승수 도움말의 예시를 나스닥 E-mini, KOSPI200, 원유 순서로 정리하고 순서 회귀 테스트를 추가했다. 계산식·필드 의미·예시 수치는 변경하지 않았다.
+- 검증: 관련 **6/6**·전체 Vitest **676/676**, 변경 파일 ESLint, production build, diff check 통과. 브라우저 실행 도구가 세션에 노출되지 않아 실제 hover 화면 QA는 미수행이다. 같은 worktree의 동시 작업 커밋 과정에서 문구는 **f9544b1**에 포함됐고, 회귀 테스트는 **cd6db28**로 분리해 커밋했다. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81f19547d95ce52a3a98)와 [Work Log](https://app.notion.com/p/3a126e6d586f813c886ed6dfa64cdfa3) 기록 완료. 운영 배포는 수행하지 않았다.

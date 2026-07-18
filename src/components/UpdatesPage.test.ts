@@ -32,6 +32,22 @@ describe('public updates page', () => {
     expect(source).toContain('updates-pagination__mobile-hidden')
   })
 
+  it('stages a calm page transition and removes its delay for reduced motion', () => {
+    expect(source).toContain("type UpdatesTransitionState = 'idle' | 'leaving' | 'entering'")
+    expect(source).toContain("window.matchMedia('(prefers-reduced-motion: reduce)').matches")
+    expect(source).toContain('data-transition-state={transitionState}')
+    expect(source).toContain("aria-busy={transitionState !== 'idle'}")
+    expect(pagesCss).toMatch(
+      /\.updates-list\[data-transition-state='leaving'\]\s*{[^}]*opacity:\s*0;[^}]*translateY\(-8px\);/s,
+    )
+    expect(pagesCss).toMatch(
+      /\.updates-list\[data-transition-state='entering'\]\s*{[^}]*updates-page-enter 240ms/s,
+    )
+    expect(pagesCss).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.updates-list\[data-transition-state\][\s\S]*animation:\s*none;/s,
+    )
+  })
+
   it('keeps the update rows flat, pagination responsive, and includes the route in the sitemap', () => {
     expect(pagesCss).toMatch(
       /\.updates-table-wrap\s*{[^}]*border-top:\s*1px solid var\(--public-info-rule\);[^}]*border-bottom:\s*1px solid var\(--public-info-rule\);/s,

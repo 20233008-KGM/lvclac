@@ -16,7 +16,7 @@ const PAGE_METADATA = {
     '/guide': {
       title: '사용 가이드 | LiqGuard',
       description:
-        'LiqGuard 선물 계산기의 입력 순서, 증거금 모드, 주문 시뮬레이션과 기기 내 저장 사용법을 안내합니다.',
+        'LiqGuard 선물 계산기의 필수 세팅값, 증거금 모드, 주문 시뮬레이션과 기기 내 저장 사용법을 안내합니다.',
     },
     '/formulas': {
       title: '계산 수식 | LiqGuard',
@@ -51,7 +51,7 @@ const PAGE_METADATA = {
     '/guide': {
       title: 'User Guide | LiqGuard',
       description:
-        'Learn the recommended input order, margin modes, order simulation, and on-device saving in LiqGuard.',
+        'Learn the minimum setup values, margin modes, order simulation, and on-device saving in LiqGuard.',
     },
     '/formulas': {
       title: 'Formula Reference | LiqGuard',

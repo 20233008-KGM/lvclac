@@ -1110,7 +1110,7 @@ export const en: Messages = {
   guide: {
     title: 'User guide',
     description:
-      'How to fill inputs, use order tools, update the mark price each day, and use shortcuts.\nEnter numbers exactly as shown in your broker app.',
+      'The minimum setup values, margin modes, order tools, and how to update the mark price each day.\nEnter numbers exactly as shown in your broker app.',
     sections: [
       {
         title: 'Getting started',
@@ -1122,21 +1122,24 @@ export const en: Messages = {
         ],
       },
       {
-        title: 'Recommended input order',
-        paragraphs: ['Fill fields in this order for the smoothest workflow:'],
+        title: 'Minimum setup values',
+        paragraphs: [
+          'Start with only the values below to calculate the current position. Tick size is optional and only needed for ▲▼ adjustments.',
+        ],
         items: [
-          'Instrument — mark first, then equity immediately (same HTS screen / snapshot)',
-          'Account — open contracts',
-          'Margin — pick the mode that matches your HTS (rate, per-contract, or total), then enter maintenance and initial margin',
-          'Instrument — entry price, contract multiplier (contract size), tick size',
+          'Position — long or short, open contracts, and entry price',
+          'Account — account equity and mark price from the same point in time',
+          'Instrument — contract multiplier (contract size)',
+          'Margin — choose one of the three modes below, then enter its maintenance and initial margin values',
         ],
       },
       {
         title: 'Margin input modes',
         paragraphs: [
-          'Domestic futures often use rate mode; many international contracts use per-contract fixed margin.',
-          'Use total mode when your HTS shows aggregate margin only.',
-          'If you enter both a rate and a direct amount, the direct amount takes precedence.',
+          'Rate mode — when margin is quoted as a percentage of notional. Examples: KOSPI 200 index futures and KOSPI single-stock futures.',
+          'Per-contract mode — when margin is quoted as an amount per contract. Examples: CME equity-index futures and commodity futures such as crude oil or gold.',
+          'Total mode — when your broker shows only the aggregate margin for the current open position.',
+          'Choose the mode that matches the exchange or broker display, then enter maintenance and initial margin as a pair.',
         ],
       },
       {

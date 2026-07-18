@@ -55,4 +55,9 @@ describe('preset overrides 무결성', () => {
     expect(Object.keys(ko.glossaryPreset.options).sort()).toEqual(ids)
     expect(Object.keys(en.glossaryPreset.options).sort()).toEqual(ids)
   })
+
+  it('en: 기본 계약승수 라벨은 짧게 표시하고 전체 용어는 도움말에 유지한다', () => {
+    expect(en.fields.contractMultiplier.label).toBe('Multiplier / contract size')
+    expect(en.fields.contractMultiplier.hint).toContain('Contract multiplier (contract size)')
+  })
 })

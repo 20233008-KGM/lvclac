@@ -1166,20 +1166,6 @@ export const en: Messages = {
         ],
       },
       {
-        title: 'Scenario price',
-        paragraphs: [
-          'The normal daily routine now uses the mark price field. Scenario price is a secondary tool for checking results at an assumed price.',
-          'Use it when you want to inspect liquidation price or margin headroom without immediately changing the stored mark and account equity.',
-          'When tick size is set, use ▲▼ or drag the field vertically to step by ticks.',
-        ],
-        items: [
-          'Price assumption — inspect results while keeping the current setup',
-          'Esc or Delete — clear the input',
-          'Ctrl+Z — undo',
-          'Ctrl+Shift+Z — redo',
-        ],
-      },
-      {
         title: 'Is the layout uncomfortable?',
         paragraphs: [
           'If column widths feel wrong or numbers look clipped, drag the panel borders (resizers) to adjust.',

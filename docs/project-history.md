@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-18 — 쿠키 설정 모달 닫기 아이콘 렌더링 수정**
+- 공용 `TrustModalFrame` 닫기 X를 브라우저 정적 위치 계산에 의존하던 CSS 가상 요소 두 선에서 좌표가 명시된 16×16 SVG 두 경로로 교체했다. 접근성 라벨·32×32 클릭 영역·색상·닫기 동작은 유지하고 SVG 구조 회귀 테스트를 추가했다.
+- 검증: 전용 **5/5**·전체 Vitest **687/687**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 실제 개인정보·쿠키 설정 모달에서 SVG 16×16 중앙 정렬·두 경로·닫기 동작·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **b0efb8c**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f8199ba76f285d56c1ea7)와 [Work Log](https://app.notion.com/p/3a126e6d586f81a6a97bc7cc9390a5ce) 기록 완료. 운영 배포는 수행하지 않았다.
+
 **2026-07-18 — `/updates` 공용 상단 네비게이션 오노출 수정**
 - `activePath={null}`이 활성 탭만 없애고 서비스 소개·사용 가이드·수식 정의·이용약관·개인정보 네비게이션은 그대로 렌더링하던 원인을 확인했다. 공용 `PublicInfoShell`에 기본값이 켜진 `showNavigation` 옵션을 추가하고 `/updates`에서만 꺼서 업데이트 내용 영역에 집중하도록 교정했다. 다른 정보 페이지 5종의 네비게이션은 유지했다.
 - 검증: 관련 7/7·전체 Vitest **654/654**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 한영 1280×900·390×844에서 `/updates` 내 공용 네비게이션 0개, 가로 오버플로·콘솔 오류 0을 확인했다. 최종 공개 브랜치 적용 커밋 `maintenance/public` **f4fc5ba**, 프로젝트 이력 정리 **46e20be**. 작업 중 외부 브랜치 전환으로 생긴 원본 `design` **3617abc**도 비파괴적으로 보존했다. Notion 완료 [Task LV-46](https://app.notion.com/p/3a126e6d586f81359a48ceb6c7b098ad)와 [Work Log](https://app.notion.com/p/3a126e6d586f813bab97f4e13768536f) 기록 완료. 운영 배포는 수행하지 않았다.

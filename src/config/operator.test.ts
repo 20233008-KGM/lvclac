@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   publicFooterOperatorDetails,
+  publicRepresentativeDisplayName,
   type PublicOperatorInfo,
 } from './operator'
 
@@ -69,5 +70,29 @@ describe('publicFooterOperatorDetails', () => {
         value: '2026-Seoul-Gangnam-0123',
       },
     ])
+  })
+
+  it('uses a localized public representative name when legal details are still pending', () => {
+    const pendingOperator: PublicOperatorInfo = {
+      brandName: 'Farfield Software',
+      companyName: 'Farfield Software Inc.',
+      productName: 'LiqGuard',
+      representativeDisplayName: {
+        ko: '김규민',
+        en: 'Gyumin Kim',
+      },
+      contactEmail: 'contact@farfield.software',
+    }
+
+    expect(publicRepresentativeDisplayName('ko', pendingOperator)).toBe('김규민')
+    expect(publicRepresentativeDisplayName('en', pendingOperator)).toBe('Gyumin Kim')
+    expect(publicFooterOperatorDetails('ko', pendingOperator)[1]).toEqual({
+      label: '대표자',
+      value: '김규민',
+    })
+    expect(publicFooterOperatorDetails('en', pendingOperator)[1]).toEqual({
+      label: 'Representative',
+      value: 'Gyumin Kim',
+    })
   })
 })

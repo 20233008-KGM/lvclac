@@ -11,6 +11,7 @@ export interface PublicOperatorInfo {
   productName: string
   legalName?: string
   representative?: string
+  representativeDisplayName?: Partial<Record<'ko' | 'en', string>>
   address?: string
   businessRegistrationNumber?: string
   commerceRegistrationNumber?: string
@@ -24,6 +25,10 @@ export const PUBLIC_OPERATOR_INFO: PublicOperatorInfo = {
   productName: 'LiqGuard',
   legalName: optional(import.meta.env.VITE_PUBLIC_OPERATOR_LEGAL_NAME),
   representative: optional(import.meta.env.VITE_PUBLIC_OPERATOR_REPRESENTATIVE),
+  representativeDisplayName: {
+    ko: '김규민',
+    en: 'Gyumin Kim',
+  },
   address: optional(import.meta.env.VITE_PUBLIC_OPERATOR_ADDRESS),
   businessRegistrationNumber: optional(
     import.meta.env.VITE_PUBLIC_OPERATOR_BUSINESS_REGISTRATION_NUMBER,
@@ -39,6 +44,13 @@ export function publicOperatorDisplayName(
   operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
 ): string {
   return operator.legalName ?? operator.brandName
+}
+
+export function publicRepresentativeDisplayName(
+  locale: 'ko' | 'en',
+  operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
+): string | undefined {
+  return operator.representative ?? operator.representativeDisplayName?.[locale]
 }
 
 export function publicOperatorDetails(
@@ -136,7 +148,9 @@ export function publicFooterOperatorDetails(
     { label: copy.labels.companyName, value: operator.companyName },
     {
       label: copy.labels.representative,
-      value: operator.representative ?? copy.placeholders.representative,
+      value:
+        publicRepresentativeDisplayName(locale, operator) ??
+        copy.placeholders.representative,
     },
     { label: copy.labels.contactEmail, value: operator.contactEmail },
     {

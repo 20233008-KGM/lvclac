@@ -799,7 +799,7 @@ export const en: Messages = {
     },
     maintenanceMarginRate: {
       label: 'Maintenance margin rate',
-      hint: '# Maintenance margin rate\nThe minimum margin ratio required to keep a position open.\n\nIf account equity falls below this requirement, a margin call or liquidation may occur.\n\nEnter it as a decimal of notional. Example: 0.247 = 24.7%',
+      hint: '# Maintenance margin rate\nThe minimum margin ratio required to keep a position open.\n\nIf account equity no longer meets this requirement, a margin call or liquidation may occur.\n\nEnter it as a decimal of notional. Example: 0.247 = 24.7%',
       placeholder: 'e.g. 0.25',
     },
     maintenanceMargin: {

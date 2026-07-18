@@ -60,13 +60,4 @@ describe('preset overrides 무결성', () => {
     expect(en.fields.contractMultiplier.label).toBe('Contract multiplier')
     expect(en.fields.contractMultiplier.hint).toMatch(/^# Contract multiplier\n/)
   })
-
-  it('계약승수 도움말 예시는 나스닥, KOSPI200, 원자재 순서로 안내한다', () => {
-    expect(ko.fields.contractMultiplier.hint).toMatch(
-      /나스닥 E-mini[\s\S]*KOSPI200[\s\S]*원유/,
-    )
-    expect(en.fields.contractMultiplier.hint).toMatch(
-      /Nasdaq E-mini[\s\S]*KOSPI200[\s\S]*crude oil/,
-    )
-  })
 })

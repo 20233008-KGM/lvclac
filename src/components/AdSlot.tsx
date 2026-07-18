@@ -28,11 +28,11 @@ function getSidebarStyle(variant: AdVariant): CSSProperties {
 }
 
 export function AdSlot({ slotId, variant = 'banner', label }: AdSlotProps) {
-  const { adsAllowed } = useGoogleConsent()
+  const { adRequestsAllowed } = useGoogleConsent()
   const insRef = useRef<HTMLModElement>(null)
   const pushedRef = useRef(false)
   const adUnitId = getAdSlotUnitId(slotId)
-  const isLive = isAdSenseConfigured(slotId) && adsAllowed
+  const isLive = isAdSenseConfigured(slotId) && adRequestsAllowed
 
   useEffect(() => {
     if (!isLive || !insRef.current || pushedRef.current) return

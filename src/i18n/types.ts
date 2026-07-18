@@ -765,8 +765,16 @@ export interface Messages {
     statusDefaultBlocked: string
     statusDenied: string
     statusAllowed: string
+    statusCustomized: string
     deny: string
     allow: string
+    details: string
+    analyticsTitle: string
+    analyticsBody: string
+    personalizedAdsTitle: string
+    personalizedAdsBody: string
+    adNotice: string
+    save: string
   }
   legal: {
     bannerShort: string

@@ -7,6 +7,12 @@ export function setAdRequestsPaused(paused: boolean): void {
   window.adsbygoogle.pauseAdRequests = paused ? 1 : 0
 }
 
+export function setPersonalizedAdRequestsAllowed(allowed: boolean): void {
+  if (typeof window === 'undefined') return
+  window.adsbygoogle = window.adsbygoogle || []
+  window.adsbygoogle.requestNonPersonalizedAds = allowed ? 0 : 1
+}
+
 export function ensureAdSenseScript(clientId: string): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
 

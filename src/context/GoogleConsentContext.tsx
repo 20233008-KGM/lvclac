@@ -11,26 +11,38 @@ import { TrustModalFrame } from '../components/TrustModalFrame'
 import { useFirstVisitGateActive } from './FirstVisitFlowContext'
 import { usePathname } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { ensureAdSenseScript, setAdRequestsPaused } from '../lib/adsense'
+import {
+  ensureAdSenseScript,
+  setAdRequestsPaused,
+  setPersonalizedAdRequestsAllowed,
+} from '../lib/adsense'
 import { initAnalytics } from '../lib/analytics'
 import {
   applyGoogleConsentMode,
   decideGoogleConsent,
   initializeGoogleConsentDefaults,
-  readOptionalTrackingPreference,
+  readPrivacyPreferences,
   shouldRequestCustomPrivacySettings,
-  writeOptionalTrackingPreference,
+  writePrivacyPreferences,
   type GoogleConsentDecision,
   type GoogleConsentValues,
-  type OptionalTrackingPreference,
+  type PrivacyPreferences,
 } from '../lib/googleConsent'
 import { GoogleConsentContext } from './googleConsentState'
 
 const INITIAL_DECISION: GoogleConsentDecision = {
   ready: false,
   regulated: true,
-  adsAllowed: false,
+  adRequestsAllowed: false,
+  adStorageAllowed: false,
+  adUserDataAllowed: false,
+  personalizedAdsAllowed: false,
   analyticsAllowed: false,
+}
+
+const DENIED_PREFERENCES: PrivacyPreferences = {
+  analytics: false,
+  personalizedAds: false,
 }
 
 function queueGoogleCallback(key: string, callback: () => void): void {
@@ -59,26 +71,32 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const [decision, setDecision] = useState<GoogleConsentDecision>(INITIAL_DECISION)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [deferredAutoOpen, setDeferredAutoOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [draftPreferences, setDraftPreferences] =
+    useState<PrivacyPreferences>(DENIED_PREFERENCES)
   const configured = Boolean(ADSENSE_CLIENT)
 
   const applyDecision = useCallback((next: GoogleConsentDecision) => {
     setDecision(next)
     applyGoogleConsentMode(next)
-    setAdRequestsPaused(adFreePath || !next.adsAllowed)
+    setPersonalizedAdRequestsAllowed(next.personalizedAdsAllowed)
+    setAdRequestsPaused(adFreePath || !next.adRequestsAllowed)
     if (next.analyticsAllowed) initAnalytics()
   }, [adFreePath])
 
   useEffect(() => {
-    setAdRequestsPaused(adFreePath || !decision.adsAllowed)
-  }, [adFreePath, decision.adsAllowed])
+    setAdRequestsPaused(adFreePath || !decision.adRequestsAllowed)
+  }, [adFreePath, decision.adRequestsAllowed])
 
   const syncGoogleDecision = useCallback(() => {
     const values = window.googlefc?.getGoogleConsentModeValues?.()
     if (!values) return
-    const preference = readOptionalTrackingPreference(localStorage)
-    const next = decideGoogleConsent(values as GoogleConsentValues, preference)
+    const preferences = readPrivacyPreferences(localStorage)
+    const next = decideGoogleConsent(values as GoogleConsentValues, preferences)
     applyDecision(next)
-    if (shouldRequestCustomPrivacySettings(next, preference)) {
+    if (shouldRequestCustomPrivacySettings(next, preferences)) {
+      setDraftPreferences(DENIED_PREFERENCES)
+      setDetailsOpen(false)
       if (firstVisitGateActive) setDeferredAutoOpen(true)
       else setSettingsOpen(true)
     }
@@ -105,17 +123,21 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
     }
   }, [syncGoogleDecision])
 
-  const chooseOptionalTracking = useCallback(
-    (preference: OptionalTrackingPreference) => {
-      writeOptionalTrackingPreference(localStorage, preference)
+  const choosePrivacyPreferences = useCallback(
+    (preferences: PrivacyPreferences) => {
+      writePrivacyPreferences(localStorage, preferences)
       applyDecision({
         ready: true,
         regulated: false,
-        adsAllowed: preference === 'allow',
-        analyticsAllowed: preference === 'allow',
+        adRequestsAllowed: true,
+        adStorageAllowed: preferences.personalizedAds,
+        adUserDataAllowed: preferences.personalizedAds,
+        personalizedAdsAllowed: preferences.personalizedAds,
+        analyticsAllowed: preferences.analytics,
       })
       setDeferredAutoOpen(false)
       setSettingsOpen(false)
+      setDetailsOpen(false)
     },
     [applyDecision],
   )
@@ -128,14 +150,26 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
       })
       return
     }
+    const savedPreferences = readPrivacyPreferences(localStorage) ?? {
+      analytics: decision.analyticsAllowed,
+      personalizedAds: decision.personalizedAdsAllowed,
+    }
+    setDraftPreferences(savedPreferences)
+    setDetailsOpen(true)
     setDeferredAutoOpen(false)
     setSettingsOpen(true)
-  }, [configured, decision.regulated, syncGoogleDecision])
+  }, [
+    configured,
+    decision.analyticsAllowed,
+    decision.personalizedAdsAllowed,
+    decision.regulated,
+    syncGoogleDecision,
+  ])
 
   const value = useMemo(
     () => ({
       ...decision,
-      adsAllowed: decision.adsAllowed && !adFreePath,
+      adRequestsAllowed: decision.adRequestsAllowed && !adFreePath,
       configured,
       openPrivacySettings,
     }),
@@ -144,15 +178,27 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
 
   const copy = t.privacySettings
   const customSettingsVisible = settingsOpen || (deferredAutoOpen && !firstVisitGateActive)
-  const optionalAllowed = decision.ready && (decision.adsAllowed || decision.analyticsAllowed)
-  const optionalStatus = !decision.ready
+  const optionalAllowedCount = Number(decision.analyticsAllowed) +
+    Number(decision.personalizedAdsAllowed)
+  const optionalStatus = !decision.adRequestsAllowed
     ? copy.statusDefaultBlocked
-    : optionalAllowed
+    : optionalAllowedCount === 2
       ? copy.statusAllowed
-      : copy.statusDenied
+      : optionalAllowedCount === 1
+        ? copy.statusCustomized
+        : copy.statusDenied
   const closePrivacySettings = () => {
     setDeferredAutoOpen(false)
     setSettingsOpen(false)
+    setDetailsOpen(false)
+  }
+
+  const openDetailedSettings = () => {
+    setDraftPreferences({
+      analytics: decision.analyticsAllowed,
+      personalizedAds: decision.personalizedAdsAllowed,
+    })
+    setDetailsOpen(true)
   }
 
   return (
@@ -169,23 +215,45 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
           icon={<PrivacyControlsIcon />}
           closeLabel={copy.close}
           onRequestClose={closePrivacySettings}
-          footer={(
-            <div className="privacy-settings-actions">
+          footer={detailsOpen ? (
+            <div className="privacy-settings-actions privacy-settings-actions--single">
               <button
                 type="button"
-                className="btn btn-ghost privacy-settings-action"
-                onClick={() => chooseOptionalTracking('deny')}
+                className="btn btn-primary privacy-settings-action"
+                onClick={() => choosePrivacyPreferences(draftPreferences)}
               >
-                {copy.deny}
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost privacy-settings-action"
-                onClick={() => chooseOptionalTracking('allow')}
-              >
-                {copy.allow}
+                {copy.save}
               </button>
             </div>
+          ) : (
+            <>
+              <div className="privacy-settings-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost privacy-settings-action"
+                  onClick={() => choosePrivacyPreferences(DENIED_PREFERENCES)}
+                >
+                  {copy.deny}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost privacy-settings-action"
+                  onClick={() => choosePrivacyPreferences({
+                    analytics: true,
+                    personalizedAds: true,
+                  })}
+                >
+                  {copy.allow}
+                </button>
+              </div>
+              <button
+                type="button"
+                className="privacy-settings-details"
+                onClick={openDetailedSettings}
+              >
+                {copy.details}
+              </button>
+            </>
           )}
         >
           <div className="privacy-settings-facts">
@@ -198,20 +266,70 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
                 {copy.coreStatus}
               </span>
             </div>
-            <div className="privacy-settings-fact">
-              <span>
-                <strong>{copy.optionalTitle}</strong>
-                <span>{copy.optionalBody}</span>
-              </span>
-              <span
-                className={`privacy-settings-status ${
-                  optionalAllowed ? 'privacy-settings-status--allowed' : ''
-                }`}
-              >
-                {optionalStatus}
-              </span>
-            </div>
+            {detailsOpen ? (
+              <>
+                <div className="privacy-settings-fact">
+                  <span>
+                    <strong>{copy.analyticsTitle}</strong>
+                    <span>{copy.analyticsBody}</span>
+                  </span>
+                  <label className="privacy-settings-toggle">
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      aria-label={copy.analyticsTitle}
+                      checked={draftPreferences.analytics}
+                      onChange={(event) => setDraftPreferences((current) => ({
+                        ...current,
+                        analytics: event.target.checked,
+                      }))}
+                    />
+                    <span className="privacy-settings-toggle-track" aria-hidden="true" />
+                    <span className="privacy-settings-toggle-label">
+                      {draftPreferences.analytics ? copy.statusAllowed : copy.statusDenied}
+                    </span>
+                  </label>
+                </div>
+                <div className="privacy-settings-fact">
+                  <span>
+                    <strong>{copy.personalizedAdsTitle}</strong>
+                    <span>{copy.personalizedAdsBody}</span>
+                  </span>
+                  <label className="privacy-settings-toggle">
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      aria-label={copy.personalizedAdsTitle}
+                      checked={draftPreferences.personalizedAds}
+                      onChange={(event) => setDraftPreferences((current) => ({
+                        ...current,
+                        personalizedAds: event.target.checked,
+                      }))}
+                    />
+                    <span className="privacy-settings-toggle-track" aria-hidden="true" />
+                    <span className="privacy-settings-toggle-label">
+                      {draftPreferences.personalizedAds ? copy.statusAllowed : copy.statusDenied}
+                    </span>
+                  </label>
+                </div>
+              </>
+            ) : (
+              <div className="privacy-settings-fact">
+                <span>
+                  <strong>{copy.optionalTitle}</strong>
+                  <span>{copy.optionalBody}</span>
+                </span>
+                <span
+                  className={`privacy-settings-status ${
+                    optionalAllowedCount > 0 ? 'privacy-settings-status--allowed' : ''
+                  }`}
+                >
+                  {optionalStatus}
+                </span>
+              </div>
+            )}
           </div>
+          <p className="privacy-settings-ad-notice">{copy.adNotice}</p>
         </TrustModalFrame>
       )}
     </GoogleConsentContext.Provider>

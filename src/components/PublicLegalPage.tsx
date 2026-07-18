@@ -212,7 +212,7 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
           {
             title: '5. 쿠키와 선택권',
             paragraphs: [
-              'Google 태그는 기본적으로 광고·분석 저장을 거부 상태로 시작합니다. 적용 지역에서는 Google 인증 CMP를 통해 선택을 받은 후 GA4 측정과 AdSense 광고 요청을 시작합니다.',
+              'Google 태그는 기본적으로 광고·분석 저장을 거부 상태로 시작합니다. 적용 지역에서는 Google 인증 CMP를 통해 선택을 받은 뒤 GA4 측정 여부를 결정하고, AdSense는 선택에 따라 맞춤·비맞춤·제한 광고 중 허용되는 방식으로 요청할 수 있습니다.',
               'Google과 광고 파트너는 이용자의 이 사이트 또는 다른 웹사이트 방문 기록을 바탕으로 광고를 제공하기 위해 광고 쿠키를 사용할 수 있습니다. 이용자는 Google 광고 설정에서 맞춤 광고를 해제할 수 있습니다.',
               '푸터의 개인정보·쿠키 설정에서 선택을 변경하거나 철회할 수 있습니다. 선택 기능을 거부해도 계산기, 수식, 가이드와 기기 내 저장 기능은 사용할 수 있습니다.',
             ],
@@ -435,7 +435,7 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
         {
           title: '5. Cookies and choices',
           paragraphs: [
-            'Google consent defaults begin in a denied state. Where required, GA4 measurement and AdSense ad requests start only after a choice through a Google-certified CMP.',
+            'Google consent defaults begin in a denied state. Where required, a choice through a Google-certified CMP controls GA4 measurement, while AdSense may request an eligible personalized, non-personalized, or limited ad based on that choice.',
             'Google and its advertising partners may use advertising cookies to serve ads based on visits to this site or other websites. You can opt out of personalized advertising through Google Ads Settings.',
             'You can change or withdraw your choice through Privacy and cookie settings in the footer. Denying optional use does not disable the calculator, formulas, guide, or on-device saving.',
           ],

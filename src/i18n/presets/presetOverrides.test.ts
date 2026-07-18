@@ -56,8 +56,8 @@ describe('preset overrides 무결성', () => {
     expect(Object.keys(en.glossaryPreset.options).sort()).toEqual(ids)
   })
 
-  it('en: 기본 계약승수 라벨은 짧게 표시하고 전체 용어는 도움말에 유지한다', () => {
-    expect(en.fields.contractMultiplier.label).toBe('Multiplier / contract size')
-    expect(en.fields.contractMultiplier.hint).toContain('Contract multiplier (contract size)')
+  it('en: 기본 계약승수 필드는 Contract multiplier로 통일한다', () => {
+    expect(en.fields.contractMultiplier.label).toBe('Contract multiplier')
+    expect(en.fields.contractMultiplier.hint).toMatch(/^# Contract multiplier\n/)
   })
 })

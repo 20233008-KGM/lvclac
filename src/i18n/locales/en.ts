@@ -853,8 +853,8 @@ export const en: Messages = {
       placeholder: '1',
     },
     contractMultiplier: {
-      label: 'Multiplier / contract size',
-      hint: '# Contract multiplier (contract size)\nValue used to calculate the one-contract P&L when price moves by 1.\n\nExamples: KOSPI200 250,000, Nasdaq E-mini 20, crude oil 1,000.\n\nDefaults to 1 if blank.',
+      label: 'Contract multiplier',
+      hint: '# Contract multiplier\nValue used to calculate the one-contract P&L when price moves by 1.\n\nExamples: KOSPI200 250,000, Nasdaq E-mini 20, crude oil 1,000.\n\nDefaults to 1 if blank.',
       placeholder: '1',
     },
     orderContracts: {

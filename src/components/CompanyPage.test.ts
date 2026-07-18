@@ -16,18 +16,21 @@ describe('public company page', () => {
     expect(source).toContain('href={ABOUT_PATH}')
   })
 
-  it('separates the company mission, product, principles, and leadership in both locales', () => {
-    expect(source).toContain('복잡한 금융 계산을 더 명확한 도구로 만듭니다')
+  it('separates the company mission, direction, principles, current product, and leadership in both locales', () => {
+    expect(source).toContain('소수에게, 오래 쓰이는 소프트웨어를')
     expect(source).toContain(
-      'We make complex financial calculations easier to understand.',
+      'Software made to last for the people who need it.',
     )
-    expect(source).toContain("problemTitle: '우리가 푸는 문제'")
-    expect(source).toContain("productTitle: '우리가 만드는 것'")
-    expect(source).toContain("principlesTitle: '제품을 만드는 기준'")
+    expect(source).toContain("workTitle: '우리가 하는 일'")
+    expect(source).toContain("directionTitle: '우리가 향하는 곳'")
+    expect(source).toContain("principlesTitle: '제품을 만드는 방식'")
+    expect(source).toContain("currentProductTitle: '현재 만드는 제품'")
     expect(source).toContain("makerTitle: '만드는 사람'")
-    expect(source).toContain("title: '명확한 근거'")
-    expect(source).toContain("title: '사용자의 선택'")
-    expect(source).toContain("title: '작고 완성도 높게'")
+    expect(source).toContain("title: '필요한 문제부터'")
+    expect(source).toContain("title: '넓이보다 깊이'")
+    expect(source).toContain("title: '있는 것을 더 좋게'")
+    expect(source).toContain('금융 도구에만 머무르지 않고')
+    expect(source).toContain('서로 다른 분야에서 오래 남는 소프트웨어')
     expect(source).toContain("makerRole: '대표'")
     expect(source).toContain("makerRole: 'CEO'")
   })

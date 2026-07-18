@@ -1759,6 +1759,7 @@ html[data-zone='contact'] body {
 
 .public-info-zone .company-section h2,
 .public-info-zone .company-principles > h2,
+.public-info-zone .company-current-product h2,
 .public-info-zone .company-maker > h2,
 .public-info-zone .company-details > h2 {
   margin: 0 0 var(--space-sm);
@@ -1792,9 +1793,35 @@ html[data-zone='contact'] body {
 }
 
 .public-info-zone .company-principles,
+.public-info-zone .company-current-product,
 .public-info-zone .company-maker {
   padding-top: var(--space-lg);
   border-top: 1px solid var(--public-info-rule);
+}
+
+.public-info-zone .company-current-product {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-xl);
+}
+
+.public-info-zone .company-current-product h2 {
+  margin-bottom: var(--space-xs);
+}
+
+.public-info-zone .company-current-product p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.public-info-zone .company-current-product .company-product-link {
+  margin-top: 0;
+  white-space: nowrap;
 }
 
 .public-info-zone .company-principles__list {
@@ -1911,6 +1938,12 @@ html[data-zone='contact'] body {
 }
 
 @media (max-width: 520px) {
+  .public-info-zone .company-current-product {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: var(--space-md);
+  }
+
   .public-info-zone .company-maker {
     align-items: flex-start;
     flex-direction: column;

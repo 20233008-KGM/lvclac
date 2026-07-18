@@ -16,18 +16,38 @@ describe('public updates page', () => {
     expect(appSource).toContain('<UpdatesPage />')
   })
 
-  it('publishes the agreed empty state in Korean and English', () => {
-    expect(source).toContain(
-      '아직 공개된 업데이트가 없습니다. 새 기능과 개선 사항을 이곳에 기록합니다.',
-    )
-    expect(source).toContain(
-      'No updates have been published yet. New features and improvements will be recorded here.',
-    )
+  it('renders localized updates in a semantic table and keeps an empty state', () => {
+    expect(source).toContain('<table className="updates-table"')
+    expect(source).toContain('<time dateTime={entry.publishedAt}>')
+    expect(source).toContain('entry.content[locale]')
+    expect(source).toContain('<p className="updates-empty">{copy.empty}</p>')
   })
 
-  it('keeps the empty state flat and includes the route in the sitemap', () => {
+  it('renders accessible URL-backed pagination only when more than ten updates exist', () => {
+    expect(source).toContain('sortedUpdates.length > UPDATES_PAGE_SIZE')
+    expect(source).toContain('updatesHrefForPage(page, window.location.search)')
+    expect(source).toContain('aria-current={page === resolvedPage.page')
+    expect(source).toContain('aria-label={copy.firstPage}')
+    expect(source).toContain('aria-label={copy.lastPage}')
+    expect(source).toContain('updates-pagination__mobile-hidden')
+  })
+
+  it('keeps the update rows flat, pagination responsive, and includes the route in the sitemap', () => {
     expect(pagesCss).toMatch(
-      /\.updates-empty\s*{[^}]*border-top:\s*1px solid var\(--public-info-rule\);[^}]*border-bottom:\s*1px solid var\(--public-info-rule\);/s,
+      /\.updates-table-wrap\s*{[^}]*border-top:\s*1px solid var\(--public-info-rule\);[^}]*border-bottom:\s*1px solid var\(--public-info-rule\);/s,
+    )
+    expect(pagesCss).toMatch(/\.updates-table tbody tr\s*{[^}]*display:\s*grid;/s)
+    expect(pagesCss).toMatch(
+      /\.updates-pagination button\s*{[^}]*width:\s*40px;[^}]*height:\s*40px;/s,
+    )
+    expect(pagesCss).toMatch(
+      /@media \(max-width: 520px\)[\s\S]*\.updates-pagination__mobile-hidden\s*{[^}]*display:\s*none;/s,
+    )
+    expect(pagesCss).toMatch(
+      /\.public-info-document\[data-info-navigation='hidden'\] \.public-info-hero\s*{[^}]*min-height:\s*0;/s,
+    )
+    expect(pagesCss).toMatch(
+      /\.public-info-document\[data-info-navigation='hidden'\] \.public-info-content\s*{[^}]*padding-top:\s*0;/s,
     )
     expect(sitemap).toContain('<loc>https://liqguard.com/updates</loc>')
   })

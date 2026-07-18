@@ -49,7 +49,11 @@ export function PublicInfoShell({
 
   const content = (
     <>
-      <article className="public-info-document" data-info-tone={tone}>
+      <article
+        className="public-info-document"
+        data-info-tone={tone}
+        data-info-navigation={showNavigation ? 'visible' : 'hidden'}
+      >
         <header className="public-info-header">
           <div className="public-info-header__top">
             <a

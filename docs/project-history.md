@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-18 — 푸터 링크 역할 재정리 및 `/updates` 빈 문서 추가**
+- 푸터 Product에서 계산기 링크를 빼고 사용 가이드·수식 정의·업데이트를 배치했다. Company는 서비스 소개·문의, Legal은 개인정보·쿠키 설정·서비스 이용 안내 다시 보기로 정리했으며, 이용약관·개인정보처리방침은 하단 법무 줄에만 남겼다. 서비스 안내는 면책 자동 표시 설정과 무관하게 누구나 다시 열 수 있다.
+- `/updates`는 기존 `PublicInfoShell`의 920px 문서 톤을 재사용하되 상단 5개 내비게이션에는 넣지 않고 활성 탭 없이 표시한다. 합의대로 한영 빈 상태만 두고, trailing slash·canonical/OG·사이트맵·광고 제외 경로를 연결했다.
+- 검증: 관련 26/26·구현 시 전체 Vitest **650/650**, production build, diff check 통과. 병행 i18n 커밋까지 합친 최종 HEAD에서도 **651/651**과 build가 재통과했다. 변경 파일 lint의 `ServiceDisclaimer.tsx` Fast Refresh 1건은 기준 커밋에서도 동일했다. 인앱 브라우저 1280×900·390×844 한영에서 3개 칼럼·모바일 2열+Legal 전체폭·문서 폭·모달 2종·푸터 링크·canonical, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **bb6650e**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81299d92c0dae13ed011)와 [Work Log](https://app.notion.com/p/3a126e6d586f81929a9afcb432f9c4c3), Release Notes 기록 완료. 운영 배포는 수행하지 않았다.
+
 **2026-07-18 — 공개 푸터 워드마크를 공식 LiqGuard 파비콘으로 교체**
 - 제품과 무관하게 보이던 CSS 합성 장식 아이콘을 제거하고 공식 방패 체크 형태를 푸터 LiqGuard 홈 링크에 적용했다. 단순 채도·밝기 필터가 색을 탁하게 만들어 필터를 제거하고 푸터 전용 `public/footer-brand-mark.svg`를 사용한다. 최종 팔레트는 본체를 블루차콜(`#65708a → #404857`)로 푸터 배경 쪽에 붙이고, 하단 20%가량은 따뜻한 레드(`#a84b4a → #e15e52`)를 되살렸으며 체크는 차가운 백색이다. 크기는 20px, 글자 간격은 9px이다. 브라우저 파비콘 원본과 탭 설정은 변경하지 않았고 중복 낭독을 피하도록 장식 이미지로 처리했다.
 - 검증: 푸터 테스트 5개, 전체 Vitest **641/641**, 변경 파일 ESLint, production build. 브라우저에서 한국어 1280px·390px 모두 20×20px·중앙 정렬·가로 오버플로 없음, 블루차콜 본체와 선명한 하단 레드, 콘솔 오류 0건을 확인했다. 적용 커밋 `maintenance/public` **6d55711**, 중간 크기 보정 **6e80efe**, 푸터 전용색 도입 **3b345b9**, 최종 차콜·레드 균형 **2b004d8**. Notion 완료 [Task](https://app.notion.com/p/3a026e6d586f81609b9ce1a9bc13d6a4)와 [Work Log](https://app.notion.com/p/3a026e6d586f81a39975f127441d022e) 기록 완료.

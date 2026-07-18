@@ -211,3 +211,7 @@
 **2026-07-18 — `/updates` 10개 단위 URL 페이지네이션 구현**
 - 한영 업데이트를 id·ISO 날짜·분류·제목·요약의 단일 정적 데이터 모델로 통합하고 최신순 10개씩 표시하도록 했다. `/updates?page=2` URL 상태, page=1 제거, lang 등 다른 쿼리 보존, 잘못된 값·범위 초과 보정, 뒤로가기·앞으로가기와 목록 시작점 스크롤을 지원한다. 데스크톱 숫자 최대 5개, 모바일 3개와 `« ‹ › »` 이동, 접근성 라벨·현재 페이지·비활성 상태를 제공한다. 10개 이하에서는 컨트롤을 숨기고 실제 데이터 0개에서는 빈 상태를 유지한다. 네비게이션 제거 뒤 남은 hero 고정 높이·본문 상단 중복 여백도 해제했다.
 - 검증: 관련 18/18·전체 Vitest **680/680**, 변경 파일 ESLint, production build, diff check 통과. 23개 임시 데이터로 10/10/3 분할, page 2·last·back, 영문 `?lang=en&page=2`, invalid/out-of-range normalization, 모바일 40×40px 7개 버튼·overflow 0을 확인한 뒤 가짜 데이터를 제거했다. 최종 빈 상태에서 table/pagination/nav 0, canonical·console error 0. 구현 `maintenance/public` **71dead1**, 병행 스테이징 분리 **dee0729**. Notion 완료 [Task LV-51](https://app.notion.com/p/3a126e6d586f81ea8671e1544d4b89f0)와 [Work Log](https://app.notion.com/p/3a126e6d586f8144935cdb225fbfd547) 기록 완료. 운영 배포는 수행하지 않았다.
+
+**2026-07-18 — 약정가격 툴팁의 지역 중심 용어 제거**
+- 한영 약정가격 도움말에서 `원화 가격`·`해외선물`과 `cash price`·`overseas futures`를 제거했다. 보유 포지션의 평균 진입 가격이라는 뜻을 명확히 하고, 거래 화면 표시 단위·종목선물 주당 가격·지수선물 지수 포인트를 안내해 롱·숏과 상품군에 공통으로 쓰도록 정리했다.
+- 검증: 전용 **2/2**·전체 Vitest **680/680**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 1280×720·390×844 한영에서 정확한 문구, 화면 내 배치, 가로 오버플로·콘솔 오류 0을 확인했다. 동시 작업 커밋 과정에서 문구는 **f9544b1**, 전용 회귀 테스트는 **a05d9ea**에 분리됐다. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81e586dbe5d7cdee5bf7)와 [Work Log](https://app.notion.com/p/3a126e6d586f8136a85cc6aaeb114dcc) 기록 완료. 운영 배포는 수행하지 않았다.

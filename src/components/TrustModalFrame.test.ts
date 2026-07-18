@@ -24,6 +24,12 @@ describe('TrustModalFrame accessibility contract', () => {
     expect(source).toContain('closeHandlerRef.current?.()')
   })
 
+  it('renders the close mark as a stable two-path SVG icon', () => {
+    expect(source).toContain('<svg viewBox="0 0 16 16"')
+    expect(source).toContain('<path d="M3.5 3.5 12.5 12.5" />')
+    expect(source).toContain('<path d="m12.5 3.5-9 9" />')
+  })
+
   it('locks background scroll while the modal is mounted', () => {
     expect(source).toContain("document.body.style.overflow = 'hidden'")
     expect(source).toContain('document.body.style.overflow = previousOverflow')

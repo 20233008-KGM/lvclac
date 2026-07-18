@@ -123,7 +123,10 @@ export function TrustModalFrame({
             aria-label={closeLabel}
             onClick={onRequestClose}
           >
-            <span aria-hidden="true" />
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3.5 3.5 12.5 12.5" />
+              <path d="m12.5 3.5-9 9" />
+            </svg>
           </button>
         )}
         <header className="trust-modal__header">

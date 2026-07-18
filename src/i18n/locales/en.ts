@@ -839,7 +839,7 @@ export const en: Messages = {
     },
     currentPrice: {
       label: 'Mark price',
-      hint: '# Mark price\nReference mark.\n\n────────\n\n[Note]\n\nChanging this alone does not update equity. Use Scenario price to roll unrealized P&L.',
+      hint: '# Mark price\nMarket price captured with account equity.\n\n────────\n\n[Initial setup]\nMatch both values to the same timestamp.\n[Later updates]\nAfter setup, a new mark automatically rolls P&L into account equity.\nDirect entry — Enter or leave to apply\n▲▼ — Apply immediately\nCtrl+Z — Undo the last update\n\n────────\n[Note]\nIf the position or cash balance changes, resnapshot instead of updating only the mark.',
       placeholder: '35,000',
     },
     scenarioPrice: {

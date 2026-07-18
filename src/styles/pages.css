@@ -1459,31 +1459,44 @@ html[data-zone='contact'] body {
   color: var(--color-text-muted);
 }
 
-.public-info-zone .about-operator {
-  padding: var(--space-lg);
-  border: 1px solid var(--public-info-rule);
-  border-radius: var(--radius);
-  background: rgb(255 255 255 / 2%);
-}
-
-.public-info-zone .about-operator__list > div {
-  border-bottom-color: var(--public-info-rule);
-}
-
-.public-info-zone .about-operator__list dt {
-  color: var(--color-text-dim);
-}
-
-.public-info-zone .about-operator__list dd {
-  color: var(--color-text-muted);
-}
-
 .public-info-zone .about-contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
   margin: 0;
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--public-info-rule);
+}
+
+.public-info-zone .about-contact__copy {
+  min-width: 0;
+}
+
+.public-info-zone .about-contact__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: 650;
+}
+
+.public-info-zone .about-contact__body {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.7;
 }
 
 .public-info-zone .about-contact a {
+  flex: 0 0 auto;
   color: var(--public-info-accent);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.public-info-zone .about-contact a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 @media (max-width: 520px) {
@@ -1495,8 +1508,10 @@ html[data-zone='contact'] body {
     padding-block: 20px;
   }
 
-  .public-info-zone .about-operator {
-    padding: var(--space-md);
+  .public-info-zone .about-contact {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-md);
   }
 }
 

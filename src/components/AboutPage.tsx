@@ -1,15 +1,11 @@
 import { CONTACT_EMAIL } from '../config/site'
 import { ABOUT_PATH } from '../config/routes'
-import {
-  PUBLIC_OPERATOR_INFO,
-  publicOperatorDetails,
-  publicOperatorDisplayName,
-} from '../config/operator'
+import { publicOperatorDisplayName } from '../config/operator'
 import { useLanguage } from '../i18n'
 import { PublicInfoShell } from './PublicInfoShell'
 
 export function AboutPage() {
-  const { t, locale } = useLanguage()
+  const { t } = useLanguage()
   const about = t.about
 
   return (
@@ -34,28 +30,13 @@ export function AboutPage() {
           ))}
         </div>
 
-        <section className="about-panel about-operator">
-          <h2 className="about-panel__title">
-            {locale === 'ko' ? '운영 정보' : 'Operator information'}
-          </h2>
-          <dl className="about-operator__list">
-            {publicOperatorDetails(locale).map((detail) => (
-              <div key={detail.label}>
-                <dt>{detail.label}</dt>
-                <dd>{detail.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="about-panel__paragraph">
-            {locale === 'ko'
-              ? `${PUBLIC_OPERATOR_INFO.productName}는 ${PUBLIC_OPERATOR_INFO.brandName}가 설계·운영합니다.`
-              : `${PUBLIC_OPERATOR_INFO.productName} is designed and operated by ${PUBLIC_OPERATOR_INFO.brandName}.`}
-          </p>
-        </section>
-
-        <p className="about-contact">
+        <section className="about-contact">
+          <div className="about-contact__copy">
+            <h2 className="about-contact__title">{about.contact.title}</h2>
+            <p className="about-contact__body">{about.contact.body}</p>
+          </div>
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-        </p>
+        </section>
       </div>
     </PublicInfoShell>
   )

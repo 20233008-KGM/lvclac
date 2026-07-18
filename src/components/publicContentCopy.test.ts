@@ -6,6 +6,10 @@ function guideText(locale: typeof ko | typeof en): string {
   return JSON.stringify(locale.guide)
 }
 
+function aboutText(locale: typeof ko | typeof en): string {
+  return JSON.stringify(locale.about)
+}
+
 describe('public v1 content copy', () => {
   it('describes only opt-in browser storage in the guide', () => {
     const koGuide = guideText(ko)
@@ -31,5 +35,23 @@ describe('public v1 content copy', () => {
     expect(enFormulas).toContain('Q = N × M')
     expect(enFormulas).toContain('constant, price-independent')
     expect(enFormulas).toContain('Leverage = notional ÷ E₀')
+  })
+
+  it('presents the about page as a benefit-led SaaS introduction in both languages', () => {
+    const koAbout = aboutText(ko)
+    const enAbout = aboutText(en)
+
+    expect(ko.about.tagline).toBe('포지션 위험을, 한 화면에서')
+    expect(en.about.tagline).toBe('See position risk in one place')
+    expect(koAbout).toContain('흩어진 계산을 한곳에')
+    expect(koAbout).toContain('결과와 기준을 함께')
+    expect(koAbout).toContain('가볍게 시작하고, 선택해서 저장')
+    expect(koAbout).toContain('현재 브라우저에만 보관됩니다')
+    expect(enAbout).toContain('Bring scattered calculations together')
+    expect(enAbout).toContain('See the result and the reasoning')
+    expect(enAbout).toContain('Start light, save by choice')
+    expect(enAbout).toContain('your inputs remain in this browser')
+    expect(koAbout).not.toContain('검증 가능한 도구로')
+    expect(enAbout).not.toContain('made verifiable')
   })
 })

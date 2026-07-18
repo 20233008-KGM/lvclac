@@ -26,7 +26,7 @@ const PAGE_METADATA = {
     '/about': {
       title: '서비스 소개 | LiqGuard',
       description:
-        'LiqGuard의 운영 주체, 계산 도구를 만든 목적, 계산 방식의 투명성과 서비스 한계를 소개합니다.',
+        '예상 청산가, 증거금 여유와 주문 이후 변화를 한 화면에서 살펴보는 LiqGuard의 제품 배경과 운영 원칙을 소개합니다.',
     },
     '/terms': {
       title: '이용약관 | LiqGuard',
@@ -57,7 +57,7 @@ const PAGE_METADATA = {
     '/about': {
       title: 'About | LiqGuard',
       description:
-        'Learn who operates LiqGuard, why the calculator exists, how its calculations stay transparent, and its limits.',
+        'Learn why LiqGuard brings estimated liquidation price, margin headroom, and post-order changes into one browser-based workspace.',
     },
     '/terms': {
       title: 'Terms of Use | LiqGuard',

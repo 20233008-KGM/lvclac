@@ -1202,32 +1202,36 @@ export const en: Messages = {
   about: {
     company: 'Farfield Software',
     title: 'About the service',
-    tagline: 'Complex risk calculations, made verifiable',
+    tagline: 'See position risk in one place',
     lead:
-      'LiqGuard is a calculation aid for quickly reviewing estimated futures liquidation price and margin headroom. It works without placing your inputs in a server account, and publishes the formulas and limitations behind its results.',
+      'LiqGuard brings estimated liquidation price, margin headroom, and post-order changes into one workspace for futures positions.\nStart without an account and save only the inputs you choose in this browser.',
     sections: [
       {
-        title: 'Why it exists',
+        title: 'Bring scattered calculations together',
         paragraphs: [
-          'Reviewing futures risk requires combining equity, price, contract, and margin figures from several broker screens. LiqGuard puts that repeatable check into one workspace.',
-          'The calculator does not make trading decisions for you. Always verify figures against official exchange and broker information before placing an order.',
+          'LiqGuard started with a simple frustration: reviewing position risk meant copying numbers across several screens and recalculating them by hand.',
+          'It brings account equity, current price, contract count, and margin inputs into one workspace so you can compare your current position with post-order changes more quickly.',
         ],
       },
       {
-        title: 'Transparent calculations',
+        title: 'See the result and the reasoning',
         paragraphs: [
-          'The formulas used for liquidation, margin, and leverage are published on a dedicated page. Direct margin inputs and rate-based or fixed margin modes are treated separately.',
-          'We clearly state where results can differ, including fees, cross margin, multiple simultaneous instruments, broker rounding, and liquidation policy.',
+          'We publish the formulas used for estimated liquidation price, margin, and leverage, and clearly separate direct margin inputs from product-specific calculation modes.',
+          'We also explain where broker or exchange rules, fees, and cross margin can change the result, so you can see when and how each number applies.',
         ],
       },
       {
-        title: 'Privacy and operations',
+        title: 'Start light, save by choice',
         paragraphs: [
-          'The public version does not require an account or cloud storage. If you choose saving, inputs remain in this browser, while analytics and advertising choices are managed separately.',
-          'You can use the public contact email for error reports, calculation questions, or privacy requests.',
+          'The public service works without an account or cloud profile. If you turn on saving, your inputs remain in this browser.',
+          'Calculator storage stays separate from analytics and advertising choices, and you can change storage and privacy settings at any time.',
         ],
       },
     ],
+    contact: {
+      title: 'Share feedback with LiqGuard',
+      body: 'Email us with calculation questions, bug reports, or general product feedback.',
+    },
     backToHome: '← Calculator',
   },
   formulas: {

@@ -113,14 +113,14 @@ export const en: Messages = {
     localMode: 'This device',
     cloudMode: 'Cloud',
     noSaveMode: "Don't save",
-    publicConsentEyebrow: 'LOCAL SAVE',
-    publicConsentTitle: 'Save your inputs on this device?',
-    publicConsentIntro: 'Pick up where you left off the next time you visit.',
+    publicConsentEyebrow: 'DEVICE STORAGE',
+    publicConsentTitle: 'Save your inputs in this browser?',
+    publicConsentIntro: 'Save only if you choose, then resume from these inputs on your next visit.',
     publicConsentSummaryLabel: 'Storage summary',
-    publicConsentBrowserOnlyTitle: 'This browser only',
-    publicConsentBrowserOnlyBody: 'Stored locally on this device',
-    publicConsentNoServerTitle: 'Never sent to our servers',
-    publicConsentNoServerBody: 'LiqGuard does not collect it',
+    publicConsentBrowserOnlyTitle: 'Storage location',
+    publicConsentBrowserOnlyBody: 'On this device, in this browser',
+    publicConsentNoServerTitle: 'Server transfer',
+    publicConsentNoServerBody: 'Not transmitted or collected',
     publicConsentSavedLabel: 'Saved inputs',
     publicConsentSavedItems: ['Account equity', 'Margin rate', 'Contracts', 'Other calculator inputs'],
     publicConsentSharedDeviceLabel: 'Shared device',
@@ -799,7 +799,7 @@ export const en: Messages = {
     },
     maintenanceMarginRate: {
       label: 'Maintenance margin rate',
-      hint: '# Maintenance margin rate\nRatio of notional (e.g. 0.247 = 24.7%)',
+      hint: '# Maintenance margin rate\nThe minimum margin ratio required to keep a position open.\n\nIf account equity falls below this requirement, a margin call or liquidation may occur.\n\nEnter it as a decimal of notional. Example: 0.247 = 24.7%',
       placeholder: 'e.g. 0.25',
     },
     maintenanceMargin: {
@@ -814,7 +814,7 @@ export const en: Messages = {
     },
     entrustedMarginRate: {
       label: 'Initial margin rate',
-      hint: '# Initial margin rate\nRatio of notional for initial margin.\n\nFor fixed amounts, use per-contract or total.',
+      hint: '# Initial margin rate\nThe margin ratio required when opening a new position.\n\nIt is generally higher than the maintenance margin rate.\n\nEnter it as a decimal of notional. For fixed amounts, use per-contract or total.',
       placeholder: 'e.g. 0.35',
     },
     entrustedMargin: {
@@ -834,7 +834,7 @@ export const en: Messages = {
     },
     contractAmount: {
       label: 'Entry price',
-      hint: '# Entry price\nAverage entry price for the position.\n\nFor stock futures, enter the cash price. For index futures, enter the index points. For overseas futures, enter the price shown on the product screen.',
+      hint: '# Entry price\nThe average entry price of the current position.\n\nEnter the average entry price in the units shown on your trading platform. Use the price per share for single-stock futures and index points for index futures.',
       placeholder: '250,000',
     },
     currentPrice: {
@@ -854,7 +854,7 @@ export const en: Messages = {
     },
     contractMultiplier: {
       label: 'Contract multiplier',
-      hint: '# Contract multiplier\nValue used to calculate the one-contract P&L when price moves by 1.\n\nExamples: KOSPI200 250,000, Nasdaq E-mini 20, crude oil 1,000.\n\nDefaults to 1 if blank.',
+      hint: '# Contract multiplier\nValue used to calculate the one-contract P&L when price moves by 1.\n\nExamples: Nasdaq E-mini 20, KOSPI200 250,000, crude oil 1,000.\n\nDefaults to 1 if blank.',
       placeholder: '1',
     },
     orderContracts: {
@@ -1002,38 +1002,52 @@ export const en: Messages = {
     resetSuccess: 'Your password has been changed. You are now signed in with the new password.',
     resetContinue: 'Continue',
   },
+  privacySettings: {
+    eyebrow: 'PRIVACY CONTROLS',
+    title: 'Privacy and cookie settings',
+    intro:
+      'Manage optional analytics and advertising technologies. The calculator and on-device saving remain available either way.',
+    close: 'Close',
+    coreTitle: 'Core calculator features',
+    coreBody: 'Calculation, language, and on-device save settings',
+    coreStatus: 'Always available',
+    optionalTitle: 'Analytics and advertising',
+    optionalBody: 'Optional technologies for usage analytics and advertising',
+    statusDefaultBlocked: 'Blocked by default',
+    statusDenied: 'Denied',
+    statusAllowed: 'Allowed',
+    deny: 'Continue without optional use',
+    allow: 'Allow analytics and ads',
+  },
   legal: {
     bannerShort:
       'For reference only — not investment advice. You are solely responsible for trading decisions.',
     resultMismatchWarning:
       'Displayed results may not match actual liquidation prices or margin call timing.',
     contentNoticeLabel: 'Investment risk and calculation limitations',
-    modalTitle: 'Before you continue',
+    modalEyebrow: 'LIQGUARD · SERVICE NOTICE',
+    modalTitle: 'Review before calculating',
     modalIntro:
-      'Please read the following. Leveraged and futures trading can result in losses exceeding your deposit.',
+      'LiqGuard is a reference tool for reviewing liquidation prices and margin. Leveraged and derivatives trading can result in losses exceeding your deposit.',
     sections: [
       {
-        title: 'Purpose',
-        body: 'This tool estimates liquidation prices and margin levels for leveraged positions. It is not investment advice, a recommendation, or legal/tax guidance.',
+        title: 'Reference calculations',
+        body: 'This tool estimates and compares liquidation prices and margin. It does not provide investment advice, recommendations, or legal or tax guidance.',
       },
       {
-        title: 'Limitations',
-        body: 'Brokers and exchanges use different rounding, fees, and margin rules. We do not guarantee accuracy or completeness.',
+        title: 'Broker and exchange rules come first',
+        body: 'Liquidation rules, rounding, fees, and margin formulas vary. Verify official figures and terms before trading.',
       },
       {
-        title: 'Your responsibility',
-        body: 'You are solely responsible for all trading decisions. Always verify against your broker’s official figures and terms before trading.',
-      },
-      {
-        title: 'Disclaimer',
-        body: 'To the extent permitted by law, the operator is not liable for losses arising from use of or reliance on this service.',
+        title: 'The final decision is yours',
+        body: 'You are responsible for every trading decision and outcome. To the extent permitted by law, the operator is not liable for losses arising from use of or reliance on this service.',
       },
     ],
     acknowledge:
       'I have read the above and will use this tool for reference only.',
-    confirmButton: 'Agree and continue',
-    dismissButton: 'OK',
-    skipModalLabel: "Don't show this again",
+    confirmButton: 'Review complete — start calculating',
+    dismissButton: 'Close notice',
+    skipModalLabel: 'Skip this notice on future visits',
     showModalAgain: 'View service notice again',
     termsLink: 'Terms of use',
     privacyLink: 'Privacy policy',

@@ -16,6 +16,13 @@ export interface GoogleConsentDecision {
   analyticsAllowed: boolean
 }
 
+export function shouldRequestCustomPrivacySettings(
+  decision: GoogleConsentDecision,
+  optionalPreference: OptionalTrackingPreference | null,
+): boolean {
+  return decision.ready && !decision.regulated && optionalPreference === null
+}
+
 const UNKNOWN = 0
 const GRANTED = 1
 const DENIED = 2

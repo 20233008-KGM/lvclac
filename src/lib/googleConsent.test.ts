@@ -3,6 +3,7 @@ import {
   decideGoogleConsent,
   OPTIONAL_TRACKING_KEY,
   readOptionalTrackingPreference,
+  shouldRequestCustomPrivacySettings,
   writeOptionalTrackingPreference,
 } from './googleConsent'
 
@@ -87,5 +88,23 @@ describe('Google consent decision', () => {
     writeOptionalTrackingPreference(storage, 'deny')
     expect(data.get(OPTIONAL_TRACKING_KEY)).toBe('deny')
     expect(readOptionalTrackingPreference(storage)).toBe('deny')
+  })
+
+  it('requests the custom settings only for ready non-regulated users without a choice', () => {
+    const nonRegulated = {
+      ready: true,
+      regulated: false,
+      adsAllowed: false,
+      analyticsAllowed: false,
+    }
+
+    expect(shouldRequestCustomPrivacySettings(nonRegulated, null)).toBe(true)
+    expect(shouldRequestCustomPrivacySettings(nonRegulated, 'deny')).toBe(false)
+    expect(
+      shouldRequestCustomPrivacySettings({ ...nonRegulated, regulated: true }, null),
+    ).toBe(false)
+    expect(
+      shouldRequestCustomPrivacySettings({ ...nonRegulated, ready: false }, null),
+    ).toBe(false)
   })
 })

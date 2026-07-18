@@ -9,7 +9,7 @@ import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
 import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
-import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
+import { ContentRiskNotice } from './components/ServiceDisclaimer'
 import { FieldHintBanner } from './components/FieldHintBanner'
 import { GuidePage } from './components/GuidePage'
 import { FormulasPage } from './components/FormulasPage'
@@ -288,11 +288,7 @@ function AppRouter() {
 }
 
 function App() {
-  return (
-    <DisclaimerProvider>
-      <AppRouter />
-    </DisclaimerProvider>
-  )
+  return <AppRouter />
 }
 
 export default App

@@ -752,8 +752,25 @@ export interface Messages {
   results: Record<string, string>
   calcMessages: Record<CalcMessageCode, string>
   auth: Record<string, string>
+  privacySettings: {
+    eyebrow: string
+    title: string
+    intro: string
+    close: string
+    coreTitle: string
+    coreBody: string
+    coreStatus: string
+    optionalTitle: string
+    optionalBody: string
+    statusDefaultBlocked: string
+    statusDenied: string
+    statusAllowed: string
+    deny: string
+    allow: string
+  }
   legal: {
     bannerShort: string
+    modalEyebrow: string
     modalTitle: string
     modalIntro: string
     sections: { title: string; body: string }[]

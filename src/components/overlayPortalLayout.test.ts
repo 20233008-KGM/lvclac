@@ -9,14 +9,16 @@ function source(path: string) {
 describe('calculator modal overlays', () => {
   it('renders the public save-consent modal at the app overlay root', () => {
     const text = source('src/components/ServiceDisclaimer.tsx')
+    const frame = source('src/components/TrustModalFrame.tsx')
 
     expect(text).toContain('<PublicSaveConsentModal')
-    expect(text).toContain('document.body.style.overflow')
-    expect(text).toContain('className="disclaimer-overlay"')
-    expect(text).toContain('className="disclaimer-modal draft-save-modal public-save-consent-modal"')
+    expect(text).toContain('<TrustModalFrame')
+    expect(text).toContain('variant="storage"')
+    expect(frame).toContain('document.body.style.overflow')
+    expect(frame).toContain('createPortal(modal, document.body)')
     expect(text).toContain('<LocalComputerIcon')
     expect(text).toContain('<CloudIcon')
-    expect(text).toContain('public-save-consent-trust-row')
+    expect(text).toContain('public-save-consent-facts')
     expect(text).toContain('public-save-consent-warning')
     expect(text).toContain('useState<PublicSaveConsent | null>(null)')
     expect(text.match(/type="radio"/g)).toHaveLength(2)

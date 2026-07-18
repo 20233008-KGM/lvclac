@@ -29,6 +29,7 @@ export function UpdatesPage() {
       eyebrow={copy.eyebrow}
       title={copy.title}
       lead={copy.lead}
+      showNavigation={false}
     >
       <p className="updates-empty">{copy.empty}</p>
     </PublicInfoShell>

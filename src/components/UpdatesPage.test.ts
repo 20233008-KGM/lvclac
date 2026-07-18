@@ -8,9 +8,10 @@ const pagesCss = readFileSync(resolve('src/styles/pages.css'), 'utf8')
 const sitemap = readFileSync(resolve('public/sitemap.xml'), 'utf8')
 
 describe('public updates page', () => {
-  it('uses the shared information shell without joining its five-tab navigation', () => {
+  it('uses the shared information shell without rendering its five-tab navigation', () => {
     expect(source).toContain('activePath={null}')
     expect(source).toContain('tone="product-doc"')
+    expect(source).toContain('showNavigation={false}')
     expect(appSource).toContain('isUpdatesPath(pathname)')
     expect(appSource).toContain('<UpdatesPage />')
   })

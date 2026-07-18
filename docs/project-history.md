@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-18 — `/updates` 공용 상단 네비게이션 오노출 수정**
+- `activePath={null}`이 활성 탭만 없애고 서비스 소개·사용 가이드·수식 정의·이용약관·개인정보 네비게이션은 그대로 렌더링하던 원인을 확인했다. 공용 `PublicInfoShell`에 기본값이 켜진 `showNavigation` 옵션을 추가하고 `/updates`에서만 꺼서 업데이트 내용 영역에 집중하도록 교정했다. 다른 정보 페이지 5종의 네비게이션은 유지했다.
+- 검증: 관련 7/7·전체 Vitest **654/654**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 한영 1280×900·390×844에서 `/updates` 내 공용 네비게이션 0개, 가로 오버플로·콘솔 오류 0을 확인했다. 최종 공개 브랜치 적용 커밋 `maintenance/public` **f4fc5ba**, 프로젝트 이력 정리 **46e20be**. 작업 중 외부 브랜치 전환으로 생긴 원본 `design` **3617abc**도 비파괴적으로 보존했다. Notion 완료 [Task LV-46](https://app.notion.com/p/3a126e6d586f81359a48ceb6c7b098ad)와 [Work Log](https://app.notion.com/p/3a126e6d586f813bab97f4e13768536f) 기록 완료. 운영 배포는 수행하지 않았다.
+
 **2026-07-18 — 영문 계약승수 라벨 단축으로 입력 패널 최소폭 완화**
 - 기본 영어 라벨과 도움말 제목을 `Contract multiplier` 하나로 통일해 긴 문구가 입력 패널과 리사이저 최소폭을 과도하게 키우지 않도록 했다. 전역 줄바꿈·리사이저 계산과 `dev`는 변경하지 않았으며, 상품별 `Shares per contract`·`Contract size` 세분화는 v2 프리셋 개선으로 남겼다.
 - 검증: 관련 회귀 테스트 5/5·전체 Vitest **651/651**, 변경 파일 ESLint, production build, diff check 통과. 브라우저 제어 스킬용 연결 도구가 세션에 노출되지 않아 실제 최소폭 드래그·한영 전환 화면 QA는 미수행이다. 적용 커밋 `maintenance/public` **f063742**, 최종 용어 정리 **267614d**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f815c875fe5711242d95d)와 [Work Log](https://app.notion.com/p/3a126e6d586f8146bfdccb458f2377a4) 갱신 완료. 실배포는 수행하지 않았다.

@@ -53,7 +53,7 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: false,
     },
     test: {
-      exclude: [...configDefaults.exclude, '**/.recovery/**'],
+      exclude: [...configDefaults.exclude, '**/.recovery/**', 'e2e/**'],
     },
   }
 })

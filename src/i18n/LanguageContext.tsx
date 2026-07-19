@@ -108,7 +108,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false
     void fetchGeoLocale().then((detected) => {
-      if (cancelled || !detected) return
+      // 조회가 진행되는 동안 사용자가 언어를 직접 선택했으면 그 선택을 보존한다.
+      if (cancelled || !detected || !shouldFetchGeo()) return
       sessionStorage.setItem(SESSION_DETECTED_KEY, detected)
       setLocaleState(detected)
     })

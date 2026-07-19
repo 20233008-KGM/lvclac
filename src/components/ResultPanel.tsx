@@ -317,6 +317,10 @@ function EvaluateResults({
   const isLong = side === 'long'
   const toleranceDeltaLabel = isLong ? r.toleranceDeltaLong : r.toleranceDeltaShort
   const toleranceValue = formatTolerancePercent(result.toleranceRate, side)
+  const liquidationSub =
+    result.liquidationMessage === 'maintenance_exceeds_equity'
+      ? null
+      : translateCalcMessage(result.liquidationMessage)
 
   return (
     <>
@@ -329,7 +333,7 @@ function EvaluateResults({
               ? formatNumber(result.liquidationPrice)
               : '-'
           }
-          sub={translateCalcMessage(result.liquidationMessage)}
+          sub={liquidationSub}
           danger={result.isAtRisk}
         />
         <ResultHero
@@ -342,7 +346,6 @@ function EvaluateResults({
         <ResultHero
           label={r.tolerancePercent}
           value={toleranceValue}
-          sub={result.isAtRisk ? translateCalcMessage('at_risk') : null}
           danger={result.isAtRisk}
         />
       </div>

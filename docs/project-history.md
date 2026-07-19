@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-19 — 푸터 정보구조 재배치와 회사 소개 페이지 추가**
+- 푸터의 수식 정의를 `dev`와 같은 결과 패널 오른쪽 위로 옮기고 Product를 `서비스 소개 → 사용 가이드 → 업데이트`, Company를 `회사 소개 → 문의하기`로 재배치했다. 기존 `/about`은 서비스 소개로 유지하고, 상단 5개 문서 내비게이션에 넣지 않는 광고 없는 `/company`를 추가했다.
+- `/company`는 Farfield Software 소개·운영 원칙·문의와 `publicFooterOperatorDetails()`의 회사정보 6개를 한영으로 표시한다. 검증: 관련 **27/27**·전체 Vitest **698/698**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 1280×900·390×844 한영에서 결과 링크 이동, 데스크톱 3×2·모바일 1열 회사정보, 푸터 순서, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **e66a6d2**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81aeb779d8f6b92a3c40)와 [Work Log](https://app.notion.com/p/3a126e6d586f81b9b169d1b1b227171f) 기록 완료. 실제 법인정보 교체와 운영 배포는 수행하지 않았다.
+
 **2026-07-18 — 현재가 통합 툴팁을 실제 갱신 흐름에 맞게 교정**
 - 세팅 전·후 현재가 안내를 하나의 한영 툴팁으로 통합해 계좌 평가금액과 같은 시점 기준, 세팅 후 가격 변동 손익의 평가금액 자동 반영, 직접 입력·▲▼·Ctrl+Z 확정/취소 방법을 함께 설명한다. 현재 화면에 없는 시나리오 가격 문구는 제거했으며 `rollPnlOnChange={setupComplete}`를 유지해 계산 동작은 바꾸지 않았다.
 - 검증: 관련 **46/46**·전체 Vitest **687/687**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 한영 1280×720·1280×900·390×844에서 세팅 전후 동일 문구, 직접 입력 손익 반영·스테퍼 즉시 반영·Ctrl+Z 복원, 툴팁 잘림·가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **a01f6b5**. Notion 완료 [Task LV-57](https://app.notion.com/p/3a126e6d586f814db9b9d388f65abe80)와 [Work Log](https://app.notion.com/p/3a126e6d586f81719bb4fe9a85a2d662) 기록 완료. `dev` 전파와 운영 배포는 수행하지 않았다.

@@ -1,6 +1,5 @@
 import {
   PUBLIC_OPERATOR_INFO,
-  publicFooterOperatorDetails,
   publicRepresentativeDisplayName,
 } from '../config/operator'
 import { ABOUT_PATH } from '../config/routes'
@@ -35,13 +34,13 @@ const companyCopy = {
         body: '새 기능을 늘리기 전에 이미 있는 것을 더 빠르고 안정적이며 이해하기 쉽게 만듭니다.',
       },
     ],
-    currentProductTitle: '현재 만드는 제품',
     currentProductBody:
       'LiqGuard는 Farfield Software의 첫 제품입니다. 선물 포지션의 청산 위험과 증거금 변화를 검토하는 도구이며, 앞으로 더 다양한 분야의 소프트웨어로 확장해 가는 출발점입니다.',
     productLink: 'LiqGuard 서비스 소개 보기',
-    makerTitle: '만드는 사람',
+    stewardshipTitle: '운영과 책임',
+    stewardshipBody:
+      'Farfield Software는 작은 팀으로 제품의 기획, 설계, 개발과 운영을 가까이 연결합니다. 제품과 기능의 수를 빠르게 늘리기보다, 만든 소프트웨어를 오래 책임지고 꾸준히 개선하는 방식을 택합니다.',
     makerRole: '대표',
-    detailsTitle: '회사 정보',
     contactTitle: '문의하기',
     contactBody: '제품, 협업과 회사에 관한 문의는 이메일로 보내 주세요.',
   },
@@ -71,13 +70,13 @@ const companyCopy = {
         body: 'Before adding more, we make what already exists faster, more reliable, and easier to understand.',
       },
     ],
-    currentProductTitle: 'What we are building now',
     currentProductBody:
       'LiqGuard is Farfield Software’s first product. It helps review futures liquidation risk and margin changes, and marks the starting point of a broader software portfolio across different fields.',
     productLink: 'Learn about LiqGuard',
-    makerTitle: 'Leadership',
+    stewardshipTitle: 'Ownership and responsibility',
+    stewardshipBody:
+      'Farfield Software is a small team that keeps product planning, design, development, and operation closely connected. Rather than rapidly increasing products and features, we take long-term responsibility for the software we build and improve it continuously.',
     makerRole: 'CEO',
-    detailsTitle: 'Company information',
     contactTitle: 'Contact',
     contactBody: 'For product, collaboration, or company inquiries, contact us by email.',
   },
@@ -87,7 +86,6 @@ export function CompanyPage() {
   const { locale } = useLanguage()
   const navigate = useNavigate()
   const copy = companyCopy[locale]
-  const operatorDetails = publicFooterOperatorDetails(locale)
   const representative = publicRepresentativeDisplayName(locale)
 
   return (
@@ -123,13 +121,10 @@ export function CompanyPage() {
           </ul>
         </section>
 
-        <section
-          className="company-current-product"
-          aria-labelledby="company-current-product-title"
-        >
+        <section className="company-current-product" aria-label={PUBLIC_OPERATOR_INFO.productName}>
           <div>
-            <h2 id="company-current-product-title">{copy.currentProductTitle}</h2>
-            <p>{copy.currentProductBody}</p>
+            <p className="company-current-product__name">{PUBLIC_OPERATOR_INFO.productName}</p>
+            <p className="company-current-product__body">{copy.currentProductBody}</p>
           </div>
           <a
             className="company-product-link"
@@ -145,27 +140,18 @@ export function CompanyPage() {
         </section>
 
         {representative && (
-          <section className="company-maker" aria-labelledby="company-maker-title">
-            <h2 id="company-maker-title">{copy.makerTitle}</h2>
-            <p>
+          <section className="company-stewardship" aria-labelledby="company-stewardship-title">
+            <div className="company-stewardship__copy">
+              <h2 id="company-stewardship-title">{copy.stewardshipTitle}</h2>
+              <p>{copy.stewardshipBody}</p>
+            </div>
+            <p className="company-stewardship__signature">
               <strong>{representative}</strong>
               <span aria-hidden="true">·</span>
               <span>{copy.makerRole}</span>
             </p>
           </section>
         )}
-
-        <section className="company-details" aria-labelledby="company-details-title">
-          <h2 id="company-details-title">{copy.detailsTitle}</h2>
-          <dl className="company-details__grid">
-            {operatorDetails.map((detail) => (
-              <div key={detail.label}>
-                <dt>{detail.label}</dt>
-                <dd>{detail.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
 
         <section className="about-contact">
           <div className="about-contact__copy">

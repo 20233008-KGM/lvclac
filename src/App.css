@@ -4032,7 +4032,9 @@ html[lang='en'] .public-save-consent-choice strong + span {
 }
 
 .trust-modal--service .legal-emphasis {
-  text-decoration: none;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .trust-modal__footer .disclaimer-modal-ack {

@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve('src/components/TrustModalFrame.tsx'), 'utf8')
+const css = readFileSync(resolve('src/App.css'), 'utf8')
 
 describe('TrustModalFrame accessibility contract', () => {
   it('renders body-level modal semantics with an accessible title', () => {
@@ -33,5 +34,11 @@ describe('TrustModalFrame accessibility contract', () => {
   it('locks background scroll while the modal is mounted', () => {
     expect(source).toContain("document.body.style.overflow = 'hidden'")
     expect(source).toContain('document.body.style.overflow = previousOverflow')
+  })
+
+  it('uses a bold underlined result mismatch warning in the service notice', () => {
+    expect(css).toMatch(
+      /\.trust-modal--service \.legal-emphasis \{[\s\S]*?font-weight: 600;[\s\S]*?text-decoration: underline;[\s\S]*?text-underline-offset: 2px;/,
+    )
   })
 })

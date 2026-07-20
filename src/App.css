@@ -3959,6 +3959,10 @@ html[lang='en'] .public-save-consent-choice strong + span {
   background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
 }
 
+.trust-modal--service .trust-modal__body {
+  padding-bottom: var(--space-sm);
+}
+
 .trust-modal--service .disclaimer-sections {
   display: grid;
   gap: 0;
@@ -4007,9 +4011,9 @@ html[lang='en'] .public-save-consent-choice strong + span {
   grid-template-columns: 12px minmax(0, 1fr);
   gap: var(--space-sm);
   align-items: start;
-  margin: 16px 0 0;
-  padding: var(--space-sm) 12px;
-  border: 1px solid transparent;
+  margin: var(--space-sm) 0 0;
+  padding: var(--space-xs) 12px;
+  border: 0;
   border-radius: var(--radius);
   background: transparent;
   color: var(--color-text-muted);

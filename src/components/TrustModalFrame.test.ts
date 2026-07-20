@@ -38,7 +38,10 @@ describe('TrustModalFrame accessibility contract', () => {
 
   it('uses a neutral transparent warning box with bold underlined copy in the service notice', () => {
     expect(css).toMatch(
-      /\.trust-modal--service \.disclaimer-modal-warning \{[\s\S]*?grid-template-columns: 12px minmax\(0, 1fr\);[\s\S]*?gap: var\(--space-sm\);[\s\S]*?padding: var\(--space-sm\) 12px;[\s\S]*?border: 1px solid transparent;[\s\S]*?background: transparent;/,
+      /\.trust-modal--service \.trust-modal__body \{[\s\S]*?padding-bottom: var\(--space-sm\);/,
+    )
+    expect(css).toMatch(
+      /\.trust-modal--service \.disclaimer-modal-warning \{[\s\S]*?grid-template-columns: 12px minmax\(0, 1fr\);[\s\S]*?gap: var\(--space-sm\);[\s\S]*?margin: var\(--space-sm\) 0 0;[\s\S]*?padding: var\(--space-xs\) 12px;[\s\S]*?border: 0;[\s\S]*?background: transparent;/,
     )
     expect(css).toMatch(
       /\.trust-modal--service \.disclaimer-warning-icon \{[\s\S]*?width: 12px;[\s\S]*?height: 12px;[\s\S]*?border: 1px solid var\(--color-text-muted\);[\s\S]*?color: var\(--color-text-muted\);[\s\S]*?font-size: 8px;[\s\S]*?line-height: 1;[\s\S]*?margin-top: 3px;/,

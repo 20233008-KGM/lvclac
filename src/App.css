@@ -6059,8 +6059,8 @@ a.site-footer__link:hover {
 
 @media (min-width: 960px) {
   .site-footer__main {
-    grid-template-columns: minmax(250px, 1fr) minmax(540px, 2.2fr);
-    gap: clamp(44px, 5vw, 84px);
+    grid-template-columns: minmax(230px, 1fr) minmax(0, 2.2fr);
+    gap: clamp(32px, 4vw, 52px);
     align-items: start;
   }
 

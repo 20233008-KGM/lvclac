@@ -81,6 +81,9 @@ describe('public review footer labels', () => {
     expect(css).toMatch(
       /@media \(min-width: 960px\) \{[\s\S]*?\.site-footer__nav \{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/,
     )
+    expect(css).toMatch(
+      /\.site-footer__main \{[\s\S]*?grid-template-columns: minmax\(230px, 1fr\) minmax\(0, 2\.2fr\);[\s\S]*?gap: clamp\(32px, 4vw, 52px\);/,
+    )
     expect(footerMark).toContain('#7183b8')
     expect(footerMark).toContain('#596a94')
     expect(footerMark).toContain('#46516a')

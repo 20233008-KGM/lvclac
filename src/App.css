@@ -4004,11 +4004,11 @@ html[lang='en'] .public-save-consent-choice strong + span {
 
 .trust-modal--service .disclaimer-modal-warning {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: var(--space-sm);
   align-items: start;
   margin: 16px 0 0;
-  padding: 12px 14px;
+  padding: var(--space-sm) 12px;
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: transparent;
@@ -4020,15 +4020,17 @@ html[lang='en'] .public-save-consent-choice strong + span {
 
 .trust-modal--service .disclaimer-warning-icon {
   display: grid;
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
   place-items: center;
   border: 1px solid var(--color-text-muted);
   border-radius: 50%;
   color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
+  line-height: 1;
+  margin-top: 3px;
 }
 
 .trust-modal--service .legal-emphasis {

@@ -38,10 +38,10 @@ describe('TrustModalFrame accessibility contract', () => {
 
   it('uses a neutral transparent warning box with bold underlined copy in the service notice', () => {
     expect(css).toMatch(
-      /\.trust-modal--service \.disclaimer-modal-warning \{[\s\S]*?border: 1px solid transparent;[\s\S]*?background: transparent;/,
+      /\.trust-modal--service \.disclaimer-modal-warning \{[\s\S]*?grid-template-columns: 12px minmax\(0, 1fr\);[\s\S]*?gap: var\(--space-sm\);[\s\S]*?padding: var\(--space-sm\) 12px;[\s\S]*?border: 1px solid transparent;[\s\S]*?background: transparent;/,
     )
     expect(css).toMatch(
-      /\.trust-modal--service \.disclaimer-warning-icon \{[\s\S]*?border: 1px solid var\(--color-text-muted\);[\s\S]*?color: var\(--color-text-muted\);/,
+      /\.trust-modal--service \.disclaimer-warning-icon \{[\s\S]*?width: 12px;[\s\S]*?height: 12px;[\s\S]*?border: 1px solid var\(--color-text-muted\);[\s\S]*?color: var\(--color-text-muted\);[\s\S]*?font-size: 8px;[\s\S]*?line-height: 1;[\s\S]*?margin-top: 3px;/,
     )
     expect(css).toMatch(
       /\.trust-modal--service \.legal-emphasis \{[\s\S]*?font-weight: 600;[\s\S]*?text-decoration: underline;[\s\S]*?text-underline-offset: 2px;/,

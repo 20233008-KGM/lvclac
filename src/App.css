@@ -4011,7 +4011,7 @@ html[lang='en'] .public-save-consent-choice strong + span {
   padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--color-warning) 22%, var(--color-border-subtle));
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--color-warning-muted) 62%, transparent);
+  background: transparent;
   color: var(--color-text-muted);
   font-size: 12px;
   line-height: 1.55;

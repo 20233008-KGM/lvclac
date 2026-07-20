@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-19 — 문서형 페이지와 푸터의 좌우 폭 정렬**
+- 공용 문서 셸 안에서 데스크톱 푸터에만 남아 있던 좌우 10px 인셋을 제거해 920px 문서 카드와 푸터 바깥선을 일치시켰다. 계산기 화면의 푸터 인셋과 푸터 내부 패널 여백은 유지하고 CSS 회귀 테스트를 추가했다.
+- 검증: 전용 **5/5**·전체 Vitest **699/699**, 변경 테스트 파일 ESLint, production build 통과. 인앱 브라우저 1280×900에서 문서·푸터 `left 180 / right 1100 / width 920px`, 390×844에서 `left 10 / right 380 / width 370px`, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **7ade5e9**. Notion 완료 [Task LV-60](https://app.notion.com/p/3a126e6d586f81858ae2d1559b2991d6)와 [Work Log](https://app.notion.com/p/3a126e6d586f814dae17c68a027f8b3d) 기록 완료. 운영 배포와 `dev` 전파는 수행하지 않았다.
+
 **2026-07-19 — 푸터 정보구조 재배치와 회사 소개 페이지 추가**
 - 푸터의 수식 정의를 `dev`와 같은 결과 패널 오른쪽 위로 옮기고 Product를 `서비스 소개 → 사용 가이드 → 업데이트`, Company를 `회사 소개 → 문의하기`로 재배치했다. 기존 `/about`은 서비스 소개로 유지하고, 상단 5개 문서 내비게이션에 넣지 않는 광고 없는 `/company`를 추가했다.
 - `/company`는 Farfield Software 소개·운영 원칙·문의와 `publicFooterOperatorDetails()`의 회사정보 6개를 한영으로 표시한다. 검증: 관련 **27/27**·전체 Vitest **698/698**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 1280×900·390×844 한영에서 결과 링크 이동, 데스크톱 3×2·모바일 1열 회사정보, 푸터 순서, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **e66a6d2**. Notion 완료 [Task](https://app.notion.com/p/3a126e6d586f81aeb779d8f6b92a3c40)와 [Work Log](https://app.notion.com/p/3a126e6d586f81b9b169d1b1b227171f) 기록 완료. 실제 법인정보 교체와 운영 배포는 수행하지 않았다.

@@ -10,6 +10,12 @@ interface ImportMetaEnv {
   readonly VITE_AD_SLOT_RIGHT_SIDEBAR_BOTTOM?: string
   readonly VITE_AD_ENABLE_SIDEBAR_TALL?: string
   readonly VITE_GA4_MEASUREMENT_ID?: string
+  readonly VITE_PUBLIC_OPERATOR_LEGAL_NAME?: string
+  readonly VITE_PUBLIC_OPERATOR_REPRESENTATIVE?: string
+  readonly VITE_PUBLIC_OPERATOR_ADDRESS?: string
+  readonly VITE_PUBLIC_OPERATOR_BUSINESS_REGISTRATION_NUMBER?: string
+  readonly VITE_PUBLIC_OPERATOR_COMMERCE_REGISTRATION_NUMBER?: string
+  readonly VITE_PUBLIC_OPERATOR_PRIVACY_OFFICER?: string
   readonly VITE_SUPABASE_URL?: string
   readonly VITE_SUPABASE_ANON_KEY?: string
   readonly VITE_SUPABASE_ENABLED?: string

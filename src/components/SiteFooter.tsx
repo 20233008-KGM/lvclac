@@ -1,64 +1,12 @@
-import { GUIDE_PATH, PRICING_PATH, PRIVACY_PATH, REFUND_POLICY_PATH, TERMS_PATH } from '../config/routes'
-import { useLanguage, type Locale, type Messages } from '../i18n'
+import { PUBLIC_OPERATOR_INFO, publicFooterOperatorDetails } from '../config/operator'
+import { useLanguage, type Locale } from '../i18n'
 import { useNavigate } from '../hooks/usePathname'
 import { DisclaimerShowAgainLink, footerLegalCopy } from './ServiceDisclaimer'
+import { buildFooterColumns } from './footerNavigation'
 
-type FooterColumn = Messages['footer']['columns'][number]
-type FooterLink = FooterColumn['links'][number]
-type FooterPolicyLabels = {
-  terms: string
-  privacy: string
-  refund: string
-}
-
-export const paddleReviewFooterLinks: Record<Locale, { label: string; href: string }[]> = {
-  ko: [{ label: 'Pro 요금제', href: PRICING_PATH }],
-  en: [{ label: 'Pro Pricing', href: PRICING_PATH }],
-}
-
-export const footerPolicyColumnTitles: Record<Locale, string> = {
-  ko: '약관 및 정책',
-  en: 'Legal',
-}
-
-export function buildFooterColumns(
-  columns: FooterColumn[],
-  locale: Locale,
-  policyLabels?: FooterPolicyLabels,
-): FooterColumn[] {
-  const guideLink = columns.flatMap((column) => column.links).find((link) => link.href === GUIDE_PATH)
-
-  const navigationColumns = columns
-    .filter((column, index) => index === 0 || !column.links.some((link) => link.href === GUIDE_PATH))
-    .map((column, index) => {
-      if (index !== 0) return column
-
-      const [primaryLink] = column.links
-      const reviewLinks = paddleReviewFooterLinks[locale]
-      const links: FooterLink[] = [
-        ...(primaryLink ? [primaryLink] : []),
-        ...reviewLinks,
-        ...(guideLink ? [guideLink] : []),
-      ]
-
-      return { ...column, links }
-    })
-
-  if (!policyLabels) return navigationColumns
-
-  const policyLinks: FooterLink[] = [
-    { label: policyLabels.terms, href: TERMS_PATH },
-    { label: policyLabels.privacy, href: PRIVACY_PATH },
-    { label: policyLabels.refund, href: REFUND_POLICY_PATH },
-  ]
-
-  return [
-    ...navigationColumns,
-    {
-      title: footerPolicyColumnTitles[locale],
-      links: policyLinks,
-    },
-  ]
+const footerDescription: Record<Locale, string> = {
+  ko: '선물 포지션의 청산 위험과 주문 이후 변화를 빠르게 검토하는 브라우저 기반 계산 보조 도구입니다.',
+  en: 'A browser-based calculation aid for reviewing futures liquidation risk and post-order changes.',
 }
 
 function isInternalPath(href: string): boolean {
@@ -77,15 +25,30 @@ export function SiteFooter() {
     privacy: t.legal.privacyLink,
     refund: footerLegalCopy[locale].refundPolicy,
   })
+  const operatorDetails = publicFooterOperatorDetails(locale)
 
   return (
     <footer className="site-footer">
       <div className="site-footer__panel">
         <div className="site-footer__main">
           <div className="site-footer__brand">
-            <p className="site-footer__company">Farfield Software</p>
-            <p className="site-footer__product">{t.siteTitle}</p>
-            <p className="site-footer__tagline">{t.footer.tagline}</p>
+            <a
+              className="site-footer__wordmark"
+              href="/"
+              onClick={(event) => {
+                event.preventDefault()
+                navigate('/')
+              }}
+            >
+              <img
+                className="site-footer__mark"
+                src="/footer-brand-mark.svg"
+                alt=""
+                aria-hidden="true"
+              />
+              <span>{PUBLIC_OPERATOR_INFO.productName}</span>
+            </a>
+            <p className="site-footer__tagline">{footerDescription[locale]}</p>
           </div>
 
           <nav className="site-footer__nav" aria-label={t.footer.navAriaLabel}>
@@ -128,6 +91,17 @@ export function SiteFooter() {
               </div>
             ))}
           </nav>
+        </div>
+
+        <div className="site-footer__operator-row">
+          <dl className="site-footer__operator">
+            {operatorDetails.map((detail) => (
+              <div key={detail.label} className="site-footer__operator-item">
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         <div className="site-footer__bottom">

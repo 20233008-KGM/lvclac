@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-19 — 회사 소개를 작은 SaaS 회사형 정보 구조로 개편**
+- `/company`의 회사명·제품 설명 반복을 제거한 뒤 사용자 후속 검토와 `dev` 회사소개를 기준으로 회사 자체의 가치와 방향을 중심에 놓았다. 히어로는 `소수에게, 오래 쓰이는 소프트웨어를`, 본문은 `우리가 하는 일`·`우리가 향하는 곳`·`제품을 만드는 방식` 3가지로 구성하고 금융 외 서로 다른 분야에서 오래 남는 소프트웨어를 하나씩 쌓는 방향을 명시했다. LiqGuard는 별도 제목 없는 제품 행에서 첫 제품이자 다분야 확장의 출발점으로 소개하고 `/about`으로 연결한다.
+- 하단의 `만드는 사람`과 6칸 회사정보 표를 `운영과 책임`으로 통합해 작은 팀의 기획·설계·개발·운영 연결과 장기 책임을 설명한다. `김규민 · 대표` / `Gyumin Kim · CEO`는 공유 운영자 값으로 만든 서명형 정보이며, 주소·등록번호 등 법적 운영정보 6개는 푸터에만 유지한다. 검증: 관련 **15/15**·전체 Vitest **703/703**, 변경 TypeScript ESLint, production build, diff check 통과. 인앱 브라우저 1280×900·390×844 한영에서 데스크톱 두 행 좌우 배치·모바일 1열, 제목 없는 제품 행, 본문 법적 정보 0개·푸터 6개, `/about` 이동, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **4b2e490**, 회사 방향 교정 **f55202d**, 최종 중복 정리 **16b891c**. Notion 완료 [Task LV-61](https://app.notion.com/p/3a126e6d586f81a7ae58f8a3d9cc6f94)와 [Work Log](https://app.notion.com/p/3a126e6d586f8186919ed4dc00b078e7) 기록 완료. 실제 법인정보 교체와 운영 배포는 수행하지 않았다.
+
 **2026-07-16 — `main` 무료 실배포 / `dev` 전체 개발환경 영구 분리** (main 04f4ed3, dev a342674)
 - `dev`를 기존 전체 기능 브랜치로 만들고 별도 Vercel `lvclac-dev`의 Production Branch로 지정. Supabase·service role·cron env와 Auth Site URL/Redirect URL을 `devpilgrm.liqguard.com` 기준으로 이관하고 `DEV` 배지를 추가했다. Vercel 파일단위 TypeScript 오류(Node 타입, middleware `.js`, cron union narrowing)를 수정해 dev Production이 오류 없이 Ready.
 - `main`은 로그인/AuthProvider·클라우드·다중 숫자세트·마이페이지·기록·결제·피드백·관리자·가이드/공식/소개/UI키트/복구 진입을 제거. `/terms`, `/privacy`만 유지하고 제거 경로는 홈으로 이동. billing/cron API와 Vercel cron, Production Supabase/service-role/cron env도 제거.

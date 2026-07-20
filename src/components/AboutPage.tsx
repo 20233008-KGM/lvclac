@@ -1,5 +1,6 @@
 import { ABOUT_PATH } from '../config/routes'
 import { CONTACT_EMAIL } from '../config/site'
+import { publicOperatorDisplayName } from '../config/operator'
 import { useLanguage } from '../i18n'
 import { PublicInfoShell } from './PublicInfoShell'
 
@@ -11,7 +12,7 @@ export function AboutPage() {
     <PublicInfoShell
       activePath={ABOUT_PATH}
       tone="company"
-      eyebrow={`${about.company} · ${about.title}`}
+      eyebrow={`${publicOperatorDisplayName()} · ${about.title}`}
       title={about.tagline}
       lead={about.lead}
     >
@@ -29,9 +30,13 @@ export function AboutPage() {
           ))}
         </div>
 
-        <p className="about-contact">
+        <section className="about-contact">
+          <div className="about-contact__copy">
+            <h2 className="about-contact__title">{about.contact.title}</h2>
+            <p className="about-contact__body">{about.contact.body}</p>
+          </div>
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-        </p>
+        </section>
       </div>
     </PublicInfoShell>
   )

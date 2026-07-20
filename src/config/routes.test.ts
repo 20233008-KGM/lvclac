@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  COMPANY_PATH,
   isLegalPath,
   isAdminFeedbackPath,
+  isCompanyPath,
   isMyPagePath,
   isPricingPath,
   isProductPath,
@@ -12,6 +14,13 @@ import {
 } from './routes'
 
 describe('routes', () => {
+  it('recognizes the company page route with optional trailing slash', () => {
+    expect(COMPANY_PATH).toBe('/company')
+    expect(isCompanyPath('/company')).toBe(true)
+    expect(isCompanyPath('/company/')).toBe(true)
+    expect(isCompanyPath('/company/team')).toBe(false)
+  })
+
   it('recognizes the my page route with optional trailing slash', () => {
     expect(MY_PAGE_PATH).toBe('/my')
     expect(isMyPagePath('/my')).toBe(true)

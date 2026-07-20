@@ -9,6 +9,12 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-19 — 국가·언어·개인정보 선택 자동화와 실접속 QA 준비**
+- 언어 감지를 `?lang` → 사용자 저장 언어 → 세션 감지 → 국가 쿠키 → 브라우저 언어의 순수 우선순위 계약으로 분리했다. 지역 조회 중 사용자가 언어를 직접 바꾸면 늦은 IP 응답이 다시 덮지 않도록 재검사하고, 외부 제공자의 국가/브라우저 코드를 정규화했다.
+- Playwright Chromium을 추가해 우선순위 충돌 5종, 늦은 지역 조회 경합, 개인정보 분석/맞춤 광고 독립 선택·저장·재진입·Consent Mode 네 목적 업데이트를 자동화했다. 실행 명령은 `npm run test:geo-consent`, 새 환경의 Chromium 준비는 `npm run test:e2e:install`이다.
+- 검증: 전용 단위 **25/25**, Chromium E2E **7/7**, 전체 Vitest **719/719**, 변경 파일 ESLint, production build, diff check 통과. Chrome 로컬 실화면에서 한국어→영어 전체 카피와 `html lang=en`, 개인정보 설정 재진입·독립 스위치를 확인한 뒤 한국어로 복원했다. 적용 커밋 `maintenance/public` **018e392**.
+- Notion 완료 [Task LV-63](https://app.notion.com/p/3a226e6d586f81ca9171df0fef79c388), [Work Log](https://app.notion.com/p/3a226e6d586f81e585c9d631500afa13), [국가별 실접속 QA](https://app.notion.com/p/3a226e6d586f81e5b69ffa769fa9f121)와 기존 운영 CMP QA·QA/Test Plan을 갱신했다. 현재 PC에는 VPN 프로필·앱이 없어 실제 해외 IP·Vercel 국가 헤더·게시된 CMP/GA4/AdSense 네트워크는 미검증이다.
+
 **2026-07-19 — 청산 한계 초과 결과의 중복 위험 문구 제거**
 - 계좌 상태가 청산 한계를 넘었을 때 결과 카드의 `청산가격`과 `청산 여유 (%)`에 반복되던 `청산 위험` 보조 문구를 제거했다. 두 카드의 기존 빨간 `danger` 강조는 유지하고, 계약승수 0·증거금률 오류 등 다른 계산 안내는 계속 표시한다. 회귀 테스트를 추가했다.
 - 검증: 전용·계산 시나리오 **18/18**·전체 Vitest **706/706**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 한국어 실제 위험 입력에서 빨간 카드 2개·위험 문구/보조 문구 0개, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **b276ccc**. Notion 완료 [Task](https://app.notion.com/p/3a326e6d586f8125a71fc9282ab2bccf)와 [Work Log](https://app.notion.com/p/3a326e6d586f819e8c65cb0254590e47) 기록 완료. 운영 배포와 푸시는 수행하지 않았다.

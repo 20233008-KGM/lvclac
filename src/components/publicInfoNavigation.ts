@@ -45,7 +45,7 @@ export function publicInfoNavigation(locale: Locale) {
 
 export function publicInfoAriaCurrent(
   path: PublicInfoPath,
-  activePath: PublicInfoPath,
+  activePath: PublicInfoPath | null,
 ): 'page' | undefined {
   return path === activePath ? 'page' : undefined
 }

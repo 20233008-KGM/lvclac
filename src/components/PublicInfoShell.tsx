@@ -14,11 +14,12 @@ import '../styles/pages.css'
 export type PublicInfoTone = 'product-doc' | 'company' | 'legal'
 
 interface PublicInfoShellProps {
-  activePath: PublicInfoPath
+  activePath: PublicInfoPath | null
   tone: PublicInfoTone
   eyebrow: string
   title: string
   lead?: string
+  showNavigation?: boolean
   children: ReactNode
 }
 
@@ -28,6 +29,7 @@ export function PublicInfoShell({
   eyebrow,
   title,
   lead,
+  showNavigation = true,
   children,
 }: PublicInfoShellProps) {
   const { locale } = useLanguage()
@@ -49,7 +51,11 @@ export function PublicInfoShell({
   return (
     <div className="public-info-zone" data-info-tone={tone}>
       <div className="public-info-standalone">
-        <article className="public-info-document" data-info-tone={tone}>
+        <article
+          className="public-info-document"
+          data-info-tone={tone}
+          data-info-navigation={showNavigation ? 'visible' : 'hidden'}
+        >
           <header className="public-info-header">
             <div className="public-info-header__top">
               <a
@@ -94,25 +100,27 @@ export function PublicInfoShell({
               {lead && <p className="public-info-lead">{lead}</p>}
             </div>
 
-            <nav className="public-info-nav" aria-label={navLabel}>
-              <ul className="public-info-nav__list">
-                {navigation.map((item) => (
-                  <li key={item.path}>
-                    <a
-                      className="public-info-nav__link"
-                      href={item.path}
-                      aria-current={publicInfoAriaCurrent(item.path, activePath)}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        navigate(item.path)
-                      }}
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            {showNavigation && (
+              <nav className="public-info-nav" aria-label={navLabel}>
+                <ul className="public-info-nav__list">
+                  {navigation.map((item) => (
+                    <li key={item.path}>
+                      <a
+                        className="public-info-nav__link"
+                        href={item.path}
+                        aria-current={publicInfoAriaCurrent(item.path, activePath)}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          navigate(item.path)
+                        }}
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
           </header>
 
           <main className="public-info-content">{children}</main>

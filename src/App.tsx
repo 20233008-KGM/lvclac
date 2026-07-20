@@ -29,6 +29,7 @@ import {
   isAboutPath,
   isAdminFeedbackPath,
   isBillingPath,
+  isCompanyPath,
   isFormulasPath,
   isGuidePath,
   isLegalPath,
@@ -62,6 +63,9 @@ const GuidePage = lazy(() =>
 )
 const AboutPage = lazy(() =>
   import('./components/AboutPage').then((mod) => ({ default: mod.AboutPage })),
+)
+const CompanyPage = lazy(() =>
+  import('./components/CompanyPage').then((mod) => ({ default: mod.CompanyPage })),
 )
 const MyPage = lazy(() =>
   import('./components/MyPage').then((mod) => ({ default: mod.MyPage })),
@@ -310,6 +314,15 @@ function AppRouter() {
       <Suspense fallback={null}>
         <div key={pathname} className="route-enter route-enter--contact">
           <AboutPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isCompanyPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <CompanyPage />
         </div>
       </Suspense>
     )

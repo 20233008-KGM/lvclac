@@ -37,6 +37,7 @@ describe('dev public information shell navigation', () => {
   it('marks only the active document as the current page', () => {
     expect(publicInfoAriaCurrent('/about', '/about')).toBe('page')
     expect(publicInfoAriaCurrent('/guide', '/about')).toBeUndefined()
+    expect(publicInfoAriaCurrent('/guide', null)).toBeUndefined()
   })
 
   it('routes all five documents through the shared shell without replacing refund', () => {
@@ -53,6 +54,17 @@ describe('dev public information shell navigation', () => {
   it('preserves the dev sign-in entry and footer inside the imported shell', () => {
     expect(shellSource).toContain('<AuthButton variant="header" />')
     expect(shellSource).toContain('<SiteFooter />')
+    expect(shellSource).toContain("data-info-navigation={showNavigation ? 'visible' : 'hidden'}")
+    expect(shellSource).toContain('{showNavigation && (')
+  })
+
+  it('supports footer-only documents without adding them to the five-page navigator', () => {
+    expect(shellSource).toContain('activePath: PublicInfoPath | null')
+    expect(shellSource).toContain('showNavigation?: boolean')
+    expect(PUBLIC_INFO_PATHS).not.toContain('/company')
+    expect(pagesCss).toMatch(
+      /\.public-info-document\[data-info-navigation='hidden'\] \.public-info-hero \{[^}]*min-height: 0;/s,
+    )
   })
 
   it('uses the 920px document frame and responsive five-item navigator', () => {

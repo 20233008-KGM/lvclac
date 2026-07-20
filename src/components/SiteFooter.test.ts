@@ -1,7 +1,16 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { GUIDE_PATH, PRIVACY_PATH, REFUND_POLICY_PATH, TERMS_PATH } from '../config/routes'
+import {
+  ABOUT_PATH,
+  COMPANY_PATH,
+  GUIDE_PATH,
+  PRIVACY_PATH,
+  REFUND_POLICY_PATH,
+  TERMS_PATH,
+} from '../config/routes'
+import { en } from '../i18n/locales/en'
+import { ko } from '../i18n/locales/ko'
 import { footerLegalCopy } from './ServiceDisclaimer'
 import { buildFooterColumns, footerPolicyColumnTitles, paddleReviewFooterLinks } from './footerNavigation'
 
@@ -28,7 +37,7 @@ describe('public review footer labels', () => {
         {
           title: '제품',
           links: [
-            { label: '선물 계산기', href: '/' },
+            { label: '서비스 소개', href: ABOUT_PATH },
             { label: 'Pro', soon: true },
             { label: '업데이트 노트', soon: true },
           ],
@@ -41,7 +50,13 @@ describe('public review footer labels', () => {
             { label: '상태 페이지', soon: true },
           ],
         },
-        { title: '회사', links: [{ label: '문의', href: 'mailto:contact@example.com' }] },
+        {
+          title: '회사',
+          links: [
+            { label: '회사 소개', href: COMPANY_PATH },
+            { label: '문의', href: 'mailto:contact@example.com' },
+          ],
+        },
         { title: '의견 보내기', links: [{ label: '버그 제보', href: '/feedback/bugs' }] },
       ],
       'ko',
@@ -53,12 +68,34 @@ describe('public review footer labels', () => {
     )
 
     expect(columns.map((column) => column.title)).toEqual(['제품', '회사', '의견 보내기', '약관 및 정책'])
-    expect(columns[0].links.map((link) => link.label)).toEqual(['선물 계산기', 'Pro 요금제', '이용 가이드'])
+    expect(columns[0].links.map((link) => link.label)).toEqual(['서비스 소개', 'Pro 요금제', '이용 가이드'])
+    expect(columns[0].links[0].href).toBe(ABOUT_PATH)
     expect(columns[0].links[2].href).toBe(GUIDE_PATH)
+    expect(columns[1].links[0]).toEqual({ label: '회사 소개', href: COMPANY_PATH })
     expect(columns[3].links).toEqual([
       { label: '이용약관', href: TERMS_PATH },
       { label: '개인정보 처리방침', href: PRIVACY_PATH },
       { label: '환불 정책', href: REFUND_POLICY_PATH },
+    ])
+  })
+
+  it('keeps localized service and company document links in the dev footer', () => {
+    const koColumns = buildFooterColumns(ko.footer.columns, 'ko')
+    const enColumns = buildFooterColumns(en.footer.columns, 'en')
+
+    expect(koColumns[0].links[0]).toEqual({ label: '서비스 소개', href: ABOUT_PATH })
+    expect(koColumns[1].links[0]).toEqual({ label: '회사 소개', href: COMPANY_PATH })
+    expect(enColumns[0].links[0]).toEqual({ label: 'Service overview', href: ABOUT_PATH })
+    expect(enColumns[1].links[0]).toEqual({ label: 'About us', href: COMPANY_PATH })
+    expect(koColumns[0].links.map((link) => link.label)).toEqual([
+      '서비스 소개',
+      'Pro 요금제',
+      '이용 가이드',
+    ])
+    expect(enColumns[0].links.map((link) => link.label)).toEqual([
+      'Service overview',
+      'Pro Pricing',
+      'User guide',
     ])
   })
 

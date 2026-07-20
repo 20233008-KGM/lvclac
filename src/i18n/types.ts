@@ -785,6 +785,7 @@ export interface Messages {
     tagline: string
     lead: string
     sections: { title: string; paragraphs: string[] }[]
+    contact: { title: string; body: string }
     backToHome: string
   }
   boards: {

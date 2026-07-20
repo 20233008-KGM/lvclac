@@ -1180,32 +1180,37 @@ export const en: Messages = {
   },
   about: {
     company: 'Farfield Software',
-    title: 'About us',
-    tagline: 'The best experience—for a few',
+    title: 'About the service',
+    tagline: 'See position risk in one place',
     lead:
-      'We build products that are truly needed, and make the world a little better through them. Farfield Software builds software that a smaller group of people use for a long time—not tools everyone tries once.',
+      'LiqGuard brings estimated liquidation price, margin headroom, and post-order changes into one workspace for futures positions.\nStart without an account and save only the inputs you choose in this browser.',
     sections: [
       {
-        title: 'What we do',
+        title: 'Bring scattered calculations together',
         paragraphs: [
-          'We design and ship productivity tools for real workflows. Accuracy and responsiveness matter more than long feature lists.',
+          'LiqGuard started with a simple frustration: reviewing position risk meant copying numbers across several screens and recalculating them by hand.',
+          'It brings account equity, current price, contract count, and margin inputs into one workspace so you can compare your current position with post-order changes more quickly.',
         ],
       },
       {
-        title: 'How we work',
+        title: 'See the result and the reasoning',
         paragraphs: [
-          'We do not build for everyone. We focus on a small audience and tailor the experience deeply for them.',
-          'We care more that existing users get better than that more people sign up. Before adding features, we make what exists more precise and faster.',
+          'We publish the formulas used for estimated liquidation price, margin, and leverage, and clearly separate direct margin inputs from product-specific calculation modes.',
+          'We also explain where broker or exchange rules, fees, and cross margin can change the result, so you can see when and how each number applies.',
         ],
       },
       {
-        title: 'What’s next',
+        title: 'Start light, save by choice',
         paragraphs: [
-          'We are a small team building software that fits the people who need it.',
-          'Dev requests, bug reports, and suggestions are always welcome.',
+          'The public service works without an account or cloud profile. If you turn on saving, your inputs remain in this browser.',
+          'Calculator storage stays separate from analytics and advertising choices, and you can change storage and privacy settings at any time.',
         ],
       },
     ],
+    contact: {
+      title: 'Share feedback with LiqGuard',
+      body: 'Email us with calculation questions, bug reports, or general product feedback.',
+    },
     backToHome: '← Calculator',
   },
   formulas: {
@@ -1359,7 +1364,7 @@ export const en: Messages = {
       {
         title: 'Product',
         links: [
-          { label: 'Futures Calculator', href: '/' },
+          { label: 'Service overview', href: '/about' },
           { label: 'Pro', soon: true },
           { label: 'Changelog', soon: true },
         ],
@@ -1367,7 +1372,7 @@ export const en: Messages = {
       {
         title: 'Company',
         links: [
-          { label: 'Farfield Software', href: '/about' },
+          { label: 'About us', href: '/company' },
           { label: 'Contact', href: `mailto:${CONTACT_EMAIL}` },
           { label: 'Support', href: SUPPORT_URL },
           { label: 'Careers', soon: true },

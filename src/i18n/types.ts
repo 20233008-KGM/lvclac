@@ -133,6 +133,7 @@ export interface Messages {
     storageModeLabel: string
     localMode: string
     cloudMode: string
+    cloudLoginRequired: string
     noSaveMode: string
     cleared: string
     enableModalTitle: string

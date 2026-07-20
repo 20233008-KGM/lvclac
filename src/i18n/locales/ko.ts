@@ -110,6 +110,7 @@ export const ko: Messages = {
     storageModeLabel: '입력값 저장 위치',
     localMode: '이 기기',
     cloudMode: '클라우드',
+    cloudLoginRequired: '클라우드 · 로그인 필요',
     noSaveMode: '저장 안 함',
     cleared: '저장된 데이터가 삭제되었습니다.',
     enableModalTitle: '입력값 저장 안내',

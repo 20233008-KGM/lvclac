@@ -94,3 +94,7 @@
 - 조사 중 추가 유령 발견해 함께 삭제(사용자 승인): `.my-page-nickname-form` 본체+오버라이드 4블록(현행 폼은 `my-page-nickname-edit`라 "legacy를 덮어쓴다"던 오버라이드까지 전부 매칭 대상 없는 죽은 코드), `.my-page-account-settings-meta`. `.my-page-settings-list`(@deprecated)·`.my-page-settings-note`·모바일 미디어쿼리 블록 포함 총 5구간 200줄, 렌더링 변화 0.
 - 검증: vitest 604/604(main rebase 후 재실행), dev /my에서 CSSOM 유령 규칙 0·실사용 규칙(linked-row/setting-line/inline-control) 유지·데스크톱 1265px/모바일 428px 가로 오버플로 없음·콘솔 에러 0. 게스트 화면 실측(로그인 화면 쪽은 참조 0건으로 코드 레벨 보장).
 - 함정: 포트 5199를 다른 세션 dev 서버가 점유 → launch.json 임시 5198로 검증 후 원복. harness 워크트리 세션이라 워크트리 커밋→main rebase→ff-merge로 main 반영(97e2302 모바일 linked-row 개편과 충돌 없음 확인).
+
+**2026-07-19 — 서비스 안내 결과 불일치 경고 강조**
+- 서비스 안내 모달의 `표시 결과와 실제 청산가·마진콜 시점이 일치하지 않을 수 있습니다.` 문장에 결과 영역과 같은 밑줄·2px 간격을 적용하고 600 굵기로 강조했다. 문구·아이콘·경고 상자·모달 동작은 변경하지 않았으며 CSS 회귀 테스트를 추가했다.
+- 검증: 관련 **12/12**·전체 Vitest **704/704**, 변경 테스트 ESLint, production build, diff check 통과. 인앱 브라우저 한국어 1280×900·영문 390×844에서 굵기 600·밑줄·2px 간격, 모바일 줄바꿈, 가로 오버플로·콘솔 오류 0을 확인했다. 적용 커밋 `maintenance/public` **feb049c**. Notion [Task LV-48](https://app.notion.com/p/3a126e6d586f81f7a91ddf623ab3b1b8)와 [Work Log](https://app.notion.com/p/3a126e6d586f818daf25c11221d45a01)에 후속 기록. 운영 배포와 푸시는 수행하지 않았다.

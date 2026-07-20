@@ -23,9 +23,28 @@ describe('draft save slot UI', () => {
 
     expect(text).toContain('draft-save-slot--off')
     expect(text).toContain('noSaveMode')
-    expect(text).toContain("['off', 'local', 'cloud']")
-    expect(text).toContain("['off', 'local']")
+    expect(text).toContain("const slots: SaveSlot[] = ['off', 'local', 'cloud']")
+    expect(text).not.toContain("cloudAvailable ? ['off', 'local', 'cloud']")
     expect(text).toContain('const active = !saveEnabled')
+  })
+
+  it('keeps the cloud slot visible for signed-out users and opens login before changing save state', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const ko = source('src/i18n/locales/ko.ts')
+    const en = source('src/i18n/locales/en.ts')
+
+    expect(text).toMatch(
+      /const mode = slot\s+if \(mode === 'cloud' && !user\) \{\s+setAuthModalOpen\(true\)\s+return\s+\}/,
+    )
+    expect(text).toContain(': t.draftSave.cloudLoginRequired')
+    expect(ko).toContain("cloudLoginRequired: '클라우드 · 로그인 필요'")
+    expect(en).toContain("cloudLoginRequired: 'Cloud · Login required'")
+  })
+
+  it('does not expose cloud drag-copy as a drop action before login', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+
+    expect(text).toContain("(user != null || (source !== 'cloud' && target !== 'cloud'))")
   })
 
   it('styles the no-save slot and shares slot stroke rules with the off pictogram', () => {

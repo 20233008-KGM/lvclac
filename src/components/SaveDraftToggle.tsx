@@ -333,7 +333,12 @@ export function SaveDraftToggle() {
     !busy && syncStatus !== 'loading' && storedForMode(mode)
 
   const canDropMode = (source: SaveStorageMode | null, target: SaveStorageMode) =>
-    !busy && syncStatus !== 'loading' && source != null && source !== target && storedForMode(source)
+    !busy &&
+    syncStatus !== 'loading' &&
+    source != null &&
+    source !== target &&
+    storedForMode(source) &&
+    (user != null || (source !== 'cloud' && target !== 'cloud'))
 
   const handleModeChange = (mode: SaveStorageMode) => {
     if (mode === storageMode) return
@@ -542,6 +547,11 @@ export function SaveDraftToggle() {
 
     const mode = slot
 
+    if (mode === 'cloud' && !user) {
+      setAuthModalOpen(true)
+      return
+    }
+
     if (saveEnabled && storageMode === mode) return
 
     if (!saveEnabled) {
@@ -566,7 +576,7 @@ export function SaveDraftToggle() {
     handleModeChange(mode)
   }
 
-  const slots: SaveSlot[] = cloudAvailable ? ['off', 'local', 'cloud'] : ['off', 'local']
+  const slots: SaveSlot[] = ['off', 'local', 'cloud']
 
   const renderNumberSetGroup = (mode: SaveStorageMode, label: string) => {
     const groupSets = mode === 'local' ? localNumberSets : cloudNumberSets
@@ -746,7 +756,12 @@ export function SaveDraftToggle() {
               const mode = slot
               const stored = mode === 'local' ? hasLocalDraft : hasCloudDraft
               const active = saveEnabled && storageMode === mode
-              const modeLabel = mode === 'local' ? t.draftSave.localMode : t.draftSave.cloudMode
+              const modeLabel =
+                mode === 'local'
+                  ? t.draftSave.localMode
+                  : user
+                    ? t.draftSave.cloudMode
+                    : t.draftSave.cloudLoginRequired
               const modeClass =
                 mode === 'local' ? 'draft-save-slot--local' : 'draft-save-slot--cloud'
               const className = [

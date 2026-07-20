@@ -113,6 +113,7 @@ export const en: Messages = {
     storageModeLabel: 'Input save location',
     localMode: 'This device',
     cloudMode: 'Cloud',
+    cloudLoginRequired: 'Cloud · Login required',
     noSaveMode: "Don't save",
     cleared: 'Saved data has been removed.',
     enableModalTitle: 'Save inputs on this device',

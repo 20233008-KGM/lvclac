@@ -36,9 +36,12 @@ describe('TrustModalFrame accessibility contract', () => {
     expect(source).toContain('document.body.style.overflow = previousOverflow')
   })
 
-  it('uses a transparent warning box with bold underlined copy in the service notice', () => {
+  it('uses a neutral transparent warning box with bold underlined copy in the service notice', () => {
     expect(css).toMatch(
-      /\.trust-modal--service \.disclaimer-modal-warning \{[\s\S]*?background: transparent;/,
+      /\.trust-modal--service \.disclaimer-modal-warning \{[\s\S]*?border: 1px solid transparent;[\s\S]*?background: transparent;/,
+    )
+    expect(css).toMatch(
+      /\.trust-modal--service \.disclaimer-warning-icon \{[\s\S]*?border: 1px solid var\(--color-text-muted\);[\s\S]*?color: var\(--color-text-muted\);/,
     )
     expect(css).toMatch(
       /\.trust-modal--service \.legal-emphasis \{[\s\S]*?font-weight: 600;[\s\S]*?text-decoration: underline;[\s\S]*?text-underline-offset: 2px;/,

@@ -1,9 +1,10 @@
 import { useEffect, type ReactNode } from 'react'
-import type { LegalPageKind } from '../config/routes'
+import { PRIVACY_PATH, TERMS_PATH, type LegalPageKind } from '../config/routes'
 import { CONTACT_EMAIL } from '../config/site'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage, type Locale } from '../i18n'
 import { LanguageToggle } from './LanguageToggle'
+import { PublicInfoShell } from './PublicInfoShell'
 import { LegalLinks } from './ServiceDisclaimer'
 import { AuthButton } from './auth/AuthButton'
 import '../styles/pages.css'
@@ -53,6 +54,8 @@ interface PublicReviewCopy {
   legal: Record<LegalPageKind, LegalDocCopy>
 }
 
+// Exported for copy-contract tests; runtime exports below remain React components.
+// eslint-disable-next-line react-refresh/only-export-components
 export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
   en: {
     backLabel: 'Back to calculator',
@@ -566,6 +569,42 @@ export function PublicLegalPage({ kind }: { kind: LegalPageKind }) {
   const { locale } = useLanguage()
   const copy = publicReviewCopy[locale]
   const doc = copy.legal[kind]
+
+  if (kind === 'terms' || kind === 'privacy') {
+    const activePath = kind === 'terms' ? TERMS_PATH : PRIVACY_PATH
+
+    return (
+      <PublicInfoShell
+        activePath={activePath}
+        tone="legal"
+        eyebrow={doc.eyebrow}
+        title={doc.title}
+        lead={doc.lead}
+      >
+        <div className="public-legal-document">
+          <p className="public-legal-effective">{doc.effectiveDate}</p>
+          <p className="public-legal-intro">{doc.intro}</p>
+          <div className="public-legal-sections">
+            {doc.sections.map((section) => (
+              <section key={section.title}>
+                <h2>{section.title}</h2>
+                <p>{section.body}</p>
+              </section>
+            ))}
+          </div>
+
+          <section className="public-legal-contact">
+            <h2>{doc.contactTitle}</h2>
+            <p>
+              {doc.contactBodyPrefix}
+              <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+              {doc.contactBodySuffix}
+            </p>
+          </section>
+        </div>
+      </PublicInfoShell>
+    )
+  }
 
   return (
     <PublicPageShell

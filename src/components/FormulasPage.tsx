@@ -1,33 +1,21 @@
-import { useNavigate } from '../hooks/usePathname'
+import { FORMULAS_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FormulasContent } from './FormulasContent'
-import { PageShell } from './PageShell'
-import { SiteFooter } from './SiteFooter'
-import '../styles/pages.css'
+import { PublicInfoShell } from './PublicInfoShell'
 
 export function FormulasPage() {
   const { t } = useLanguage()
-  const navigate = useNavigate()
   const f = t.formulas
 
   return (
-    <PageShell>
-      <div className="formulas-page">
-        <header className="formulas-page__header">
-          <h1 className="formulas-page__title">{f.title}</h1>
-          <button
-            type="button"
-            className="formulas-page__close"
-            onClick={() => navigate('/')}
-            aria-label={t.close}
-          >
-            ×
-          </button>
-        </header>
-
-        <FormulasContent formulas={f} variant="page" />
-      </div>
-      <SiteFooter />
-    </PageShell>
+    <PublicInfoShell
+      activePath={FORMULAS_PATH}
+      tone="product-doc"
+      eyebrow="LiqGuard · Reference"
+      title={f.title}
+      lead={f.description}
+    >
+      <FormulasContent formulas={f} variant="page" />
+    </PublicInfoShell>
   )
 }

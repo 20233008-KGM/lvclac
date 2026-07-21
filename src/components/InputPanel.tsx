@@ -415,8 +415,6 @@ function setupCopy(lang: 'ko' | 'en') {
       updateTitle: '현재가 갱신',
       baselinePrice: '기준 현재가',
       updatePrice: '새 현재가',
-      updateHint:
-        '# 현재가 갱신\n새 현재가를 반영하면 기존 현재가 대비 손익이 계좌 평가금액에 자동 반영됩니다.\n\n계좌 세팅값은 잠가두고 여기만 움직이는 흐름을 권장합니다.',
       lock: '세팅 잠금',
       edit: '수정',
       locked: '세팅 잠김',
@@ -431,8 +429,6 @@ function setupCopy(lang: 'ko' | 'en') {
     updateTitle: 'Mark update',
     baselinePrice: 'Baseline mark',
     updatePrice: 'New mark',
-    updateHint:
-      '# Mark update\nApplying a new mark rolls P&L from the previous mark into account equity.\n\nKeep account setup locked and move only this field for daily updates.',
     lock: 'Lock setup',
     edit: 'Edit',
     locked: 'Setup locked',
@@ -652,7 +648,6 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
   const scenarioModeActive = isPreviewModeActive(inputs)
   const displayInputs = resolveInputPanelDisplayInputs(inputs)
   const tickPnl = calcPositionTickPnl(displayInputs)
-  const c = setupCopy(t.lang)
   const setupComplete = isAccountSetupComplete(inputs)
   const frozenFieldClass = setupComplete ? 'field--setup-screen' : ''
   // 세팅 완료 후에는 baseline 필드가 잠긴다. 편집을 시도하면 확인창이 뜨고,
@@ -777,7 +772,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             <CurrentPriceField
               inputs={inputs}
               onChange={onChange}
-              field={setupComplete ? { ...f.currentPrice, hint: c.updateHint } : f.currentPrice}
+              field={f.currentPrice}
               stepUpLabel={t.stepUp}
               stepDownLabel={t.stepDown}
               tooltipLabel={t.fieldTooltipLabel}

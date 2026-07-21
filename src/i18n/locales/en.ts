@@ -778,7 +778,7 @@ export const en: Messages = {
     },
     maintenanceMarginRate: {
       label: 'Maintenance margin rate',
-      hint: '# Maintenance margin rate\nRatio of notional (e.g. 0.247 = 24.7%)',
+      hint: '# Maintenance margin rate\nThe minimum margin ratio required to keep a position open.\n\nIf account equity no longer meets this requirement, a margin call or liquidation may occur.\n\nEnter it as a decimal of notional. Example: 0.247 = 24.7%',
       placeholder: 'e.g. 0.25',
     },
     maintenanceMargin: {
@@ -793,7 +793,7 @@ export const en: Messages = {
     },
     entrustedMarginRate: {
       label: 'Initial margin rate',
-      hint: '# Initial margin rate\nRatio of notional for initial margin.\n\nFor fixed amounts, use per-contract or total.',
+      hint: '# Initial margin rate\nThe margin ratio required when opening a new position.\n\nIt is generally higher than the maintenance margin rate.\n\nEnter it as a decimal of notional. For fixed amounts, use per-contract or total.',
       placeholder: 'e.g. 0.35',
     },
     entrustedMargin: {
@@ -813,12 +813,12 @@ export const en: Messages = {
     },
     contractAmount: {
       label: 'Entry price',
-      hint: '# Entry price\nAverage entry price for the position.\n\nFor stock futures, enter the cash price. For index futures, enter the index points. For overseas futures, enter the price shown on the product screen.',
+      hint: '# Entry price\nThe average entry price of the current position.\n\nEnter the average entry price in the units shown on your trading platform. Use the price per share for single-stock futures and index points for index futures.',
       placeholder: '250,000',
     },
     currentPrice: {
       label: 'Mark price',
-      hint: '# Mark price\nReference mark.\n\n────────\n\n[Note]\n\nChanging this alone does not update equity. Use Scenario price to roll unrealized P&L.',
+      hint: '# Mark price\nMarket price captured with account equity.\n\n────────\n\n[Initial setup]\nMatch both values to the same timestamp.\n[Later updates]\nAfter setup, a new mark automatically rolls P&L into account equity.\nDirect entry — Enter or leave to apply\n▲▼ — Apply immediately\nCtrl+Z — Undo the last update\n\n────────\n[Note]\nIf the position or cash balance changes, resnapshot instead of updating only the mark.',
       placeholder: '35,000',
     },
     scenarioPrice: {
@@ -832,13 +832,13 @@ export const en: Messages = {
       placeholder: '1',
     },
     contractMultiplier: {
-      label: 'Contract multiplier (contract size)',
-      hint: '# Contract multiplier (contract size)\nValue used to calculate the one-contract P&L when price moves by 1.\n\nExamples: KOSPI200 250,000, Nasdaq E-mini 20, crude oil 1,000.\n\nDefaults to 1 if blank.',
+      label: 'Contract multiplier',
+      hint: '# Contract multiplier\nValue used to calculate the one-contract P&L when price moves by 1.\n\nExamples: Nasdaq E-mini 20, KOSPI200 250,000, crude oil 1,000.\n\nDefaults to 1 if blank.',
       placeholder: '1',
     },
     orderContracts: {
       label: 'Order size (contracts)',
-      hint: '# Order size (contracts)\nAdditional contracts to simulate at fill.\n\n+ expands the position, − reduces it.',
+      hint: '# Order size (contracts)\nAdditional contracts to simulate at fill.\n\nPositive (+) expands the current position; negative (−) reduces it.\n\nLong: + buy / − sell\nShort: + sell / − buy to cover',
       placeholder: '+/-0',
     },
     orderPrice: {

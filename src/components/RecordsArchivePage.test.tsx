@@ -117,6 +117,23 @@ describe('RecordsArchiveView', () => {
     expect(html).not.toContain('records-archive-table')
   })
 
+  it('shows export to every signed-in user without a subscription gate', () => {
+    const html = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} onOpenExport={vi.fn()} />,
+    )
+
+    expect(html).toContain('records-export-trigger')
+    expect(html).toContain(en.accountRecords.export)
+  })
+
+  it('does not expose export in the signed-out state', () => {
+    const html = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} signedIn={false} onOpenExport={vi.fn()} />,
+    )
+
+    expect(html).not.toContain('records-export-trigger')
+  })
+
   it('renders the initial latest-record date as a centered timeline anchor', () => {
     const html = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
 

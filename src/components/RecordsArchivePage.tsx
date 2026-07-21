@@ -27,11 +27,21 @@ import {
   formatSavedAtCompact,
 } from '../utils/format'
 import { SiteFooter } from './SiteFooter'
+import {
+  buildOrderExportTable,
+  buildSnapshotExportTable,
+  downloadRecordExport,
+} from '../lib/accountRecordExport'
+import type { RecordsExportRequest, RecordsExportResult } from './RecordsExportModal'
 import '../styles/pages.css'
 import '../styles/auth-dialog.css'
+import '../styles/records-export.css'
 
 const BulkDeleteConfirmModal = lazy(() =>
   import('./BulkDeleteConfirmModal').then((mod) => ({ default: mod.BulkDeleteConfirmModal })),
+)
+const RecordsExportModal = lazy(() =>
+  import('./RecordsExportModal').then((mod) => ({ default: mod.RecordsExportModal })),
 )
 
 type AccountRecordsCopy = Messages['accountRecords']
@@ -67,6 +77,7 @@ function toDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- shared pure helper is covered by the page tests
 export function toTimelineRecords(
   orderRecords: OrderHistoryRecord[],
   snapshotRecords: AccountSnapshotRecord[],
@@ -96,6 +107,7 @@ export function toTimelineRecords(
  * 처음 열 때는 가장 최근 기록일을 기준점으로 삼고, 날짜 점프 뒤에는 사용자가 고른
  * 날짜를 그대로 유지한다. 기준점보다 위쪽은 아직 오지 않은 미래 영역으로 비워 둔다.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- shared pure helper is covered by the page tests
 export function resolveTimelineAnchorDate(
   dateAnchor: string | null,
   timelineRecords: TimelineRecord[],
@@ -459,6 +471,7 @@ export function RecordsArchiveView({
   onSlotFilterChange,
   dateAnchor = null,
   onDateAnchorChange,
+  onOpenExport,
 }: {
   copy: AccountRecordsCopy
   backLabel?: string
@@ -494,6 +507,7 @@ export function RecordsArchiveView({
   onSlotFilterChange?: (filter: NumberSetFilter) => void
   dateAnchor?: string | null
   onDateAnchorChange?: (date: string | null) => void
+  onOpenExport?: () => void
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
   const timelineAnchorDate = resolveTimelineAnchorDate(dateAnchor, timelineRecords)
@@ -703,6 +717,16 @@ export function RecordsArchiveView({
                         <span className="records-slot-filter-label">{copy.slotFilterLabel}</span>
                         <span className="records-slot-filter-value">{slotFilterValueLabel}</span>
                         <span aria-hidden="true">▾</span>
+                      </button>
+                    )}
+                    {onOpenExport && (
+                      <button
+                        type="button"
+                        className="records-export-trigger"
+                        onClick={onOpenExport}
+                      >
+                        <span aria-hidden="true">⇩</span>
+                        <span>{copy.export}</span>
                       </button>
                     )}
                     {hasToolbarMenu && (
@@ -959,7 +983,7 @@ export function RecordsArchiveView({
 }
 
 export function RecordsArchivePage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { user } = useAuth()
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [orderRecords, setOrderRecords] = useState<OrderHistoryRecord[]>([])
@@ -990,6 +1014,7 @@ export function RecordsArchivePage() {
   const [slots, setSlots] = useState<{ id: string; title: string }[]>([])
   const [dateAnchor, setDateAnchor] = useState<string | null>(null)
   const [memoEntry, setMemoEntry] = useState<TimelineRecord | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
 
   // 날짜 점프: 선택한 날(YYYY-MM-DD)의 끝(로컬 23:59:59.999)을 상한으로 삼아
   // 그 시각 이하의 기록만 조회한다. null이면 상한 없음(최신부터).
@@ -1246,12 +1271,14 @@ export function RecordsArchivePage() {
   }, [user?.id])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- route entry must start its async repository load
     void loadRecords()
   }, [loadRecords])
 
   useEffect(() => {
     const userId = user?.id ?? null
     if (!userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear user-owned slot labels immediately on sign-out
       setSlots([])
       return
     }
@@ -1269,6 +1296,46 @@ export function RecordsArchivePage() {
 
   const hasOlderRecords = orderHasMore || snapshotHasMore
   const loadingOlderRecords = orderLoadingMore || snapshotLoadingMore
+  const exportEndDate = useMemo(
+    () => resolveTimelineAnchorDate(dateAnchor, toTimelineRecords(orderRecords, snapshotRecords)),
+    [dateAnchor, orderRecords, snapshotRecords],
+  )
+
+  const exportRecords = useCallback(
+    async (request: RecordsExportRequest): Promise<RecordsExportResult> => {
+      const userId = user?.id ?? null
+      if (!userId) return { ok: false, reason: 'error' }
+
+      const from = request.startDate
+        ? new Date(`${request.startDate}T00:00:00.000`).toISOString()
+        : null
+      const to = request.endDate
+        ? new Date(`${request.endDate}T23:59:59.999`).toISOString()
+        : null
+      const filter = { numberSetFilter: request.numberSetFilter, from, to }
+
+      try {
+        if (request.kind === 'orders') {
+          const result = await recordsRepository.fetchAllOrderHistory(userId, filter)
+          if (result.error !== null) return { ok: false, reason: 'error' }
+          if (result.data.length === 0) return { ok: false, reason: 'empty' }
+          const table = buildOrderExportTable(result.data, slots, request.locale)
+          const filename = await downloadRecordExport(table, request.kind, request.format)
+          return { ok: true, filename }
+        }
+
+        const result = await recordsRepository.fetchAllAccountSnapshots(userId, filter)
+        if (result.error !== null) return { ok: false, reason: 'error' }
+        if (result.data.length === 0) return { ok: false, reason: 'empty' }
+        const table = buildSnapshotExportTable(result.data, slots, request.locale)
+        const filename = await downloadRecordExport(table, request.kind, request.format)
+        return { ok: true, filename }
+      } catch {
+        return { ok: false, reason: 'error' }
+      }
+    },
+    [recordsRepository, slots, user?.id],
+  )
 
   return (
     <>
@@ -1315,7 +1382,21 @@ export function RecordsArchivePage() {
           setDateAnchor(date)
           setDetail(null)
         }}
+        onOpenExport={user ? () => setExportOpen(true) : undefined}
       />
+      {exportOpen && user && (
+        <Suspense fallback={null}>
+          <RecordsExportModal
+            copy={t.accountRecords}
+            locale={locale}
+            slots={slots}
+            initialFilter={numberSetFilter}
+            initialEndDate={exportEndDate}
+            onClose={() => setExportOpen(false)}
+            onExport={exportRecords}
+          />
+        </Suspense>
+      )}
       {memoEntry && user && (
         <MemoEditorWindow
           key={`${memoEntry.type}:${memoEntry.id}`}

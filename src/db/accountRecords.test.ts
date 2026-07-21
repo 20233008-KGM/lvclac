@@ -726,3 +726,117 @@ describe('account records repository helpers', () => {
     ])
   })
 })
+
+describe('account records full export queries', () => {
+  function exportClient(options?: { failAtOffset?: number }) {
+    const calls: {
+      table: string
+      ranges: [number, number][]
+      filters: [string, string, unknown][]
+    } = { table: '', ranges: [], filters: [] }
+    const orderRows = Array.from({ length: 501 }, (_, index) => ({
+      id: `order-${index}`,
+      position_side: 'long',
+      order_contracts: index,
+      order_price: 100.5,
+      before_inputs: {},
+      after_inputs: {},
+      before_result: {},
+      after_result: {},
+      number_set_id: 'slot-1',
+      memo: null,
+      created_at: `2026-07-21T00:${String(index % 60).padStart(2, '0')}:00.000Z`,
+    }))
+    const snapshotRows = [{
+      id: 'snapshot-1',
+      title: 'Snapshot',
+      inputs: {},
+      result: {},
+      source: 'manual',
+      source_local_date: null,
+      number_set_id: null,
+      memo: null,
+      created_at: '2026-07-21T00:00:00.000Z',
+    }]
+
+    const client = {
+      from(table: string) {
+        calls.table = table
+        const rows = table === 'order_history' ? orderRows : snapshotRows
+        const query = {
+          select() { return query },
+          eq(column: string, value: unknown) {
+            calls.filters.push(['eq', column, value])
+            return query
+          },
+          is(column: string, value: unknown) {
+            calls.filters.push(['is', column, value])
+            return query
+          },
+          gte(column: string, value: unknown) {
+            calls.filters.push(['gte', column, value])
+            return query
+          },
+          lte(column: string, value: unknown) {
+            calls.filters.push(['lte', column, value])
+            return query
+          },
+          order() { return query },
+          range(from: number, to: number) {
+            calls.ranges.push([from, to])
+            return {
+              returns: () =>
+                options?.failAtOffset === from
+                  ? Promise.resolve({ data: null, error: { code: 'export_page_failed' } })
+                  : Promise.resolve({ data: rows.slice(from, to + 1), error: null }),
+            }
+          },
+        }
+        return query
+      },
+    }
+    return { client, calls }
+  }
+
+  it('fetches matching order rows in repeated 500-row pages beyond the visible 20', async () => {
+    const { client, calls } = exportClient()
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchAllOrderHistory('user-1', {
+      numberSetFilter: { kind: 'slot', id: 'slot-1' },
+      from: '2026-07-20T15:00:00.000Z',
+      to: '2026-07-21T14:59:59.999Z',
+    })
+
+    expect(result.error).toBeNull()
+    expect(result.data).toHaveLength(501)
+    expect(calls.ranges).toEqual([[0, 499], [500, 999]])
+    expect(calls.filters).toContainEqual(['eq', 'user_id', 'user-1'])
+    expect(calls.filters).toContainEqual(['eq', 'number_set_id', 'slot-1'])
+    expect(calls.filters).toContainEqual(['gte', 'created_at', '2026-07-20T15:00:00.000Z'])
+    expect(calls.filters).toContainEqual(['lte', 'created_at', '2026-07-21T14:59:59.999Z'])
+  })
+
+  it('applies the unassigned filter to full snapshot exports', async () => {
+    const { client, calls } = exportClient()
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchAllAccountSnapshots('user-1', {
+      numberSetFilter: { kind: 'unassigned' },
+    })
+
+    expect(result.error).toBeNull()
+    expect(result.data).toHaveLength(1)
+    expect(calls.table).toBe('account_snapshots')
+    expect(calls.ranges).toEqual([[0, 499]])
+    expect(calls.filters).toContainEqual(['is', 'number_set_id', null])
+  })
+
+  it('aborts without returning a partial export when a later page fails', async () => {
+    const { client, calls } = exportClient({ failAtOffset: 500 })
+    const repo = createAccountRecordsRepository(client as never)
+    const result = await repo.fetchAllOrderHistory('user-1')
+
+    expect(result.data).toBeNull()
+    expect(result.error).toBe('account_records_error')
+    expect(calls.ranges).toEqual([[0, 499], [500, 999]])
+  })
+})

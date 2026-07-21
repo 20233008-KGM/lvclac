@@ -280,6 +280,26 @@ export interface Messages {
     jumpToDateAria: string
     timelineAnchorLabel: string
     backToLatest: string
+    export: string
+    exportTitle: string
+    exportDescription: string
+    exportRecordType: string
+    exportOrders: string
+    exportSnapshots: string
+    exportSlot: string
+    exportStartDate: string
+    exportEndDate: string
+    exportHeaderLanguage: string
+    exportLanguageKo: string
+    exportLanguageEn: string
+    exportCsv: string
+    exportXlsx: string
+    exportPreparing: string
+    exportSuccess: string
+    exportEmpty: string
+    exportError: string
+    exportInvalidRange: string
+    exportClose: string
   }
   myPage: {
     title: string

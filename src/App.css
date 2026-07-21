@@ -1502,9 +1502,73 @@ input:focus:not(:focus-visible) {
 }
 
 .input-panel__head h2 {
+  display: flex;
+  align-items: center;
+  min-width: 0;
   margin: 0;
   padding: 0;
   border-bottom: none;
+}
+
+.active-number-set-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: calc(100% - 34px);
+  margin-left: 10px;
+  gap: 6px;
+  color: var(--color-text-dim);
+  line-height: 1;
+}
+
+.active-number-set-label::before {
+  content: '';
+  display: block;
+  flex: 0 0 1px;
+  width: 1px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.active-number-set-label__name {
+  min-width: 0;
+  max-width: 170px;
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-number-set-label__storage {
+  display: inline-flex;
+  flex: 0 0 13px;
+  width: 13px;
+  height: 13px;
+  color: var(--color-primary);
+}
+
+.active-number-set-label__storage svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 520px) {
+  .active-number-set-label {
+    margin-left: 7px;
+    gap: 5px;
+  }
+
+  .active-number-set-label__name {
+    max-width: 110px;
+    font-size: 11px;
+  }
 }
 
 .input-panel__clear-actions {

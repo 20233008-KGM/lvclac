@@ -7,6 +7,18 @@ function source(path: string) {
 }
 
 describe('draft save slot UI', () => {
+  it('shows a user-named active set in the input panel header without a redundant label', () => {
+    const inputPanel = source('src/components/InputPanel.tsx')
+    const activeLabel = source('src/components/ActiveNumberSetLabel.tsx')
+    const styles = source('src/App.css')
+
+    expect(inputPanel).toContain('<ActiveNumberSetLabel />')
+    expect(activeLabel).toContain('activeNumberSetId')
+    expect(activeLabel).toContain('active-number-set-label__storage')
+    expect(activeLabel).not.toContain('현재 세트')
+    expect(styles).toMatch(/\.active-number-set-label::before\s*\{[^}]*height: 9px;/s)
+  })
+
   it('renders local and cloud storage choices as icon-only save slots', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
 

@@ -26,4 +26,13 @@ describe('records archive layout contract', () => {
     )
     expect(css).toContain('height: max(184px, calc(var(--records-timeline-height) / 2 - 26px));')
   })
+
+  it('centers time and slot metadata on desktop and folds it into one mobile row', () => {
+    expect(css).toMatch(/\.records-timeline-row\s*\{[\s\S]*align-items: center;/)
+    expect(css).toMatch(/\.records-timeline-meta\s*\{[\s\S]*display: grid;[\s\S]*align-self: center;/)
+    expect(css).toMatch(/\.records-timeline-slot\s*\{[\s\S]*text-overflow: ellipsis;/)
+    expect(css).toMatch(
+      /@media[\s\S]*\.records-timeline-meta\s*\{[\s\S]*grid-row: 1;[\s\S]*display: flex;/,
+    )
+  })
 })

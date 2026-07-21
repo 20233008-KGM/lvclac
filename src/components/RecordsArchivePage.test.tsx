@@ -15,7 +15,11 @@ const summary: AccountRecordSummary = {
   isAtRisk: false,
 }
 
-function orderRecord(id: string, createdAt: string): OrderHistoryRecord {
+function orderRecord(
+  id: string,
+  createdAt: string,
+  numberSetId?: string | null,
+): OrderHistoryRecord {
   return {
     id,
     positionSide: 'long',
@@ -25,11 +29,17 @@ function orderRecord(id: string, createdAt: string): OrderHistoryRecord {
     afterInputs: sampleInputs,
     beforeResult: summary,
     afterResult: summary,
+    numberSetId,
     createdAt,
   }
 }
 
-function snapshotRecord(id: string, createdAt: string, accountEval = 29_047_200): AccountSnapshotRecord {
+function snapshotRecord(
+  id: string,
+  createdAt: string,
+  accountEval = 29_047_200,
+  numberSetId?: string | null,
+): AccountSnapshotRecord {
   return {
     id,
     title: `Snapshot ${id}`,
@@ -37,6 +47,7 @@ function snapshotRecord(id: string, createdAt: string, accountEval = 29_047_200)
     result: summary,
     source: 'manual',
     sourceLocalDate: null,
+    numberSetId,
     createdAt,
   }
 }
@@ -96,7 +107,8 @@ describe('RecordsArchiveView', () => {
     error: null,
     notice: null,
     orderRecords: [orderRecord('order-1', '2026-07-09T06:02:00.000Z')],
-    snapshotRecords: [snapshotRecord('snapshot-1', '2026-07-09T06:03:00.000Z')],
+    snapshotRecords: [snapshotRecord('snapshot-1', '2026-07-09T06:03:00.000Z', 29_047_200, 'slot-1')],
+    slots: [{ id: 'slot-1', title: 'Primary hedge' }],
     onRetry: vi.fn(),
     onDeleteOrder: vi.fn(),
     onDeleteSnapshot: vi.fn(),
@@ -160,6 +172,38 @@ describe('RecordsArchiveView', () => {
     expect(html).toContain('records-timeline-row--snapshot')
     expect(html).toContain('records-timeline-row--order')
     expect(html).toContain('records-timeline-cell--empty')
+  })
+
+  it('shows current slot names and unassigned records under time only in the all-slots view', () => {
+    const allSlots = renderToStaticMarkup(<RecordsArchiveView {...baseProps} />)
+    const slotLabels = allSlots.match(/class="records-timeline-slot"/g) ?? []
+
+    expect(slotLabels).toHaveLength(2)
+    expect(allSlots).toContain('title="Primary hedge"')
+    expect(allSlots).toContain(`title="${en.accountRecords.slotFilterUnassigned}"`)
+
+    const oneSlot = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} slotFilter={{ kind: 'slot', id: 'slot-1' }} />,
+    )
+    const unassigned = renderToStaticMarkup(
+      <RecordsArchiveView {...baseProps} slotFilter={{ kind: 'unassigned' }} />,
+    )
+
+    expect(oneSlot).not.toContain('records-timeline-slot')
+    expect(unassigned).not.toContain('records-timeline-slot')
+  })
+
+  it('distinguishes an unresolved slot id from an unassigned record', () => {
+    const html = renderToStaticMarkup(
+      <RecordsArchiveView
+        {...baseProps}
+        snapshotRecords={[
+          snapshotRecord('snapshot-missing', '2026-07-09T06:03:00.000Z', 29_047_200, 'slot-missing'),
+        ]}
+      />,
+    )
+
+    expect(html).toContain(`title="${en.accountRecords.slotNameUnavailable}"`)
   })
 
   it('keeps snapshot fields and order fields separated by card type', () => {

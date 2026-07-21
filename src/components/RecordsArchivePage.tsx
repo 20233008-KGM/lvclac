@@ -26,6 +26,10 @@ import {
   formatPercent,
   formatSavedAtCompact,
 } from '../utils/format'
+import {
+  createAccountRecordSlotTitles,
+  resolveAccountRecordSlotLabel,
+} from '../utils/accountRecordSlot'
 import { SiteFooter } from './SiteFooter'
 import {
   buildOrderExportTable,
@@ -511,6 +515,8 @@ export function RecordsArchiveView({
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
   const timelineAnchorDate = resolveTimelineAnchorDate(dateAnchor, timelineRecords)
+  const slotTitles = useMemo(() => createAccountRecordSlotTitles(slots), [slots])
+  const showTimelineSlotNames = slotFilter.kind === 'all'
   const newestTimelineKey = timelineRecords[0] ? timelineKey(timelineRecords[0]) : null
   const timelineScrollRef = useRef<HTMLDivElement>(null)
   const loadMoreSentinelRef = useInfiniteScroll<HTMLDivElement>({
@@ -845,6 +851,14 @@ export function RecordsArchiveView({
                           const entryKey = timelineKey(entry)
                           const selected = selectedKeys.has(entryKey)
                           const contextActive = menu != null && timelineKey(menu.entry) === entryKey
+                          const slotLabel = showTimelineSlotNames
+                            ? resolveAccountRecordSlotLabel(
+                                entry.record.numberSetId,
+                                slotTitles,
+                                copy.slotFilterUnassigned,
+                                copy.slotNameUnavailable,
+                              )
+                            : null
                           return (
                             <div
                               key={`${entry.type}-${entry.id}`}
@@ -871,9 +885,16 @@ export function RecordsArchiveView({
                                   aria-hidden="true"
                                 />
                               )}
-                              <time className="records-timeline-time" dateTime={entry.createdAt}>
-                                {formatSavedAtCompact(entry.createdAt)}
-                              </time>
+                              <div className="records-timeline-meta">
+                                <time className="records-timeline-time" dateTime={entry.createdAt}>
+                                  {formatSavedAtCompact(entry.createdAt)}
+                                </time>
+                                {slotLabel && (
+                                  <span className="records-timeline-slot" title={slotLabel}>
+                                    {slotLabel}
+                                  </span>
+                                )}
+                              </div>
                               {entry.type === 'order' ? (
                                 <div className="records-timeline-cell records-timeline-cell--orders">
                                   <OrderTimelineCard

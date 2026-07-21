@@ -35,7 +35,7 @@ function authUser(overrides: Partial<AuthUser> = {}): AuthUser {
   }
 }
 
-function snapshotRecord(): AccountSnapshotRecord {
+function snapshotRecord(numberSetId: string | null = 'slot-1'): AccountSnapshotRecord {
   return {
     id: 'snapshot-1',
     title: 'Latest snapshot',
@@ -47,11 +47,16 @@ function snapshotRecord(): AccountSnapshotRecord {
     },
     source: 'manual',
     sourceLocalDate: null,
+    numberSetId,
     createdAt: '2026-07-10T02:01:00.000Z',
   }
 }
 
-function orderRecord(id: string, orderPrice: number): OrderHistoryRecord {
+function orderRecord(
+  id: string,
+  orderPrice: number,
+  numberSetId?: string | null,
+): OrderHistoryRecord {
   return {
     id,
     positionSide: 'long',
@@ -61,6 +66,7 @@ function orderRecord(id: string, orderPrice: number): OrderHistoryRecord {
     afterInputs: sampleInputs,
     beforeResult: summary,
     afterResult: summary,
+    numberSetId,
     createdAt: '2026-07-09T06:01:00.000Z',
   }
 }
@@ -212,13 +218,14 @@ describe('AccountRecordsSummaryPanel', () => {
         error={null}
         latestSnapshot={snapshotRecord()}
         recentOrders={[
-          orderRecord('order-1', 280_000),
-          orderRecord('order-2', 279_500),
-          orderRecord('order-3', 279_000),
+          orderRecord('order-1', 280_000, 'slot-1'),
+          orderRecord('order-2', 279_500, null),
+          orderRecord('order-3', 279_000, 'slot-missing'),
           orderRecord('order-4', 272_000),
           orderRecord('order-5', 295_500),
           orderRecord('order-6', 276_000),
         ]}
+        slots={[{ id: 'slot-1', title: 'Primary hedge' }]}
         archiveHref="/records"
         onRetry={vi.fn()}
       />,
@@ -235,7 +242,7 @@ describe('AccountRecordsSummaryPanel', () => {
     expect(html).toContain('<a class="records-summary-link" href="/records">')
     expect(html).toContain('href="/records"')
     expect(html).toContain('records-summary-table records-summary-table--orders')
-    expect(html).toContain(en.accountRecords.createdAt)
+    expect(html).toContain(en.accountRecords.savedAtAndSlot)
     expect(html).toContain(en.accountRecords.side)
     expect(occurrences(html, en.accountRecords.archiveOrderContracts)).toBe(1)
     expect(occurrences(html, en.accountRecords.archiveOrderPrice)).toBe(1)
@@ -243,5 +250,8 @@ describe('AccountRecordsSummaryPanel', () => {
     expect(html).not.toContain(`${en.accountRecords.archiveOrderPrice} <strong>`)
     expect(html).toContain('295,500')
     expect(html).not.toContain('276,000')
+    expect(occurrences(html, 'title="Primary hedge"')).toBe(2)
+    expect(html).toContain(`title="${en.accountRecords.slotFilterUnassigned}"`)
+    expect(html).toContain(`title="${en.accountRecords.slotNameUnavailable}"`)
   })
 })

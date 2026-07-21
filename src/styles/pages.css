@@ -2636,7 +2636,7 @@ html[data-zone='about'] body {
 
 .records-timeline-row {
   position: relative;
-  align-items: start;
+  align-items: center;
   min-height: 42px;
 }
 
@@ -2648,9 +2648,18 @@ html[data-zone='about'] body {
   min-height: 1px;
 }
 
-.records-timeline-time {
+.records-timeline-meta {
   z-index: 1;
+  display: grid;
+  align-self: center;
   justify-self: center;
+  justify-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+}
+
+.records-timeline-time {
   width: max-content;
   max-width: 78px;
   padding: 2px 6px;
@@ -2660,6 +2669,19 @@ html[data-zone='about'] body {
   color: var(--color-text-muted);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.records-timeline-slot {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -3224,6 +3246,10 @@ html[data-zone='about'] body {
   grid-template-columns: minmax(0, 1fr) 3.25rem minmax(3.5rem, max-content) minmax(4.5rem, max-content);
 }
 
+.records-summary-order {
+  min-height: 40px;
+}
+
 .records-summary-head {
   min-height: 30px;
   background: color-mix(in srgb, var(--color-bg-elevated) 82%, var(--color-border-subtle));
@@ -3273,6 +3299,30 @@ html[data-zone='about'] body {
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.records-summary-slot {
+  max-width: 50%;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-summary-record-meta {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.records-summary-record-slot {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.2;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -4399,11 +4449,25 @@ a.my-page-compare-card__action {
     display: none;
   }
 
-  .records-timeline-time {
+  .records-timeline-meta {
     grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
     justify-self: start;
-    max-width: none;
+    width: 100%;
     margin-bottom: calc(var(--space-xs) * -1);
+  }
+
+  .records-timeline-time {
+    flex: none;
+    max-width: none;
+  }
+
+  .records-timeline-slot {
+    width: auto;
+    max-width: min(55vw, 220px);
+    text-align: left;
   }
 
   .records-timeline-cell {

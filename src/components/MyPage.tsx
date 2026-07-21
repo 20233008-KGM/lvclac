@@ -42,6 +42,10 @@ import {
   formatPercent,
   formatSavedAtCompact,
 } from '../utils/format'
+import {
+  createAccountRecordSlotTitles,
+  resolveAccountRecordSlotLabel,
+} from '../utils/accountRecordSlot'
 import { authErrorMessage } from './auth/authMessages'
 import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
@@ -299,10 +303,12 @@ function RecentOrderList({
   copy,
   recordsCopy,
   orders,
+  slotTitles,
 }: {
   copy: MyPageCopy
   recordsCopy: AccountRecordsCopy
   orders: OrderHistoryRecord[]
+  slotTitles: ReadonlyMap<string, string>
 }) {
   if (orders.length === 0) {
     return <p className="account-records-empty">{copy.recentOrdersEmpty}</p>
@@ -311,21 +317,34 @@ function RecentOrderList({
   return (
     <div className="records-summary-table records-summary-table--orders" role="table">
       <div className="records-summary-row records-summary-head" role="row">
-        <span role="columnheader">{recordsCopy.createdAt}</span>
+        <span role="columnheader">{recordsCopy.savedAtAndSlot}</span>
         <span role="columnheader">{recordsCopy.side}</span>
         <span role="columnheader">{recordsCopy.archiveOrderContracts}</span>
         <span role="columnheader">{recordsCopy.archiveOrderPrice}</span>
       </div>
-      {orders.slice(0, 5).map((order) => (
-        <div key={order.id} className="records-summary-row records-summary-order" role="row">
-          <time dateTime={order.createdAt} role="cell">{formatSavedAtCompact(order.createdAt)}</time>
-          <span className={`records-summary-side records-summary-side--${order.positionSide}`} role="cell">
-            {order.positionSide}
-          </span>
-          <strong role="cell">{formatNumber(order.orderContracts)}</strong>
-          <strong role="cell">{formatNumber(order.orderPrice)}</strong>
-        </div>
-      ))}
+      {orders.slice(0, 5).map((order) => {
+        const slotLabel = resolveAccountRecordSlotLabel(
+          order.numberSetId,
+          slotTitles,
+          recordsCopy.slotFilterUnassigned,
+          recordsCopy.slotNameUnavailable,
+        )
+        return (
+          <div key={order.id} className="records-summary-row records-summary-order" role="row">
+            <div className="records-summary-record-meta" role="cell">
+              <time dateTime={order.createdAt}>{formatSavedAtCompact(order.createdAt)}</time>
+              <span className="records-summary-record-slot" title={slotLabel}>
+                {slotLabel}
+              </span>
+            </div>
+            <span className={`records-summary-side records-summary-side--${order.positionSide}`} role="cell">
+              {order.positionSide}
+            </span>
+            <strong role="cell">{formatNumber(order.orderContracts)}</strong>
+            <strong role="cell">{formatNumber(order.orderPrice)}</strong>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -337,6 +356,7 @@ export function AccountRecordsSummaryPanel({
   error,
   latestSnapshot,
   recentOrders,
+  slots = [],
   archiveHref,
   onRetry,
 }: {
@@ -346,9 +366,19 @@ export function AccountRecordsSummaryPanel({
   error: string | null
   latestSnapshot: AccountSnapshotRecord | null
   recentOrders: OrderHistoryRecord[]
+  slots?: { id: string; title: string }[]
   archiveHref: string
   onRetry: () => void
 }) {
+  const slotTitles = useMemo(() => createAccountRecordSlotTitles(slots), [slots])
+  const latestSnapshotSlotLabel = latestSnapshot
+    ? resolveAccountRecordSlotLabel(
+        latestSnapshot.numberSetId,
+        slotTitles,
+        recordsCopy.slotFilterUnassigned,
+        recordsCopy.slotNameUnavailable,
+      )
+    : null
   const recentOrderCount =
     recentOrders.length > 0
       ? copy.recordsCount.replace('{count}', String(recentOrders.length))
@@ -385,6 +415,11 @@ export function AccountRecordsSummaryPanel({
           <section className="records-summary-block">
             <div className="records-summary-block-head">
               <h3>{copy.latestSnapshotTitle}</h3>
+              {latestSnapshotSlotLabel && (
+                <span className="records-summary-slot" title={latestSnapshotSlotLabel}>
+                  {latestSnapshotSlotLabel}
+                </span>
+              )}
             </div>
             <LatestSnapshotSummary
               copy={copy}
@@ -397,7 +432,12 @@ export function AccountRecordsSummaryPanel({
               <h3>{copy.recentOrdersTitle}</h3>
               <span>{recentOrderCount}</span>
             </div>
-            <RecentOrderList copy={copy} recordsCopy={recordsCopy} orders={recentOrders} />
+            <RecentOrderList
+              copy={copy}
+              recordsCopy={recordsCopy}
+              orders={recentOrders}
+              slotTitles={slotTitles}
+            />
           </section>
         </div>
       )}
@@ -1980,6 +2020,7 @@ export function MyPage() {
               error={recordsError}
               latestSnapshot={latestSnapshot}
               recentOrders={recentOrders}
+              slots={cloudNumberSets}
               archiveHref={RECORDS_PATH}
               onRetry={() => void loadRecordsSummary()}
             />

@@ -275,6 +275,8 @@ export interface Messages {
     slotFilterLabel: string
     slotFilterAll: string
     slotFilterUnassigned: string
+    slotNameUnavailable: string
+    savedAtAndSlot: string
     slotFilterAria: string
     jumpToDate: string
     jumpToDateAria: string

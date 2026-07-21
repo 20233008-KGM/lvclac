@@ -90,4 +90,14 @@ describe('account records copy', () => {
     expect(en.accountRecords.archiveOrderPrice).toBe('Order price')
     expect(en.accountRecords.detail).toBe('Details')
   })
+
+  it('keeps timeline dates compact and provides slot metadata copy in both languages', () => {
+    expect(ko.accountRecords.timelineAnchorLabel).toBe('{date}')
+    expect(ko.accountRecords.savedAtAndSlot).toBe('저장 시각 · 슬롯')
+    expect(ko.accountRecords.slotNameUnavailable).toBe('슬롯 정보 없음')
+
+    expect(en.accountRecords.timelineAnchorLabel).toBe('{date}')
+    expect(en.accountRecords.savedAtAndSlot).toBe('Saved · slot')
+    expect(en.accountRecords.slotNameUnavailable).toBe('Slot unavailable')
+  })
 })

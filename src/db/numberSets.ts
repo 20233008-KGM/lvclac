@@ -1,4 +1,5 @@
 import type { CalculatorInputs } from '../types'
+import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 import {
   isRolloverAnchor,
@@ -16,6 +17,7 @@ interface NumberSetRow {
   title: string
   inputs: unknown
   memo?: string | null
+  preset_id?: string | null
   updated_at: string
   auto_snapshot_enabled?: boolean | null
   rollover_reminder_enabled?: boolean | null
@@ -39,6 +41,7 @@ export interface NumberSetRecord {
   title: string
   inputs: CalculatorInputs
   memo: string | null
+  presetId: PresetId | null
   updatedAt: string
   autoSnapshotEnabled: boolean
   rollover: RolloverSettings
@@ -51,7 +54,7 @@ export interface NumberSetDeletionSummary {
 }
 
 const NUMBER_SET_COLUMNS =
-  'id,title,inputs,memo,updated_at,auto_snapshot_enabled,' +
+  'id,title,inputs,memo,preset_id,updated_at,auto_snapshot_enabled,' +
   'rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date,rollover_pending'
 
 type NumberSetResult<T> =
@@ -88,6 +91,7 @@ function rowToRecord(row: NumberSetRow): NumberSetRecord {
     title: row.title || DEFAULT_SET_TITLE,
     inputs: parseStoredCalculatorInputs(row.inputs) ?? { mode: 'evaluate', positionSide: 'long' },
     memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    presetId: isPresetId(row.preset_id) ? row.preset_id : null,
     updatedAt: row.updated_at,
     autoSnapshotEnabled: row.auto_snapshot_enabled ?? false,
     rollover: rowToRollover(row),
@@ -130,13 +134,14 @@ export async function fetchNumberSets(
 export async function createNumberSet(
   userId: string,
   inputs: CalculatorInputs,
+  presetId: PresetId,
   title = DEFAULT_SET_TITLE,
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
 
   const { data, error } = await supabase
     .from('number_sets')
-    .insert({ user_id: userId, title: normalizeTitle(title), inputs })
+    .insert({ user_id: userId, title: normalizeTitle(title), inputs, preset_id: presetId })
     .select(NUMBER_SET_COLUMNS)
     .single<NumberSetRow>()
 
@@ -147,6 +152,7 @@ export async function createNumberSet(
 export async function saveNumberSet(
   userId: string,
   inputs: CalculatorInputs,
+  presetId: PresetId,
   setId?: string | null,
   title?: string | null,
 ): Promise<NumberSetResult<NumberSetRecord>> {
@@ -157,7 +163,11 @@ export async function saveNumberSet(
   if (existingId) {
     const { data, error } = await supabase
       .from('number_sets')
-      .update(title == null ? { inputs } : { title: normalizeTitle(title), inputs })
+      .update(
+        title == null
+          ? { inputs, preset_id: presetId }
+          : { title: normalizeTitle(title), inputs, preset_id: presetId },
+      )
       .eq('id', existingId)
       .eq('user_id', userId)
       .select(NUMBER_SET_COLUMNS)
@@ -169,7 +179,7 @@ export async function saveNumberSet(
 
   const { data, error } = await supabase
     .from('number_sets')
-    .insert({ user_id: userId, title: normalizeTitle(title), inputs })
+    .insert({ user_id: userId, title: normalizeTitle(title), inputs, preset_id: presetId })
     .select(NUMBER_SET_COLUMNS)
     .single<NumberSetRow>()
 
@@ -208,6 +218,26 @@ export async function updateNumberSetMemo(
   const { data, error } = await supabase
     .from('number_sets')
     .update({ memo: normalized })
+    .eq('id', setId)
+    .eq('user_id', userId)
+    .select(NUMBER_SET_COLUMNS)
+    .maybeSingle<NumberSetRow>()
+
+  if (error) return { data: null, error: mapError(error) }
+  if (!data) return { data: null, error: 'number_set_not_found' }
+  return { data: rowToRecord(data), error: null }
+}
+
+export async function setNumberSetPreset(
+  userId: string,
+  setId: string,
+  presetId: PresetId,
+): Promise<NumberSetResult<NumberSetRecord>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .update({ preset_id: presetId })
     .eq('id', setId)
     .eq('user_id', userId)
     .select(NUMBER_SET_COLUMNS)

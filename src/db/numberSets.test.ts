@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { createNumberSetDeletionRepository } from './numberSets'
+
+function source(path: string) {
+  return readFileSync(resolve(path), 'utf8')
+}
 
 type RpcResult = {
   data: {
@@ -81,5 +87,25 @@ describe('number-set deletion summary', () => {
     await expect(
       createNumberSetDeletionRepository(fake as never).fetchSummary('other-user', 'slot-3'),
     ).resolves.toEqual({ data: null, error: 'number_set_not_found' })
+  })
+})
+
+describe('number-set terminology preset storage', () => {
+  it('adds a nullable constrained preset column for legacy-compatible cloud slots', () => {
+    const migration = source('supabase/migrations/20260723010000_number_set_preset.sql')
+
+    expect(migration).toContain('add column if not exists preset_id text')
+    expect(migration).toContain('preset_id is null')
+    expect(migration).toContain("'default', 'index', 'stock', 'commodity', 'fx', 'cfd'")
+    expect(migration).not.toContain('preset_id text not null')
+  })
+
+  it('reads, validates, and writes preset_id through every cloud slot save path', () => {
+    const db = source('src/db/numberSets.ts')
+
+    expect(db).toContain("'id,title,inputs,memo,preset_id,updated_at")
+    expect(db).toContain('presetId: isPresetId(row.preset_id) ? row.preset_id : null')
+    expect(db).toContain('preset_id: presetId')
+    expect(db).toContain('export async function setNumberSetPreset')
   })
 })

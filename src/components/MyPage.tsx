@@ -39,7 +39,7 @@ import {
 } from '../db/rolloverSchedule'
 import type { AuthUser } from '../db/profile'
 import type { Messages } from '../i18n/types'
-import { useLanguage } from '../i18n'
+import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import {
   formatLeverageValue,
   formatNumber,
@@ -56,7 +56,6 @@ import { validateNewPassword, validatePasswordConfirmation } from '../auth/valid
 import { calculateEvaluate } from '../calc/leverage'
 import { BillingPanel } from './billing/BillingPanel'
 import { NumberSetDetailModal } from './NumberSetDetailModal'
-import { PresetSelect } from './PresetSelect'
 import { ToggleSwitch } from './ToggleSwitch'
 import { TimeZoneSelect } from './TimeZoneSelect'
 import {
@@ -810,23 +809,27 @@ function RolloverSettingControl({
  */
 function NumberSetRow({
   copy,
+  presetCopy,
   numberSet,
   busy,
   autoSnapshotAllowed,
   showAutoSnapshotColumn,
   onRenameNumberSet,
+  onSetPreset,
   onDeleteNumberSet,
   onSetAutoSnapshot,
   onSetRollover,
   onClearRolloverPending,
 }: {
   copy: MyPageCopy
+  presetCopy: Messages['glossaryPreset']
   numberSet: CalculatorNumberSet
   busy: boolean
   // Pro 여부. onSetAutoSnapshot이 있을 때만(클라우드 슬롯) 토글을 노출하고, false면 켜기 불가.
   autoSnapshotAllowed?: boolean
   showAutoSnapshotColumn: boolean
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onSetPreset: (mode: SaveStorageMode, setId: string, presetId: PresetId) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
   onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
@@ -858,33 +861,10 @@ function NumberSetRow({
   }, [copy, detailOpen, numberSet])
 
   return (
-    <li
-      className={`my-page-number-set-row${numberSet.autoSnapshotEnabled ? ' my-page-number-set-row--auto-selected' : ''}`}
-    >
+    <li className="my-page-number-set-row">
       <div
         className={`my-page-number-set-row-main${showAutoSnapshotColumn ? ' my-page-number-set-row-main--with-auto' : ''}`}
       >
-        {showAutoSnapshotColumn && (
-          showAutoSnapshotControl && onSetAutoSnapshot ? (
-            <label className="my-page-number-set-row-auto">
-              <input
-                type="checkbox"
-                checked={numberSet.autoSnapshotEnabled}
-                disabled={busy}
-                aria-label={`${numberSet.title}: ${copy.autoSnapshotSlotToggleLabel}`}
-                onChange={(event) =>
-                  onSetAutoSnapshot(
-                    numberSet.storageMode,
-                    numberSet.id,
-                    event.currentTarget.checked,
-                  )
-                }
-              />
-            </label>
-          ) : (
-            <span className="my-page-number-set-row-auto my-page-number-set-row-auto--empty" aria-hidden="true" />
-          )
-        )}
         <input
           value={titleDraft}
           aria-label={copy.numberSetNamePlaceholder}
@@ -898,6 +878,23 @@ function NumberSetRow({
             if (event.key === 'Escape') setTitleDraft(numberSet.title)
           }}
         />
+        {showAutoSnapshotColumn && (
+          showAutoSnapshotControl && onSetAutoSnapshot ? (
+            <div className="my-page-number-set-row-auto">
+              <ToggleSwitch
+                checked={numberSet.autoSnapshotEnabled}
+                disabled={busy}
+                label={`${numberSet.title}: ${copy.autoSnapshotSlotToggleLabel}`}
+                labelHidden
+                onChange={(enabled) =>
+                  onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
+                }
+              />
+            </div>
+          ) : (
+            <span className="my-page-number-set-row-auto my-page-number-set-row-auto--empty" aria-hidden="true" />
+          )
+        )}
         <div className="my-page-number-set-row-actions">
           <button
             type="button"
@@ -921,6 +918,27 @@ function NumberSetRow({
           </button>
         </div>
       </div>
+      <label className="my-page-number-set-row-preset">
+        <span>{presetCopy.label}</span>
+        <select
+          value={numberSet.presetId}
+          disabled={busy}
+          aria-label={`${numberSet.title}: ${presetCopy.label}`}
+          onChange={(event) =>
+            onSetPreset(
+              numberSet.storageMode,
+              numberSet.id,
+              event.currentTarget.value as PresetId,
+            )
+          }
+        >
+          {PRESET_IDS.map((presetId) => (
+            <option key={presetId} value={presetId}>
+              {presetCopy.options[presetId]}
+            </option>
+          ))}
+        </select>
+      </label>
       {numberSet.rollover.pending && onClearRolloverPending && (
         <div className="my-page-rollover-banner" role="status">
           <span>{copy.rolloverPendingBanner}</span>
@@ -977,6 +995,7 @@ function NumberSetRow({
 /** 위치(이 기기/클라우드)별 숫자세트 그룹 카드: 헤더(이름 + n/10 + 추가 아이콘) + 세트 행 리스트. */
 function NumberSetGroup({
   copy,
+  presetCopy,
   title,
   addLabel,
   automationNote,
@@ -987,12 +1006,14 @@ function NumberSetGroup({
   autoSnapshotAllowed,
   onCreateNumberSet,
   onRenameNumberSet,
+  onSetPreset,
   onDeleteNumberSet,
   onSetAutoSnapshot,
   onSetRollover,
   onClearRolloverPending,
 }: {
   copy: MyPageCopy
+  presetCopy: Messages['glossaryPreset']
   title: string
   addLabel: string
   automationNote?: string
@@ -1003,6 +1024,7 @@ function NumberSetGroup({
   autoSnapshotAllowed?: boolean
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onSetPreset: (mode: SaveStorageMode, setId: string, presetId: PresetId) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   // 넘기면 이 그룹의 각 행에 자동 스냅샷 토글이 붙는다(클라우드 그룹 전용).
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
@@ -1040,8 +1062,8 @@ function NumberSetGroup({
       )}
       {showAutoSnapshotColumn && (
         <div className="my-page-number-set-list-head" aria-hidden="true">
-          <span>{copy.autoSnapshotSlotToggleLabel}</span>
           <span />
+          <span>{copy.autoSnapshotSlotToggleLabel}</span>
           <span />
         </div>
       )}
@@ -1050,11 +1072,13 @@ function NumberSetGroup({
           <NumberSetRow
             key={`${numberSet.storageMode}:${numberSet.id}:${numberSet.title}`}
             copy={copy}
+            presetCopy={presetCopy}
             numberSet={numberSet}
             busy={busy}
             autoSnapshotAllowed={autoSnapshotAllowed}
             showAutoSnapshotColumn={showAutoSnapshotColumn}
             onRenameNumberSet={onRenameNumberSet}
+            onSetPreset={onSetPreset}
             onDeleteNumberSet={onDeleteNumberSet}
             onSetAutoSnapshot={onSetAutoSnapshot}
             onSetRollover={onSetRollover}
@@ -1069,6 +1093,7 @@ function NumberSetGroup({
 /** 숫자세트 독립 패널: 환경설정과 분리된 최상위 섹션, 위치별 2열 그룹 카드. */
 export function NumberSetPreferencesPanel({
   copy,
+  presetCopy,
   localNumberSets,
   cloudNumberSets,
   numberSetLimits,
@@ -1077,12 +1102,14 @@ export function NumberSetPreferencesPanel({
   isPro,
   onCreateNumberSet,
   onRenameNumberSet,
+  onSetPreset,
   onDeleteNumberSet,
   onSetAutoSnapshot,
   onSetRollover,
   onClearRolloverPending,
 }: {
   copy: MyPageCopy
+  presetCopy: Messages['glossaryPreset']
   localNumberSets: CalculatorNumberSet[]
   cloudNumberSets: CalculatorNumberSet[]
   numberSetLimits: Record<SaveStorageMode, number>
@@ -1091,6 +1118,7 @@ export function NumberSetPreferencesPanel({
   isPro: boolean
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onSetPreset: (mode: SaveStorageMode, setId: string, presetId: PresetId) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
   onSetRollover: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
@@ -1110,6 +1138,7 @@ export function NumberSetPreferencesPanel({
       <div className="my-page-number-set-groups">
         <NumberSetGroup
           copy={copy}
+          presetCopy={presetCopy}
           title={copy.numberSetsLocalTitle}
           addLabel={copy.addLocalNumberSet}
           mode="local"
@@ -1118,10 +1147,12 @@ export function NumberSetPreferencesPanel({
           busy={busy}
           onCreateNumberSet={onCreateNumberSet}
           onRenameNumberSet={onRenameNumberSet}
+          onSetPreset={onSetPreset}
           onDeleteNumberSet={onDeleteNumberSet}
         />
         <NumberSetGroup
           copy={copy}
+          presetCopy={presetCopy}
           title={copy.numberSetsCloudTitle}
           addLabel={copy.addCloudNumberSet}
           automationNote={isPro ? copy.autoSnapshotSlotHelp : undefined}
@@ -1132,6 +1163,7 @@ export function NumberSetPreferencesPanel({
           autoSnapshotAllowed={isPro}
           onCreateNumberSet={onCreateNumberSet}
           onRenameNumberSet={onRenameNumberSet}
+          onSetPreset={onSetPreset}
           onDeleteNumberSet={onDeleteNumberSet}
           onSetAutoSnapshot={onSetAutoSnapshot}
           onSetRollover={onSetRollover}
@@ -1621,6 +1653,7 @@ export function MyPage() {
     numberSetLimits,
     createNumberSet,
     renameNumberSet,
+    setNumberSetPreset,
     setNumberSetAutoSnapshot,
     setNumberSetRollover,
     clearNumberSetRolloverPending,
@@ -2133,6 +2166,13 @@ export function MyPage() {
     [setNumberSetAutoSnapshot, runNumberSetAction],
   )
 
+  const handleSetNumberSetPreset = useCallback(
+    (mode: SaveStorageMode, setId: string, presetId: PresetId) => {
+      void runNumberSetAction(() => setNumberSetPreset(mode, setId, presetId))
+    },
+    [runNumberSetAction, setNumberSetPreset],
+  )
+
   const handleSetNumberSetRollover = useCallback(
     (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => {
       void runNumberSetAction(() => setNumberSetRollover(mode, setId, settings))
@@ -2186,22 +2226,14 @@ export function MyPage() {
         preferencesPanel={
           user ? (
             <>
-              <section
-                id="my-page-preferences"
-                className="my-page-panel"
-                aria-labelledby="my-page-preferences-title"
-              >
-                <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
-                <div className="my-page-setting-lines">
-                  <div className="my-page-setting-line">
-                    <div className="my-page-setting-line__copy">
-                      <h3>{t.myPage.glossaryPresetTitle}</h3>
-                      <p>{t.myPage.glossaryPresetBody}</p>
-                    </div>
-                    <div className="my-page-setting-line__control">
-                      <PresetSelect variant="inline" />
-                    </div>
-                  </div>
+              {isPro && (
+                <section
+                  id="my-page-preferences"
+                  className="my-page-panel"
+                  aria-labelledby="my-page-preferences-title"
+                >
+                  <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
+                  <div className="my-page-setting-lines">
                   {/* 계좌 스냅샷 자동 저장·주문 기록 자동 저장은 Pro 전용 —
                       무료 유저에겐 "노출 후 차단" 대신 아예 렌더하지 않는다(업그레이드 패널로 일원화). */}
                   {isPro && (
@@ -2241,10 +2273,12 @@ export function MyPage() {
                       </div>
                     </>
                   )}
-                </div>
-              </section>
+                  </div>
+                </section>
+              )}
               <NumberSetPreferencesPanel
                 copy={t.myPage}
+                presetCopy={t.glossaryPreset}
                 localNumberSets={localNumberSets}
                 cloudNumberSets={cloudNumberSets}
                 numberSetLimits={numberSetLimits}
@@ -2253,6 +2287,7 @@ export function MyPage() {
                 isPro={isPro}
                 onCreateNumberSet={handleCreateNumberSet}
                 onRenameNumberSet={handleRenameNumberSet}
+                onSetPreset={handleSetNumberSetPreset}
                 onDeleteNumberSet={handleDeleteNumberSet}
                 onSetAutoSnapshot={handleSetNumberSetAutoSnapshot}
                 onSetRollover={handleSetNumberSetRollover}

@@ -1,4 +1,5 @@
 import type { CalculatorInputs } from '../types'
+import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 
 export const LOCAL_NUMBER_SETS_KEY = 'leverage_calculator_local_number_sets_v1'
@@ -10,6 +11,7 @@ export interface LocalNumberSetRecord {
   id: string
   title: string
   inputs: CalculatorInputs
+  presetId: PresetId | null
   updatedAt: string
 }
 
@@ -22,6 +24,7 @@ interface StorageLike {
 interface LocalNumberSetSeed {
   id?: string
   title?: string
+  presetId?: PresetId | null
   updatedAt?: string
 }
 
@@ -48,6 +51,7 @@ function parseLocalNumberSet(value: unknown): LocalNumberSetRecord | null {
     id: row.id,
     title: sanitizeTitle(row.title),
     inputs,
+    presetId: isPresetId(row.presetId) ? row.presetId : null,
     updatedAt: typeof row.updatedAt === 'string' && row.updatedAt ? row.updatedAt : timestamp(),
   }
 }
@@ -118,6 +122,7 @@ export function loadLocalNumberSets(
       id: DEFAULT_LOCAL_NUMBER_SET_ID,
       title: DEFAULT_NUMBER_SET_TITLE,
       inputs: legacyDraft,
+      presetId: null,
       updatedAt: legacySavedAt ?? timestamp(),
     },
   ]
@@ -135,6 +140,7 @@ export function appendLocalNumberSet(
     id: seed.id ?? makeLocalId(),
     title: sanitizeTitle(seed.title),
     inputs,
+    presetId: seed.presetId ?? null,
     updatedAt: seed.updatedAt ?? timestamp(),
   }
   return { sets: [...sets, set], set }
@@ -152,6 +158,7 @@ export function upsertLocalNumberSet(
     id: targetId,
     title: sanitizeTitle(seed.title ?? existing?.title),
     inputs,
+    presetId: seed.presetId !== undefined ? seed.presetId : existing?.presetId ?? null,
     updatedAt: seed.updatedAt ?? timestamp(),
   }
   if (!existing) return [updated, ...sets]
@@ -165,6 +172,16 @@ export function renameLocalNumberSet(
 ): LocalNumberSetRecord[] {
   return sets.map((set) =>
     set.id === setId ? { ...set, title: sanitizeTitle(title), updatedAt: timestamp() } : set,
+  )
+}
+
+export function setLocalNumberSetPreset(
+  sets: LocalNumberSetRecord[],
+  setId: string,
+  presetId: PresetId,
+): LocalNumberSetRecord[] {
+  return sets.map((set) =>
+    set.id === setId ? { ...set, presetId, updatedAt: timestamp() } : set,
   )
 }
 

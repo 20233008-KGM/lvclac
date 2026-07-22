@@ -18,6 +18,7 @@ export { applyPreset, mergeOverride } from './applyPreset'
 export {
   PRESET_STORAGE_KEY,
   detectInitialPreset,
+  isPresetId,
   normalizePresetId,
   persistPreset,
 } from './storage'

@@ -31,6 +31,7 @@ function numberSet(
     id,
     title: `${storageMode}-${id}`,
     inputs: defaultInputs,
+    presetId: id.endsWith('1') ? 'stock' : 'index',
     updatedAt: null,
     storageMode,
     autoSnapshotEnabled,
@@ -39,10 +40,12 @@ function numberSet(
 }
 
 function renderPanel(locale: 'ko' | 'en', isPro: boolean, hasEnabledCloudSet = true) {
-  const copy = locale === 'ko' ? ko.myPage : en.myPage
+  const messages = locale === 'ko' ? ko : en
+  const copy = messages.myPage
   return renderToStaticMarkup(
     createElement(NumberSetPreferencesPanel, {
       copy,
+      presetCopy: messages.glossaryPreset,
       localNumberSets: [numberSet('local-1', 'local')],
       cloudNumberSets: [
         numberSet('cloud-1', 'cloud', hasEnabledCloudSet),
@@ -54,6 +57,7 @@ function renderPanel(locale: 'ko' | 'en', isPro: boolean, hasEnabledCloudSet = t
       isPro,
       onCreateNumberSet: noop,
       onRenameNumberSet: noop,
+      onSetPreset: noop,
       onDeleteNumberSet: noop,
       onSetAutoSnapshot: noop,
       onSetRollover: noop,
@@ -81,7 +85,7 @@ describe('my page number-set management UI', () => {
     expect(css).toContain('.my-page-number-set-groups')
   })
 
-  it('renders one daily-record column with checked and unchecked cloud rows in both locales', () => {
+  it('renders one daily-record switch column after the name column in both locales', () => {
     const koHtml = renderPanel('ko', true)
     const enHtml = renderPanel('en', true)
 
@@ -89,7 +93,8 @@ describe('my page number-set management UI', () => {
     expect(koHtml.match(/my-page-number-set-list-head/g)).toHaveLength(1)
     expect(koHtml).toContain('type="checkbox"')
     expect(koHtml).toContain('checked=""')
-    expect(koHtml).toContain('my-page-number-set-row--auto-selected')
+    expect(koHtml).toContain('toggle-switch__track')
+    expect(koHtml).not.toContain('my-page-number-set-row--auto-selected')
     expect(koHtml).toContain('cloud-cloud-1: 매일 기록')
     expect(koHtml).toContain('매일 기록 중: 클라우드 세트 1개')
     expect(enHtml).toContain(en.myPage.autoSnapshotSlotHelp)
@@ -103,9 +108,9 @@ describe('my page number-set management UI', () => {
 
     expect(html).not.toContain(ko.myPage.autoSnapshotSlotHelp)
     expect(html).not.toContain('매일 기록 중')
-    expect(html).not.toContain('매일 기록')
     expect(html).not.toContain('my-page-number-set-list-head')
     expect(html).not.toContain('type="checkbox"')
+    expect(html).toContain(`local-local-1: ${ko.glossaryPreset.label}`)
   })
 
   it('keeps an already-enabled free cloud set removable without enabling inactive rows', () => {
@@ -117,21 +122,33 @@ describe('my page number-set management UI', () => {
     expect(html).toContain('my-page-number-set-row-auto--empty')
   })
 
-  it('uses a fixed checkbox column instead of the former phone-only second row', () => {
+  it('uses a fixed middle switch column without selected-row styling or a phone-only second row', () => {
     const component = source('src/components/MyPage.tsx')
     const css = source('src/styles/pages.css')
 
-    expect(component).not.toContain('<ToggleSwitch\n              checked={numberSet.autoSnapshotEnabled}')
-    expect(component).toContain(
-      `onSetAutoSnapshot(
-                    numberSet.storageMode,
-                    numberSet.id,
-                    event.currentTarget.checked,
-                  )`,
-    )
-    expect(component).toContain('</label>\n          ) : (')
-    expect(component).toContain('/>\n          )\n        )}\n        <input\n          value={titleDraft}')
-    expect(css).toContain('grid-template-columns: 78px minmax(0, 1fr) auto')
+    expect(component).toContain('<ToggleSwitch')
+    expect(component).toContain('onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)')
+    expect(component).toMatch(/value=\{titleDraft\}[\s\S]*showAutoSnapshotColumn[\s\S]*my-page-number-set-row-actions/)
+    expect(css).toContain('grid-template-columns: minmax(0, 1fr) 48px auto')
+    expect(css).not.toContain('.my-page-number-set-row--auto-selected')
     expect(css).not.toContain('@media (max-width: 420px)')
+  })
+
+  it('renders a terminology preset selector in every local and cloud slot', () => {
+    const html = renderPanel('ko', true)
+
+    expect(html.match(/my-page-number-set-row-preset/g)).toHaveLength(3)
+    expect(html).toContain(`local-local-1: ${ko.glossaryPreset.label}`)
+    expect(html).toContain(`cloud-cloud-1: ${ko.glossaryPreset.label}`)
+    expect(html).toContain('value="stock" selected=""')
+    expect(html).toContain('value="index" selected=""')
+  })
+
+  it('removes the former global terminology preference and routes a slot selector to its exact id', () => {
+    const component = source('src/components/MyPage.tsx')
+
+    expect(component).not.toContain('<PresetSelect variant="inline" />')
+    expect(component).toContain('onSetPreset(\n              numberSet.storageMode,\n              numberSet.id,')
+    expect(component).toContain('setNumberSetPreset(mode, setId, presetId)')
   })
 })

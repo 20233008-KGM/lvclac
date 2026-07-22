@@ -7,6 +7,7 @@ import {
   deleteLocalNumberSet,
   loadLocalNumberSets,
   renameLocalNumberSet,
+  setLocalNumberSetPreset,
   resolveActiveLocalNumberSetId,
   upsertLocalNumberSet,
   writeLocalNumberSets,
@@ -41,6 +42,7 @@ describe('local number sets', () => {
         id: DEFAULT_LOCAL_NUMBER_SET_ID,
         title: '기본 세트',
         inputs: sampleInputs,
+        presetId: null,
         updatedAt: '2026-07-10T01:02:03.000Z',
       },
     ])
@@ -108,5 +110,38 @@ describe('local number sets', () => {
     const result = loadLocalNumberSets(storage, null, null)
     expect(result.sets[0]).not.toHaveProperty('memo')
     expect(storage.getItem(LOCAL_NUMBER_SETS_KEY)).not.toContain('memo')
+  })
+
+  it('keeps legacy slots nullable and stores a preset only on the targeted slot', () => {
+    const storage = new MemoryStorage()
+    storage.setItem(
+      LOCAL_NUMBER_SETS_KEY,
+      JSON.stringify([
+        { id: 'local-a', title: '기본 세트', inputs: defaultInputs, updatedAt: null },
+        { id: 'local-b', title: '주식 세트', inputs: sampleInputs, updatedAt: null },
+      ]),
+    )
+
+    const loaded = loadLocalNumberSets(storage, null, null).sets
+    expect(loaded.map((set) => set.presetId)).toEqual([null, null])
+
+    const next = setLocalNumberSetPreset(loaded, 'local-b', 'stock')
+    expect(next[0].presetId).toBeNull()
+    expect(next[1].presetId).toBe('stock')
+  })
+
+  it('persists an explicit preset when a new local slot is created or saved', () => {
+    const created = appendLocalNumberSet([], defaultInputs, {
+      id: 'local-a',
+      presetId: 'fx',
+      updatedAt: '2026-07-10T01:00:00.000Z',
+    })
+    const updated = upsertLocalNumberSet(created.sets, 'local-a', sampleInputs, {
+      presetId: 'cfd',
+      updatedAt: '2026-07-10T02:00:00.000Z',
+    })
+
+    expect(created.set.presetId).toBe('fx')
+    expect(updated[0].presetId).toBe('cfd')
   })
 })

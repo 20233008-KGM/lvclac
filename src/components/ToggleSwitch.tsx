@@ -24,6 +24,7 @@ export function ToggleSwitch({
     <label className="toggle-switch">
       <input
         type="checkbox"
+        role="switch"
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.currentTarget.checked)}

@@ -24,6 +24,7 @@ import {
 import { consumeOrderHistoryUndo } from './orderHistoryUndoSync'
 import { createAccountRecordsRepository } from '../db/accountRecords'
 import { defaultInputs, type CalculatorInputs } from '../types'
+import { useLanguage, type PresetId } from '../i18n'
 import { useAuth } from './AuthContext'
 import {
   createNumberSet as createCloudNumberSet,
@@ -32,6 +33,7 @@ import {
   fetchLatestNumberSet,
   renameNumberSet as renameCloudNumberSet,
   updateNumberSetMemo as updateCloudNumberSetMemo,
+  setNumberSetPreset as setCloudNumberSetPreset,
   setNumberSetAutoSnapshot as setCloudNumberSetAutoSnapshot,
   setNumberSetRollover as setCloudNumberSetRollover,
   clearNumberSetRolloverPending as clearCloudNumberSetRolloverPending,
@@ -47,6 +49,7 @@ import {
   readActiveLocalNumberSetId,
   resolveActiveLocalNumberSetId,
   renameLocalNumberSet,
+  setLocalNumberSetPreset,
   upsertLocalNumberSet,
   writeActiveLocalNumberSetId,
   writeLocalNumberSets,
@@ -73,6 +76,7 @@ export interface CalculatorNumberSet {
   id: string
   title: string
   inputs: CalculatorInputs
+  presetId: PresetId
   memo?: string | null
   updatedAt: string | null
   storageMode: SaveStorageMode
@@ -122,6 +126,11 @@ interface CalculatorContextValue {
   createNumberSet: (mode: SaveStorageMode) => Promise<string | null>
   renameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => Promise<string | null>
   setNumberSetMemo: (mode: SaveStorageMode, setId: string, memo: string) => Promise<string | null>
+  setNumberSetPreset: (
+    mode: SaveStorageMode,
+    setId: string,
+    presetId: PresetId,
+  ) => Promise<string | null>
   setNumberSetAutoSnapshot: (
     mode: SaveStorageMode,
     setId: string,
@@ -224,13 +233,13 @@ function readDraftSavedAt(): string | null {
   }
 }
 
-function saveDraft(inputs: CalculatorInputs): string | null {
+function saveDraft(inputs: CalculatorInputs, presetId: PresetId): string | null {
   try {
     const savedAt = new Date().toISOString()
     const sets = readLocalNumberSetState()
     const activeSetId =
       resolveActiveLocalNumberSetId(localStorage, sets) ?? readActiveLocalNumberSetId(localStorage)
-    const nextSets = upsertLocalNumberSet(sets, activeSetId, inputs, { updatedAt: savedAt })
+    const nextSets = upsertLocalNumberSet(sets, activeSetId, inputs, { presetId, updatedAt: savedAt })
     const nextActiveId = activeSetId ?? nextSets[0]?.id ?? null
     writeLocalNumberSets(localStorage, nextSets)
     writeActiveLocalNumberSetId(localStorage, nextActiveId)
@@ -280,6 +289,7 @@ function getInitialInputs(saveEnabled: boolean): CalculatorInputs {
 }
 
 export function CalculatorProvider({ children }: { children: ReactNode }) {
+  const { preset, setPreset } = useLanguage()
   const { user, loading: authLoading, isPro } = useAuth()
   const activeUserId = user?.id ?? null
   const cloudAvailable = Boolean(activeUserId)
@@ -313,6 +323,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const cloudSetIdRef = useRef<string | null>(null)
   const mountedRef = useRef(false)
   const suppressNextPersistRef = useRef(false)
+  const suppressNextPresetPersistRef = useRef(false)
+  const previousPresetRef = useRef(preset)
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
 
   const deleteOrderHistoryOnUndo = useCallback(() => {
@@ -392,6 +404,18 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setHistory((prev) => replaceCalculatorHistory(prev, { ...nextInputs }))
   }, [])
 
+  const replaceNumberSetFromStorage = useCallback(
+    (numberSet: { inputs: CalculatorInputs; presetId: PresetId | null }) => {
+      replaceInputsFromStorage(numberSet.inputs)
+      const nextPreset = numberSet.presetId ?? preset
+      if (nextPreset !== preset) {
+        suppressNextPresetPersistRef.current = true
+        setPreset(nextPreset)
+      }
+    },
+    [preset, replaceInputsFromStorage, setPreset],
+  )
+
   const undoInputs = useCallback(() => {
     setHistory((prev) => {
       if (hasOrderApplyUndo(prev.present)) {
@@ -427,16 +451,18 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     () => [
       ...localNumberSets.map((set) => ({
         ...set,
+        presetId: set.presetId ?? preset,
         storageMode: 'local' as const,
         autoSnapshotEnabled: false,
         rollover: DISABLED_ROLLOVER,
       })),
       ...cloudNumberSets.map((set) => ({
         ...set,
+        presetId: set.presetId ?? preset,
         storageMode: 'cloud' as const,
       })),
     ],
-    [cloudNumberSets, localNumberSets],
+    [cloudNumberSets, localNumberSets, preset],
   )
   const activeNumberSetId = storageMode === 'cloud' ? cloudSetId : activeLocalSetId
 
@@ -492,7 +518,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           setSyncError(null)
           return null
         }
-        const savedAt = saveDraft(value)
+        const savedAt = saveDraft(value, preset)
         if (!savedAt) {
           setSyncStatus('error')
           setSyncError('local_draft_save_failed')
@@ -512,7 +538,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         setSyncError('not_logged_in')
         return 'not_logged_in'
       }
-      const result = await saveNumberSet(activeUserId, value, cloudSetIdRef.current)
+      const result = await saveNumberSet(activeUserId, value, preset, cloudSetIdRef.current)
       if (result.error) {
         setSyncStatus('error')
         setSyncError(result.error)
@@ -536,7 +562,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       setSyncStatus('saved')
       return null
     },
-    [activeUserId, refreshLocalNumberSetState, saveEnabled, storageMode],
+    [activeUserId, preset, refreshLocalNumberSetState, saveEnabled, storageMode],
   )
 
   const setSaveEnabled = useCallback(
@@ -572,9 +598,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       }
 
       if (mode === 'local') {
-        const draft = loadDraft()
-        if (draft) {
-          replaceInputsFromStorage(draft)
+        const selected = readActiveLocalNumberSet()
+        if (selected) {
+          replaceNumberSetFromStorage(selected)
           refreshLocalNumberSetState()
           setSyncStatus('saved')
           return null
@@ -592,7 +618,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         const selected = sets.find((set) => set.id === preferredId) ?? sets[0] ?? null
         setCloudNumberSets(sets)
         if (selected && hasMeaningfulCalculatorInputs(selected.inputs)) {
-          replaceInputsFromStorage(selected.inputs)
+          replaceNumberSetFromStorage(selected)
           setCloudSetId(selected.id)
           setHasCloudDraft(true)
           setCloudDraftSavedAt(selected.updatedAt)
@@ -606,7 +632,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
       return persistInputs(inputs, true, mode)
     },
-    [activeUserId, inputs, persistInputs, refreshLocalNumberSetState, storageMode],
+    [activeUserId, inputs, persistInputs, refreshLocalNumberSetState, replaceNumberSetFromStorage, storageMode],
   )
 
   const pauseSaving = useCallback(() => {
@@ -658,19 +684,21 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setStorageModeState(mode)
     writeStorageMode(mode)
     if (mode === 'local') {
-      const draft = loadDraft()
-      replaceInputsFromStorage(draft ?? defaultInputs)
-      setHasLocalDraft(Boolean(draft))
+      const selected = readActiveLocalNumberSet()
+      if (selected) replaceNumberSetFromStorage(selected)
+      else replaceInputsFromStorage(defaultInputs)
+      setHasLocalDraft(Boolean(selected))
       refreshLocalNumberSetState()
       setCloudSetId(null)
     }
     setSyncStatus('idle')
     setSyncError(null)
-  }, [refreshLocalNumberSetState, replaceInputsFromStorage])
+  }, [refreshLocalNumberSetState, replaceInputsFromStorage, replaceNumberSetFromStorage])
 
   const migrateLocalDraftToCloud = useCallback(async (): Promise<string | null> => {
     if (!activeUserId) return 'not_logged_in'
     const localDraft = loadDraft()
+    const localPreset = readActiveLocalNumberSet()?.presetId ?? preset
     if (!localDraft) {
       setHasLocalDraft(false)
       setLocalDraftSavedAt(null)
@@ -682,7 +710,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setSyncStatus('saving')
     setSyncError(null)
 
-    const result = await saveNumberSet(activeUserId, localDraft, cloudSetIdRef.current)
+    const result = await saveNumberSet(activeUserId, localDraft, localPreset, cloudSetIdRef.current)
     if (result.error) {
       setSyncStatus('error')
       setSyncError(result.error)
@@ -695,7 +723,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     }
 
     const savedSet = result.data
-    replaceInputsFromStorage(savedSet.inputs)
+    replaceNumberSetFromStorage(savedSet)
     setCloudSetId(savedSet.id)
     setHasCloudDraft(true)
     setCloudDraftSavedAt(savedSet.updatedAt)
@@ -709,7 +737,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     refreshLocalNumberSetState()
     setSyncStatus('saved')
     return null
-  }, [activeUserId, refreshLocalNumberSetState, replaceInputsFromStorage])
+  }, [activeUserId, preset, refreshLocalNumberSetState, replaceNumberSetFromStorage])
 
   const copyDraftBetweenStorageModes = useCallback(
     async (source: SaveStorageMode, target: SaveStorageMode): Promise<string | null> => {
@@ -723,6 +751,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         }
 
         const localDraft = loadDraft()
+        const localPreset = readActiveLocalNumberSet()?.presetId ?? preset
         if (!localDraft) {
           setHasLocalDraft(false)
           setLocalDraftSavedAt(null)
@@ -733,7 +762,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
         setSyncStatus('saving')
         setSyncError(null)
-        const result = await saveNumberSet(activeUserId, localDraft, cloudSetIdRef.current)
+        const result = await saveNumberSet(activeUserId, localDraft, localPreset, cloudSetIdRef.current)
         if (result.error) {
           setSyncStatus('error')
           setSyncError(result.error)
@@ -757,7 +786,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             : [savedSet, ...sets]
         })
         if (saveEnabled && storageMode === 'cloud') {
-          replaceInputsFromStorage(savedSet.inputs)
+          replaceNumberSetFromStorage(savedSet)
         }
         setSyncStatus('saved')
         setSyncError(null)
@@ -787,7 +816,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return 'no_cloud_draft'
         }
 
-        const savedAt = saveDraft(result.data.inputs)
+        const savedAt = saveDraft(result.data.inputs, result.data.presetId ?? preset)
         if (!savedAt) {
           setSyncStatus('error')
           setSyncError('local_draft_save_failed')
@@ -801,7 +830,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         refreshLocalNumberSetState()
         setLocalDraftSavedAt(savedAt)
         if (saveEnabled && storageMode === 'local') {
-          replaceInputsFromStorage(result.data.inputs)
+          replaceNumberSetFromStorage(result.data)
         }
         setSyncStatus('saved')
         setSyncError(null)
@@ -810,7 +839,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
       return 'unsupported_draft_copy'
     },
-    [activeUserId, refreshLocalNumberSetState, replaceInputsFromStorage, saveEnabled, storageMode],
+    [activeUserId, preset, refreshLocalNumberSetState, replaceNumberSetFromStorage, saveEnabled, storageMode],
   )
 
   const selectNumberSet = useCallback(
@@ -831,7 +860,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         setHasLocalDraft(true)
         setLocalDraftSavedAt(selected.updatedAt)
         setCloudSetId(null)
-        replaceInputsFromStorage(selected.inputs)
+        replaceNumberSetFromStorage(selected)
         setSyncStatus('saved')
         return null
       }
@@ -847,11 +876,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       }
       setHasCloudDraft(true)
       setCloudDraftSavedAt(selected.updatedAt)
-      replaceInputsFromStorage(selected.inputs)
+      replaceNumberSetFromStorage(selected)
       setSyncStatus('saved')
       return null
     },
-    [activeUserId, cloudNumberSets, replaceInputsFromStorage],
+    [activeUserId, cloudNumberSets, replaceNumberSetFromStorage],
   )
 
   const createNumberSet = useCallback(
@@ -861,6 +890,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         const sets = readLocalNumberSetState()
         if (sets.length >= numberSetLimits.local) return 'number_set_limit_reached'
         const result = appendLocalNumberSet(sets, inputs, {
+          presetId: preset,
           title: `숫자세트 ${sets.length + 1}`,
         })
         writeLocalNumberSets(localStorage, result.sets)
@@ -875,6 +905,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       const result = await createCloudNumberSet(
         activeUserId,
         inputs,
+        preset,
         `숫자세트 ${cloudNumberSets.length + 1}`,
       )
       if (result.error) {
@@ -898,7 +929,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       }
       setHasCloudDraft(true)
       setCloudDraftSavedAt(createdSet.updatedAt)
-      replaceInputsFromStorage(createdSet.inputs)
+      replaceNumberSetFromStorage(createdSet)
       setSyncStatus('saved')
       return null
     },
@@ -906,9 +937,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       activeUserId,
       cloudNumberSets.length,
       inputs,
+      preset,
       numberSetLimits.cloud,
       numberSetLimits.local,
-      replaceInputsFromStorage,
+      replaceNumberSetFromStorage,
       refreshLocalNumberSetState,
       selectNumberSet,
     ],
@@ -956,6 +988,37 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       return null
     },
     [activeUserId],
+  )
+
+  const setNumberSetPreset = useCallback(
+    async (mode: SaveStorageMode, setId: string, presetId: PresetId): Promise<string | null> => {
+      if (mode === 'local') {
+        const nextSets = setLocalNumberSetPreset(readLocalNumberSetState(), setId, presetId)
+        if (!nextSets.some((set) => set.id === setId)) return 'number_set_not_found'
+        writeLocalNumberSets(localStorage, nextSets)
+        refreshLocalNumberSetState()
+        if (storageMode === 'local' && activeLocalSetId === setId && preset !== presetId) {
+          suppressNextPresetPersistRef.current = true
+          setPreset(presetId)
+        }
+        return null
+      }
+
+      if (!activeUserId) return 'not_logged_in'
+      const result = await setCloudNumberSetPreset(activeUserId, setId, presetId)
+      if (result.error) return result.error
+      const updatedSet = result.data
+      if (!updatedSet) return 'number_set_not_found'
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === updatedSet.id ? updatedSet : set)),
+      )
+      if (storageMode === 'cloud' && cloudSetIdRef.current === setId && preset !== presetId) {
+        suppressNextPresetPersistRef.current = true
+        setPreset(presetId)
+      }
+      return null
+    },
+    [activeLocalSetId, activeUserId, preset, refreshLocalNumberSetState, setPreset, storageMode],
   )
 
   const setNumberSetAutoSnapshot = useCallback(
@@ -1027,7 +1090,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         const nextActive = nextSets.find((set) => set.id === nextActiveId) ?? null
         refreshLocalNumberSetState()
         if (storageMode === 'local') {
-          replaceInputsFromStorage(nextActive?.inputs ?? defaultInputs)
+          if (nextActive) replaceNumberSetFromStorage(nextActive)
+          else replaceInputsFromStorage(defaultInputs)
           if (!nextActive) {
             setSaveEnabledState(false)
             writeSaveEnabled(false)
@@ -1057,7 +1121,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           // ignore
         }
         if (storageMode === 'cloud') {
-          replaceInputsFromStorage(nextActive?.inputs ?? defaultInputs)
+          if (nextActive) replaceNumberSetFromStorage(nextActive)
+          else replaceInputsFromStorage(defaultInputs)
           if (!nextActive) {
             setSaveEnabledState(false)
             writeSaveEnabled(false)
@@ -1073,9 +1138,25 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       cloudSetId,
       refreshLocalNumberSetState,
       replaceInputsFromStorage,
+      replaceNumberSetFromStorage,
       storageMode,
     ],
   )
+
+  useEffect(() => {
+    const previousPreset = previousPresetRef.current
+    previousPresetRef.current = preset
+    if (previousPreset === preset) return
+    if (suppressNextPresetPersistRef.current) {
+      suppressNextPresetPersistRef.current = false
+      return
+    }
+    if (!saveEnabled || !activeNumberSetId) return
+    const timer = window.setTimeout(() => {
+      void setNumberSetPreset(storageMode, activeNumberSetId, preset)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [activeNumberSetId, preset, saveEnabled, setNumberSetPreset, storageMode])
 
   useEffect(() => {
     if (authLoading) return
@@ -1091,12 +1172,12 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       }
 
       if (storageMode === 'local') {
-        const draft = loadDraft()
-        if (draft) {
-          replaceInputsFromStorage(draft)
+        const selected = readActiveLocalNumberSet()
+        if (selected) {
+          replaceNumberSetFromStorage(selected)
           setSyncStatus('saved')
         } else {
-          replaceInputsFromStorage(draft ?? defaultInputs)
+          replaceInputsFromStorage(defaultInputs)
           setSyncStatus('idle')
         }
         setCloudSetId(null)
@@ -1126,7 +1207,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       const selected = sets.find((set) => set.id === preferredId) ?? sets[0] ?? null
       setCloudNumberSets(sets)
       if (selected && hasMeaningfulCalculatorInputs(selected.inputs)) {
-        replaceInputsFromStorage(selected.inputs)
+        replaceNumberSetFromStorage(selected)
         setCloudSetId(selected.id)
         setHasCloudDraft(true)
         setCloudDraftSavedAt(selected.updatedAt)
@@ -1151,6 +1232,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     authLoading,
     refreshLocalNumberSetState,
     replaceInputsFromStorage,
+    replaceNumberSetFromStorage,
     saveEnabled,
     storageMode,
   ])
@@ -1233,6 +1315,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         createNumberSet,
         renameNumberSet,
         setNumberSetMemo,
+        setNumberSetPreset,
         setNumberSetAutoSnapshot,
         setNumberSetRollover,
         clearNumberSetRolloverPending,

@@ -3,11 +3,13 @@ import { PRESET_IDS, type PresetId } from '../types'
 /** 활성 용어 프리셋 저장 키. 환영 플로우의 "거래 종목" 선택과 단일 진실원으로 공유한다. */
 export const PRESET_STORAGE_KEY = 'leverage_glossary_preset'
 
+export function isPresetId(value: unknown): value is PresetId {
+  return typeof value === 'string' && (PRESET_IDS as readonly string[]).includes(value)
+}
+
 /** 화이트리스트 검증. 알 수 없는/빈 값은 모두 'default'(현재 국내선물 어휘)로 수렴. */
 export function normalizePresetId(value: string | null | undefined): PresetId {
-  return value && (PRESET_IDS as readonly string[]).includes(value)
-    ? (value as PresetId)
-    : 'default'
+  return isPresetId(value) ? value : 'default'
 }
 
 /** 초기 프리셋 복원. detectLocale.ts 패턴(window 가드 → localStorage → 검증 → 기본값). */

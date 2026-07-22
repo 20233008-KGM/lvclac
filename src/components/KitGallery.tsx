@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { LayoutProvider } from '../context/LayoutContext'
-import { useLanguage } from '../i18n'
+import { useLanguage, type PresetId } from '../i18n'
 import { sampleInputs, type CalculatorInputs } from '../types'
 import type { CalculatorNumberSet } from '../context/CalculatorContext'
 import { InputPanel } from './InputPanel'
@@ -58,10 +58,13 @@ const mockRolloverPending = {
   nextDate: '2026-12-10',
   pending: true,
 } as const
+const mockLocalSets: CalculatorNumberSet[] = [
+  { id: 'local-1', title: '이 기기 기본 세트', inputs: sampleInputs, presetId: 'index', updatedAt: null, storageMode: 'local', autoSnapshotEnabled: false, rollover: mockRolloverOff },
+]
 const mockCloudSets: CalculatorNumberSet[] = [
-  { id: 'set-2', title: '클라우드 숫자세트 - 변동성 돌파 전략', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
-  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverPending },
-  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false, rollover: mockRolloverOff },
+  { id: 'set-2', title: '클라우드 숫자세트 - 변동성 돌파 전략', inputs: sampleInputs, presetId: 'stock', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
+  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, presetId: 'cfd', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverPending },
+  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, presetId: 'default', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false, rollover: mockRolloverOff },
 ]
 const numberSetLimits: Record<'local' | 'cloud', number> = { local: 10, cloud: 10 }
 
@@ -96,6 +99,19 @@ export function KitGallery() {
     ...sampleInputs,
     orderPrice: sampleInputs.currentPrice,
   }))
+  const [kitLocalSets, setKitLocalSets] = useState(mockLocalSets)
+  const [kitCloudSets, setKitCloudSets] = useState(mockCloudSets)
+
+  const setKitPreset = (
+    mode: 'local' | 'cloud',
+    setId: string,
+    presetId: PresetId,
+  ) => {
+    const update = (sets: CalculatorNumberSet[]) =>
+      sets.map((set) => (set.id === setId ? { ...set, presetId } : set))
+    if (mode === 'local') setKitLocalSets(update)
+    else setKitCloudSets(update)
+  }
 
   // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 확정한다.
 
@@ -167,16 +183,24 @@ export function KitGallery() {
         >
           <NumberSetPreferencesPanel
             copy={t.myPage}
-            localNumberSets={[]}
-            cloudNumberSets={mockCloudSets}
+            presetCopy={t.glossaryPreset}
+            localNumberSets={kitLocalSets}
+            cloudNumberSets={kitCloudSets}
             numberSetLimits={numberSetLimits}
             busy={false}
             notice={null}
             isPro
             onCreateNumberSet={noop}
             onRenameNumberSet={noop}
+            onSetPreset={setKitPreset}
             onDeleteNumberSet={noop}
-            onSetAutoSnapshot={noop}
+            onSetAutoSnapshot={(_, setId, enabled) =>
+              setKitCloudSets((sets) =>
+                sets.map((set) =>
+                  set.id === setId ? { ...set, autoSnapshotEnabled: enabled } : set,
+                ),
+              )
+            }
             onSetRollover={noop}
             onClearRolloverPending={noop}
           />

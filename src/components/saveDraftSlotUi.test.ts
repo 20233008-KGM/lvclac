@@ -118,8 +118,8 @@ describe('draft save slot UI', () => {
     )
     expect(ctx).toContain("if (source === 'local' && target === 'cloud')")
     expect(ctx).toContain("if (source === 'cloud' && target === 'local')")
-    expect(ctx).toContain('saveNumberSet(activeUserId, localDraft, cloudSetIdRef.current)')
-    expect(ctx).toContain('saveDraft(result.data.inputs)')
+    expect(ctx).toContain('saveNumberSet(activeUserId, localDraft, localPreset, cloudSetIdRef.current)')
+    expect(ctx).toContain('saveDraft(result.data.inputs, result.data.presetId ?? preset)')
   })
 
   it('describes slot drag-copy behavior in the save tooltip copy', () => {
@@ -181,7 +181,7 @@ describe('draft save slot UI', () => {
   it('clears visible inputs instead of copying values when switching to an empty storage mode', () => {
     const text = source('src/context/CalculatorContext.tsx')
 
-    expect(text).toContain('replaceInputsFromStorage(draft ?? defaultInputs)')
+    expect(text).toContain('if (selected) replaceNumberSetFromStorage(selected)')
     expect(text).toContain('replaceInputsFromStorage(defaultInputs)')
     expect(text).toContain('suppressNextPersistRef.current = true')
   })
@@ -317,7 +317,17 @@ describe('draft save slot UI', () => {
     expect(text).toContain('selectNumberSet: (mode: SaveStorageMode, setId: string) => Promise<string | null>')
     expect(text).toContain('createNumberSet: (mode: SaveStorageMode) => Promise<string | null>')
     expect(text).toContain('renameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => Promise<string | null>')
+    expect(text).toContain('setNumberSetPreset: (')
     expect(text).toContain('deleteNumberSetById: (mode: SaveStorageMode, setId: string) => Promise<string | null>')
+  })
+
+  it('restores and persists the terminology preset with the active number-set slot', () => {
+    const text = source('src/context/CalculatorContext.tsx')
+
+    expect(text).toContain('replaceNumberSetFromStorage')
+    expect(text).toContain('const nextPreset = numberSet.presetId ?? preset')
+    expect(text).toContain('void setNumberSetPreset(storageMode, activeNumberSetId, preset)')
+    expect(text).toContain('presetId: preset')
   })
 
   it('uses multi-set cloud helpers instead of latest-only selection for lists', () => {

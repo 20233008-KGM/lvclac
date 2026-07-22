@@ -368,8 +368,8 @@ export interface Messages {
     recordsCount: string
     recordsEmpty: string
     recordsSummaryTitle: string
-    latestSnapshotTitle: string
-    latestSnapshotEmpty: string
+    recentSnapshotsTitle: string
+    recentSnapshotsEmpty: string
     recentOrdersTitle: string
     recentOrdersEmpty: string
     recordsArchiveLink: string

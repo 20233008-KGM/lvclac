@@ -84,15 +84,15 @@ describe('my page copy', () => {
 
   it('provides compact records summary copy for both languages', () => {
     expect(ko.myPage.recordsSummaryTitle).toBe('계정 기록')
-    expect(ko.myPage.latestSnapshotTitle).toBe('최근 계좌스냅샷')
+    expect(ko.myPage.recentSnapshotsTitle).toBe('최근 계좌스냅샷')
     expect(ko.myPage.recentOrdersTitle).toBe('최근 주문')
     expect(ko.myPage.recordsArchiveLink).toBe('기록 장부 열기')
-    expect(ko.myPage.latestSnapshotEmpty).toContain('계좌스냅샷')
+    expect(ko.myPage.recentSnapshotsEmpty).toContain('계좌스냅샷')
 
     expect(en.myPage.recordsSummaryTitle).toBe('Account records')
-    expect(en.myPage.latestSnapshotTitle).toBe('Latest account snapshot')
+    expect(en.myPage.recentSnapshotsTitle).toBe('Recent account snapshots')
     expect(en.myPage.recentOrdersTitle).toBe('Recent orders')
     expect(en.myPage.recordsArchiveLink).toBe('Open records ledger')
-    expect(en.myPage.latestSnapshotEmpty).toContain('snapshot')
+    expect(en.myPage.recentSnapshotsEmpty).toContain('snapshot')
   })
 })

@@ -154,7 +154,7 @@ export function KitGallery() {
             recordsCopy={t.accountRecords}
             loading={false}
             error={null}
-            latestSnapshot={null}
+            recentSnapshots={[]}
             recentOrders={[]}
             archiveHref="#"
             onRetry={noop}

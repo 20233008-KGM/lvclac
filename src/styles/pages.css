@@ -3242,6 +3242,10 @@ html[data-zone='about'] body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.records-summary-table--recent-snapshots .records-summary-row {
+  grid-template-columns: minmax(4.5rem, 1fr) minmax(5rem, max-content) minmax(3.75rem, max-content) minmax(3rem, max-content);
+}
+
 .records-summary-table--orders .records-summary-row {
   grid-template-columns: minmax(0, 1fr) 3.25rem minmax(3.5rem, max-content) minmax(4.5rem, max-content);
 }
@@ -3269,9 +3273,14 @@ html[data-zone='about'] body {
 }
 
 .records-summary-values,
+.records-summary-snapshot,
 .records-summary-order {
   color: var(--color-text);
   font-size: var(--font-size-sm);
+}
+
+.records-summary-snapshot {
+  min-height: 40px;
 }
 
 .records-summary-row strong {
@@ -3280,9 +3289,15 @@ html[data-zone='about'] body {
   font-weight: 700;
 }
 
-/* "라벨 왼쪽 · 숫자 오른쪽" — 첫 열(계좌평가금)은 왼쪽, 나머지 숫자 열은 헤더·값 모두 오른쪽. */
-.records-summary-table--snapshot .records-summary-head span:nth-child(n + 2),
-.records-summary-table--snapshot .records-summary-values strong:nth-child(n + 2) {
+/* 저장 메타는 왼쪽, 세 숫자 지표는 헤더·값 모두 오른쪽. */
+.records-summary-table--recent-snapshots .records-summary-head span:nth-child(n + 2),
+.records-summary-snapshot strong {
+  text-align: right;
+}
+
+/* 결제 화면의 기존 3열 스냅샷 미리보기 정렬은 유지한다. */
+.records-summary-table--snapshot:not(.records-summary-table--recent-snapshots) .records-summary-head span:nth-child(n + 2),
+.records-summary-table--snapshot:not(.records-summary-table--recent-snapshots) .records-summary-values strong:nth-child(n + 2) {
   text-align: right;
 }
 
@@ -3299,14 +3314,6 @@ html[data-zone='about'] body {
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.records-summary-slot {
-  max-width: 50%;
-  overflow: hidden;
-  text-align: right;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

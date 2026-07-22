@@ -118,3 +118,8 @@
 - `maintenance/public`의 `PublicInfoShell`과 단일 내비게이션 모델을 `dev`에 수동 이식해 서비스 소개·사용 가이드·수식 정의·이용약관·개인정보를 같은 920px 문서 공간으로 묶었다. 데스크톱 5열·모바일 2+2+1 현재 페이지 표시와 문서 폭에 맞춘 푸터를 적용하고, `dev` 로그인 진입·계정/클라우드/Paddle 법무 문구와 별도 환불 정책은 유지했다. 가이드·수식은 공용 셸 계약에 따라 독립 무광고 문서가 됐다.
 - 검증: 집중 **11/11**·전체 Vitest **649/649**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 1280×900·390×844 한영의 다섯 경로에서 내비게이션 순서·현재 표시·내부 링크, 문서/푸터 폭, 가로·내비게이션 오버플로 0, 콘솔 경고·오류 0을 확인했다.
 - 적용 커밋 `dev` **af70c8e**. Notion 완료 [Task](https://app.notion.com/p/3a326e6d586f81cf901bd8742aa5a147)와 [Work Log](https://app.notion.com/p/3a326e6d586f81c0b994dcddc0b62382) 기록 완료. 실도메인 배포 후 시각·인증 상태, 푸시·배포는 수행하지 않았다.
+
+**2026-07-20 — dev 서비스 소개 복원 및 회사 소개 문서 분리**
+- `dev`의 `/about`을 `maintenance/public` 최신 LiqGuard 서비스 소개 카피·3개 섹션·평면형 문의 CTA로 복원하고, 기존 회사 설명은 독립 `/company` 문서로 분리했다. 회사 문서는 회사가 하는 일·향하는 방향·제작 원칙·LiqGuard 제품 행·운영과 책임·대표 서명·문의 흐름을 쓰며 5개 문서 네비게이터에는 넣지 않았다. 공용 셸은 `activePath={null}`·`showNavigation={false}`를 지원하되 `dev` 로그인 버튼을 유지한다.
+- 푸터 Product 첫 링크는 `서비스 소개 / Service overview` → `/about`, Company 첫 링크는 `회사 소개 / About us` → `/company`로 바꿨다. Pro·가이드·문의·후원·채용·피드백·약관·개인정보·환불과 회사정보 6칸은 유지했다. 검증: 집중 **26/26**·전체 Vitest **660/660**, 변경 파일 ESLint, production build, diff check 통과. 인앱 브라우저 한영 1280×900·390×844에서 콘텐츠·네비게이터 표시/숨김·링크 왕복·2열/3열→1열·가로 오버플로·콘솔 경고/오류 0을 확인했다.
+- 적용 커밋 `dev` **107f9bd**. Notion 완료 [Task](https://app.notion.com/p/3a326e6d586f8104a12bc2b3aad2bf91)와 [Work Log](https://app.notion.com/p/3a326e6d586f8160ab72c942f0b8f7ae) 기록 완료. 실도메인 인증·시각 확인, 실제 운영자 환경변수 교체, 푸시·배포는 수행하지 않았다.

@@ -255,46 +255,53 @@ function MailIcon() {
   )
 }
 
-function LatestSnapshotSummary({
+function RecentSnapshotList({
   copy,
   recordsCopy,
-  snapshot,
+  snapshots,
+  slotTitles,
 }: {
   copy: MyPageCopy
   recordsCopy: AccountRecordsCopy
-  snapshot: AccountSnapshotRecord | null
+  snapshots: AccountSnapshotRecord[]
+  slotTitles: ReadonlyMap<string, string>
 }) {
-  if (!snapshot) {
-    return <p className="account-records-empty">{copy.latestSnapshotEmpty}</p>
+  if (snapshots.length === 0) {
+    return <p className="account-records-empty">{copy.recentSnapshotsEmpty}</p>
   }
 
-  const metrics = [
-    {
-      label: recordsCopy.summaryAccountEquity,
-      value: formatNumber(snapshot.inputs.accountEval ?? null),
-    },
-    {
-      label: recordsCopy.summaryLiquidationBuffer,
-      value: formatPercent(snapshot.result.toleranceRate),
-    },
-    {
-      label: recordsCopy.summaryLeverage,
-      value: formatLeverageValue(snapshot.result.leverageRatio),
-    },
-  ]
-
   return (
-    <div className="records-summary-table records-summary-table--snapshot" role="table">
+    <div
+      className="records-summary-table records-summary-table--snapshot records-summary-table--recent-snapshots"
+      role="table"
+    >
       <div className="records-summary-row records-summary-head" role="row">
-        {metrics.map((metric) => (
-          <span key={metric.label} role="columnheader">{metric.label}</span>
-        ))}
+        <span role="columnheader">{recordsCopy.savedAtAndSlot}</span>
+        <span role="columnheader">{recordsCopy.summaryAccountEquity}</span>
+        <span role="columnheader">{recordsCopy.summaryLiquidationBuffer}</span>
+        <span role="columnheader">{recordsCopy.summaryLeverage}</span>
       </div>
-      <div className="records-summary-row records-summary-values" role="row">
-        {metrics.map((metric) => (
-          <strong key={metric.label} role="cell">{metric.value}</strong>
-        ))}
-      </div>
+      {snapshots.map((snapshot) => {
+        const slotLabel = resolveAccountRecordSlotLabel(
+          snapshot.numberSetId,
+          slotTitles,
+          recordsCopy.slotFilterUnassigned,
+          recordsCopy.slotNameUnavailable,
+        )
+        return (
+          <div key={snapshot.id} className="records-summary-row records-summary-snapshot" role="row">
+            <div className="records-summary-record-meta" role="cell">
+              <time dateTime={snapshot.createdAt}>{formatSavedAtCompact(snapshot.createdAt)}</time>
+              <span className="records-summary-record-slot" title={slotLabel}>
+                {slotLabel}
+              </span>
+            </div>
+            <strong role="cell">{formatNumber(snapshot.inputs.accountEval ?? null)}</strong>
+            <strong role="cell">{formatPercent(snapshot.result.toleranceRate)}</strong>
+            <strong role="cell">{formatLeverageValue(snapshot.result.leverageRatio)}</strong>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -354,7 +361,7 @@ export function AccountRecordsSummaryPanel({
   recordsCopy,
   loading,
   error,
-  latestSnapshot,
+  recentSnapshots,
   recentOrders,
   slots = [],
   archiveHref,
@@ -364,21 +371,18 @@ export function AccountRecordsSummaryPanel({
   recordsCopy: AccountRecordsCopy
   loading: boolean
   error: string | null
-  latestSnapshot: AccountSnapshotRecord | null
+  recentSnapshots: AccountSnapshotRecord[]
   recentOrders: OrderHistoryRecord[]
   slots?: { id: string; title: string }[]
   archiveHref: string
   onRetry: () => void
 }) {
   const slotTitles = useMemo(() => createAccountRecordSlotTitles(slots), [slots])
-  const latestSnapshotSlotLabel = latestSnapshot
-    ? resolveAccountRecordSlotLabel(
-        latestSnapshot.numberSetId,
-        slotTitles,
-        recordsCopy.slotFilterUnassigned,
-        recordsCopy.slotNameUnavailable,
-      )
-    : null
+  const visibleSnapshots = recentSnapshots.slice(0, 5)
+  const recentSnapshotCount =
+    visibleSnapshots.length > 0
+      ? copy.recordsCount.replace('{count}', String(visibleSnapshots.length))
+      : copy.recordsEmpty
   const recentOrderCount =
     recentOrders.length > 0
       ? copy.recordsCount.replace('{count}', String(recentOrders.length))
@@ -414,17 +418,14 @@ export function AccountRecordsSummaryPanel({
         <div className="records-summary-grid">
           <section className="records-summary-block">
             <div className="records-summary-block-head">
-              <h3>{copy.latestSnapshotTitle}</h3>
-              {latestSnapshotSlotLabel && (
-                <span className="records-summary-slot" title={latestSnapshotSlotLabel}>
-                  {latestSnapshotSlotLabel}
-                </span>
-              )}
+              <h3>{copy.recentSnapshotsTitle}</h3>
+              <span>{recentSnapshotCount}</span>
             </div>
-            <LatestSnapshotSummary
+            <RecentSnapshotList
               copy={copy}
               recordsCopy={recordsCopy}
-              snapshot={latestSnapshot}
+              snapshots={visibleSnapshots}
+              slotTitles={slotTitles}
             />
           </section>
           <section className="records-summary-block">
@@ -1609,14 +1610,14 @@ export function MyPage() {
     loading: boolean
     error: string | null
     notice: string | null
-    latestSnapshot: AccountSnapshotRecord | null
+    recentSnapshots: AccountSnapshotRecord[]
     recentOrders: OrderHistoryRecord[]
   }>({
     userId: null,
     loading: false,
     error: null,
     notice: null,
-    latestSnapshot: null,
+    recentSnapshots: [],
     recentOrders: [],
   })
   const [autoSaveBusy, setAutoSaveBusy] = useState(false)
@@ -1651,8 +1652,8 @@ export function MyPage() {
   const recordsLoading = user && recordsState.userId === user.id ? recordsState.loading : false
   const recordsError = user && recordsState.userId === user.id ? recordsState.error : null
   const recordsNotice = user && recordsState.userId === user.id ? recordsState.notice : null
-  const latestSnapshot =
-    user && recordsState.userId === user.id ? recordsState.latestSnapshot : null
+  const recentSnapshots =
+    user && recordsState.userId === user.id ? recordsState.recentSnapshots : []
   const recentOrders = user && recordsState.userId === user.id ? recordsState.recentOrders : []
   const localNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'local')
   const cloudNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'cloud')
@@ -1717,7 +1718,7 @@ export function MyPage() {
         loading: false,
         error: null,
         notice: null,
-        latestSnapshot: null,
+        recentSnapshots: [],
         recentOrders: [],
       })
       return
@@ -1729,7 +1730,7 @@ export function MyPage() {
       loading: true,
       error: null,
       notice: prev.userId === userId ? prev.notice : null,
-      latestSnapshot: prev.userId === userId ? prev.latestSnapshot : null,
+      recentSnapshots: prev.userId === userId ? prev.recentSnapshots : [],
       recentOrders: prev.userId === userId ? prev.recentOrders : [],
     }))
 
@@ -1740,7 +1741,7 @@ export function MyPage() {
         loading: false,
         error: t.accountRecords.loadError,
         notice: null,
-        latestSnapshot: null,
+        recentSnapshots: [],
         recentOrders: [],
       })
       return
@@ -1751,7 +1752,7 @@ export function MyPage() {
       loading: false,
       error: null,
       notice: null,
-      latestSnapshot: result.data.accountSnapshots[0] ?? null,
+      recentSnapshots: result.data.accountSnapshots.slice(0, 5),
       recentOrders: result.data.orderHistory.slice(0, 5),
     })
   }, [recordsRepository, t.accountRecords.loadError, user])
@@ -2018,7 +2019,7 @@ export function MyPage() {
               recordsCopy={t.accountRecords}
               loading={recordsLoading}
               error={recordsError}
-              latestSnapshot={latestSnapshot}
+              recentSnapshots={recentSnapshots}
               recentOrders={recentOrders}
               slots={cloudNumberSets}
               archiveHref={RECORDS_PATH}

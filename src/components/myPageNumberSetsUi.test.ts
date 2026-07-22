@@ -122,7 +122,15 @@ describe('my page number-set management UI', () => {
     const css = source('src/styles/pages.css')
 
     expect(component).not.toContain('<ToggleSwitch\n              checked={numberSet.autoSnapshotEnabled}')
-    expect(component).toContain('event.currentTarget.checked')
+    expect(component).toContain(
+      `onSetAutoSnapshot(
+                    numberSet.storageMode,
+                    numberSet.id,
+                    event.currentTarget.checked,
+                  )`,
+    )
+    expect(component).toContain('</label>\n          ) : (')
+    expect(component).toContain('/>\n          )\n        )}\n        <input\n          value={titleDraft}')
     expect(css).toContain('grid-template-columns: 78px minmax(0, 1fr) auto')
     expect(css).not.toContain('@media (max-width: 420px)')
   })

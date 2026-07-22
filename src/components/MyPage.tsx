@@ -813,6 +813,7 @@ function NumberSetRow({
   numberSet,
   busy,
   autoSnapshotAllowed,
+  showAutoSnapshotColumn,
   onRenameNumberSet,
   onDeleteNumberSet,
   onSetAutoSnapshot,
@@ -824,6 +825,7 @@ function NumberSetRow({
   busy: boolean
   // Pro 여부. onSetAutoSnapshot이 있을 때만(클라우드 슬롯) 토글을 노출하고, false면 켜기 불가.
   autoSnapshotAllowed?: boolean
+  showAutoSnapshotColumn: boolean
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
@@ -834,7 +836,7 @@ function NumberSetRow({
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const detailModalTriggerRef = useRef<HTMLButtonElement | null>(null)
-  const showAutoSnapshotToggle = Boolean(
+  const showAutoSnapshotControl = Boolean(
     onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled),
   )
 
@@ -856,10 +858,33 @@ function NumberSetRow({
   }, [copy, detailOpen, numberSet])
 
   return (
-    <li className="my-page-number-set-row">
+    <li
+      className={`my-page-number-set-row${numberSet.autoSnapshotEnabled ? ' my-page-number-set-row--auto-selected' : ''}`}
+    >
       <div
-        className={`my-page-number-set-row-main${showAutoSnapshotToggle ? ' my-page-number-set-row-main--with-auto' : ''}`}
+        className={`my-page-number-set-row-main${showAutoSnapshotColumn ? ' my-page-number-set-row-main--with-auto' : ''}`}
       >
+        {showAutoSnapshotColumn && (
+          showAutoSnapshotControl && onSetAutoSnapshot ? (
+            <label className="my-page-number-set-row-auto">
+              <input
+                type="checkbox"
+                checked={numberSet.autoSnapshotEnabled}
+                disabled={busy}
+                aria-label={`${numberSet.title}: ${copy.autoSnapshotSlotToggleLabel}`}
+                onChange={(event) =>
+                  onSetAutoSnapshot(
+                    numberSet.storageMode,
+                    numberSet.id,
+                    event.currentTarget.checked,
+                  )
+                }
+              />
+            </label>
+          ) : (
+            <span className="my-page-number-set-row-auto my-page-number-set-row-auto--empty" aria-hidden="true" />
+          )
+        )}
         <input
           value={titleDraft}
           aria-label={copy.numberSetNamePlaceholder}
@@ -873,18 +898,6 @@ function NumberSetRow({
             if (event.key === 'Escape') setTitleDraft(numberSet.title)
           }}
         />
-        {showAutoSnapshotToggle && onSetAutoSnapshot && (
-          <div className="my-page-number-set-row-auto">
-            <ToggleSwitch
-              checked={numberSet.autoSnapshotEnabled}
-              disabled={busy}
-              label={copy.autoSnapshotSlotToggleLabel}
-              onChange={(enabled) =>
-                onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
-              }
-            />
-          </div>
-        )}
         <div className="my-page-number-set-row-actions">
           <button
             type="button"
@@ -996,6 +1009,10 @@ function NumberSetGroup({
   onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
   onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
+  const showAutoSnapshotColumn = Boolean(
+    onSetAutoSnapshot && (autoSnapshotAllowed || sets.some((set) => set.autoSnapshotEnabled)),
+  )
+
   return (
     <div className="my-page-number-set-group">
       <div className="my-page-number-set-group-head">
@@ -1021,6 +1038,13 @@ function NumberSetGroup({
           {automationNote}
         </p>
       )}
+      {showAutoSnapshotColumn && (
+        <div className="my-page-number-set-list-head" aria-hidden="true">
+          <span>{copy.autoSnapshotSlotToggleLabel}</span>
+          <span />
+          <span />
+        </div>
+      )}
       <ul className="my-page-number-set-list">
         {sets.map((numberSet) => (
           <NumberSetRow
@@ -1029,6 +1053,7 @@ function NumberSetGroup({
             numberSet={numberSet}
             busy={busy}
             autoSnapshotAllowed={autoSnapshotAllowed}
+            showAutoSnapshotColumn={showAutoSnapshotColumn}
             onRenameNumberSet={onRenameNumberSet}
             onDeleteNumberSet={onDeleteNumberSet}
             onSetAutoSnapshot={onSetAutoSnapshot}

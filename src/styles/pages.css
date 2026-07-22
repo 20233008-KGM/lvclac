@@ -3799,12 +3799,33 @@ html[data-zone='about'] body {
   list-style: none;
 }
 
+.my-page-number-set-list-head {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  padding: 0 var(--space-sm);
+  color: var(--color-text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.my-page-number-set-list-head span:first-child {
+  text-align: center;
+}
+
 .my-page-number-set-row {
   display: grid;
   gap: 6px;
   padding: var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
+}
+
+.my-page-number-set-row--auto-selected {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 42%, transparent);
 }
 
 .my-page-number-set-row-main {
@@ -3815,10 +3836,10 @@ html[data-zone='about'] body {
 }
 
 .my-page-number-set-row-main--with-auto {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
 }
 
-.my-page-number-set-row-main input {
+.my-page-number-set-row-main > input {
   min-width: 0;
   min-height: 32px;
   height: 32px;
@@ -3829,7 +3850,7 @@ html[data-zone='about'] body {
   color: var(--color-text);
 }
 
-.my-page-number-set-row-main input:focus {
+.my-page-number-set-row-main > input:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
@@ -3840,11 +3861,33 @@ html[data-zone='about'] body {
 }
 
 .my-page-number-set-row-auto {
-  min-width: 0;
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  cursor: pointer;
 }
 
-.my-page-number-set-row-auto .toggle-switch__label {
-  white-space: nowrap;
+.my-page-number-set-row-auto input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.my-page-number-set-row-auto input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.my-page-number-set-row-auto input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.my-page-number-set-row-auto--empty {
+  cursor: default;
 }
 
 /* 상세보기 펼침: 세트 기준값 미니 그리드. */
@@ -4311,28 +4354,6 @@ a.my-page-compare-card__action {
 
   .my-page-billing-row .btn-primary {
     width: 100%;
-  }
-}
-
-@media (max-width: 420px) {
-  .my-page-number-set-row-main--with-auto {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .my-page-number-set-row-main--with-auto > input {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .my-page-number-set-row-main--with-auto .my-page-number-set-row-actions {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .my-page-number-set-row-auto {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: end;
   }
 }
 

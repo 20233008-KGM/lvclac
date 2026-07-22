@@ -81,15 +81,20 @@ describe('my page number-set management UI', () => {
     expect(css).toContain('.my-page-number-set-groups')
   })
 
-  it('explains the cloud daily-record controls in both locales', () => {
+  it('renders one daily-record column with checked and unchecked cloud rows in both locales', () => {
     const koHtml = renderPanel('ko', true)
     const enHtml = renderPanel('en', true)
 
     expect(koHtml).toContain(ko.myPage.autoSnapshotSlotHelp)
-    expect(koHtml).toContain('매일 기록')
+    expect(koHtml.match(/my-page-number-set-list-head/g)).toHaveLength(1)
+    expect(koHtml).toContain('type="checkbox"')
+    expect(koHtml).toContain('checked=""')
+    expect(koHtml).toContain('my-page-number-set-row--auto-selected')
+    expect(koHtml).toContain('cloud-cloud-1: 매일 기록')
     expect(koHtml).toContain('매일 기록 중: 클라우드 세트 1개')
     expect(enHtml).toContain(en.myPage.autoSnapshotSlotHelp)
-    expect(enHtml).toContain('Record daily')
+    expect(enHtml.match(/my-page-number-set-list-head/g)).toHaveLength(1)
+    expect(enHtml).toContain('cloud-cloud-1: Record daily')
     expect(enHtml).toContain('Recording daily: 1 cloud set(s)')
   })
 
@@ -99,13 +104,26 @@ describe('my page number-set management UI', () => {
     expect(html).not.toContain(ko.myPage.autoSnapshotSlotHelp)
     expect(html).not.toContain('매일 기록 중')
     expect(html).not.toContain('매일 기록')
+    expect(html).not.toContain('my-page-number-set-list-head')
+    expect(html).not.toContain('type="checkbox"')
   })
 
-  it('moves the daily-record control to a second row at phone widths', () => {
+  it('keeps an already-enabled free cloud set removable without enabling inactive rows', () => {
+    const html = renderPanel('ko', false, true)
+
+    expect(html.match(/my-page-number-set-list-head/g)).toHaveLength(1)
+    expect(html.match(/type="checkbox"/g)).toHaveLength(1)
+    expect(html).toContain('checked=""')
+    expect(html).toContain('my-page-number-set-row-auto--empty')
+  })
+
+  it('uses a fixed checkbox column instead of the former phone-only second row', () => {
+    const component = source('src/components/MyPage.tsx')
     const css = source('src/styles/pages.css')
 
-    expect(css).toContain('@media (max-width: 420px)')
-    expect(css).toContain('.my-page-number-set-row-main--with-auto')
-    expect(css).toContain('grid-column: 1 / -1')
+    expect(component).not.toContain('<ToggleSwitch\n              checked={numberSet.autoSnapshotEnabled}')
+    expect(component).toContain('event.currentTarget.checked')
+    expect(css).toContain('grid-template-columns: 78px minmax(0, 1fr) auto')
+    expect(css).not.toContain('@media (max-width: 420px)')
   })
 })

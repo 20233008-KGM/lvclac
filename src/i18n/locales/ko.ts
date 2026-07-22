@@ -395,8 +395,10 @@ export const ko: Messages = {
     autoSnapshotLastRun: '마지막 자동 스냅샷: {date}',
     autoSnapshotRegionLabel: '지역 (시간대)',
     autoSnapshotTimeZoneSearchPlaceholder: '도시·시간대 검색 (예: Seoul)',
-    autoSnapshotSlotToggleLabel: '자동',
-    autoSnapshotSlotCountNote: '자동 스냅샷 대상: 클라우드 세트 {count}개. 각 세트를 매일 설정한 시각에 자동 저장합니다.',
+    autoSnapshotSlotToggleLabel: '매일 기록',
+    autoSnapshotSlotHelp:
+      '켜 둔 세트는 위 환경설정에서 정한 시각에 계좌 기록으로 저장해요. 값이 바뀐 날만 저장됩니다.',
+    autoSnapshotSlotCountNote: '매일 기록 중: 클라우드 세트 {count}개',
     rolloverTitle: '롤오버(만기 이월) 알림',
     rolloverToggleLabel: '롤오버 알림',
     rolloverIntervalLabel: '주기',

@@ -828,6 +828,9 @@ function NumberSetRow({
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const detailModalTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const showAutoSnapshotToggle = Boolean(
+    onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled),
+  )
 
   const commitRename = () => {
     const trimmed = titleDraft.trim()
@@ -848,7 +851,9 @@ function NumberSetRow({
 
   return (
     <li className="my-page-number-set-row">
-      <div className="my-page-number-set-row-main">
+      <div
+        className={`my-page-number-set-row-main${showAutoSnapshotToggle ? ' my-page-number-set-row-main--with-auto' : ''}`}
+      >
         <input
           value={titleDraft}
           aria-label={copy.numberSetNamePlaceholder}
@@ -862,8 +867,8 @@ function NumberSetRow({
             if (event.key === 'Escape') setTitleDraft(numberSet.title)
           }}
         />
-        <div className="my-page-number-set-row-actions">
-          {onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled) && (
+        {showAutoSnapshotToggle && onSetAutoSnapshot && (
+          <div className="my-page-number-set-row-auto">
             <ToggleSwitch
               checked={numberSet.autoSnapshotEnabled}
               disabled={busy}
@@ -872,7 +877,9 @@ function NumberSetRow({
                 onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
               }
             />
-          )}
+          </div>
+        )}
+        <div className="my-page-number-set-row-actions">
           <button
             type="button"
             className="my-page-icon-btn"
@@ -954,6 +961,7 @@ function NumberSetGroup({
   title,
   addLabel,
   storageNote,
+  automationNote,
   mode,
   sets,
   limit,
@@ -970,6 +978,7 @@ function NumberSetGroup({
   title: string
   addLabel: string
   storageNote?: string
+  automationNote?: string
   mode: SaveStorageMode
   sets: CalculatorNumberSet[]
   limit: number
@@ -1009,6 +1018,11 @@ function NumberSetGroup({
             i
           </span>
           <span>{storageNote}</span>
+        </p>
+      )}
+      {automationNote && (
+        <p className="my-page-number-set-automation-note" role="note">
+          {automationNote}
         </p>
       )}
       <ul className="my-page-number-set-list">
@@ -1090,6 +1104,7 @@ export function NumberSetPreferencesPanel({
           copy={copy}
           title={copy.numberSetsCloudTitle}
           addLabel={copy.addCloudNumberSet}
+          automationNote={isPro ? copy.autoSnapshotSlotHelp : undefined}
           mode="cloud"
           sets={cloudNumberSets}
           limit={numberSetLimits.cloud}

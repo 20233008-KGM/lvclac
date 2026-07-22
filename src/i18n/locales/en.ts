@@ -403,8 +403,10 @@ export const en: Messages = {
     autoSnapshotLastRun: 'Last automatic snapshot: {date}',
     autoSnapshotRegionLabel: 'Region (time zone)',
     autoSnapshotTimeZoneSearchPlaceholder: 'Search city or time zone (e.g. Seoul)',
-    autoSnapshotSlotToggleLabel: 'Auto',
-    autoSnapshotSlotCountNote: 'Auto snapshot targets: {count} cloud set(s). Each is saved automatically at your chosen time every day.',
+    autoSnapshotSlotToggleLabel: 'Record daily',
+    autoSnapshotSlotHelp:
+      'Enabled sets are saved to your account records at the time chosen in Preferences above. Days with no changes are skipped.',
+    autoSnapshotSlotCountNote: 'Recording daily: {count} cloud set(s)',
     rolloverTitle: 'Rollover reminder',
     rolloverToggleLabel: 'Rollover alert',
     rolloverIntervalLabel: 'Cycle',

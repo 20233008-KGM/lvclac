@@ -399,6 +399,7 @@ export interface Messages {
     autoSnapshotRegionLabel: string
     autoSnapshotTimeZoneSearchPlaceholder: string
     autoSnapshotSlotToggleLabel: string
+    autoSnapshotSlotHelp: string
     autoSnapshotSlotCountNote: string
     rolloverTitle: string
     rolloverToggleLabel: string

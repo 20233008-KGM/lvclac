@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-21 — 활성 사용자 지정 숫자세트를 입력 패널 헤더에 표시**
+- `dev` 계산기 입력 패널의 `입력` 오른쪽에 현재 활성 숫자세트 이름과 이 기기/클라우드 아이콘을 읽기 전용으로 표시한다. `현재 세트` 문구는 쓰지 않으며 `기본 세트`·`숫자세트 N` 같은 자동 생성 이름은 숨긴다. 전체 이름·저장 위치는 툴팁과 접근성 이름으로 제공하고 기존 세트 선택·저장 흐름은 유지한다.
+- 1×9px 구분선, 데스크톱 170px·모바일 110px 이름 말줄임을 적용했다. 검증: 전체 Vitest **663/663**, production build, 변경 파일 ESLint 통과. Chrome 데스크톱·390px에서 헤더 높이 24.5px, 구분선 9px, 긴 이름 ellipsis, `?`·`비우기` 무충돌을 실측했다. 전체 ESLint는 기존 `.recovery` 파싱 오류와 기존 React 규칙 위반으로 실패했다.
+- 적용 커밋 `dev` **0272ceb**를 깨끗한 임시 작업 트리로 고정해 `awesome-s-projects1/lvclac-dev` Production **dpl_5dkF8CymY73mnyvT1oCJYMVK12Wy**로 배포했다. `devpilgrm.liqguard.com`은 새 배포 Ready·HTTP 200·noindex·DEV 배지·실제 클라우드 세트명 `삼성전자08`·콘솔 오류 0을 확인했고, `liqguard.com`은 별도 `lvclac` 프로젝트의 기존 **dpl_4TS5dVwcNtYpVtAfDSZ5oiRZQA8k** 그대로다. 현재 작업 폴더의 미커밋 export/i18n 변경은 배포에서 제외했다. Notion [Task LV-70](https://app.notion.com/p/3a526e6d586f81f4bf90cb4eedc3ce6f), [Work Log](https://app.notion.com/p/3a526e6d586f8128926fd1d0dd3ad0b3), Release Notes를 갱신했다. 푸시는 수행하지 않았고 결제 webhook·cron은 별도 smoke하지 않았다.
+
 **2026-07-19 — 국가·언어·개인정보 선택 자동화와 실접속 QA 준비**
 - 언어 감지를 `?lang` → 사용자 저장 언어 → 세션 감지 → 국가 쿠키 → 브라우저 언어의 순수 우선순위 계약으로 분리했다. 지역 조회 중 사용자가 언어를 직접 바꾸면 늦은 IP 응답이 다시 덮지 않도록 재검사하고, 외부 제공자의 국가/브라우저 코드를 정규화했다.
 - Playwright Chromium을 추가해 우선순위 충돌 5종, 늦은 지역 조회 경합, 개인정보 분석/맞춤 광고 독립 선택·저장·재진입·Consent Mode 네 목적 업데이트를 자동화했다. 실행 명령은 `npm run test:geo-consent`, 새 환경의 Chromium 준비는 `npm run test:e2e:install`이다.

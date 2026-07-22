@@ -59,7 +59,7 @@ const mockRolloverPending = {
   pending: true,
 } as const
 const mockCloudSets: CalculatorNumberSet[] = [
-  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
+  { id: 'set-2', title: '클라우드 숫자세트 - 변동성 돌파 전략', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
   { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverPending },
   { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false, rollover: mockRolloverOff },
 ]
@@ -74,7 +74,7 @@ function KitItem({
 }: {
   name: string
   note?: string
-  width?: number
+  width?: number | string
   children: ReactNode
 }) {
   return (
@@ -160,7 +160,11 @@ export function KitGallery() {
             onRetry={noop}
           />
         </KitItem>
-        <KitItem name="NumberSetPreferencesPanel" note="숫자세트 패널" width={560}>
+        <KitItem
+          name="NumberSetPreferencesPanel"
+          note="숫자세트 패널 · 마이페이지 콘텐츠 폭"
+          width="min(1048px, calc(100vw - 32px))"
+        >
           <NumberSetPreferencesPanel
             copy={t.myPage}
             localNumberSets={[]}

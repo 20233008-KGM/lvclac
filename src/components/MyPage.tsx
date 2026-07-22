@@ -953,6 +953,7 @@ function NumberSetGroup({
   copy,
   title,
   addLabel,
+  storageNote,
   mode,
   sets,
   limit,
@@ -968,6 +969,7 @@ function NumberSetGroup({
   copy: MyPageCopy
   title: string
   addLabel: string
+  storageNote?: string
   mode: SaveStorageMode
   sets: CalculatorNumberSet[]
   limit: number
@@ -1001,6 +1003,14 @@ function NumberSetGroup({
           </button>
         </div>
       </div>
+      {storageNote && (
+        <p className="my-page-number-set-storage-note" role="note">
+          <span className="my-page-number-set-storage-note__glyph" aria-hidden="true">
+            i
+          </span>
+          <span>{storageNote}</span>
+        </p>
+      )}
       <ul className="my-page-number-set-list">
         {sets.map((numberSet) => (
           <NumberSetRow
@@ -1067,6 +1077,7 @@ export function NumberSetPreferencesPanel({
           copy={copy}
           title={copy.numberSetsLocalTitle}
           addLabel={copy.addLocalNumberSet}
+          storageNote={copy.localStorageNote}
           mode="local"
           sets={localNumberSets}
           limit={numberSetLimits.local}

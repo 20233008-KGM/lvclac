@@ -2816,6 +2816,39 @@ input:focus:not(:focus-visible) {
   font-weight: 600;
 }
 
+.draft-number-set-menu__storage-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0 2px 1px 21px;
+  color: var(--color-text-dim);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.draft-number-set-menu__storage-note--empty {
+  width: 100%;
+  max-width: 250px;
+  padding: 2px 0 0;
+  text-align: left;
+}
+
+.draft-number-set-menu__info-glyph {
+  display: inline-grid;
+  flex: 0 0 13px;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  margin-top: 1px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* 아이템(원라인): [방향점][제목][금액·레버리지] */
 .draft-number-set-menu__item {
   display: grid;

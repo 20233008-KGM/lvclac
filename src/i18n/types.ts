@@ -162,6 +162,7 @@ export interface Messages {
     helpHint: string
     helpHintLabel: string
     numberSetPickerLabel: string
+    localDataLossNote: string
     numberSetMenuTitle: string
     numberSetAdd: string
     numberSetManage: string

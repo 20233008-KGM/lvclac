@@ -185,6 +185,14 @@ function PlusIcon() {
   )
 }
 
+function InfoGlyph() {
+  return (
+    <span className="draft-number-set-menu__info-glyph" aria-hidden="true">
+      i
+    </span>
+  )
+}
+
 /** 위치(로컬/클라우드)별 스토리지 글리프 — 그룹 라벨·아이콘 타일에 재사용. */
 function StorageGlyph({ mode }: { mode: SaveStorageMode }) {
   return mode === 'local' ? <LocalComputerIcon /> : <CloudIcon />
@@ -594,6 +602,12 @@ export function SaveDraftToggle() {
           <span>{label}</span>
           <span className="draft-number-set-menu__group-count">{countLabel}</span>
         </div>
+        {mode === 'local' && (
+          <p className="draft-number-set-menu__storage-note" role="note">
+            <InfoGlyph />
+            <span>{t.draftSave.localDataLossNote}</span>
+          </p>
+        )}
         {groupSets.map((numberSet) => {
           const active = saveEnabled && storageMode === mode && activeNumberSetId === numberSet.id
           const { side, sideLabel, equityText, leverageText } = describeNumberSet(numberSet)
@@ -663,6 +677,15 @@ export function SaveDraftToggle() {
                 </span>
                 <strong>{t.draftSave.numberSetEmptyTitle}</strong>
                 <span>{t.draftSave.numberSetEmptyBody}</span>
+                {storageMode === 'local' && (
+                  <p
+                    className="draft-number-set-menu__storage-note draft-number-set-menu__storage-note--empty"
+                    role="note"
+                  >
+                    <InfoGlyph />
+                    <span>{t.draftSave.localDataLossNote}</span>
+                  </p>
+                )}
                 <button
                   type="button"
                   className="btn btn-primary draft-number-set-menu__empty-cta"

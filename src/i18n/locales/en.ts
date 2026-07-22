@@ -105,7 +105,7 @@ export const en: Messages = {
   draftSave: {
     label: 'Save inputs on this device',
     cloudLabel: 'Save inputs to cloud',
-    hint: '# Save inputs on this device\nWhen on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Switching to "Don\'t save" only stops saving — your stored values are kept, not deleted.\n\n────────\n\n[Tip]\n\n💡 Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
+    hint: '# Save inputs on this device\nWhen on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Clearing this browser’s site data or storage, or resetting the browser, also deletes the saved values. Switching to "Don\'t save" only stops saving — your stored values are kept, not deleted.\n\n────────\n\n[Tip]\n\n💡 Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
     cloudHint:
       '# Save inputs to cloud\nWhen signed in and Cloud is selected, inputs are saved to Supabase DB and can be restored on another device. Switching to "Don\'t save" keeps your cloud copy intact.\n\n────────\n\n[Tip]\n\n💡 Useful when switching between your desktop and laptop.',
     offHint:
@@ -121,7 +121,7 @@ export const en: Messages = {
     enableModalBody: [
       'When you turn on "Save inputs on this device," values you enter in the calculator (account equity, margin rates, number of contracts, etc.) may be stored in your browser\'s local storage (localStorage) on your device.',
       'This feature is provided for convenience only; we do not transmit or store this information on our servers.',
-      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs deletes the stored values.',
+      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs deletes the stored values. Clearing this browser’s site data or storage, or resetting the browser, also deletes them, and LiqGuard cannot recover them.',
       'However, if others use the same device, or if malware, browser extensions, or an insecure environment is present, stored values may be exposed. We do not guarantee the security of your device environment; you should decide whether to store sensitive information.',
     ],
     cloudEnableModalBody: [
@@ -152,8 +152,9 @@ export const en: Messages = {
     copyError: 'Could not copy saved values. Please try again shortly.',
     helpHintLabel: 'Input save slots help',
     helpHint:
-      "# Input save slots\nChoose where inputs are stored. A filled icon means saved values exist in that slot.\n\n[Slots]\n\n⊘ Don't save — Stops saving; stored values are not deleted.\n\n💻 This device — Stored in this browser (localStorage) only; not sent to a server.\n\n☁️ Cloud — While signed in, stores to Supabase DB so you can restore on another device.\n\n────────\n\n[Actions]\n\n- Click a slot to switch save location.\n- Click the active slot again to confirm deleting its stored values.\n- Drag a filled slot onto another to copy values only.\n\n────────\n\n[Note]\n\n💡 The first time you turn saving on, a notice appears; you can choose not to show it again.\n\nThe ✓ and number show when saving completed. They hide while you edit.",
+      "# Input save slots\nChoose where inputs are stored. A filled icon means saved values exist in that slot.\n\n[Slots]\n\n⊘ Don't save — Stops saving; stored values are not deleted.\n\n💻 This device — Stored in this browser (localStorage) only; not sent to a server. Clearing its site data or storage, or resetting the browser, deletes these values.\n\n☁️ Cloud — While signed in, stores to Supabase DB so you can restore on another device.\n\n────────\n\n[Actions]\n\n- Click a slot to switch save location.\n- Click the active slot again to confirm deleting its stored values.\n- Drag a filled slot onto another to copy values only.\n\n────────\n\n[Note]\n\n💡 The first time you turn saving on, a notice appears; you can choose not to show it again.\n\nThe ✓ and number show when saving completed. They hide while you edit.",
     numberSetPickerLabel: 'Choose number set',
+    localDataLossNote: 'Clearing this browser’s site data or storage also deletes device sets.',
     numberSetMenuTitle: 'Choose active number set',
     numberSetAdd: 'Add set',
     numberSetManage: 'Manage all',
@@ -647,7 +648,8 @@ export const en: Messages = {
     privacyTitle: 'Privacy and security',
     privacyBody:
       'When cloud saving is enabled, inputs and records may be stored in Supabase DB and restricted to your account by RLS policies.',
-    localStorageNote: 'Device-saved inputs stay in browser localStorage and are not sent to our server.',
+    localStorageNote:
+      'Stored only in this browser. If its site data or storage is cleared, or the browser is reset, LiqGuard cannot recover these sets.',
     cloudStorageNote: 'Cloud saved inputs and account records are stored and deleted by signed-in account.',
     deleteAccountTitle: 'Account and data deletion',
     deleteAccountBody:
@@ -768,7 +770,8 @@ export const en: Messages = {
     guideLink: 'See the full guide',
     mathLink: 'Curious about the math? See the formulas',
     saveTitle: 'Save your inputs on this device?',
-    saveBody: "Saved values stay inside this browser and never leave it. You can change this anytime in My Page or the margin section.",
+    saveBody:
+      'Saved values stay inside this browser. Clearing its site data or storage also deletes them. You can change this anytime in My Page or the margin section.',
     saveYes: 'Save on this device',
     saveYesDesc: 'Your inputs are still here when you come back.',
     saveNo: "Don't save",

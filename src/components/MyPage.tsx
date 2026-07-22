@@ -27,7 +27,11 @@ import type {
   AccountSnapshotAutomationSettings,
   AccountSnapshotAutomationSettingsInput,
 } from '../db/accountSnapshotAutomation'
-import { fetchNumberSets, type RolloverSettings } from '../db/numberSets'
+import {
+  fetchNumberSetDeletionSummary,
+  fetchNumberSets,
+  type RolloverSettings,
+} from '../db/numberSets'
 import {
   computeNextRolloverDate,
   type RolloverAnchor,
@@ -60,12 +64,14 @@ import {
   writePreferredSnapshotTimeZone,
 } from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
+import type { NumberSetDeleteSummaryState } from './NumberSetDeleteConfirmModal'
 import '../styles/pages.css'
 // 로그아웃 /my 뷰의 Google 로그인 버튼(.google-btn)은 auth-dialog.css에 정의돼 있다.
 // AuthModal이 열리기 전에도 스타일이 적용되도록 여기서 직접 로드한다(기존 스타일 재사용).
 import '../styles/auth-dialog.css'
 
 const AuthModal = lazy(() => import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })))
+const NumberSetDeleteConfirmModal = lazy(() => import('./NumberSetDeleteConfirmModal'))
 
 // 개발 빌드에서만 로드. 프로덕션에서는 import.meta.env.DEV가 false로 치환되어
 // 아래 동적 import가 제거되므로 관련 코드/문자열이 번들에 포함되지 않는다.
@@ -1653,6 +1659,17 @@ export function MyPage() {
   const [automationNotice, setAutomationNotice] = useState<string | null>(null)
   const [numberSetBusy, setNumberSetBusy] = useState(false)
   const [numberSetNotice, setNumberSetNotice] = useState<string | null>(null)
+  const numberSetActionBusyRef = useRef(false)
+  const deleteSummaryRequestRef = useRef(0)
+  const deleteSummaryUserIdRef = useRef(user?.id ?? null)
+  const [numberSetDeleteTarget, setNumberSetDeleteTarget] = useState<{
+    mode: SaveStorageMode
+    id: string
+    title: string
+    userId: string
+  } | null>(null)
+  const [numberSetDeleteSummary, setNumberSetDeleteSummary] =
+    useState<NumberSetDeleteSummaryState>({ status: 'ready', summary: null })
   // 자동 스냅샷 시간대: 저장값이 있으면 그걸, 없으면 브라우저 추정 시간대로 시작한다.
   const [snapshotTimeZone, setSnapshotTimeZone] = useState<string>(
     () => readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
@@ -1691,6 +1708,11 @@ export function MyPage() {
       setPasswordConfirmationDraft('')
     }
   }, [user])
+
+  useEffect(() => {
+    deleteSummaryUserIdRef.current = user?.id ?? null
+    deleteSummaryRequestRef.current += 1
+  }, [user?.id])
 
   useEffect(() => {
     if (!user) {
@@ -1959,18 +1981,26 @@ export function MyPage() {
   )
 
   const runNumberSetAction = useCallback(
-    async (action: () => Promise<string | null>) => {
-      if (!user || numberSetBusy) return
+    async (action: () => Promise<string | null>): Promise<boolean> => {
+      if (!user || numberSetActionBusyRef.current) return false
+      numberSetActionBusyRef.current = true
       setNumberSetBusy(true)
       setNumberSetNotice(null)
-      const error = await action()
-      setNumberSetBusy(false)
-      if (error === 'number_set_limit_reached') setNumberSetNotice(t.myPage.numberSetLimitReached)
-      else if (error === 'not_logged_in') setNumberSetNotice(t.myPage.numberSetLoginRequired)
-      else if (error) setNumberSetNotice(t.myPage.numberSetError)
+      try {
+        const error = await action()
+        if (error === 'number_set_limit_reached') setNumberSetNotice(t.myPage.numberSetLimitReached)
+        else if (error === 'not_logged_in') setNumberSetNotice(t.myPage.numberSetLoginRequired)
+        else if (error) setNumberSetNotice(t.myPage.numberSetError)
+        return error === null
+      } catch {
+        setNumberSetNotice(t.myPage.numberSetError)
+        return false
+      } finally {
+        numberSetActionBusyRef.current = false
+        setNumberSetBusy(false)
+      }
     },
     [
-      numberSetBusy,
       t.myPage.numberSetError,
       t.myPage.numberSetLimitReached,
       t.myPage.numberSetLoginRequired,
@@ -1992,12 +2022,92 @@ export function MyPage() {
     [renameNumberSet, runNumberSetAction],
   )
 
+  const loadNumberSetDeleteSummary = useCallback(
+    async (target: { mode: SaveStorageMode; id: string; userId: string }) => {
+      const requestId = deleteSummaryRequestRef.current + 1
+      deleteSummaryRequestRef.current = requestId
+
+      if (target.mode === 'local') {
+        setNumberSetDeleteSummary({ status: 'ready', summary: null })
+        return
+      }
+      if (!user) {
+        setNumberSetDeleteSummary({ status: 'error', summary: null })
+        return
+      }
+
+      setNumberSetDeleteSummary({ status: 'loading', summary: null })
+      try {
+        const result = await fetchNumberSetDeletionSummary(target.userId, target.id)
+        if (
+          deleteSummaryRequestRef.current !== requestId ||
+          deleteSummaryUserIdRef.current !== target.userId
+        ) return
+        if (result.error) {
+          setNumberSetDeleteSummary({ status: 'error', summary: null })
+          return
+        }
+        setNumberSetDeleteSummary({ status: 'ready', summary: result.data })
+      } catch {
+        if (
+          deleteSummaryRequestRef.current === requestId &&
+          deleteSummaryUserIdRef.current === target.userId
+        ) {
+          setNumberSetDeleteSummary({ status: 'error', summary: null })
+        }
+      }
+    },
+    [user],
+  )
+
   const handleDeleteNumberSet = useCallback(
     (mode: SaveStorageMode, setId: string) => {
-      void runNumberSetAction(() => deleteNumberSetById(mode, setId))
+      if (numberSetActionBusyRef.current) return
+      const target = numberSets.find(
+        (numberSet) => numberSet.storageMode === mode && numberSet.id === setId,
+      )
+      if (!target) return
+      if (!user) return
+      const nextTarget = { mode, id: setId, title: target.title, userId: user.id }
+      setNumberSetNotice(null)
+      setNumberSetDeleteTarget(nextTarget)
+      void loadNumberSetDeleteSummary(nextTarget)
     },
-    [deleteNumberSetById, runNumberSetAction],
+    [loadNumberSetDeleteSummary, numberSets, user],
   )
+
+  const handleCloseNumberSetDelete = useCallback(() => {
+    if (numberSetActionBusyRef.current) return
+    deleteSummaryRequestRef.current += 1
+    setNumberSetDeleteTarget(null)
+  }, [])
+
+  const handleRetryNumberSetDelete = useCallback(() => {
+    if (!numberSetDeleteTarget || numberSetDeleteTarget.mode !== 'cloud') return
+    void loadNumberSetDeleteSummary(numberSetDeleteTarget)
+  }, [loadNumberSetDeleteSummary, numberSetDeleteTarget])
+
+  const handleConfirmNumberSetDelete = useCallback(async () => {
+    const target = numberSetDeleteTarget
+    if (!target || numberSetActionBusyRef.current) return
+    if (
+      target.mode === 'cloud' &&
+      (numberSetDeleteSummary.status !== 'ready' || !numberSetDeleteSummary.summary)
+    ) return
+
+    const deleted = await runNumberSetAction(() => deleteNumberSetById(target.mode, target.id))
+    if (!deleted) return
+    deleteSummaryRequestRef.current += 1
+    setNumberSetDeleteTarget(null)
+    setNumberSetNotice(t.myPage.numberSetDeleteSuccess)
+  }, [
+    deleteNumberSetById,
+    numberSetDeleteSummary.status,
+    numberSetDeleteSummary.summary,
+    numberSetDeleteTarget,
+    runNumberSetAction,
+    t.myPage.numberSetDeleteSuccess,
+  ])
 
   const handleSetNumberSetAutoSnapshot = useCallback(
     (mode: SaveStorageMode, setId: string, enabled: boolean) => {
@@ -2019,6 +2129,9 @@ export function MyPage() {
     },
     [clearNumberSetRolloverPending, runNumberSetAction],
   )
+
+  const visibleNumberSetDeleteTarget =
+    numberSetDeleteTarget?.userId === user?.id ? numberSetDeleteTarget : null
 
   return (
     <>
@@ -2155,6 +2268,34 @@ export function MyPage() {
         onSignOut={() => void signOut()}
       />
       <SiteFooter />
+      {visibleNumberSetDeleteTarget && (
+        <Suspense fallback={null}>
+          <NumberSetDeleteConfirmModal
+            mode={visibleNumberSetDeleteTarget.mode}
+            setTitle={visibleNumberSetDeleteTarget.title}
+            summaryState={numberSetDeleteSummary}
+            busy={numberSetBusy}
+            copy={{
+              title: t.myPage.numberSetDeleteTitle,
+              cloudBody: t.myPage.numberSetDeleteCloudBody,
+              localBody: t.myPage.numberSetDeleteLocalBody,
+              orderCount: t.myPage.numberSetDeleteOrderCount,
+              snapshotCount: t.myPage.numberSetDeleteSnapshotCount,
+              memoCount: t.myPage.numberSetDeleteMemoCount,
+              warning: t.myPage.numberSetDeleteWarning,
+              summaryLoading: t.myPage.numberSetDeleteSummaryLoading,
+              summaryError: t.myPage.numberSetDeleteSummaryError,
+              retry: t.myPage.numberSetDeleteRetry,
+              cancel: t.myPage.numberSetDeleteCancel,
+              confirm: t.myPage.numberSetDeleteConfirm,
+              confirmBusy: t.myPage.numberSetDeleteBusy,
+            }}
+            onClose={handleCloseNumberSetDelete}
+            onConfirm={() => void handleConfirmNumberSetDelete()}
+            onRetry={handleRetryNumberSetDelete}
+          />
+        </Suspense>
+      )}
       {authModalOpen && (
         <Suspense fallback={null}>
           <AuthModal onClose={() => setAuthModalOpen(false)} />

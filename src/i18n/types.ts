@@ -454,6 +454,20 @@ export interface Messages {
     numberSetLimitReached: string
     numberSetLoginRequired: string
     numberSetError: string
+    numberSetDeleteTitle: string
+    numberSetDeleteCloudBody: string
+    numberSetDeleteLocalBody: string
+    numberSetDeleteOrderCount: string
+    numberSetDeleteSnapshotCount: string
+    numberSetDeleteMemoCount: string
+    numberSetDeleteWarning: string
+    numberSetDeleteSummaryLoading: string
+    numberSetDeleteSummaryError: string
+    numberSetDeleteRetry: string
+    numberSetDeleteCancel: string
+    numberSetDeleteConfirm: string
+    numberSetDeleteBusy: string
+    numberSetDeleteSuccess: string
     planTitle: string
     planStatusLabel: string
     planStatusValue: string

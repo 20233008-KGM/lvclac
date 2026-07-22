@@ -56,6 +56,7 @@ import {
   hasMeaningfulCalculatorInputs,
   parseStoredCalculatorInputs,
 } from '../utils/storedCalculatorInputs'
+import { resolveNumberSetDeletionTransition } from '../utils/numberSetDeletion'
 
 const DRAFT_KEY = 'leverage_calculator_draft'
 const DRAFT_SAVED_AT_KEY = 'leverage_calculator_draft_saved_at'
@@ -1038,12 +1039,23 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       if (!activeUserId) return 'not_logged_in'
       const result = await deleteNumberSet(activeUserId, setId)
       if (result.error) return result.error
-      const nextSets = cloudNumberSets.filter((set) => set.id !== setId)
+      const deletion = resolveNumberSetDeletionTransition(cloudNumberSets, cloudSetId, setId)
+      const { nextSets } = deletion
       setCloudNumberSets(nextSets)
-      const nextActive = nextSets[0] ?? null
-      if (cloudSetId === setId) {
+      const nextActive = nextSets.find((set) => set.id === deletion.nextActiveId) ?? null
+      if (deletion.activeDeleted) {
+        cloudSetIdRef.current = nextActive?.id ?? null
         setCloudSetId(nextActive?.id ?? null)
         setCloudDraftSavedAt(nextActive?.updatedAt ?? null)
+        try {
+          if (nextActive) {
+            localStorage.setItem(ACTIVE_CLOUD_NUMBER_SET_ID_KEY, nextActive.id)
+          } else {
+            localStorage.removeItem(ACTIVE_CLOUD_NUMBER_SET_ID_KEY)
+          }
+        } catch {
+          // ignore
+        }
         if (storageMode === 'cloud') {
           replaceInputsFromStorage(nextActive?.inputs ?? defaultInputs)
           if (!nextActive) {

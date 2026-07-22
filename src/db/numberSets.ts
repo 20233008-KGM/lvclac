@@ -44,6 +44,12 @@ export interface NumberSetRecord {
   rollover: RolloverSettings
 }
 
+export interface NumberSetDeletionSummary {
+  orderHistoryCount: number
+  accountSnapshotCount: number
+  memoCount: number
+}
+
 const NUMBER_SET_COLUMNS =
   'id,title,inputs,memo,updated_at,auto_snapshot_enabled,' +
   'rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date,rollover_pending'
@@ -301,4 +307,49 @@ export async function deleteNumberSet(
 
   if (error) return { data: null, error: mapError(error) }
   return { data: true, error: null }
+}
+
+type NumberSetDeletionClient = NonNullable<typeof supabase>
+
+interface NumberSetDeletionSummaryRow {
+  order_history_count: number
+  account_snapshot_count: number
+  memo_count: number
+}
+
+export function createNumberSetDeletionRepository(
+  client: NumberSetDeletionClient | null = supabase,
+) {
+  return {
+    async fetchSummary(
+      userId: string,
+      setId: string,
+    ): Promise<NumberSetResult<NumberSetDeletionSummary>> {
+      if (!client) return unavailable()
+      const { data, error } = await client
+        .rpc('get_number_set_deletion_summary', {
+          p_user_id: userId,
+          p_number_set_id: setId,
+        })
+        .maybeSingle<NumberSetDeletionSummaryRow>()
+
+      if (error) return { data: null, error: mapError(error) }
+      if (!data) return { data: null, error: 'number_set_not_found' }
+      return {
+        data: {
+          orderHistoryCount: Number(data.order_history_count),
+          accountSnapshotCount: Number(data.account_snapshot_count),
+          memoCount: Number(data.memo_count),
+        },
+        error: null,
+      }
+    },
+  }
+}
+
+export async function fetchNumberSetDeletionSummary(
+  userId: string,
+  setId: string,
+): Promise<NumberSetResult<NumberSetDeletionSummary>> {
+  return createNumberSetDeletionRepository().fetchSummary(userId, setId)
 }

@@ -3073,12 +3073,6 @@ html[data-zone='about'] body {
   color: var(--color-success);
 }
 
-/* 배지·감싸는 요소 없이 텍스트 색+체크 글리프만으로 연동 상태 구분(마크업 불변) */
-.my-page-linked-status.is-linked::before {
-  content: '✓';
-  margin-right: 4px;
-}
-
 .my-page-linked-status.is-unlinked {
   color: var(--color-text-muted);
 }

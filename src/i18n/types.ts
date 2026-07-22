@@ -211,6 +211,9 @@ export interface Messages {
     memoSnapshotTitle: string
     memoOrderTitle: string
     memoNumberSetTitle: string
+    memoWorkspaceTitle: string
+    memoWorkspaceHint: string
+    memoBackToSlot: string
     memoSaving: string
     memoSaved: string
     memoEmptySaved: string

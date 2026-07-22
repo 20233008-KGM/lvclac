@@ -3,7 +3,12 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AccountRecordSummary, AccountSnapshotRecord, OrderHistoryRecord } from '../db/accountRecords'
 import { en } from '../i18n/locales/en'
 import { sampleInputs } from '../types'
-import { RecordsArchiveView, resolveTimelineAnchorDate, toTimelineRecords } from './RecordsArchivePage'
+import {
+  RecordsArchiveView,
+  resolveInitialRecordsSlotFilter,
+  resolveTimelineAnchorDate,
+  toTimelineRecords,
+} from './RecordsArchivePage'
 
 const summary: AccountRecordSummary = {
   liquidationPrice: 232_927,
@@ -99,6 +104,19 @@ describe('toTimelineRecords', () => {
   })
 })
 
+describe('resolveInitialRecordsSlotFilter', () => {
+  const slots = [{ id: 'slot-a' }, { id: 'slot-b' }]
+
+  it('opens the active cloud slot when it still exists', () => {
+    expect(resolveInitialRecordsSlotFilter(slots, 'slot-b')).toEqual({ kind: 'slot', id: 'slot-b' })
+  })
+
+  it('falls back to the first slot and then all records', () => {
+    expect(resolveInitialRecordsSlotFilter(slots, 'missing')).toEqual({ kind: 'slot', id: 'slot-a' })
+    expect(resolveInitialRecordsSlotFilter([], 'missing')).toEqual({ kind: 'all' })
+  })
+})
+
 describe('RecordsArchiveView', () => {
   const baseProps = {
     copy: en.accountRecords,
@@ -127,6 +145,23 @@ describe('RecordsArchiveView', () => {
     expect(html).toContain('records-timeline-row--order')
     expect(html).not.toContain('account-record-tabs')
     expect(html).not.toContain('records-archive-table')
+  })
+
+  it('places the persistent memo workspace in the left page sidebar', () => {
+    const html = renderToStaticMarkup(
+      <RecordsArchiveView
+        {...baseProps}
+        memoWorkspace={<div data-testid="memo-workspace">Workspace</div>}
+        memoSummary="Primary hedge · Slot memo"
+        memoExpanded
+        onToggleMemoWorkspace={vi.fn()}
+      />,
+    )
+
+    const sidebar = firstMatch(html, /<header class="my-page-header records-archive-sidebar"[\s\S]*?<\/header>/)
+    expect(sidebar).toContain('records-memo-workspace--expanded')
+    expect(sidebar).toContain('data-testid="memo-workspace"')
+    expect(sidebar).toContain('aria-expanded="true"')
   })
 
   it('shows export to every signed-in user without a subscription gate', () => {

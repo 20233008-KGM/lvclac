@@ -15,12 +15,17 @@ describe('records archive layout contract', () => {
     )
   })
 
-  it('keeps desktop records in a right-side ledger with an internal scrolling body', () => {
+  it('uses the full desktop width for a divided memo-and-ledger workspace', () => {
     expect(css).toMatch(
-      /\.records-archive-page \.records-archive\s*\{[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*grid-template-columns: minmax\(360px, 1fr\) minmax\(900px, 960px\);/,
+      /\.records-archive-page \.records-archive\s*\{[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*grid-template-columns: minmax\(360px, 2fr\) minmax\(0, 3fr\);/,
     )
-    expect(css).toMatch(/\.records-archive \.my-page-console\s*\{[\s\S]*width: min\(100%, 960px\);/)
-    expect(css).toContain('--records-timeline-height: clamp(420px, calc(100dvh - 350px), 520px);')
+    expect(css).toMatch(
+      /\.records-archive \.my-page-console\s*\{[\s\S]*width: 100%;[\s\S]*border-left: 1px solid var\(--color-border-subtle\);/,
+    )
+    expect(css).toContain('--records-timeline-height: clamp(480px, calc(100dvh - 230px), 680px);')
+    expect(css).toMatch(
+      /\.records-archive-panel\s*\{[\s\S]*border: 0;[\s\S]*background: transparent;/,
+    )
     expect(css).toMatch(
       /\.records-timeline-scroll\s*\{[\s\S]*height: var\(--records-timeline-height\);[\s\S]*max-height: none;[\s\S]*overflow-y: auto;/,
     )

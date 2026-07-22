@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 const source = readFileSync(resolve('src/components/MemoEditorWindow.tsx'), 'utf8')
 const slotSource = readFileSync(resolve('src/components/SaveDraftToggle.tsx'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
+const pageCss = readFileSync(resolve('src/styles/pages.css'), 'utf8')
 
 describe('MemoEditorWindow production contract', () => {
   it('uses an SVG close mark instead of a font glyph', () => {
@@ -16,6 +17,15 @@ describe('MemoEditorWindow production contract', () => {
     expect(source).toContain('window.setTimeout(() =>')
     expect(source).toContain('}, 400)')
     expect(source).toContain("setSaveState('error')")
+  })
+
+  it('shares the autosave contract with the records-page workspace editor', () => {
+    expect(source).toContain('export const MemoWorkspaceEditor = forwardRef')
+    expect(source).toContain('useMemoAutosave(initialMemo, onSave)')
+    expect(source).toContain('useImperativeHandle(ref, () => ({ save })')
+    expect(pageCss).toContain('.records-memo-editor__textarea')
+    expect(pageCss).toContain('.records-memo-editor__preview')
+    expect(pageCss).toContain('.records-memo-workspace__toggle')
   })
 
   it('supports desktop header dragging and a fixed mobile sheet', () => {

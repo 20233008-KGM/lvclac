@@ -966,7 +966,6 @@ function NumberSetGroup({
   copy,
   title,
   addLabel,
-  storageNote,
   automationNote,
   mode,
   sets,
@@ -983,7 +982,6 @@ function NumberSetGroup({
   copy: MyPageCopy
   title: string
   addLabel: string
-  storageNote?: string
   automationNote?: string
   mode: SaveStorageMode
   sets: CalculatorNumberSet[]
@@ -1018,14 +1016,6 @@ function NumberSetGroup({
           </button>
         </div>
       </div>
-      {storageNote && (
-        <p className="my-page-number-set-storage-note" role="note">
-          <span className="my-page-number-set-storage-note__glyph" aria-hidden="true">
-            i
-          </span>
-          <span>{storageNote}</span>
-        </p>
-      )}
       {automationNote && (
         <p className="my-page-number-set-automation-note" role="note">
           {automationNote}
@@ -1097,7 +1087,6 @@ export function NumberSetPreferencesPanel({
           copy={copy}
           title={copy.numberSetsLocalTitle}
           addLabel={copy.addLocalNumberSet}
-          storageNote={copy.localStorageNote}
           mode="local"
           sets={localNumberSets}
           limit={numberSetLimits.local}
@@ -1124,6 +1113,9 @@ export function NumberSetPreferencesPanel({
           onClearRolloverPending={onClearRolloverPending}
         />
       </div>
+      <p className="my-page-field-help my-page-number-set-storage-footnote" role="note">
+        {copy.localStorageNote}
+      </p>
       {isPro && (
         <p className="my-page-field-help">
           {copy.autoSnapshotSlotCountNote.replace('{count}', String(autoSnapshotCount))}

@@ -665,7 +665,7 @@ export const en: Messages = {
     privacyBody:
       'When cloud saving is enabled, inputs and records may be stored in Supabase DB and restricted to your account by RLS policies.',
     localStorageNote:
-      'Stored only in this browser. If its site data or storage is cleared, or the browser is reset, LiqGuard cannot recover these sets.',
+      'Device sets stay in this browser only and disappear when its browser data is cleared.',
     cloudStorageNote: 'Cloud saved inputs and account records are stored and deleted by signed-in account.',
     deleteAccountTitle: 'Account and data deletion',
     deleteAccountBody:

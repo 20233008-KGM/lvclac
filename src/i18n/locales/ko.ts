@@ -654,7 +654,7 @@ export const ko: Messages = {
     privacyBody:
       '클라우드 저장을 켜면 입력값과 기록이 Supabase DB에 저장될 수 있으며, RLS 정책으로 본인 계정에서만 조회되도록 제한합니다.',
     localStorageNote:
-      '이 브라우저에만 저장됩니다. 사이트 데이터·저장 공간을 지우거나 브라우저를 초기화하면 LiqGuard에서 복구할 수 없습니다.',
+      '이 기기 세트는 이 브라우저에만 저장되며, 브라우저 데이터 삭제 시 함께 사라집니다.',
     cloudStorageNote: '클라우드 저장값과 계정 기록은 로그인 계정 기준으로 저장·삭제됩니다.',
     deleteAccountTitle: '회원 탈퇴 및 데이터 삭제',
     deleteAccountBody:

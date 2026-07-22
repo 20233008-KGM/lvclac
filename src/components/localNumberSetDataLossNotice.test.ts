@@ -36,16 +36,22 @@ describe('local number-set data-loss notices', () => {
     expect(styles).not.toContain('.draft-number-set-menu__storage-note--warning')
   })
 
-  it('renders the persistent management note only in the local number-set card', () => {
+  it('renders the persistent management note as a short panel footnote', () => {
     const component = source('src/components/MyPage.tsx')
     const styles = source('src/styles/pages.css')
 
-    expect(component).toContain('storageNote?: string')
-    expect(component).toContain('storageNote={copy.localStorageNote}')
-    expect(component.match(/storageNote=\{copy\.localStorageNote\}/g)).toHaveLength(1)
-    expect(component).toContain('className="my-page-number-set-storage-note" role="note"')
-    expect(styles).toContain('.my-page-number-set-storage-note')
-    expect(ko.myPage.localStorageNote).toContain('브라우저를 초기화')
-    expect(en.myPage.localStorageNote).toContain('browser is reset')
+    expect(component).not.toContain('storageNote?: string')
+    expect(component).not.toContain('storageNote={copy.localStorageNote}')
+    expect(component).toContain(
+      'className="my-page-field-help my-page-number-set-storage-footnote" role="note"',
+    )
+    expect(component.match(/\{copy\.localStorageNote\}/g)).toHaveLength(1)
+    expect(styles).not.toContain('.my-page-number-set-storage-note')
+    expect(ko.myPage.localStorageNote).toBe(
+      '이 기기 세트는 이 브라우저에만 저장되며, 브라우저 데이터 삭제 시 함께 사라집니다.',
+    )
+    expect(en.myPage.localStorageNote).toBe(
+      'Device sets stay in this browser only and disappear when its browser data is cleared.',
+    )
   })
 })

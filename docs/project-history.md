@@ -148,3 +148,8 @@
 - `dev` 마이페이지 Pro 클라우드 숫자세트의 `자동` 토글을 `매일 기록 / Record daily`로 바꾸고, 환경설정 시각에 계좌 기록으로 저장하되 값이 바뀌지 않은 날은 건너뛴다는 한영 설명을 그룹 상단에 상시 노출한다. 하단은 활성 클라우드 세트 개수만 짧게 표시하며 기존 `autoSnapshotEnabled` 콜백·API·DB·서버 실행 규칙은 유지했다.
 - 행을 이름·토글·상세/삭제 영역으로 분리하고 420px 이하에서 토글을 둘째 줄 오른쪽으로 내렸다. 검증: 관련 **4/4**·전체 Vitest **715/715**, TypeScript, production build, 변경 파일 ESLint(기존 `MyPage.tsx` effect 규칙 제외), diff check 통과. 동일 컴포넌트 갤러리의 한국어 1920·1023·428·390px와 영어 1023px에서 긴 이름·라벨·아이콘 겹침 및 행 내부 가로 오버플로 0, 390px 둘째 줄, 라벨 연결·탭 진입을 확인했다. 로그인된 실제 `/my` 토글 왕복과 cron 결과는 미검증이다.
 - 적용 커밋 `dev` **6d67f55**. Notion 완료 [Task LV-78](https://app.notion.com/p/3a526e6d586f8161ba51d72462e99b00)와 [Work Log](https://app.notion.com/p/3a526e6d586f813fbf24df5afe1b9bf8) 기록 완료. 푸시·배포는 수행하지 않았다.
+
+**2026-07-23 — 마이페이지 연동 상태 체크 표시 제거**
+- `dev` 마이페이지의 이메일·Google 연동 상태에 CSS로 붙던 초록색 `✓` 글리프를 제거했다. `연동됨 / Linked` 텍스트의 성공 색상과 기존 상태 마크업·연동/해제 동작·행 정렬은 그대로 유지했다.
+- 검증: MyPage 집중 Vitest **8/8**, TypeScript 포함 production build, diff check 통과. 로컬 인앱 브라우저는 로그인 세션이 없어 실제 연동 행의 최종 시각 화면은 확인하지 못했다.
+- 적용 커밋 `dev` **723feea**. Notion 완료 [Task](https://app.notion.com/p/3a526e6d586f81959d4ccb39c6ad3e05)와 [Work Log](https://app.notion.com/p/3a526e6d586f81e68bf5f7b31085ccf7) 기록 완료. 푸시·배포는 수행하지 않았다.

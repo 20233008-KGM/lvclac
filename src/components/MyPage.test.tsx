@@ -128,6 +128,18 @@ describe('MyPageView', () => {
     expect(html).not.toContain('my-page-console')
   })
 
+  it('shows a neutral account loader instead of signed-out marketing during auth restore', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView {...baseProps} authLoading user={null} />,
+    )
+
+    expect(html).toContain('my-page-auth-loading')
+    expect(html).toContain(en.myPage.loadingBody)
+    expect(html).not.toContain('my-page-signin')
+    expect(html).not.toContain(en.myPage.loginHeadline)
+    expect(html).not.toContain(en.myPage.loginEmailAction)
+  })
+
   it('renders signed-in account hub sections with the records summary entry', () => {
     const html = renderToStaticMarkup(
       <MyPageView

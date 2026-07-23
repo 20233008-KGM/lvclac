@@ -104,6 +104,31 @@ describe('draft save slot UI', () => {
     expect(text).toContain('if (!storedForMode(mode) && !readSkipEnableModal(mode))')
   })
 
+  it('keeps the first-save notice but removes the persistent reopen link', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const styles = source('src/App.css')
+    const types = source('src/i18n/types.ts')
+
+    expect(text).toContain("modal === 'enable'")
+    expect(text).toContain('t.draftSave.skipModalLabel')
+    expect(text).not.toContain('showGuideAgain')
+    expect(text).not.toContain("'enable-info'")
+    expect(styles).not.toContain('.draft-save-show-guide')
+    expect(types).not.toContain('showGuideAgain: string')
+  })
+
+  it('underlines only the local browser-data loss sentence in both languages', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const styles = source('src/App.css')
+
+    expect(text).toContain('draft-save-modal-emphasis')
+    expect(text).toContain(
+      'emphasis={modalIsCloud ? undefined : t.draftSave.localDataLossEmphasis}',
+    )
+    expect(styles).toContain('.draft-save-modal-emphasis')
+    expect(styles).toContain('text-decoration-line: underline')
+  })
+
   it('supports drag-copying saved values between local and cloud slots', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
     const ctx = source('src/context/CalculatorContext.tsx')
@@ -119,7 +144,7 @@ describe('draft save slot UI', () => {
     expect(ctx).toContain("if (source === 'local' && target === 'cloud')")
     expect(ctx).toContain("if (source === 'cloud' && target === 'local')")
     expect(ctx).toContain('saveNumberSet(activeUserId, localDraft, localPreset, cloudSetIdRef.current)')
-    expect(ctx).toContain('saveDraft(result.data.inputs, result.data.presetId ?? preset)')
+    expect(ctx).toContain('saveDraft(selected.inputs, selected.presetId ?? preset)')
   })
 
   it('describes slot drag-copy behavior in the save tooltip copy', () => {

@@ -3233,10 +3233,43 @@ input:focus:not(:focus-visible) {
   flex-shrink: 0;
 }
 
-.draft-save-show-guide {
-  display: block;
-  margin-top: var(--space-xs);
+.draft-save-modal-emphasis {
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.my-page-route-loading {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-dim);
+  background: var(--color-bg);
   font-size: var(--font-size-sm);
+}
+
+.my-page-route-loading__spinner,
+.my-page-auth-loading__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border-subtle);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: myPageLoadingSpin 700ms linear infinite;
+}
+
+@keyframes myPageLoadingSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-page-route-loading__spinner,
+  .my-page-auth-loading__spinner {
+    animation: none;
+  }
 }
 
 .draft-save-status,

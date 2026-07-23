@@ -140,9 +140,9 @@ export interface Messages {
     cloudEnableModalTitle: string
     enableModalBody: string[]
     cloudEnableModalBody: string[]
+    localDataLossEmphasis: string
     enableConfirm: string
     skipModalLabel: string
-    showGuideAgain: string
     clearedModalTitle: string
     deleteConfirmTitle: string
     deleteConfirmBody: string
@@ -313,6 +313,7 @@ export interface Messages {
     backToCalculator: string
     loginTitle: string
     loginBody: string
+    loadingBody: string
     loginAction: string
     loginHeadline: string
     loginPanelTitle: string

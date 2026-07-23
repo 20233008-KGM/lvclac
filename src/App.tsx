@@ -47,6 +47,7 @@ import { useGridResize } from './hooks/useGridResize'
 import { useLayoutOverflow } from './hooks/useLayoutOverflow'
 import { usePrecisionRisk } from './hooks/usePrecisionRisk'
 import { useLanguage } from './i18n'
+import { loadMyPage } from './routes/lazyPages'
 import './App.css'
 
 const FeedbackBoardPage = lazy(() =>
@@ -68,7 +69,7 @@ const CompanyPage = lazy(() =>
   import('./components/CompanyPage').then((mod) => ({ default: mod.CompanyPage })),
 )
 const MyPage = lazy(() =>
-  import('./components/MyPage').then((mod) => ({ default: mod.MyPage })),
+  loadMyPage().then((mod) => ({ default: mod.MyPage })),
 )
 const BillingPage = lazy(() =>
   import('./components/billing/BillingPage').then((mod) => ({ default: mod.BillingPage })),
@@ -264,6 +265,7 @@ function CalculatorApp() {
 
 function AppRouter() {
   const pathname = usePathname()
+  const { t } = useLanguage()
   const boardId = parseBoardPath(pathname)
   const legalKind = isLegalPath(pathname)
 
@@ -329,7 +331,14 @@ function AppRouter() {
   }
   if (isMyPagePath(pathname)) {
     return (
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={(
+          <main className="my-page-route-loading" role="status" aria-label={t.loading}>
+            <span className="my-page-route-loading__spinner" aria-hidden="true" />
+            <span>{t.loading}</span>
+          </main>
+        )}
+      >
         <div key={pathname} className="route-enter">
           <MyPage />
         </div>

@@ -11,7 +11,7 @@
  *   SUPABASE_SERVICE_ROLE_KEY (for --crud)
  */
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   buildAccountSnapshotPayload,
@@ -21,14 +21,18 @@ import { defaultInputs } from '../../src/types'
 import type { EvaluateResult, OrderResult } from '../../src/types'
 
 function loadEnv(): Record<string, string> {
-  const text = readFileSync(resolve(process.cwd(), '.env'), 'utf8')
   const out: Record<string, string> = {}
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const eq = trimmed.indexOf('=')
-    if (eq === -1) continue
-    out[trimmed.slice(0, eq)] = trimmed.slice(eq + 1)
+  for (const filename of ['.env', '.env.local']) {
+    const path = resolve(process.cwd(), filename)
+    if (!existsSync(path)) continue
+    const text = readFileSync(path, 'utf8')
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eq = trimmed.indexOf('=')
+      if (eq === -1) continue
+      out[trimmed.slice(0, eq)] = trimmed.slice(eq + 1)
+    }
   }
   return out
 }
@@ -190,7 +194,10 @@ async function main() {
       'account_snapshots+source',
       'account_snapshots?select=id,title,inputs,result,source,source_local_date,created_at&limit=1',
     ],
-    ['profiles.auto_save_order_history', 'profiles?select=nickname,auto_save_order_history&limit=1'],
+    [
+      'profiles.preferences',
+      'profiles?select=nickname,auto_save_order_history,active_cloud_number_set_id&limit=1',
+    ],
     ['account_snapshot_settings', 'account_snapshot_settings?select=user_id,enabled&limit=1'],
   ] as const
 

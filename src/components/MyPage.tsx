@@ -1293,8 +1293,14 @@ export function MyPageView({
         </header>
 
         {authLoading ? (
-          <section className="my-page-panel my-page-login" aria-live="polite">
-            <p>{copy.loginBody}</p>
+          <section
+            className="my-page-auth-loading"
+            role="status"
+            aria-live="polite"
+            aria-label={copy.loadingBody}
+          >
+            <span className="my-page-auth-loading__spinner" aria-hidden="true" />
+            <span>{copy.loadingBody}</span>
           </section>
         ) : !user ? (
           <section className="my-page-signin" aria-labelledby="my-page-login-title">

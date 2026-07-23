@@ -1,8 +1,18 @@
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import {
+  Suspense,
+  lazy,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react'
 import { useAuth } from '../../context/AuthContext'
 import type { AuthUser } from '../../db/profile'
 import { useLanguage } from '../../i18n'
 import { BILLING_PATH, MY_PAGE_PATH } from '../../config/routes'
+import { useNavigate } from '../../hooks/usePathname'
+import { prefetchMyPage } from '../../routes/lazyPages'
+import { onAccountMenuNavigate } from './accountMenuNavigation'
 
 const AuthModal = lazy(() => import('./AuthModal').then((mod) => ({ default: mod.AuthModal })))
 
@@ -42,10 +52,11 @@ interface AccountMenuProps {
   }
   user: AuthUser
   onClose: () => void
+  onMyPageClick: (event: ReactMouseEvent<HTMLAnchorElement>) => void
   onSignOut: () => void
 }
 
-export function AccountMenu({ copy, user, onClose, onSignOut }: AccountMenuProps) {
+export function AccountMenu({ copy, user, onClose, onMyPageClick, onSignOut }: AccountMenuProps) {
   const initial = initialOf(user.nickname)
 
   return (
@@ -58,7 +69,7 @@ export function AccountMenu({ copy, user, onClose, onSignOut }: AccountMenuProps
           {user.nickname}
         </span>
       </div>
-      <a role="menuitem" className="auth-menu__item" href={MY_PAGE_PATH} onClick={onClose}>
+      <a role="menuitem" className="auth-menu__item" href={MY_PAGE_PATH} onClick={onMyPageClick}>
         {copy.myPage}
       </a>
       <a role="menuitem" className="auth-menu__item" href={BILLING_PATH} onClick={onClose}>
@@ -82,6 +93,7 @@ export function AccountMenu({ copy, user, onClose, onSignOut }: AccountMenuProps
 export function AuthButton({ variant = 'default' }: AuthButtonProps) {
   const { t } = useLanguage()
   const { user, loading, signOut } = useAuth()
+  const navigate = useNavigate()
   const [modalOpen, setModalOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const accountRef = useRef<HTMLDivElement>(null)
@@ -104,6 +116,24 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [menuOpen])
+
+  useEffect(() => {
+    if (!user) return
+    const preload = () => prefetchMyPage()
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(preload, { timeout: 2000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const id = window.setTimeout(preload, 500)
+    return () => window.clearTimeout(id)
+  }, [user])
+
+  const handleMyPageClick = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    onAccountMenuNavigate(event, () => {
+      setMenuOpen(false)
+      navigate(MY_PAGE_PATH)
+    })
+  }
 
   if (loading) {
     return (
@@ -140,7 +170,12 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
           className="auth-avatar-btn"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => {
+            prefetchMyPage()
+            setMenuOpen((open) => !open)
+          }}
+          onPointerEnter={prefetchMyPage}
+          onFocus={prefetchMyPage}
         >
           <span className="auth-avatar" aria-hidden="true">
             {initial}
@@ -153,6 +188,7 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
             copy={{ myPage: t.myPage.title, billing: t.myPage.billing.page.pageTitle, logout: t.logout }}
             user={user}
             onClose={() => setMenuOpen(false)}
+            onMyPageClick={handleMyPageClick}
             onSignOut={() => void signOut()}
           />
         )}

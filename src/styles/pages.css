@@ -1796,6 +1796,16 @@ html[data-zone='about'] body {
   padding: var(--space-lg);
 }
 
+.my-page-auth-loading {
+  min-height: 240px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
+}
+
 /* 로그아웃 상태 안내 — 2단(가치 소개 + 로그인 카드) */
 .my-page-signin {
   display: grid;

@@ -130,9 +130,10 @@ export const en: Messages = {
       'Choosing "Don\'t save" only stops saving; your cloud copy is kept. Clearing all inputs deletes the cloud copy. Device-local saved inputs are managed separately in This device mode.',
       'Do not save information you consider sensitive. Saved inputs and calculator results do not replace your own trading judgment.',
     ],
+    localDataLossEmphasis:
+      'Clearing this browser’s site data or storage, or resetting the browser, also deletes them, and LiqGuard cannot recover them.',
     enableConfirm: 'Agree and save',
     skipModalLabel: "Don't show this again",
-    showGuideAgain: 'Show save notice again',
     clearedModalTitle: 'Save disabled',
     deleteConfirmTitle: 'Delete saved inputs',
     deleteConfirmBody: 'Delete the inputs saved on this device?\nThis cannot be undone.',
@@ -316,6 +317,7 @@ export const en: Messages = {
     loginTitle: 'Log in required',
     loginBody:
       'Log in to manage saved inputs, account records, and future Pro status from this page.',
+    loadingBody: 'Loading your account.',
     loginAction: 'Log in',
     loginHeadline: 'Log in to pick up all your records right where you left off',
     loginPanelTitle: 'Log in',

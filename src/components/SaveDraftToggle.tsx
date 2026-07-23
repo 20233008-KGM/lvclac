@@ -34,7 +34,7 @@ const SnapshotProGateModal = lazy(() =>
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 const DRAFT_SLOT_DRAG_TYPE = 'application/x-lvclac-draft-slot'
 
-type ModalKind = 'enable' | 'enable-info' | null
+type ModalKind = 'enable' | null
 
 type SaveSlot = 'off' | SaveStorageMode
 
@@ -118,12 +118,26 @@ function DraftSaveModal({
   return createPortal(modal, document.body)
 }
 
-function EnableModalBody({ lines }: { lines: string[] }) {
+function EnableModalBody({
+  lines,
+  emphasis,
+}: {
+  lines: string[]
+  emphasis?: string
+}) {
   return (
     <div className="draft-save-modal-body">
-      {lines.map((line) => (
-        <p key={line}>{line}</p>
-      ))}
+      {lines.map((line) => {
+        if (!emphasis || !line.includes(emphasis)) return <p key={line}>{line}</p>
+        const [before, after] = line.split(emphasis)
+        return (
+          <p key={line}>
+            {before}
+            <span className="draft-save-modal-emphasis">{emphasis}</span>
+            {after}
+          </p>
+        )
+      })}
     </div>
   )
 }
@@ -234,7 +248,6 @@ export function SaveDraftToggle() {
   const [modal, setModal] = useState<ModalKind>(null)
   const [pendingMode, setPendingMode] = useState<SaveStorageMode | null>(null)
   const [dontShowAgain, setDontShowAgain] = useState(false)
-  const [, refreshSkipState] = useState(0)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [draggingMode, setDraggingMode] = useState<SaveStorageMode | null>(null)
@@ -249,7 +262,6 @@ export function SaveDraftToggle() {
   const isCloud = storageMode === 'cloud'
   const modalMode = pendingMode ?? storageMode
   const modalIsCloud = modalMode === 'cloud'
-  const skipActive = readSkipEnableModal(storageMode)
   const enableTitle = modalIsCloud
     ? t.draftSave.cloudEnableModalTitle
     : t.draftSave.enableModalTitle
@@ -366,7 +378,6 @@ export function SaveDraftToggle() {
     const consentMode = pendingMode ?? storageMode
     if (dontShowAgain) {
       setSkipEnableModal(consentMode, true)
-      refreshSkipState((value) => value + 1)
     }
     if (pendingMode) {
       const targetMode = pendingMode
@@ -399,12 +410,6 @@ export function SaveDraftToggle() {
     focusWithin: true,
     positionAnchorRef: slotsRowRef,
   })
-
-  const showGuideAgain = () => {
-    setSkipEnableModal(storageMode, false)
-    refreshSkipState((value) => value + 1)
-    setModal('enable-info')
-  }
 
   const positionNumberSetMenu = () => {
     const anchor = numberSetPickerRef.current
@@ -878,11 +883,6 @@ export function SaveDraftToggle() {
             {notice}
           </span>
         )}
-        {skipActive && (
-          <button type="button" className="link-btn draft-save-show-guide" onClick={showGuideAgain}>
-            {t.draftSave.showGuideAgain}
-          </button>
-        )}
       </div>
       {numberSetMenu}
       {memoSetId && (() => {
@@ -916,18 +916,10 @@ export function SaveDraftToggle() {
             </label>
           }
         >
-          <EnableModalBody lines={enableBody} />
-        </DraftSaveModal>
-      )}
-
-      {modal === 'enable-info' && (
-        <DraftSaveModal
-          title={enableTitle}
-          confirmLabel={t.draftSave.confirm}
-          onConfirm={() => setModal(null)}
-          onDismiss={() => setModal(null)}
-        >
-          <EnableModalBody lines={enableBody} />
+          <EnableModalBody
+            lines={enableBody}
+            emphasis={modalIsCloud ? undefined : t.draftSave.localDataLossEmphasis}
+          />
         </DraftSaveModal>
       )}
 

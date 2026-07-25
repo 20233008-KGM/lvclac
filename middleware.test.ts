@@ -5,7 +5,9 @@ describe('public-lite indexing middleware', () => {
   it('keeps every route blocked until the public launch flag is enabled', () => {
     const body = robotsBody(new Request('https://lvclac.example/robots.txt'), false)
 
-    expect(body).toContain('Disallow: /')
+    expect(body).toContain('User-agent: Mediapartners-Google\nAllow: /')
+    expect(body).toContain('User-agent: Google-Display-Ads-Bot\nAllow: /')
+    expect(body).toContain('User-agent: *\nDisallow: /')
 
     expect(shouldNoIndexPath('/', false)).toBe(true)
     expect(shouldNoIndexPath('/terms/', false)).toBe(true)

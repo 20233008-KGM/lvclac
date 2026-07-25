@@ -35,7 +35,19 @@ export function shouldNoIndexPath(_pathname: string, indexingAllowed = allowInde
 export function robotsBody(request: Request, indexingAllowed = allowIndexing()): string {
   const siteUrl = siteUrlFromRequest(request)
   if (!indexingAllowed) {
-    return `User-agent: *\nDisallow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
+    return [
+      'User-agent: Mediapartners-Google',
+      'Allow: /',
+      '',
+      'User-agent: Google-Display-Ads-Bot',
+      'Allow: /',
+      '',
+      'User-agent: *',
+      'Disallow: /',
+      '',
+      `Sitemap: ${siteUrl}/sitemap.xml`,
+      '',
+    ].join('\n')
   }
   return `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
 }

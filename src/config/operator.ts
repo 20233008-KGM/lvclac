@@ -109,6 +109,7 @@ export function publicFooterOperatorDetails(
   locale: 'ko' | 'en',
   operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
 ): { label: string; value: string }[] {
+  const representative = publicRepresentativeDisplayName(locale, operator)
   const copy =
     locale === 'ko'
       ? {
@@ -120,12 +121,6 @@ export function publicFooterOperatorDetails(
             businessRegistrationNumber: '사업자등록번호',
             commerceRegistrationNumber: '통신판매업 신고번호',
           },
-          placeholders: {
-            representative: '김아무개',
-            address: '서울특별시 강남구 테헤란로 123',
-            businessRegistrationNumber: '123-45-67890',
-            commerceRegistrationNumber: '2026-서울강남-0123',
-          },
         }
       : {
           labels: {
@@ -136,38 +131,31 @@ export function publicFooterOperatorDetails(
             businessRegistrationNumber: 'Business registration no.',
             commerceRegistrationNumber: 'E-commerce registration no.',
           },
-          placeholders: {
-            representative: 'Jane Doe',
-            address: '123 Teheran-ro, Gangnam-gu, Seoul',
-            businessRegistrationNumber: '123-45-67890',
-            commerceRegistrationNumber: '2026-Seoul-Gangnam-0123',
-          },
         }
 
   return [
     { label: copy.labels.companyName, value: operator.companyName },
-    {
-      label: copy.labels.representative,
-      value:
-        publicRepresentativeDisplayName(locale, operator) ??
-        copy.placeholders.representative,
-    },
+    representative
+      ? {
+          label: copy.labels.representative,
+          value: representative,
+        }
+      : null,
     { label: copy.labels.contactEmail, value: operator.contactEmail },
-    {
-      label: copy.labels.address,
-      value: operator.address ?? copy.placeholders.address,
-    },
-    {
-      label: copy.labels.businessRegistrationNumber,
-      value:
-        operator.businessRegistrationNumber ??
-        copy.placeholders.businessRegistrationNumber,
-    },
-    {
-      label: copy.labels.commerceRegistrationNumber,
-      value:
-        operator.commerceRegistrationNumber ??
-        copy.placeholders.commerceRegistrationNumber,
-    },
-  ]
+    operator.address
+      ? { label: copy.labels.address, value: operator.address }
+      : null,
+    operator.businessRegistrationNumber
+      ? {
+          label: copy.labels.businessRegistrationNumber,
+          value: operator.businessRegistrationNumber,
+        }
+      : null,
+    operator.commerceRegistrationNumber
+      ? {
+          label: copy.labels.commerceRegistrationNumber,
+          value: operator.commerceRegistrationNumber,
+        }
+      : null,
+  ].filter((item): item is { label: string; value: string } => item !== null)
 }

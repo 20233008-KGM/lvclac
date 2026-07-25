@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-23 — 숫자세트 ‘매일 기록’ 체크 행 UX**
+- `dev` 마이페이지 클라우드 숫자세트를 `[매일 기록 체크박스] [이름] [상세·삭제]` 한 줄 열 구조로 바꾸고 열 라벨은 그룹 위에 한 번만 표시한다. 체크된 행은 옅은 파랑으로 강조하며 체크박스만 기존 `onSetAutoSnapshot(storageMode, setId, enabled)` 경로를 호출한다. Pro는 모든 행을 선택할 수 있고 무료 사용자는 신규 활성화 열을 숨기되 이미 활성인 세트는 해제할 수 있다. 로컬 세트·DB·cron·`autoSnapshotEnabled` 계약은 그대로다.
+- 검증: 관련 **9/9**·전체 Vitest **748/748**, TypeScript, production build, 변경 파일 ESLint(기존 `MyPage.tsx` effect 규칙 제외), diff check 통과. UI 키트 한영 1920·1023·428·390px에서 긴 이름·상세/롤오버·Tab/Space, 32px 클릭 영역, 행 내부 가로 오버플로 0을 확인했다. 로그인된 Pro 실제 저장 왕복은 미검증이다.
+- 적용 커밋 `dev` **dd514ca**, 테스트 계약 보강 **81bb4ff**. Notion 완료 [Task LV-80](https://app.notion.com/p/3a526e6d586f8164bd4ad2f1e7f23b3e)와 [Work Log](https://app.notion.com/p/3a526e6d586f8129be9ad2e923a26a69) 기록 완료. 푸시·배포는 수행하지 않았고 병행 중인 로그인 로딩·클라우드 활성 세트 선호도 변경은 커밋에서 제외했다.
+
 **2026-07-21 — 주문기록·계좌 스냅샷 CSV/Excel 내보내기**
 - `dev` `/records`에 모든 로그인 사용자가 구독과 무관하게 쓰는 내보내기 모달을 추가했다. 주문·스냅샷, CSV·XLSX, 전체·미분류·특정 슬롯, 시작/종료일, 한국어·영어 열 제목을 선택하며 성공 후 모달을 유지한다. 화면 20건과 별개로 Supabase RLS 아래 전체 일치를 500건씩 안정 정렬 조회한다.
 - CSV는 UTF-8 BOM·RFC 4180·빈 값·수식 삽입 방지를 적용하고, XLSX는 숫자·날짜·불리언 타입, 열 너비, 1행 고정, 전체 범위 필터를 보존한다. `write-excel-file`은 클릭 시 별도 청크로 로드한다. 검증: 전체 Vitest **700/700**, 변경 파일 ESLint, production build, diff check, npm audit 0건 통과. 실제 로그인 장부에서 주문 **108행×54열** 한국어 CSV/XLSX와 스냅샷 **112행×33열** 영문 XLSX를 내려받아 BOM·헤더·타입·필터·고정행을 확인했고 1920×855·390×844 모달을 실측했다. 테스트 PC에 Microsoft Excel이 없고 번들 스프레드시트 렌더러도 로드되지 않아 Excel GUI 복구 경고 확인만 미수행이다.

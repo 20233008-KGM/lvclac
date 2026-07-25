@@ -715,9 +715,7 @@ export const en: Messages = {
   glossaryPreset: {
     label: 'Instrument',
     options: {
-      index: 'Index futures',
-      stock: 'Stock futures',
-      commodity: 'Commodity futures',
+      futures: 'Futures terminology',
     },
   },
   welcome: {

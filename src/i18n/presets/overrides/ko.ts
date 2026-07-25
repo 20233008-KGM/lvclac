@@ -1,10 +1,8 @@
-import { mergeOverride } from '../applyPreset'
 import type { PresetId, PresetOverride } from '../types'
 
 /**
- * 지수·종목·원자재 선물이 공유하는 국내 선물 어휘 베이스.
- * 대부분 현재(default) 라벨과 동일하지만, 세 프리셋이 canonical 키 셋을
- * 빠짐없이 덮도록 여기서 전부 명시한다(화면 간 어휘 혼용 방지).
+ * 지수·종목·원자재 선물이 공유하는 단일 한국어 선물 용어세트.
+ * 현재 locale 기본 문구와 같은 계약을 명시해 호환 소비자에서도 용어가 달라지지 않는다.
  */
 const futuresBase: PresetOverride = {
   fields: {
@@ -28,25 +26,5 @@ const futuresBase: PresetOverride = {
 }
 
 export const koPresetOverrides: Record<PresetId, PresetOverride> = {
-  // 지수선물: 진입값은 지수 포인트, 승수는 '지수승수'
-  index: mergeOverride(futuresBase, {
-    fields: {
-      contractAmount: { label: '진입 지수·가격' },
-      contractMultiplier: { label: '지수승수' },
-    },
-  }),
-  // 종목선물: 주당 가격 + 1계약당 주식 수(거래승수)
-  stock: mergeOverride(futuresBase, {
-    fields: {
-      contractAmount: { label: '진입 가격(주당)' },
-      contractMultiplier: { label: '거래승수(주식수)' },
-    },
-  }),
-  // 원자재선물: 1계약 단위 크기(배럴·톤 등)
-  commodity: mergeOverride(futuresBase, {
-    fields: {
-      contractAmount: { label: '진입 가격' },
-      contractMultiplier: { label: '계약단위(계약크기)' },
-    },
-  }),
+  futures: futuresBase,
 }

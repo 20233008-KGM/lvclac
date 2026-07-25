@@ -20,7 +20,7 @@ export function mergeOverride(base: PresetOverride, patch: PresetOverride): Pres
 /**
  * 로드된 로케일 `Messages` 위에 프리셋 오버라이드를 얕게 병합한 새 객체를 반환한다.
  * - base는 절대 변형하지 않는다(항상 새 객체 생성).
- * - override가 null이면(=`'default'` 프리셋) base를 그대로 반환한다.
+ * - override가 null이면 base를 그대로 반환한다.
  * - 반환 타입이 `Messages`라 fields의 14개 키 형상이 컴파일 타임에 보장된다.
  */
 export function applyPreset(base: Messages, override: PresetOverride | null): Messages {

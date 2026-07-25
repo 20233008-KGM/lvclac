@@ -135,7 +135,7 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
                 ],
                 [
                   '필수 설정',
-                  '언어·용어 프리셋, 면책 확인, 로컬 저장 선택, 개인정보·쿠키 선택',
+                  '언어, 면책 확인, 로컬 저장 선택, 개인정보·쿠키 선택',
                   '이용자 설정 유지와 반복 안내 방지',
                   '설정별 localStorage 삭제 또는 브라우저 사이트 데이터 삭제 시까지',
                 ],
@@ -358,7 +358,7 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
               ],
               [
                 'Required preferences',
-                'Language, glossary preset, disclaimer acknowledgement, local-save and privacy choices',
+                'Language, disclaimer acknowledgement, local-save and privacy choices',
                 'Keep settings and avoid repeating notices',
                 'Until the related localStorage value or browser site data is deleted',
               ],

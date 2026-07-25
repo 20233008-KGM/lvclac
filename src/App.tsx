@@ -52,7 +52,7 @@ function isTextEditingTarget(target: EventTarget | null): boolean {
 }
 
 function CalculatorApp() {
-  const { t, preset } = useLanguage()
+  const { t } = useLanguage()
   const isDevDeployment = import.meta.env.VITE_DEPLOYMENT_CHANNEL === 'dev'
   const {
     inputs,
@@ -87,8 +87,8 @@ function CalculatorApp() {
   } = useGridResize(saveEnabled, t)
 
   const measureKey = useMemo(
-    () => JSON.stringify({ inputs, locale: t.htmlLang, preset }),
-    [inputs, t.htmlLang, preset],
+    () => JSON.stringify({ inputs, locale: t.htmlLang }),
+    [inputs, t.htmlLang],
   )
 
   const { fitScale } = useLayoutOverflow({

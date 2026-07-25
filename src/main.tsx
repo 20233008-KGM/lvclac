@@ -6,7 +6,6 @@ import { PublicCalculatorProvider } from './context/PublicCalculatorContext.tsx'
 import { GoogleConsentProvider } from './context/GoogleConsentContext.tsx'
 import { LanguageProvider } from './i18n'
 import { LanguageToggle } from './components/LanguageToggle.tsx'
-import { PresetSelect } from './components/PresetSelect.tsx'
 import { DisclaimerProvider } from './components/ServiceDisclaimer.tsx'
 
 const Analytics = lazy(() =>
@@ -20,7 +19,6 @@ createRoot(document.getElementById('root')!).render(
         <DisclaimerProvider>
           <GoogleConsentProvider>
             <LanguageToggle variant="fixed" />
-            <PresetSelect variant="fixed" />
             <App />
             <Suspense fallback={null}>
               <Analytics />

@@ -67,10 +67,10 @@ export function regionToLocale(region: WelcomeRegion): Locale {
   return region === 'KR' ? 'ko' : 'en'
 }
 
-/** 지역 → 기본 추천 프리셋. 공개판은 모든 지역에서 지수선물로 시작한다. */
+/** 지역과 무관하게 공개판의 단일 공통 선물 용어세트를 사용한다. */
 export function regionToSuggestedPreset(_region: WelcomeRegion): PresetId {
   void _region
-  return 'index'
+  return 'futures'
 }
 
 export function readPreferredSnapshotTimeZone(): string | null {

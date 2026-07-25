@@ -26,9 +26,9 @@ describe('welcomePreferences', () => {
     expect(regionToLocale('OTHER')).toBe('en')
   })
 
-  it('regionToSuggestedPreset: 모든 지역은 지수선물', () => {
+  it('regionToSuggestedPreset: 모든 지역은 공통 선물 용어세트', () => {
     for (const region of WELCOME_REGIONS) {
-      expect(regionToSuggestedPreset(region)).toBe('index')
+      expect(regionToSuggestedPreset(region)).toBe('futures')
     }
   })
 

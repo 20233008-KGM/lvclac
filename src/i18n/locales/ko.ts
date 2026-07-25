@@ -703,9 +703,7 @@ export const ko: Messages = {
   glossaryPreset: {
     label: '거래 종목',
     options: {
-      index: '지수선물',
-      stock: '종목선물',
-      commodity: '원자재선물',
+      futures: '선물 공통 용어',
     },
   },
   welcome: {

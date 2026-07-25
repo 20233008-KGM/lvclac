@@ -14,7 +14,7 @@ function keySet(o: PresetOverride): string[] {
 
 describe('preset overrides 무결성', () => {
   it('ko: 모든 named 프리셋이 동일한 canonical 키 셋을 빠짐없이 덮는다', () => {
-    const ref = keySet(koPresetOverrides.index)
+    const ref = keySet(koPresetOverrides.futures)
     expect(ref.length).toBeGreaterThan(0)
     for (const id of PRESET_IDS) {
       expect(keySet(koPresetOverrides[id]), `ko.${id} canonical mismatch`).toEqual(ref)
@@ -34,7 +34,7 @@ describe('preset overrides 무결성', () => {
   })
 
   it('en: override 키가 실제 base(en)에 존재하고 canonical의 부분집합이다', () => {
-    const canonical = new Set(keySet(koPresetOverrides.index))
+    const canonical = new Set(keySet(koPresetOverrides.futures))
     for (const id of PRESET_IDS) {
       const o = enPresetOverrides[id]
       for (const k of Object.keys(o.fields ?? {})) {
@@ -50,7 +50,7 @@ describe('preset overrides 무결성', () => {
 
   it('PRESET_IDS == glossaryPreset.options 키(ko/en 양쪽)', () => {
     const ids = [...PRESET_IDS].sort()
-    expect(ids).toEqual(['commodity', 'index', 'stock'])
+    expect(ids).toEqual(['futures'])
     expect(Object.keys(ko.glossaryPreset.options).sort()).toEqual(ids)
     expect(Object.keys(en.glossaryPreset.options).sort()).toEqual(ids)
   })

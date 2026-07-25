@@ -22,7 +22,7 @@ import {
   type WelcomeRegion,
 } from './welcomePreferences'
 
-/** 공개판이 지원하는 거래 종목 3종. */
+/** 공개판의 단일 공통 선물 용어세트. */
 const INSTRUMENT_IDS = PRESET_IDS
 
 /** 로케일 무관 표기 태그 — 지역 코드칩 / 상품 모노칩. */
@@ -34,9 +34,7 @@ const REGION_CODE: Record<WelcomeRegion, string> = {
   OTHER: '—',
 }
 const INSTRUMENT_MONO: Record<PresetId, string> = {
-  index: 'IX',
-  stock: 'EQ',
-  commodity: 'CM',
+  futures: 'FU',
 }
 
 /** 완료 화면 표시 후 실제 닫힘(onComplete)까지 지연(ms). */

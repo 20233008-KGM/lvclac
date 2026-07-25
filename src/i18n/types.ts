@@ -3,8 +3,8 @@ import type { CalcMessageCode } from './calcMessages'
 
 export type Locale = 'ko' | 'en'
 
-/** 공개판에서 지원하는 선물 상품군별 용어 프리셋 식별자. */
-export const PRESET_IDS = ['index', 'stock', 'commodity'] as const
+/** 공개판의 단일 고정 선물 용어세트 식별자. */
+export const PRESET_IDS = ['futures'] as const
 export type PresetId = (typeof PRESET_IDS)[number]
 
 export interface FieldCopy {

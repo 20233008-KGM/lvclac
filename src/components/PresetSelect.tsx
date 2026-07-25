@@ -6,8 +6,8 @@ interface PresetSelectProps {
 }
 
 /**
- * 용어 프리셋(거래 종목) 선택기. 언어 토글과 같은 LanguageContext 상태를 공유하므로
- * 어디서 바꾸든 즉시 앱 전역 라벨에 반영된다.
+ * 호환 화면용 단일 용어세트 표시 컨트롤.
+ * 공개 계산기 진입점에는 렌더링하지 않으며 값도 바뀌지 않는다.
  */
 export function PresetSelect({ variant = 'inline' }: PresetSelectProps) {
   const { preset, setPreset, t } = useLanguage()

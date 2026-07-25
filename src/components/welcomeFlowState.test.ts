@@ -33,7 +33,7 @@ describe('welcomeReducer', () => {
   it('선택값을 반영하고 step은 유지', () => {
     let s = init()
     s = welcomeReducer(s, { type: 'setRegion', region: 'US' })
-    s = welcomeReducer(s, { type: 'setInstrument', instrument: 'fx' })
+    s = welcomeReducer(s, { type: 'setInstrument', instrument: 'commodity' })
     s = welcomeReducer(s, { type: 'setMargin', marginMode: 'perContract' })
     s = welcomeReducer(s, { type: 'setStage', stage: 'hasPosition' })
     s = welcomeReducer(s, { type: 'setSave', saveLocal: true })
@@ -41,7 +41,7 @@ describe('welcomeReducer', () => {
     expect(s).toMatchObject({
       step: 0,
       region: 'US',
-      instrument: 'fx',
+      instrument: 'commodity',
       marginMode: 'perContract',
       stage: 'hasPosition',
       saveLocal: true,

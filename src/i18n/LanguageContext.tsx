@@ -27,7 +27,7 @@ import type { Locale, Messages, PresetId } from './types'
 interface LanguageContextValue {
   locale: Locale
   setLocale: (locale: Locale) => void
-  /** 활성 용어 프리셋(상품군 어휘). 'default' = 현재 국내선물 어휘 */
+  /** 활성 용어 프리셋(지수·종목·원자재 선물 상품군 어휘). */
   preset: PresetId
   setPreset: (preset: PresetId) => void
   t: Messages

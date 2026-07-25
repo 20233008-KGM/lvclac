@@ -5,11 +5,10 @@ import { enPresetOverrides } from './overrides/en'
 
 /**
  * 현재 언어·프리셋에 해당하는 오버라이드를 반환한다.
- * - `'default'`는 null(=베이스 어휘 그대로).
- * - en 오버라이드에 없는 프리셋은 빈 객체라도 존재하므로 null 폴백은 방어용.
+ * - 공개판은 지수·종목·원자재 선물 프리셋만 허용한다.
+ * - 맵 누락 시 null 폴백은 방어용이다.
  */
 export function getPresetOverride(locale: Locale, presetId: PresetId): PresetOverride | null {
-  if (presetId === 'default') return null
   const map = locale === 'en' ? enPresetOverrides : koPresetOverrides
   return map[presetId] ?? null
 }

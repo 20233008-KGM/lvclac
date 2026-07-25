@@ -715,12 +715,9 @@ export const en: Messages = {
   glossaryPreset: {
     label: 'Instrument',
     options: {
-      default: 'Standard',
       index: 'Index futures',
       stock: 'Stock futures',
       commodity: 'Commodity futures',
-      fx: 'Forex (FX)',
-      cfd: 'CFD',
     },
   },
   welcome: {

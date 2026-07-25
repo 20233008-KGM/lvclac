@@ -16,15 +16,14 @@ import {
 import {
   WELCOME_REGIONS,
   regionToLocale,
-  regionToSuggestedPreset,
   regionToTimeZone,
   writePreferredRegion,
   writePreferredSnapshotTimeZone,
   type WelcomeRegion,
 } from './welcomePreferences'
 
-/** 거래 종목 선택지(표준 제외한 5종 상품군). */
-const INSTRUMENT_IDS = PRESET_IDS.filter((id): id is Exclude<PresetId, 'default'> => id !== 'default')
+/** 공개판이 지원하는 거래 종목 3종. */
+const INSTRUMENT_IDS = PRESET_IDS
 
 /** 로케일 무관 표기 태그 — 지역 코드칩 / 상품 모노칩. */
 const REGION_CODE: Record<WelcomeRegion, string> = {
@@ -34,12 +33,10 @@ const REGION_CODE: Record<WelcomeRegion, string> = {
   JP: 'JP',
   OTHER: '—',
 }
-const INSTRUMENT_MONO: Record<Exclude<PresetId, 'default'>, string> = {
+const INSTRUMENT_MONO: Record<PresetId, string> = {
   index: 'IX',
   stock: 'EQ',
   commodity: 'CM',
-  fx: 'FX',
-  cfd: 'CD',
 }
 
 /** 완료 화면 표시 후 실제 닫힘(onComplete)까지 지연(ms). */
@@ -161,8 +158,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
   useModalFocusRestore()
 
   const initialRegion: WelcomeRegion = locale === 'ko' ? 'KR' : 'US'
-  const initialInstrument: PresetId =
-    preset !== 'default' ? preset : regionToSuggestedPreset(initialRegion)
+  const initialInstrument: PresetId = preset
   const [draft, dispatch] = useReducer(
     welcomeReducer,
     makeInitialDraft(initialRegion, initialInstrument),

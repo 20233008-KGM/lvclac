@@ -26,9 +26,10 @@ describe('welcomePreferences', () => {
     expect(regionToLocale('OTHER')).toBe('en')
   })
 
-  it('regionToSuggestedPreset: 한국은 지수선물, 그 외 표준', () => {
-    expect(regionToSuggestedPreset('KR')).toBe('index')
-    expect(regionToSuggestedPreset('US')).toBe('default')
+  it('regionToSuggestedPreset: 모든 지역은 지수선물', () => {
+    for (const region of WELCOME_REGIONS) {
+      expect(regionToSuggestedPreset(region)).toBe('index')
+    }
   })
 
   it('WELCOME_REGIONS는 5종', () => {

@@ -3,8 +3,8 @@ import type { CalcMessageCode } from './calcMessages'
 
 export type Locale = 'ko' | 'en'
 
-/** 용어 프리셋 식별자. 'default'는 미선택(현재 국내선물 어휘), 나머지는 상품군별. */
-export const PRESET_IDS = ['default', 'index', 'stock', 'commodity', 'fx', 'cfd'] as const
+/** 공개판에서 지원하는 선물 상품군별 용어 프리셋 식별자. */
+export const PRESET_IDS = ['index', 'stock', 'commodity'] as const
 export type PresetId = (typeof PRESET_IDS)[number]
 
 export interface FieldCopy {

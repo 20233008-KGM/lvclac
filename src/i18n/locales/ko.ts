@@ -703,12 +703,9 @@ export const ko: Messages = {
   glossaryPreset: {
     label: '거래 종목',
     options: {
-      default: '표준(국내 선물)',
       index: '지수선물',
       stock: '종목선물',
       commodity: '원자재선물',
-      fx: '외환(FX)',
-      cfd: 'CFD',
     },
   },
   welcome: {

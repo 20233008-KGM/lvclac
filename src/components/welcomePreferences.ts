@@ -67,9 +67,10 @@ export function regionToLocale(region: WelcomeRegion): Locale {
   return region === 'KR' ? 'ko' : 'en'
 }
 
-/** 지역 → 기본 추천 프리셋(거래 종목 단계의 초기 선택값). 한국은 지수선물, 그 외는 표준. */
-export function regionToSuggestedPreset(region: WelcomeRegion): PresetId {
-  return region === 'KR' ? 'index' : 'default'
+/** 지역 → 기본 추천 프리셋. 공개판은 모든 지역에서 지수선물로 시작한다. */
+export function regionToSuggestedPreset(_region: WelcomeRegion): PresetId {
+  void _region
+  return 'index'
 }
 
 export function readPreferredSnapshotTimeZone(): string | null {

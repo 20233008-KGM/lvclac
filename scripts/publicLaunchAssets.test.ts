@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   adsensePublisherId,
@@ -47,5 +49,13 @@ describe('public launch assets', () => {
         adsenseClient: 'ca-pub-not-a-number',
       }),
     ).not.toContain('google-adsense-account')
+  })
+
+  it('allows AdSense verification crawlers while prelaunch search indexing stays blocked', () => {
+    const robots = readFileSync(resolve('public/robots.txt'), 'utf8')
+
+    expect(robots).toContain('User-agent: Mediapartners-Google\nAllow: /')
+    expect(robots).toContain('User-agent: Google-Display-Ads-Bot\nAllow: /')
+    expect(robots).toContain('User-agent: *\nDisallow: /')
   })
 })

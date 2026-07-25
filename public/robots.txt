@@ -1,4 +1,9 @@
-# 정식 공개 전까지 전체 색인을 막는다.
-# 공개 시점에 경로별 Allow + Sitemap 구성으로 되돌린다.
+# 정식 공개 전까지 검색엔진 색인을 막되 AdSense 사이트 확인은 허용한다.
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: Google-Display-Ads-Bot
+Allow: /
+
 User-agent: *
 Disallow: /

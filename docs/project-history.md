@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-07-23 — 계정별 클라우드 작업공간 복원·마이페이지 로딩 개선 dev 배포**
+- `dev`는 마지막 활성 클라우드 숫자세트를 `profiles.active_cloud_number_set_id`에 계정 단위로 저장하고 새 브라우저에서 복원한다. 브라우저가 이미 선택한 로컬 저장·저장 안 함은 보존한다. 계정 메뉴는 마이페이지 청크를 유휴·호버·포커스 시 미리 불러오며, 라우트와 인증 복원 중에는 로그인 마케팅 대신 중립 로더를 표시한다. 로컬 저장 최초 안내의 데이터 삭제 위험 문장만 밑줄 강조하고 지속적인 안내 재열기 링크는 제거했다.
+- 검증: 전체 Vitest **760/760**, TypeScript 포함 production build, 원격 Supabase schema smoke 통과. 변경 파일 ESLint는 추가 오류 없이 HEAD에도 존재하는 effect/Fast Refresh 6건만 재현됐다. `devpilgrm.liqguard.com`에서 HTTP 200·DEV 배지·noindex·브라우저 콘솔 오류 0을 확인했고 공개 `liqguard.com` 배포는 그대로 유지했다. 로그인된 실제 계정의 다중 브라우저 활성 슬롯 저장 왕복은 미검증이다.
+- 기능 커밋 `dev` **0039464**, 기록 정리 커밋 **8b0e617**, 최종 Vercel 배포 **dpl_Cif6L6y28CdCDVZKKpVGgTwUGgkC**. Notion [Task](https://app.notion.com/p/3a626e6d586f8186b927f7192c5f99ee)·[Release](https://app.notion.com/p/3a626e6d586f81a78fccf30cdd8c0d16)·[Work Log](https://app.notion.com/p/3a626e6d586f819f9588e5ac2d568d80) 기록 완료. `origin/dev` 푸시와 최종 HEAD 기준 개발 production 배포를 완료했다.
+
 **2026-07-21 — 활성 사용자 지정 숫자세트를 입력 패널 헤더에 표시**
 - `dev` 계산기 입력 패널의 `입력` 오른쪽에 현재 활성 숫자세트 이름과 이 기기/클라우드 아이콘을 읽기 전용으로 표시한다. `현재 세트` 문구는 쓰지 않으며 `기본 세트`·`숫자세트 N` 같은 자동 생성 이름은 숨긴다. 전체 이름·저장 위치는 툴팁과 접근성 이름으로 제공하고 기존 세트 선택·저장 흐름은 유지한다.
 - 1×9px 구분선, 데스크톱 170px·모바일 110px 이름 말줄임을 적용했다. 검증: 전체 Vitest **663/663**, production build, 변경 파일 ESLint 통과. Chrome 데스크톱·390px에서 헤더 높이 24.5px, 구분선 9px, 긴 이름 ellipsis, `?`·`비우기` 무충돌을 실측했다. 전체 ESLint는 기존 `.recovery` 파싱 오류와 기존 React 규칙 위반으로 실패했다.

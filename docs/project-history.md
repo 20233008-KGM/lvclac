@@ -158,3 +158,8 @@
 - `dev` `/records`를 왼쪽 슬롯·기록 메모 40%와 오른쪽 무테두리 장부 60%의 2단 구조로 바꾸고 1px 세로선을 뒀다. 장부 카드 외곽은 페이지 배경과 합치고 행 최소 높이·패딩·간격을 늘렸다. 서버 활성 클라우드 슬롯을 첫 필터로 사용하며 전체·미분류는 메모 안내를 표시한다.
 - 행 메모는 왼쪽 작업공간으로 전환하고 슬롯 메모 복귀, 500자·400ms 자동저장, 전환 전 즉시 저장을 유지한다. 상세 팝업 편집 중 왼쪽은 같은 기록의 최신값 읽기 전용 미러로 바꿔 동시 초안 덮어쓰기를 막았다. 1023px 이하에서는 메모를 기본 접힌 요약 바로 쌓고 행 메모 진입 시 펼친다.
 - 검증: 집중 **35/35**·전체 Vitest **752/752**, 변경 파일 ESLint, TypeScript 포함 production build, diff check 통과. 인앱 브라우저 1920·1440·1024px에서 0.4:0.6, 428px 접기·펼치기와 가로 오버플로 0을 확인했다. 적용 커밋 `dev` **1248ade**. Notion [Task](https://app.notion.com/p/3a526e6d586f815b8273ef3e25399a31)·[Work Log](https://app.notion.com/p/3a526e6d586f81f5921ce188d7281c18)·[Decision Log](https://app.notion.com/p/3a526e6d586f813e839ac0f0f46006be) 기록 완료. 로그인된 실제 Supabase 저장 실패·재시도, 푸시·배포는 미수행이다.
+
+**2026-07-23 — 숫자세트 슬롯별 거래용어·매일 기록 스위치**
+- `dev` 숫자세트 첫 줄을 `[이름] [매일 기록 스위치] [상세·삭제]`로 바꾸고 체크박스·선택 행 파란 강조를 제거했다. 로컬·클라우드 각 행 두 번째 줄에는 거래용어 선택기를 두며, 상단 선택기와 슬롯 선택·생성·자동저장이 해당 슬롯의 preset을 함께 저장·복원한다. 구버전 슬롯은 nullable 값으로 현재 기기 preset을 fallback하고 신규 값부터 명시 저장한다.
+- 검증: 집중 **57/57**·전체 Vitest **760/760**, TypeScript, production build, diff check 통과. 변경 파일 ESLint는 이번 변경 경고 없이 기존 `MyPage.tsx` effect 4건과 `CalculatorContext.tsx` effect/Fast Refresh 2건만 남았다. UI 키트 한영 1920·1023·428·390px에서 긴 이름, 가운데 스위치 열, 슬롯별 selector, 상세·롤오버, 행 내부 오버플로 0을 확인했다.
+- 적용 커밋 `dev` **1c8d97e**, history 정리 **19f1d8f**. Notion 완료 [Task LV-81](https://app.notion.com/p/3a526e6d586f817da5bfd64d0a695f41)와 [Work Log](https://app.notion.com/p/3a526e6d586f81d4ba4be0476cbc06fe) 기록 완료. 로그인된 Pro DB 저장 왕복과 원격 마이그레이션 적용, push·배포는 수행하지 않았다. 병행 중인 로그인 로딩·클라우드 활성 세트 선호도 변경은 커밋에서 제외했다.

@@ -98,18 +98,18 @@ describe('calcShortLiquidationPrice — 경계', () => {
 })
 
 describe('sanitizeLiquidationPrice', () => {
-  it('롱 — 음수·현재가 이상 청산가는 null', () => {
-    expect(sanitizeLiquidationPrice(-100, 'long', 350)).toBeNull()
-    expect(sanitizeLiquidationPrice(0, 'long', 350)).toBeNull()
-    expect(sanitizeLiquidationPrice(400, 'long', 350)).toBeNull()
-    expect(sanitizeLiquidationPrice(300, 'long', 350)).toBe(300)
+  it('롱 — 음수는 null, 현재가를 지난 양수 청산가는 보존', () => {
+    expect(sanitizeLiquidationPrice(-100)).toBeNull()
+    expect(sanitizeLiquidationPrice(0)).toBeNull()
+    expect(sanitizeLiquidationPrice(400)).toBe(400)
+    expect(sanitizeLiquidationPrice(300)).toBe(300)
   })
 
-  it('숏 — 0 이하·현재가 이하 청산가는 null', () => {
-    expect(sanitizeLiquidationPrice(-50, 'short', 350)).toBeNull()
-    expect(sanitizeLiquidationPrice(0, 'short', 350)).toBeNull()
-    expect(sanitizeLiquidationPrice(340, 'short', 350)).toBeNull()
-    expect(sanitizeLiquidationPrice(400, 'short', 350)).toBe(400)
+  it('숏 — 0 이하는 null, 현재가를 지난 양수 청산가는 보존', () => {
+    expect(sanitizeLiquidationPrice(-50)).toBeNull()
+    expect(sanitizeLiquidationPrice(0)).toBeNull()
+    expect(sanitizeLiquidationPrice(340)).toBe(340)
+    expect(sanitizeLiquidationPrice(400)).toBe(400)
   })
 })
 
@@ -150,7 +150,7 @@ describe('calcLiquidationPriceFromParams — 최소 입력 시뮬', () => {
     expect(price!).toBeGreaterThan(350)
   })
 
-  it('숏 — 증거금 대비 계좌가 너무 작으면 현재가 아래 해 → null', () => {
+  it('숏 — 증거금 대비 계좌가 너무 작아 이미 지난 현재가 아래 해도 보존', () => {
     const params = buildLiquidationParams(
       {
         mode: 'order',
@@ -164,6 +164,6 @@ describe('calcLiquidationPriceFromParams — 최소 입력 시뮬', () => {
       },
       1,
     )!
-    expect(calcLiquidationPriceFromParams(params, 'short')).toBeNull()
+    expect(calcLiquidationPriceFromParams(params, 'short')).toBeCloseTo(342.857142857, 8)
   })
 })

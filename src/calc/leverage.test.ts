@@ -12,6 +12,7 @@ import {
 import { getPointValue, resolvePointValue } from './pointValue'
 import {
   calcContractNotional,
+  calcCurrentPositionNotional,
   calcMarginFromNotional,
   calcPositionNotional,
 } from './margins'
@@ -79,6 +80,37 @@ describe('calcPositionNotional', () => {
         1,
       ),
     ).toBe(250_000)
+  })
+})
+
+describe('calcCurrentPositionNotional', () => {
+  it('진입가와 현재가가 같은 가격 축이면 현재가 기준 명목가치', () => {
+    expect(
+      calcCurrentPositionNotional(
+        {
+          accountEval: 28_229_439,
+          contractAmount: 279_500,
+          contractMultiplier: 10,
+          currentPrice: 243_500,
+        },
+        41,
+      ),
+    ).toBe(99_835_000)
+  })
+
+  it('fixedSpec은 진입가로 오인하지 않고 기존 고정 명목가치 유지', () => {
+    expect(
+      calcCurrentPositionNotional(
+        {
+          accountEval: 50_000,
+          contractAmount: 250_000,
+          contractAmountRole: 'fixedSpec',
+          contractMultiplier: 1,
+          currentPrice: 5_000,
+        },
+        2,
+      ),
+    ).toBe(500_000)
   })
 })
 
@@ -336,6 +368,57 @@ describe('calculateEvaluate', () => {
     })
     expect(result.margins?.contractNotional).toBe(20_000_000)
     expect(result.margins?.maintenanceMargin).toBe(4_000_000)
+  })
+
+  it('회귀: 진입가와 현재가가 다르면 현재가 기준 증거금 여유와 청산가가 일치', () => {
+    const result = calculateEvaluate({
+      mode: 'evaluate',
+      positionSide: 'long',
+      accountEval: 28_229_439,
+      contracts: 41,
+      contractAmount: 279_500,
+      contractAmountRole: 'entryPrice',
+      currentPrice: 243_500,
+      contractMultiplier: 10,
+      marginInputMode: 'rate',
+      maintenanceMarginRate: 0.247,
+      entrustedMarginRate: 0.37,
+    })
+
+    expect(result.margins?.contractNotional).toBe(99_835_000)
+    expect(result.margins?.maintenanceMargin).toBe(24_659_245)
+    expect(result.margins?.maintenanceExcess).toBe(3_570_194)
+    expect(result.margins?.entrustedMargin).toBe(36_938_950)
+    expect(result.margins?.availableMargin).toBe(-8_709_511)
+    expect(result.leverageRatio).toBeCloseTo(3.5365562879, 8)
+    expect(result.liquidationPrice).toBeCloseTo(231_935.86953, 5)
+    expect(result.liquidationPrice).toBeLessThan(243_500)
+    expect(result.isAtRisk).toBe(false)
+  })
+
+  it('회귀: 현재가가 청산가 아래로 내려가도 청산가를 보존하고 위험으로 표시', () => {
+    const result = calculateEvaluate({
+      mode: 'evaluate',
+      positionSide: 'long',
+      accountEval: 22_694_439,
+      contracts: 41,
+      contractAmount: 279_500,
+      contractAmountRole: 'entryPrice',
+      currentPrice: 230_000,
+      contractMultiplier: 10,
+      marginInputMode: 'rate',
+      maintenanceMarginRate: 0.247,
+      entrustedMarginRate: 0.37,
+    })
+
+    expect(result.margins?.maintenanceMargin).toBe(23_292_100)
+    expect(result.margins?.maintenanceExcess).toBe(-597_661)
+    expect(result.liquidationPrice).toBeCloseTo(231_935.86953, 5)
+    expect(result.liquidationPrice).toBeGreaterThan(230_000)
+    expect(result.toleranceRate).toBeCloseTo(-0.8416824043, 8)
+    expect(result.toleranceDelta).toBeCloseTo(-1_935.86953, 5)
+    expect(result.liquidationMessage).toBe('maintenance_exceeds_equity')
+    expect(result.isAtRisk).toBe(true)
   })
 
   it('직접 입력 유지증거금 우선', () => {
@@ -604,7 +687,7 @@ describe('calculateOrder', () => {
     expect(result.afterLiquidation!).toBeGreaterThan(350)
   })
 
-  it('숏 — 증거금 대비 계좌가 작으면 청산가 미표시', () => {
+  it('숏 — 증거금 대비 계좌가 작아 이미 청산가를 지나도 기준값 표시', () => {
     const result = calculateOrder({
       mode: 'order',
       accountEval: 10,
@@ -615,6 +698,10 @@ describe('calculateOrder', () => {
       positionSide: 'short',
       orderContracts: 1,
     })
-    expect(result.afterLiquidation).toBeNull()
+    expect(result.afterLiquidation).toBeCloseTo(342.857142857, 8)
+    expect(result.afterTolerance).toBeLessThan(0)
+    expect(result.orderCapacityMessage).toBe('order_exceeds_max_sellable')
+    expect(result.orderMessage).toBe('order_exceeds_max_sellable')
+    expect(result.isAtRiskAfter).toBe(true)
   })
 })

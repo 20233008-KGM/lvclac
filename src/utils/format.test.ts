@@ -70,12 +70,14 @@ describe('formatTolerancePercent', () => {
     expect(formatTolerancePercent(10.92, 'short')).toBe('+10.92')
   })
 
-  it('0은 부호 없음', () => {
-    expect(formatTolerancePercent(0, 'long')).toBe('0')
+  it('청산가 도달 시 숨김', () => {
+    expect(formatTolerancePercent(0, 'long')).toBe('-')
+    expect(formatTolerancePercent(0, 'short')).toBe('-')
   })
 
-  it('청산 위험(음수)은 포지션 부호를 덮어쓰지 않음', () => {
-    expect(formatTolerancePercent(-4, 'short')).toBe('-4')
+  it('청산가 통과 시 숨김', () => {
+    expect(formatTolerancePercent(-4, 'long')).toBe('-')
+    expect(formatTolerancePercent(-4, 'short')).toBe('-')
   })
 })
 

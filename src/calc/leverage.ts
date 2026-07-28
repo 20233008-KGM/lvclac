@@ -142,12 +142,14 @@ function resolveLiquidation(
     params.maintenanceAtCurrent,
     contracts,
   )
-  if (inputError) {
+  // 유지증거금 부족은 계산 불가 입력이 아니라 이미 임계가를 지난 위험 상태다.
+  // 경고는 유지하되 과거 기준점인 청산가는 계속 계산해 표시한다.
+  if (inputError && inputError !== 'maintenance_exceeds_equity') {
     return { liquidationPrice: null, inputError }
   }
 
   const liquidationPrice = calcLiquidationPriceFromParams(params, inputs.positionSide)
-  return { liquidationPrice, inputError: null }
+  return { liquidationPrice, inputError }
 }
 
 /** 주문 체결 가격 — 미입력 시 현재가 */
@@ -314,11 +316,11 @@ function calcAfterOrderLiquidation(
 
   const { liquidationPrice, inputError } = resolveLiquidation(afterInputs, newContracts)
 
-  if (inputError) {
+  if (inputError && inputError !== 'maintenance_exceeds_equity') {
     return { price: null, afterMargins: result.margins, afterInputs, message: inputError }
   }
 
-  return { price: liquidationPrice, afterMargins: result.margins, afterInputs, message: null }
+  return { price: liquidationPrice, afterMargins: result.margins, afterInputs, message: inputError }
 }
 
 export function calculateEvaluate(inputs: CalculatorInputs): EvaluateResult {

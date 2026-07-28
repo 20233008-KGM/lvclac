@@ -17,15 +17,16 @@ export {
 export { calcLongLiquidationPrice, isLongLiquidationValid } from './long.js'
 export { calcShortLiquidationPrice } from './short.js'
 
-/** UI·시뮬에 쓸 수 있는 청산가만 반환 — 음수·현재가 반대편은 null */
+/**
+ * UI·시뮬에 표시할 수 있는 청산가만 반환한다.
+ *
+ * 현재가가 이미 청산가를 지난 경우에도 청산가는 위험 판단의 기준점이므로
+ * 그대로 보존한다. 양수가 아닌 값과 비유한 값만 표시 불가로 처리한다.
+ */
 export function sanitizeLiquidationPrice(
   price: number | null,
-  side: PositionSide,
-  currentPrice: number,
 ): number | null {
   if (price == null || !Number.isFinite(price) || price <= 0) return null
-  if (side === 'long' && price >= currentPrice) return null
-  if (side === 'short' && price <= currentPrice) return null
   return price
 }
 
@@ -38,7 +39,7 @@ export function calcLiquidationPriceFromParams(
       ? calcLongLiquidationPrice(params)
       : calcShortLiquidationPrice(params)
 
-  return sanitizeLiquidationPrice(raw, side, params.currentPrice)
+  return sanitizeLiquidationPrice(raw)
 }
 
 export function calcLiquidationPriceForInputs(

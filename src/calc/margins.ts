@@ -15,7 +15,11 @@ import { hasContractSpec, resolvePointValue } from './pointValue.js'
 
 type NotionalInputs = Pick<
   CalculatorInputs,
-  'accountEval' | 'contractAmount' | 'contractMultiplier' | 'currentPrice'
+  | 'accountEval'
+  | 'contractAmount'
+  | 'contractAmountRole'
+  | 'contractMultiplier'
+  | 'currentPrice'
 >
 
 /** 주문·청산 계산 기준가 — 현재가 우선, 없으면 주문가 */
@@ -138,6 +142,40 @@ export function calcPositionNotional(inputs: NotionalInputs, contracts: number):
   return 0
 }
 
+/**
+ * 현재 계좌 상태의 명목가치.
+ *
+ * 진입가와 현재가가 같은 가격 축이면 현재가를 사용한다. 명시적인 entryPrice는
+ * 물론, contractAmountRole 도입 전 저장값도 두 가격의 스케일이 비슷하면 진입가로
+ * 간주한다. fixedSpec 또는 가격 스케일이 다른 해외선물식 명목값은 기존 계산을 유지한다.
+ */
+export function calcCurrentPositionNotional(
+  inputs: NotionalInputs,
+  contracts: number,
+): number {
+  const currentPrice = inputs.currentPrice
+  const contractAmount = inputs.contractAmount
+  const hasComparablePriceScale =
+    contractAmount != null &&
+    contractAmount > 0 &&
+    currentPrice != null &&
+    currentPrice > 0 &&
+    contractAmount / currentPrice >= 0.5 &&
+    contractAmount / currentPrice <= 2
+  const usesEntryPrice =
+    inputs.contractAmountRole === 'entryPrice' ||
+    (inputs.contractAmountRole == null && hasComparablePriceScale)
+
+  if (usesEntryPrice && currentPrice != null && currentPrice > 0) {
+    if (isWonAccountIndexFieldMismatch(inputs as CalculatorInputs)) {
+      return calcIndexNotionalWon(currentPrice, contracts, inputs.contractMultiplier)
+    }
+    return calcRateBasedNotional(currentPrice, contracts, inputs.contractMultiplier)
+  }
+
+  return calcPositionNotional(inputs, contracts)
+}
+
 /** @deprecated calcPositionNotional 사용 권장 */
 export function calcContractNotional(
   contracts: number | undefined,
@@ -211,7 +249,7 @@ export function resolveMaintenanceMargin(
       if (contracts === 0) {
         return { amount: 0, source: 'rate' }
       }
-      const notional = calcPositionNotional(inputs, contracts)
+      const notional = calcCurrentPositionNotional(inputs, contracts)
       return {
         amount: calcMarginFromNotional(notional, inputs.maintenanceMarginRate ?? 0),
         source: 'rate',
@@ -243,7 +281,7 @@ export function resolveEntrustedMargin(
       if (contracts === 0) {
         return { amount: 0, source: 'rate' }
       }
-      const notional = calcPositionNotional(inputs, contracts)
+      const notional = calcCurrentPositionNotional(inputs, contracts)
       return {
         amount: calcMarginFromNotional(notional, inputs.entrustedMarginRate ?? 0),
         source: 'rate',
@@ -267,7 +305,7 @@ export function calcMargins(
     hasEntrustedSpec(inputs)
   if (!marginReady) return null
 
-  const contractNotional = calcPositionNotional(inputs, heldContracts)
+  const contractNotional = calcCurrentPositionNotional(inputs, heldContracts)
   const { amount: maintenanceMargin, source: maintenanceMarginSource } =
     resolveMaintenanceMargin(inputs, heldContracts)
   const { amount: entrustedMargin, source: entrustedMarginSource } =

@@ -153,3 +153,8 @@
 - `dev` 마이페이지의 이메일·Google 연동 상태에 CSS로 붙던 초록색 `✓` 글리프를 제거했다. `연동됨 / Linked` 텍스트의 성공 색상과 기존 상태 마크업·연동/해제 동작·행 정렬은 그대로 유지했다.
 - 검증: MyPage 집중 Vitest **8/8**, TypeScript 포함 production build, diff check 통과. 로컬 인앱 브라우저는 로그인 세션이 없어 실제 연동 행의 최종 시각 화면은 확인하지 못했다.
 - 적용 커밋 `dev` **723feea**. Notion 완료 [Task](https://app.notion.com/p/3a526e6d586f81959d4ccb39c6ad3e05)와 [Work Log](https://app.notion.com/p/3a526e6d586f81e68bf5f7b31085ccf7) 기록 완료. 푸시·배포는 수행하지 않았다.
+
+**2026-07-23 — 기록 장부 4:6 레이아웃·통합 메모 작업공간**
+- `dev` `/records`를 왼쪽 슬롯·기록 메모 40%와 오른쪽 무테두리 장부 60%의 2단 구조로 바꾸고 1px 세로선을 뒀다. 장부 카드 외곽은 페이지 배경과 합치고 행 최소 높이·패딩·간격을 늘렸다. 서버 활성 클라우드 슬롯을 첫 필터로 사용하며 전체·미분류는 메모 안내를 표시한다.
+- 행 메모는 왼쪽 작업공간으로 전환하고 슬롯 메모 복귀, 500자·400ms 자동저장, 전환 전 즉시 저장을 유지한다. 상세 팝업 편집 중 왼쪽은 같은 기록의 최신값 읽기 전용 미러로 바꿔 동시 초안 덮어쓰기를 막았다. 1023px 이하에서는 메모를 기본 접힌 요약 바로 쌓고 행 메모 진입 시 펼친다.
+- 검증: 집중 **35/35**·전체 Vitest **752/752**, 변경 파일 ESLint, TypeScript 포함 production build, diff check 통과. 인앱 브라우저 1920·1440·1024px에서 0.4:0.6, 428px 접기·펼치기와 가로 오버플로 0을 확인했다. 적용 커밋 `dev` **1248ade**. Notion [Task](https://app.notion.com/p/3a526e6d586f815b8273ef3e25399a31)·[Work Log](https://app.notion.com/p/3a526e6d586f81f5921ce188d7281c18)·[Decision Log](https://app.notion.com/p/3a526e6d586f813e839ac0f0f46006be) 기록 완료. 로그인된 실제 Supabase 저장 실패·재시도, 푸시·배포는 미수행이다.

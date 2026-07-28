@@ -89,6 +89,7 @@ export const en: Messages = {
   orderScenarioHint:
     '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Rollover]\n\nDuring rollover, small differences can come from order price vs actual fill and moving market snapshots.\nAfter rollover or re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity/mark at the same timestamp and align them again.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply (also deletes auto-saved order record)\nCtrl+Shift+Z → Redo',
   clearAllInputs: 'Clear all',
+  clearOrderInputs: 'Clear',
   clearAllInputsHint:
     '# Clear all inputs\nThe Clear all button resets every field at once.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
   clearAllInputsHintLabel: 'Clear shortcut help',
@@ -151,9 +152,11 @@ export const en: Messages = {
       'Drag a saved slot onto the other slot to copy values only. Example: drop This device on Cloud to copy local values to cloud.',
     copySuccess: 'Copied {source} values to {target}.',
     copyError: 'Could not copy saved values. Please try again shortly.',
+    numberSetCopyHint: 'Drag onto another number set to copy its input values.',
+    numberSetCopySuccess: 'Copied {source} values to {target}.',
     helpHintLabel: 'Input save slots help',
     helpHint:
-      "# Input save slots\nChoose where inputs are stored. A filled icon means saved values exist in that slot.\n\n[Slots]\n\n⊘ Don't save — Stops saving; stored values are not deleted.\n\n💻 This device — Stored in this browser (localStorage) only; not sent to a server. Clearing its site data or storage, or resetting the browser, deletes these values.\n\n☁️ Cloud — While signed in, stores to Supabase DB so you can restore on another device.\n\n────────\n\n[Actions]\n\n- Click a slot to switch save location.\n- Click the active slot again to confirm deleting its stored values.\n- Drag a filled slot onto another to copy values only.\n\n────────\n\n[Note]\n\n💡 The first time you turn saving on, a notice appears; you can choose not to show it again.\n\nThe ✓ and number show when saving completed. They hide while you edit.",
+      "# Input save slots\nChoose where inputs are stored. A filled icon means saved values exist in that slot.\n\n[Slots]\n\n⊘ Don't save — Stops saving; stored values are not deleted.\n\n💻 This device — Stored in this browser (localStorage) only; not sent to a server. Clearing its site data or storage, or resetting the browser, deletes these values.\n\n☁️ Cloud — While signed in, stores to Supabase DB so you can restore on another device.\n\n────────\n\n[Actions]\n\n- Click a slot to switch save location.\n- Click the active slot again to confirm deleting its stored values.\n- Drag a filled slot onto another to copy values only.\n- In the number-set picker, drag one set onto another to copy inputs while keeping the target set's name and storage location.\n\n────────\n\n[Note]\n\n💡 The first time you turn saving on, a notice appears; you can choose not to show it again.\n\nThe ✓ and number show when saving completed. They hide while you edit.",
     numberSetPickerLabel: 'Choose number set',
     localDataLossNote: 'Clearing this browser’s site data or storage also deletes device sets.',
     numberSetMenuTitle: 'Choose active number set',

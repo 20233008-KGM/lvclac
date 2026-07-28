@@ -33,13 +33,31 @@ const SnapshotProGateModal = lazy(() =>
 
 const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 const DRAFT_SLOT_DRAG_TYPE = 'application/x-lvclac-draft-slot'
+const NUMBER_SET_DRAG_TYPE = 'application/x-lvclac-number-set'
 
 type ModalKind = 'enable' | null
 
 type SaveSlot = 'off' | SaveStorageMode
+type NumberSetDragIdentity = { mode: SaveStorageMode; setId: string }
 
 function parseDraggedMode(value: string): SaveStorageMode | null {
   return value === 'local' || value === 'cloud' ? value : null
+}
+
+function parseDraggedNumberSet(value: string): NumberSetDragIdentity | null {
+  try {
+    const parsed = JSON.parse(value) as Partial<NumberSetDragIdentity>
+    if (
+      (parsed.mode === 'local' || parsed.mode === 'cloud') &&
+      typeof parsed.setId === 'string' &&
+      parsed.setId
+    ) {
+      return { mode: parsed.mode, setId: parsed.setId }
+    }
+  } catch {
+    // Ignore malformed dataTransfer payloads.
+  }
+  return null
 }
 
 function skipEnableModalKey(mode: SaveStorageMode): string {
@@ -242,6 +260,7 @@ export function SaveDraftToggle() {
     createNumberSet,
     setNumberSetMemo,
     copyDraftBetweenStorageModes,
+    copyNumberSetValues,
   } = useCalculator()
   const { user, isPro } = useAuth()
   const navigate = useNavigate()
@@ -252,6 +271,9 @@ export function SaveDraftToggle() {
   const [notice, setNotice] = useState<string | null>(null)
   const [draggingMode, setDraggingMode] = useState<SaveStorageMode | null>(null)
   const [dropTargetMode, setDropTargetMode] = useState<SaveStorageMode | null>(null)
+  const [draggingNumberSet, setDraggingNumberSet] = useState<NumberSetDragIdentity | null>(null)
+  const [dropTargetNumberSet, setDropTargetNumberSet] =
+    useState<NumberSetDragIdentity | null>(null)
   const [numberSetMenuOpen, setNumberSetMenuOpen] = useState(false)
   const [numberSetMenuStyle, setNumberSetMenuStyle] = useState<CSSProperties | null>(null)
   const [gateMode, setGateMode] = useState<SnapshotProGateMode | null>(null)
@@ -348,6 +370,21 @@ export function SaveDraftToggle() {
     t.draftSave.copySuccess
       .replace('{source}', modeLabelFor(source))
       .replace('{target}', modeLabelFor(target))
+
+  const formatNumberSetCopySuccess = (
+    source: NumberSetDragIdentity,
+    target: NumberSetDragIdentity,
+  ) => {
+    const sourceSet = menuNumberSets.find(
+      (numberSet) => numberSet.storageMode === source.mode && numberSet.id === source.setId,
+    )
+    const targetSet = menuNumberSets.find(
+      (numberSet) => numberSet.storageMode === target.mode && numberSet.id === target.setId,
+    )
+    return t.draftSave.numberSetCopySuccess
+      .replace('{source}', sourceSet?.title ?? '')
+      .replace('{target}', targetSet?.title ?? '')
+  }
 
   const canDragMode = (mode: SaveStorageMode) =>
     !busy && syncStatus !== 'loading' && storedForMode(mode)
@@ -548,6 +585,91 @@ export function SaveDraftToggle() {
     setDropTargetMode(null)
   }
 
+  const isSameNumberSet = (
+    left: NumberSetDragIdentity | null,
+    right: NumberSetDragIdentity,
+  ) => left?.mode === right.mode && left.setId === right.setId
+
+  const handleNumberSetDragStart = (
+    event: DragEvent<HTMLDivElement>,
+    source: NumberSetDragIdentity,
+  ) => {
+    if (busy || syncStatus === 'loading') {
+      event.preventDefault()
+      return
+    }
+    event.dataTransfer.effectAllowed = 'copy'
+    event.dataTransfer.setData(NUMBER_SET_DRAG_TYPE, JSON.stringify(source))
+    setDraggingNumberSet(source)
+    setDropTargetNumberSet(null)
+    setNotice(null)
+  }
+
+  const handleNumberSetDragOver = (
+    event: DragEvent<HTMLDivElement>,
+    target: NumberSetDragIdentity,
+  ) => {
+    if (
+      busy ||
+      syncStatus === 'loading' ||
+      draggingNumberSet == null ||
+      isSameNumberSet(draggingNumberSet, target)
+    ) {
+      return
+    }
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    setDropTargetNumberSet(target)
+  }
+
+  const handleNumberSetDragLeave = (
+    event: DragEvent<HTMLDivElement>,
+    target: NumberSetDragIdentity,
+  ) => {
+    const relatedTarget = event.relatedTarget
+    if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) return
+    setDropTargetNumberSet((current) => (isSameNumberSet(current, target) ? null : current))
+  }
+
+  const handleNumberSetDrop = (
+    event: DragEvent<HTMLDivElement>,
+    target: NumberSetDragIdentity,
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const source =
+      parseDraggedNumberSet(event.dataTransfer.getData(NUMBER_SET_DRAG_TYPE)) ??
+      draggingNumberSet
+
+    setDraggingNumberSet(null)
+    setDropTargetNumberSet(null)
+
+    if (
+      source == null ||
+      isSameNumberSet(source, target) ||
+      busy ||
+      syncStatus === 'loading'
+    ) {
+      return
+    }
+
+    setBusy(true)
+    setNotice(null)
+    void copyNumberSetValues(source.mode, source.setId, target.mode, target.setId).then(
+      (error) => {
+        setNotice(
+          error ? t.draftSave.copyError : formatNumberSetCopySuccess(source, target),
+        )
+        setBusy(false)
+      },
+    )
+  }
+
+  const handleNumberSetDragEnd = () => {
+    setDraggingNumberSet(null)
+    setDropTargetNumberSet(null)
+  }
+
   const handleSlotClick = (slot: SaveSlot) => {
     if (busy || syncStatus === 'loading') return
     setNotice(null)
@@ -615,16 +737,28 @@ export function SaveDraftToggle() {
         )}
         {groupSets.map((numberSet) => {
           const active = saveEnabled && storageMode === mode && activeNumberSetId === numberSet.id
+          const identity = { mode, setId: numberSet.id }
+          const dragging = isSameNumberSet(draggingNumberSet, identity)
+          const dropTarget = isSameNumberSet(dropTargetNumberSet, identity)
           const { side, sideLabel, equityText, leverageText } = describeNumberSet(numberSet)
           return (
             <div
               key={`${mode}:${numberSet.id}`}
               className={`draft-number-set-menu__item${
                 active ? ' draft-number-set-menu__item--active' : ''
-              }${mode === 'cloud' ? ' draft-number-set-menu__item--memo' : ''}`}
+              }${mode === 'cloud' ? ' draft-number-set-menu__item--memo' : ''}${
+                dragging ? ' draft-number-set-menu__item--dragging' : ''
+              }${dropTarget ? ' draft-number-set-menu__item--drop-target' : ''}`}
               role="menuitemradio"
               tabIndex={0}
               aria-checked={active}
+              draggable={!busy && syncStatus !== 'loading'}
+              title={t.draftSave.numberSetCopyHint}
+              onDragStart={(event) => handleNumberSetDragStart(event, identity)}
+              onDragOver={(event) => handleNumberSetDragOver(event, identity)}
+              onDragLeave={(event) => handleNumberSetDragLeave(event, identity)}
+              onDrop={(event) => handleNumberSetDrop(event, identity)}
+              onDragEnd={handleNumberSetDragEnd}
               onClick={() => handleNumberSetSelect(numberSet.storageMode, numberSet.id)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {

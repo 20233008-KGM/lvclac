@@ -382,6 +382,29 @@ describe('주문 시나리오', () => {
     expect(cleared.orderPrice).toBe(320_000)
   })
 
+  it('주문 비우기 — 주문 필드만 초기화한다', () => {
+    const cleared = applyInputPatch(orderBase, { clearOrderInputs: true })
+
+    expect(cleared.orderContracts).toBeUndefined()
+    expect(cleared.orderPrice).toBeUndefined()
+    expect(cleared.accountEval).toBe(orderBase.accountEval)
+    expect(cleared.contracts).toBe(orderBase.contracts)
+    expect(cleared.contractAmount).toBe(orderBase.contractAmount)
+  })
+
+  it('주문 미리보기 중 비우기 — 진입 전 계좌 기준값을 복원하고 미리보기를 종료한다', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const cleared = applyInputPatch(preview, { clearOrderInputs: true })
+
+    expect(isOrderScenarioModeActive(cleared)).toBe(false)
+    expect(cleared.orderContracts).toBeUndefined()
+    expect(cleared.orderPrice).toBeUndefined()
+    expect(cleared.accountEval).toBe(orderBase.accountEval)
+    expect(cleared.contracts).toBe(orderBase.contracts)
+    expect(cleared.contractAmount).toBe(orderBase.contractAmount)
+  })
+
   it('Enter 2 — contracts/equity 반영, 모드 종료', () => {
     const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
     const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })

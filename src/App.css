@@ -2879,6 +2879,22 @@ input:focus:not(:focus-visible) {
   outline: none;
 }
 
+.draft-number-set-menu__item[draggable='true'] {
+  cursor: grab;
+}
+
+.draft-number-set-menu__item--dragging {
+  opacity: 0.48;
+  cursor: grabbing;
+}
+
+.draft-number-set-menu__item--drop-target {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+  cursor: copy;
+}
+
 /* 방향 색점 — 롱/숏(색으로 구분, 라벨은 스크린리더 전용으로 별도 제공) */
 .draft-number-set-menu__side-dot {
   width: 7px;
@@ -3584,6 +3600,7 @@ input:focus:not(:focus-visible) {
   flex-shrink: 1;
   min-width: 0;
   max-width: min(100%, 22rem);
+  gap: var(--space-xs);
 }
 
 .order-scenario-chip {

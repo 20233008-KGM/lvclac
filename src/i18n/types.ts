@@ -112,6 +112,7 @@ export interface Messages {
   /** 주문가 inline 현재가 버튼 aria/title */
   useCurrentPriceTitle: string
   clearAllInputs: string
+  clearOrderInputs: string
   clearAllInputsHint: string
   clearAllInputsHintLabel: string
   clearAllInputsModalTitle: string
@@ -159,6 +160,8 @@ export interface Messages {
     copyHint: string
     copySuccess: string
     copyError: string
+    numberSetCopyHint: string
+    numberSetCopySuccess: string
     helpHint: string
     helpHintLabel: string
     numberSetPickerLabel: string

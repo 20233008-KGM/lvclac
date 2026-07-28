@@ -160,6 +160,12 @@ interface CalculatorContextValue {
   deleteNumberSetById: (mode: SaveStorageMode, setId: string) => Promise<string | null>
   migrateLocalDraftToCloud: () => Promise<string | null>
   copyDraftBetweenStorageModes: (source: SaveStorageMode, target: SaveStorageMode) => Promise<string | null>
+  copyNumberSetValues: (
+    sourceMode: SaveStorageMode,
+    sourceSetId: string,
+    targetMode: SaveStorageMode,
+    targetSetId: string,
+  ) => Promise<string | null>
 }
 
 const CalculatorContext = createContext<CalculatorContextValue | null>(null)
@@ -1000,6 +1006,100 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     [activeUserId, preset, refreshLocalNumberSetState, rememberActiveCloudNumberSet, replaceNumberSetFromStorage, saveEnabled, storageMode],
   )
 
+  const copyNumberSetValues = useCallback(
+    async (
+      sourceMode: SaveStorageMode,
+      sourceSetId: string,
+      targetMode: SaveStorageMode,
+      targetSetId: string,
+    ): Promise<string | null> => {
+      if (sourceMode === targetMode && sourceSetId === targetSetId) return null
+
+      const sourceSets = sourceMode === 'local' ? localNumberSets : cloudNumberSets
+      const sourceSet = sourceSets.find((set) => set.id === sourceSetId)
+      if (!sourceSet) return 'number_set_not_found'
+      const sourcePreset = sourceSet.presetId ?? preset
+
+      if (targetMode === 'local') {
+        const targetSet = localNumberSets.find((set) => set.id === targetSetId)
+        if (!targetSet) return 'number_set_not_found'
+
+        const updatedSets = upsertLocalNumberSet(
+          localNumberSets,
+          targetSetId,
+          sourceSet.inputs,
+          { presetId: sourcePreset },
+        )
+        writeLocalNumberSets(localStorage, updatedSets)
+        const refreshed = refreshLocalNumberSetState()
+        const updatedTarget = refreshed.sets.find((set) => set.id === targetSetId)
+        if (
+          updatedTarget &&
+          saveEnabled &&
+          storageMode === 'local' &&
+          activeLocalSetId === targetSetId
+        ) {
+          replaceNumberSetFromStorage(updatedTarget)
+        }
+        setSyncStatus('saved')
+        setSyncError(null)
+        return null
+      }
+
+      if (!activeUserId) {
+        setSyncStatus('error')
+        setSyncError('not_logged_in')
+        return 'not_logged_in'
+      }
+      if (!cloudNumberSets.some((set) => set.id === targetSetId)) {
+        return 'number_set_not_found'
+      }
+
+      setSyncStatus('saving')
+      setSyncError(null)
+      const result = await saveNumberSet(
+        activeUserId,
+        sourceSet.inputs,
+        sourcePreset,
+        targetSetId,
+      )
+      if (result.error) {
+        setSyncStatus('error')
+        setSyncError(result.error)
+        return result.error
+      }
+      if (!result.data) {
+        setSyncStatus('error')
+        setSyncError('number_set_save_empty')
+        return 'number_set_save_empty'
+      }
+
+      const savedSet = result.data
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === savedSet.id ? savedSet : set)),
+      )
+      if (saveEnabled && storageMode === 'cloud' && cloudSetId === targetSetId) {
+        setCloudDraftSavedAt(savedSet.updatedAt)
+        replaceNumberSetFromStorage(savedSet)
+      }
+      setSyncStatus('saved')
+      setSyncError(null)
+      return null
+    },
+    [
+      activeLocalSetId,
+      activeUserId,
+      cloudNumberSets,
+      cloudSetId,
+      localNumberSets,
+      preset,
+      refreshLocalNumberSetState,
+      replaceNumberSetFromStorage,
+      saveEnabled,
+      storageMode,
+    ],
+  )
+
   const selectNumberSet = useCallback(
     async (mode: SaveStorageMode, setId: string): Promise<string | null> => {
       setSyncError(null)
@@ -1542,6 +1642,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         deleteNumberSetById,
         migrateLocalDraftToCloud,
         copyDraftBetweenStorageModes,
+        copyNumberSetValues,
       }}
     >
       {children}

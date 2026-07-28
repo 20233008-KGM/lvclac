@@ -144,4 +144,38 @@ describe('local number sets', () => {
     expect(created.set.presetId).toBe('fx')
     expect(updated[0].presetId).toBe('cfd')
   })
+
+  it('copies inputs and preset into a target slot without replacing its identity', () => {
+    const source = appendLocalNumberSet([], sampleInputs, {
+      id: 'local-source',
+      title: '공격형',
+      presetId: 'futures',
+      updatedAt: '2026-07-10T01:00:00.000Z',
+    })
+    const target = appendLocalNumberSet(source.sets, defaultInputs, {
+      id: 'local-target',
+      title: '보수형',
+      presetId: 'stock',
+      updatedAt: '2026-07-10T02:00:00.000Z',
+    })
+
+    const copied = upsertLocalNumberSet(
+      target.sets,
+      'local-target',
+      source.set.inputs,
+      {
+        presetId: source.set.presetId ?? undefined,
+        updatedAt: '2026-07-10T03:00:00.000Z',
+      },
+    )
+
+    expect(copied.find((set) => set.id === 'local-source')).toEqual(source.set)
+    expect(copied.find((set) => set.id === 'local-target')).toMatchObject({
+      id: 'local-target',
+      title: '보수형',
+      inputs: sampleInputs,
+      presetId: 'futures',
+      updatedAt: '2026-07-10T03:00:00.000Z',
+    })
+  })
 })

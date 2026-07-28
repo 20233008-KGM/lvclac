@@ -162,12 +162,46 @@ describe('draft save slot UI', () => {
     expect(text).toContain('t.draftSave.helpHintLabel')
   })
 
+  it('copies one number set onto another from the active-set picker', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const ctx = source('src/context/CalculatorContext.tsx')
+
+    expect(text).toContain('NUMBER_SET_DRAG_TYPE')
+    expect(text).toContain('handleNumberSetDragStart')
+    expect(text).toContain('handleNumberSetDrop')
+    expect(text).toContain('copyNumberSetValues(source.mode, source.setId, target.mode, target.setId)')
+    expect(text).toContain('title={t.draftSave.numberSetCopyHint}')
+    expect(ctx).toContain('const copyNumberSetValues = useCallback')
+    expect(ctx).toContain('upsertLocalNumberSet(')
+    expect(ctx).toContain('saveNumberSet(')
+    expect(ctx).toContain('targetSetId,')
+  })
+
+  it('explains that number-set drag-copy keeps the target identity', () => {
+    const types = source('src/i18n/types.ts')
+    const ko = source('src/i18n/locales/ko.ts')
+    const en = source('src/i18n/locales/en.ts')
+
+    expect(types).toContain('numberSetCopyHint: string')
+    expect(types).toContain('numberSetCopySuccess: string')
+    expect(ko).toContain('대상 세트의 이름·저장 위치는 유지되고 입력값만 복사됩니다')
+    expect(en).toContain("keeping the target set's name and storage location")
+  })
+
   it('styles save slots while they are drag sources or drop targets', () => {
     const css = source('src/App.css')
 
     expect(css).toContain('.draft-save-slot--dragging')
     expect(css).toContain('.draft-save-slot--drop-target')
     expect(css).toContain('cursor: copy;')
+  })
+
+  it('styles number-set rows while dragging and targeting a copy', () => {
+    const css = source('src/App.css')
+
+    expect(css).toContain(".draft-number-set-menu__item[draggable='true']")
+    expect(css).toContain('.draft-number-set-menu__item--dragging')
+    expect(css).toContain('.draft-number-set-menu__item--drop-target')
   })
 
   it('positions the save tooltip from the right edge of the slot group', () => {

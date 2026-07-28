@@ -981,13 +981,26 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
               highlight={orderScenarioActive}
             />
           </h2>
-          {orderScenarioActive && orderChipText && (
-            <div className="result-panel--order__head-meta">
+          <div className="result-panel--order__head-meta">
+            {orderScenarioActive && orderChipText && (
               <span className="order-scenario-chip" role="status">
                 {orderChipText}
               </span>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              className="input-panel__clear-btn result-panel--order__clear-btn"
+              disabled={
+                inputs.orderContracts == null &&
+                inputs.orderPrice == null &&
+                !orderScenarioActive
+              }
+              title={t.clearOrderInputs}
+              onClick={() => handleOrderChange({ clearOrderInputs: true })}
+            >
+              {t.clearOrderInputs}
+            </button>
+          </div>
         </div>
         <OrderInputs
           inputs={inputs}

@@ -23,6 +23,8 @@ export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   commitOrderScenario?: OrderScenarioBaseline
   /** 주문 시나리오 Esc — 진입 전 상태 복원 */
   clearOrderScenario?: true
+  /** 주문 계약수·가격 초기화 (미리보기 중이면 미리보기도 종료) */
+  clearOrderInputs?: true
   /** 주문 시나리오 Enter 2 — 계좌에 주문 반영 */
   applyOrderScenario?: true
   /** 주문 반영 취소 — 미리보기 복귀 */
@@ -425,6 +427,7 @@ export function applyInputPatch(
     undoMarkPrice,
     commitOrderScenario,
     clearOrderScenario,
+    clearOrderInputs,
     applyOrderScenario,
     undoOrderApply,
     ...inputPatch
@@ -448,6 +451,20 @@ export function applyInputPatch(
     const undone = revertScenarioApply(prev)
     if (undone) return { ...prev, ...inputPatch, ...undone }
     return { ...prev, ...inputPatch }
+  }
+
+  if (clearOrderInputs) {
+    const base = isOrderScenarioModeActive(prev)
+      ? { ...prev, ...revertOrderScenarioState(prev) }
+      : prev
+    return {
+      ...base,
+      ...inputPatch,
+      orderContracts: undefined,
+      orderPrice: undefined,
+      orderScenarioRevertSnapshot: undefined,
+      orderScenarioBeforeBaseline: undefined,
+    }
   }
 
   if (applyOrderScenario) {

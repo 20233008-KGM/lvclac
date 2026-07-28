@@ -34,6 +34,28 @@ describe('public local draft UI', () => {
     expect(context).not.toMatch(/function pauseSaving[\s\S]*clearDraft\(\)/)
   })
 
+  it('clears input fields without deleting or disabling the public local draft', () => {
+    const context = source('src/context/PublicCalculatorContext.tsx')
+    const resetStart = context.indexOf('const resetInputs = useCallback(')
+    const resetEnd = context.indexOf('const setSaveEnabled = useCallback(', resetStart)
+    const resetBlock = context.slice(resetStart, resetEnd)
+
+    expect(resetBlock).toContain('replaceCalculatorHistory(current, defaultInputs)')
+    expect(resetBlock).not.toContain('clearDraft()')
+    expect(resetBlock).not.toContain('setSaveEnabledState(false)')
+    expect(resetBlock).not.toContain('setHasLocalDraft(false)')
+  })
+
+  it('restores a deliberately cleared draft as an existing saved draft', () => {
+    const context = source('src/context/PublicCalculatorContext.tsx')
+    const readStart = context.indexOf('function readLegacyDraft()')
+    const readEnd = context.indexOf('function readActiveLocalSetDraft()', readStart)
+    const readBlock = context.slice(readStart, readEnd)
+
+    expect(readBlock).toContain('return parseStoredCalculatorInputs(JSON.parse(raw))')
+    expect(readBlock).not.toContain('hasMeaningfulCalculatorInputs')
+  })
+
   it('does not expose a separate delete action in the compact public slots', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
 

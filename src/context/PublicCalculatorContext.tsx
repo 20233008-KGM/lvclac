@@ -26,10 +26,7 @@ import {
   loadLocalNumberSets,
   resolveActiveLocalNumberSetId,
 } from '../storage/localNumberSets'
-import {
-  hasMeaningfulCalculatorInputs,
-  parseStoredCalculatorInputs,
-} from '../utils/storedCalculatorInputs'
+import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 
 const DRAFT_KEY = 'leverage_calculator_draft'
 const DRAFT_SAVED_AT_KEY = 'leverage_calculator_draft_saved_at'
@@ -65,8 +62,7 @@ function readLegacyDraft(): CalculatorInputs | null {
   try {
     const raw = localStorage.getItem(DRAFT_KEY)
     if (!raw) return null
-    const parsed = parseStoredCalculatorInputs(JSON.parse(raw))
-    return parsed && hasMeaningfulCalculatorInputs(parsed) ? parsed : null
+    return parseStoredCalculatorInputs(JSON.parse(raw))
   } catch {
     return null
   }
@@ -211,12 +207,6 @@ export function PublicCalculatorProvider({ children }: { children: ReactNode }) 
 
   const resetInputs = useCallback(() => {
     setHistory((current) => replaceCalculatorHistory(current, defaultInputs))
-    clearDraft()
-    setSaveEnabledState(false)
-    setHasLocalDraft(false)
-    setLocalDraftSavedAt(null)
-    setSyncStatus('idle')
-    setSyncError(null)
   }, [])
 
   const setSaveEnabled = useCallback(

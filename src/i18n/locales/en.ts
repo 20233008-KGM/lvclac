@@ -89,10 +89,11 @@ export const en: Messages = {
     '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Rollover]\n\nDuring rollover, small differences can come from order price vs actual fill and moving market snapshots.\nAfter rollover or re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity/mark at the same timestamp and align them again.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply (also deletes auto-saved order record)\nCtrl+Shift+Z → Redo',
   clearAllInputs: 'Clear all',
   clearAllInputsHint:
-    '# Clear all inputs\nThe Clear all button resets every field at once.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
+    '# Clear all inputs\nThe Clear all button resets every field at once. Local saving stays enabled when it is already on.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
   clearAllInputsHintLabel: 'Clear shortcut help',
   clearAllInputsModalTitle: 'Clear all inputs',
-  clearAllInputsModalBody: 'This will clear all entered values. Continue?',
+  clearAllInputsModalBody:
+    'This clears input fields only. Your local save setting is kept. Continue?',
   clearAllInputsConfirm: 'Clear',
   accountSettingGuard: {
     title: 'Change account setup?',
@@ -142,7 +143,7 @@ export const en: Messages = {
     enableModalBody: [
       'When you turn on "Save inputs on this device," values you enter in the calculator (account equity, margin rates, number of contracts, etc.) may be stored in your browser\'s local storage (localStorage) on your device.',
       'This feature is provided for convenience only; we do not transmit or store this information on our servers.',
-      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs deletes the stored values.',
+      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs keeps the local save setting and resets only the input fields.',
       'However, if others use the same device, or if malware, browser extensions, or an insecure environment is present, stored values may be exposed. We do not guarantee the security of your device environment; you should decide whether to store sensitive information.',
     ],
     cloudEnableModalBody: [

@@ -91,10 +91,11 @@ export const en: Messages = {
   clearAllInputs: 'Clear all',
   clearOrderInputs: 'Clear',
   clearAllInputsHint:
-    '# Clear all inputs\nThe Clear all button resets every field at once.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
+    '# Clear all inputs\nThe Clear all button resets every field at once. Saved number sets, memos, and records are not deleted.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
   clearAllInputsHintLabel: 'Clear shortcut help',
   clearAllInputsModalTitle: 'Clear all inputs',
-  clearAllInputsModalBody: 'This will clear all entered values. Continue?',
+  clearAllInputsModalBody:
+    'This clears input fields only. Your number set, memos, and records are kept. Continue?',
   clearAllInputsConfirm: 'Clear',
   accountSettingGuard: {
     title: 'Change account setup?',
@@ -122,13 +123,13 @@ export const en: Messages = {
     enableModalBody: [
       'When you turn on "Save inputs on this device," values you enter in the calculator (account equity, margin rates, number of contracts, etc.) may be stored in your browser\'s local storage (localStorage) on your device.',
       'This feature is provided for convenience only; we do not transmit or store this information on our servers.',
-      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs deletes the stored values. Clearing this browser’s site data or storage, or resetting the browser, also deletes them, and LiqGuard cannot recover them.',
+      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs keeps the number set and resets only its input fields. Clearing this browser’s site data or storage, or resetting the browser, deletes the saved values, and LiqGuard cannot recover them.',
       'However, if others use the same device, or if malware, browser extensions, or an insecure environment is present, stored values may be exposed. We do not guarantee the security of your device environment; you should decide whether to store sensitive information.',
     ],
     cloudEnableModalBody: [
       'When saving is enabled while signed in, calculator inputs (account equity, margin rates, contracts, etc.) may be stored in Supabase DB as number_sets data for your account.',
       'Row-level security is configured so only your signed-in account can read, update, or delete its saved inputs.',
-      'Choosing "Don\'t save" only stops saving; your cloud copy is kept. Clearing all inputs deletes the cloud copy. Device-local saved inputs are managed separately in This device mode.',
+      'Choosing "Don\'t save" only stops saving; your cloud copy is kept. Clearing all inputs keeps the number set, memos, and records while resetting only its input fields. Device-local saved inputs are managed separately in This device mode.',
       'Do not save information you consider sensitive. Saved inputs and calculator results do not replace your own trading judgment.',
     ],
     localDataLossEmphasis:

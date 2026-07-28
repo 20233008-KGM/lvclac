@@ -391,7 +391,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [localDraftSavedAt, setLocalDraftSavedAt] = useState(readActiveLocalDraftSavedAt)
   const [cloudDraftSavedAt, setCloudDraftSavedAt] = useState<string | null>(null)
   const cloudSetIdRef = useRef<string | null>(null)
-  const cloudNumberSetsRef = useRef<NumberSetRecord[]>([])
   const mountedRef = useRef(false)
   const suppressNextPersistRef = useRef(false)
   const suppressNextPresetPersistRef = useRef(false)
@@ -412,10 +411,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     cloudSetIdRef.current = cloudSetId
   }, [cloudSetId])
-
-  useEffect(() => {
-    cloudNumberSetsRef.current = cloudNumberSets
-  }, [cloudNumberSets])
 
   const rememberActiveCloudNumberSet = useCallback(
     async (userId: string, setId: string | null): Promise<string | null> => {
@@ -562,59 +557,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     ): Promise<string | null> => {
       if (!force && !saveEnabled) return null
 
-      if (!hasMeaningfulCalculatorInputs(value)) {
-        if (mode === 'local') {
-          clearDraft()
-          refreshLocalNumberSetState()
-          setSyncStatus('idle')
-          setSyncError(null)
-          return null
-        }
-
-        if (!activeUserId) {
-          setSyncStatus('idle')
-          setSyncError(null)
-          setHasCloudDraft(false)
-          setCloudDraftSavedAt(null)
-          return null
-        }
-
-        setSyncStatus('saving')
-        setSyncError(null)
-        const deletedSetId = cloudSetIdRef.current
-        const result = await deleteNumberSet(activeUserId, deletedSetId)
-        if (result.error) {
-          setSyncStatus('error')
-          setSyncError(result.error)
-          return result.error
-        }
-        if (deletedSetId) {
-          const nextSets = cloudNumberSetsRef.current.filter((set) => set.id !== deletedSetId)
-          const nextActive = nextSets[0] ?? null
-          setCloudNumberSets(nextSets)
-          cloudSetIdRef.current = nextActive?.id ?? null
-          setCloudSetId(nextActive?.id ?? null)
-          setHasCloudDraft(nextSets.length > 0)
-          setCloudDraftSavedAt(nextActive?.updatedAt ?? null)
-          if (nextActive) replaceNumberSetFromStorage(nextActive)
-          else replaceInputsFromStorage(defaultInputs)
-          const preferenceError = await rememberActiveCloudNumberSet(
-            activeUserId,
-            nextActive?.id ?? null,
-          )
-          if (preferenceError) {
-            console.error('[numberSets] update active cloud preference after delete failed:', preferenceError)
-          }
-        } else {
-          cloudSetIdRef.current = null
-          setCloudSetId(null)
-          setHasCloudDraft(false)
-          setCloudDraftSavedAt(null)
-        }
-        setSyncStatus('idle')
-        return null
-      }
-
       if (mode === 'local') {
         if (isSameAsStoredDraft(value)) {
           setHasLocalDraft(true)
@@ -674,7 +616,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       setSyncStatus('saved')
       return null
     },
-    [activeUserId, preset, refreshLocalNumberSetState, rememberActiveCloudNumberSet, replaceInputsFromStorage, replaceNumberSetFromStorage, saveEnabled, storageMode],
+    [activeUserId, preset, refreshLocalNumberSetState, rememberActiveCloudNumberSet, saveEnabled, storageMode],
   )
 
   const setSaveEnabled = useCallback(
@@ -743,7 +685,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         }
         const { sets, selected, serverActiveId } = result.data
         setCloudNumberSets(sets)
-        if (selected && hasMeaningfulCalculatorInputs(selected.inputs)) {
+        if (selected) {
           replaceNumberSetFromStorage(selected)
           cloudSetIdRef.current = selected.id
           setCloudSetId(selected.id)
@@ -972,7 +914,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return result.error
         }
         const selected = result.data?.selected ?? null
-        if (!selected || !hasMeaningfulCalculatorInputs(selected.inputs)) {
+        if (!selected) {
           setHasCloudDraft(false)
           setCloudSetId(null)
           setCloudDraftSavedAt(null)
@@ -1568,7 +1510,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     async function refreshCloudDraftPresence() {
       const result = await refreshCloudNumberSetState(userId)
       if (!active || result.error) return
-      const hasDraft = (result.data ?? []).some((set) => hasMeaningfulCalculatorInputs(set.inputs))
+      const hasDraft = (result.data ?? []).length > 0
       setHasCloudDraft(hasDraft)
     }
 

@@ -286,11 +286,37 @@ describe('draft save slot UI', () => {
     const persistBlock = text.slice(persistStart, persistEnd)
     const dependencyList = persistBlock.match(/\n\s+\[([^\]]+)\],\r?\n\s+\)\r?\n\s*$/)?.[1]
 
-    expect(text).toContain('const cloudNumberSetsRef = useRef<NumberSetRecord[]>([])')
-    expect(text).toContain('cloudNumberSetsRef.current = cloudNumberSets')
-    expect(persistBlock).toContain('cloudNumberSetsRef.current.filter')
     expect(dependencyList).toBeDefined()
     expect(dependencyList).not.toMatch(/\bcloudNumberSets\b/)
+    expect(text).not.toContain('cloudNumberSetsRef')
+  })
+
+  it('persists empty inputs without deleting the active local or cloud number set', () => {
+    const text = source('src/context/CalculatorContext.tsx')
+    const persistStart = text.indexOf('const persistInputs = useCallback(')
+    const persistEnd = text.indexOf('const setSaveEnabled = useCallback(', persistStart)
+    const persistBlock = text.slice(persistStart, persistEnd)
+
+    expect(persistBlock).toContain('saveDraft(value, preset)')
+    expect(persistBlock).toContain(
+      'saveNumberSet(activeUserId, value, preset, previousSetId)',
+    )
+    expect(persistBlock).not.toContain('clearDraft(')
+    expect(persistBlock).not.toContain('deleteNumberSet(')
+    expect(persistBlock).not.toContain('hasMeaningfulCalculatorInputs(value)')
+  })
+
+  it('treats an empty-input cloud set as an existing saved set', () => {
+    const text = source('src/context/CalculatorContext.tsx')
+
+    expect(text).toContain('if (selected) {')
+    expect(text).toContain('const hasDraft = (result.data ?? []).length > 0')
+    expect(text).not.toContain(
+      'selected && hasMeaningfulCalculatorInputs(selected.inputs)',
+    )
+    expect(text).not.toContain(
+      '!selected || !hasMeaningfulCalculatorInputs(selected.inputs)',
+    )
   })
 
   it('keeps the saved status in the same muted tone as other draft-save status text', () => {

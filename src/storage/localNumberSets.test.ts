@@ -178,4 +178,33 @@ describe('local number sets', () => {
       updatedAt: '2026-07-10T03:00:00.000Z',
     })
   })
+
+  it('clears only the selected set inputs while preserving its identity and preset', () => {
+    const first = appendLocalNumberSet([], sampleInputs, {
+      id: 'local-a',
+      title: '삼성08',
+      presetId: 'futures',
+      updatedAt: '2026-07-10T01:00:00.000Z',
+    })
+    const second = appendLocalNumberSet(first.sets, sampleInputs, {
+      id: 'local-b',
+      title: '보조 세트',
+      presetId: 'stock',
+      updatedAt: '2026-07-10T02:00:00.000Z',
+    })
+
+    const cleared = upsertLocalNumberSet(second.sets, 'local-a', defaultInputs, {
+      updatedAt: '2026-07-10T03:00:00.000Z',
+    })
+
+    expect(cleared).toHaveLength(2)
+    expect(cleared.find((set) => set.id === 'local-a')).toEqual({
+      id: 'local-a',
+      title: '삼성08',
+      inputs: defaultInputs,
+      presetId: 'futures',
+      updatedAt: '2026-07-10T03:00:00.000Z',
+    })
+    expect(cleared.find((set) => set.id === 'local-b')).toEqual(second.set)
+  })
 })

@@ -108,4 +108,19 @@ describe('number-set terminology preset storage', () => {
     expect(db).toContain('preset_id: presetId')
     expect(db).toContain('export async function setNumberSetPreset')
   })
+
+  it('updates inputs in place without touching metadata or invoking deletion', () => {
+    const db = source('src/db/numberSets.ts')
+    const saveStart = db.indexOf('export async function saveNumberSet(')
+    const saveEnd = db.indexOf('export async function renameNumberSet(', saveStart)
+    const saveBlock = db.slice(saveStart, saveEnd)
+
+    expect(saveBlock).toContain('.update(')
+    expect(saveBlock).toContain('{ inputs, preset_id: presetId }')
+    expect(saveBlock).toContain(".eq('id', existingId)")
+    expect(saveBlock).not.toContain('.delete()')
+    expect(saveBlock).not.toContain('memo:')
+    expect(saveBlock).not.toContain('auto_snapshot_enabled:')
+    expect(saveBlock).not.toContain('rollover_')
+  })
 })

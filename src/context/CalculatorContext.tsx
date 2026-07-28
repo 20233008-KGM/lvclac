@@ -385,6 +385,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [localDraftSavedAt, setLocalDraftSavedAt] = useState(readActiveLocalDraftSavedAt)
   const [cloudDraftSavedAt, setCloudDraftSavedAt] = useState<string | null>(null)
   const cloudSetIdRef = useRef<string | null>(null)
+  const cloudNumberSetsRef = useRef<NumberSetRecord[]>([])
   const mountedRef = useRef(false)
   const suppressNextPersistRef = useRef(false)
   const suppressNextPresetPersistRef = useRef(false)
@@ -405,6 +406,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     cloudSetIdRef.current = cloudSetId
   }, [cloudSetId])
+
+  useEffect(() => {
+    cloudNumberSetsRef.current = cloudNumberSets
+  }, [cloudNumberSets])
 
   const rememberActiveCloudNumberSet = useCallback(
     async (userId: string, setId: string | null): Promise<string | null> => {
@@ -578,7 +583,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           return result.error
         }
         if (deletedSetId) {
-          const nextSets = cloudNumberSets.filter((set) => set.id !== deletedSetId)
+          const nextSets = cloudNumberSetsRef.current.filter((set) => set.id !== deletedSetId)
           const nextActive = nextSets[0] ?? null
           setCloudNumberSets(nextSets)
           cloudSetIdRef.current = nextActive?.id ?? null
@@ -663,7 +668,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       setSyncStatus('saved')
       return null
     },
-    [activeUserId, cloudNumberSets, preset, refreshLocalNumberSetState, rememberActiveCloudNumberSet, replaceInputsFromStorage, replaceNumberSetFromStorage, saveEnabled, storageMode],
+    [activeUserId, preset, refreshLocalNumberSetState, rememberActiveCloudNumberSet, replaceInputsFromStorage, replaceNumberSetFromStorage, saveEnabled, storageMode],
   )
 
   const setSaveEnabled = useCallback(

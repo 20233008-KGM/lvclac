@@ -245,6 +245,20 @@ describe('draft save slot UI', () => {
     expect(text).toMatch(/setSyncStatus\('saving'\)\r?\n\s+const timer = window\.setTimeout\(\(\) => \{/)
   })
 
+  it('does not reschedule cloud autosave when only the saved slot list changes', () => {
+    const text = source('src/context/CalculatorContext.tsx')
+    const persistStart = text.indexOf('const persistInputs = useCallback(')
+    const persistEnd = text.indexOf('const setSaveEnabled = useCallback(', persistStart)
+    const persistBlock = text.slice(persistStart, persistEnd)
+    const dependencyList = persistBlock.match(/\n\s+\[([^\]]+)\],\r?\n\s+\)\r?\n\s*$/)?.[1]
+
+    expect(text).toContain('const cloudNumberSetsRef = useRef<NumberSetRecord[]>([])')
+    expect(text).toContain('cloudNumberSetsRef.current = cloudNumberSets')
+    expect(persistBlock).toContain('cloudNumberSetsRef.current.filter')
+    expect(dependencyList).toBeDefined()
+    expect(dependencyList).not.toMatch(/\bcloudNumberSets\b/)
+  })
+
   it('keeps the saved status in the same muted tone as other draft-save status text', () => {
     const css = source('src/App.css')
 

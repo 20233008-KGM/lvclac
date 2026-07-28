@@ -46,7 +46,7 @@ describe('records archive layout contract', () => {
       /\.records-timeline-row\s*\{[\s\S]*min-height: 50px;/,
     )
     expect(css).toMatch(
-      /\.records-timeline-card\s*\{[\s\S]*min-height: 42px;[\s\S]*padding: 6px 10px;/,
+      /\.records-timeline-card\s*\{[\s\S]*min-height: 38px;[\s\S]*padding: 3px 10px;/,
     )
   })
 })

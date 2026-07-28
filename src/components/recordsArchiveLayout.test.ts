@@ -40,4 +40,13 @@ describe('records archive layout contract', () => {
       /@media[\s\S]*\.records-timeline-meta\s*\{[\s\S]*grid-row: 1;[\s\S]*display: flex;/,
     )
   })
+
+  it('keeps compact record cards inside the stable timeline row rhythm', () => {
+    expect(css).toMatch(
+      /\.records-timeline-row\s*\{[\s\S]*min-height: 50px;/,
+    )
+    expect(css).toMatch(
+      /\.records-timeline-card\s*\{[\s\S]*min-height: 42px;[\s\S]*padding: 6px 10px;/,
+    )
+  })
 })

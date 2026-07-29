@@ -87,6 +87,25 @@ describe('calculator history menu descriptions', () => {
     ])
   })
 
+  it('shows the order-price link state as a localized field change', () => {
+    const description = describeCalculatorHistoryMove(
+      move(
+        { ...base, orderPrice: 340, orderPriceLinked: false },
+        { ...base, orderPrice: 350, orderPriceLinked: true },
+      ),
+      ko,
+    )
+
+    expect(description.kind).toBe('fields')
+    if (description.kind !== 'fields') return
+    expect(description.diffs).toContainEqual({
+      key: 'orderPriceLinked',
+      label: '주문가격 현재가 연동',
+      before: '해제',
+      after: '연동',
+    })
+  })
+
   it('summarizes a final order once and preserves a negative contract sign', () => {
     const orderInputs: CalculatorInputs = {
       ...base,

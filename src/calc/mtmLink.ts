@@ -23,6 +23,10 @@ export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   commitOrderScenario?: OrderScenarioBaseline
   /** 주문 시나리오 Esc — 진입 전 상태 복원 */
   clearOrderScenario?: true
+  /** 주문 계약수·가격 초기화 (미리보기 중이면 미리보기도 종료) */
+  clearOrderInputs?: true
+  /** 주문 가격의 현재가 연동 켜기/끄기 */
+  setOrderPriceLink?: boolean
   /** 주문 시나리오 Enter 2 — 계좌에 주문 반영 */
   applyOrderScenario?: true
   /** 주문 반영 취소 — 미리보기 복귀 */
@@ -408,11 +412,39 @@ function sanitizePatchForScenarioLock(
   return inputPatch
 }
 
+function finalizeOrderPriceLink(
+  next: CalculatorInputs,
+  intent: {
+    manualOrderPriceEdit: boolean
+    requestedLinkState: boolean | undefined
+    clearOrderInputs: boolean
+  },
+): CalculatorInputs {
+  let linked = next.orderPriceLinked === true
+
+  if (intent.requestedLinkState !== undefined) {
+    linked = intent.requestedLinkState
+  } else if (intent.manualOrderPriceEdit || intent.clearOrderInputs) {
+    linked = false
+  }
+
+  if (!linked || next.currentPrice == null) {
+    return { ...next, orderPriceLinked: false }
+  }
+
+  return {
+    ...next,
+    orderPriceLinked: true,
+    orderPrice: next.currentPrice,
+  }
+}
+
 /** 시나리오·가격·주문 입력 패치 보정 */
 export function applyInputPatch(
   prev: CalculatorInputs,
   patch: CalculatorInputPatch,
 ): CalculatorInputs {
+  const manualOrderPriceEdit = Object.prototype.hasOwnProperty.call(patch, 'orderPrice')
   const {
     commitScenarioPrice,
     commitCurrentPrice,
@@ -425,29 +457,52 @@ export function applyInputPatch(
     undoMarkPrice,
     commitOrderScenario,
     clearOrderScenario,
+    clearOrderInputs,
+    setOrderPriceLink,
     applyOrderScenario,
     undoOrderApply,
     ...inputPatch
   } = patch
 
   const previewLocked = isPreviewModeActive(prev)
+  const finish = (next: CalculatorInputs) =>
+    finalizeOrderPriceLink(next, {
+      manualOrderPriceEdit,
+      requestedLinkState: setOrderPriceLink,
+      clearOrderInputs: clearOrderInputs === true,
+    })
 
   if (undoMarkPrice) {
     const undone = revertMarkPriceApply(prev)
-    if (undone) return { ...prev, ...inputPatch, ...undone }
-    return { ...prev, ...inputPatch }
+    if (undone) return finish({ ...prev, ...inputPatch, ...undone })
+    return finish({ ...prev, ...inputPatch })
   }
 
   if (undoOrderApply) {
     const undone = revertOrderApply(prev)
-    if (undone) return { ...prev, ...inputPatch, ...undone }
-    return { ...prev, ...inputPatch }
+    if (undone) return finish({ ...prev, ...inputPatch, ...undone })
+    return finish({ ...prev, ...inputPatch })
   }
 
   if (undoScenarioApply) {
     const undone = revertScenarioApply(prev)
-    if (undone) return { ...prev, ...inputPatch, ...undone }
-    return { ...prev, ...inputPatch }
+    if (undone) return finish({ ...prev, ...inputPatch, ...undone })
+    return finish({ ...prev, ...inputPatch })
+  }
+
+  if (clearOrderInputs) {
+    const base = isOrderScenarioModeActive(prev)
+      ? { ...prev, ...revertOrderScenarioState(prev) }
+      : prev
+    return finish({
+      ...base,
+      ...inputPatch,
+      orderContracts: undefined,
+      orderPrice: undefined,
+      orderPriceLinked: false,
+      orderScenarioRevertSnapshot: undefined,
+      orderScenarioBeforeBaseline: undefined,
+    })
   }
 
   if (applyOrderScenario) {
@@ -472,9 +527,9 @@ export function applyInputPatch(
               orderScenarioBeforeBaseline: base.orderScenarioBeforeBaseline,
             }
           : undefined
-      return { ...base, ...applied, orderApplyUndoSnapshot: undoSnapshot }
+      return finish({ ...base, ...applied, orderApplyUndoSnapshot: undoSnapshot })
     }
-    return base
+    return finish(base)
   }
 
   if (applyScenarioToMark != null) {
@@ -495,9 +550,9 @@ export function applyInputPatch(
               scenarioRevertSnapshot: base.scenarioRevertSnapshot,
             }
           : undefined
-      return { ...base, ...rolled, scenarioApplyUndoSnapshot: undoSnapshot }
+      return finish({ ...base, ...rolled, scenarioApplyUndoSnapshot: undoSnapshot })
     }
-    return base
+    return finish(base)
   }
 
   if (applyMarkPrice != null) {
@@ -515,25 +570,25 @@ export function applyInputPatch(
               evalSnapshotSide: base.evalSnapshotSide,
             }
           : undefined
-      return { ...base, ...moved, markPriceUndoSnapshot: undoSnapshot }
+      return finish({ ...base, ...moved, markPriceUndoSnapshot: undoSnapshot })
     }
-    return base
+    return finish(base)
   }
 
   if (clearOrderScenario) {
-    return { ...prev, ...inputPatch, ...revertOrderScenarioState(prev) }
+    return finish({ ...prev, ...inputPatch, ...revertOrderScenarioState(prev) })
   }
 
   if (clearScenario) {
-    return { ...prev, ...inputPatch, ...revertScenarioState(prev) }
+    return finish({ ...prev, ...inputPatch, ...revertScenarioState(prev) })
   }
 
   if (previewLocked && tickCurrentPrice != null) {
-    return prev
+    return finish(prev)
   }
 
   if (previewLocked && commitCurrentPrice != null) {
-    return prev
+    return finish(prev)
   }
 
   const sanitizedPatch = sanitizePatchForScenarioLock(prev, inputPatch)
@@ -542,38 +597,38 @@ export function applyInputPatch(
     const direction = tickCurrentPrice === 1 ? 1 : -1
     const base = { ...prev, ...sanitizedPatch }
     const moved = applyTickMove(base, direction)
-    if (moved) return { ...base, ...moved }
-    return base
+    if (moved) return finish({ ...base, ...moved })
+    return finish(base)
   }
 
   if (commitOrderScenario != null) {
     const base = { ...prev, ...sanitizedPatch }
     const entered = enterOrderScenarioPreview(base, commitOrderScenario)
-    if (entered) return { ...base, ...entered }
-    return base
+    if (entered) return finish({ ...base, ...entered })
+    return finish(base)
   }
 
   if (commitScenarioPrice != null) {
     const base = { ...prev, ...sanitizedPatch }
     const entered = enterScenarioPreview(base, commitScenarioPrice)
-    if (entered) return { ...base, ...entered }
-    return base
+    if (entered) return finish({ ...base, ...entered })
+    return finish(base)
   }
 
   if (commitCurrentPrice != null) {
     const base = { ...prev, ...sanitizedPatch }
     const moved = applyPriceMove(base, commitCurrentPrice)
-    if (moved) return { ...base, ...moved }
-    return base
+    if (moved) return finish({ ...base, ...moved })
+    return finish(base)
   }
 
   if (sanitizedPatch.accountEval !== undefined) {
-    return {
+    return finish({
       ...prev,
       ...sanitizedPatch,
       mtmPriceAnchor: inputPatch.currentPrice ?? prev.currentPrice,
-    }
+    })
   }
 
-  return { ...prev, ...sanitizedPatch }
+  return finish({ ...prev, ...sanitizedPatch })
 }

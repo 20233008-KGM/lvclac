@@ -32,4 +32,27 @@ describe('sanitizeDraftInputs', () => {
     })
     expect(result.scenarioRevertSnapshot).toBeUndefined()
   })
+
+  it('현재가 연동 저장값은 주문가격을 현재가와 같은 값으로 복원', () => {
+    const result = sanitizeDraftInputs({
+      ...defaultInputs,
+      currentPrice: 355,
+      orderPrice: 340,
+      orderPriceLinked: true,
+    })
+
+    expect(result.orderPriceLinked).toBe(true)
+    expect(result.orderPrice).toBe(355)
+  })
+
+  it('현재가가 없는 손상된 연동 저장값은 연동을 해제', () => {
+    const result = sanitizeDraftInputs({
+      ...defaultInputs,
+      orderPrice: 340,
+      orderPriceLinked: true,
+    })
+
+    expect(result.orderPriceLinked).toBe(false)
+    expect(result.orderPrice).toBe(340)
+  })
 })

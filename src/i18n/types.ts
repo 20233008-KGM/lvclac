@@ -65,6 +65,9 @@ export interface Messages {
       accountEval: string
       currentPrice: string
       contracts: string
+      orderPriceLink: string
+      linked: string
+      unlinked: string
       orderPreview: string
       orderApply: string
       scenarioPreview: string
@@ -110,7 +113,12 @@ export interface Messages {
   useCurrentPriceShort: string
   /** 주문가 inline 현재가 버튼 aria/title */
   useCurrentPriceTitle: string
+  /** 현재가와 주문 가격 연동 버튼 aria/title */
+  linkOrderPriceTitle: string
+  /** 현재가와 주문 가격 연동 해제 버튼 aria/title */
+  unlinkOrderPriceTitle: string
   clearAllInputs: string
+  clearOrderInputs: string
   clearAllInputsHint: string
   clearAllInputsHintLabel: string
   clearAllInputsModalTitle: string

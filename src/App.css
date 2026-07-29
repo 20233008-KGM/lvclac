@@ -2297,7 +2297,8 @@ input:focus:not(:focus-visible) {
 .input-panel .field > input,
 .input-panel .field > .numeric-field,
 .input-panel .field > .number-stepper,
-.input-panel .field > .input-commit-row {
+.input-panel .field > .input-commit-row,
+.input-panel .field > .current-price-link-row {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -2360,6 +2361,10 @@ input:focus:not(:focus-visible) {
 }
 
 .input-panel .number-stepper--with-inline-slot {
+  grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width) var(--stepper-btn-width);
+}
+
+.input-panel .number-stepper--with-trailing-slot {
   grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width) var(--stepper-btn-width);
 }
 
@@ -4817,6 +4822,7 @@ html[lang='en'] .trust-modal--service .disclaimer-sections p {
   flex-shrink: 1;
   min-width: 0;
   max-width: min(100%, 22rem);
+  gap: var(--space-xs);
 }
 
 .order-scenario-chip {
@@ -5257,6 +5263,51 @@ html[lang='en'] .trust-modal--service .disclaimer-sections p {
   cursor: not-allowed;
 }
 
+.current-price-link-row {
+  --stepper-btn-width: 1.375rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stepper-btn-width);
+  align-items: stretch;
+  min-width: 0;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast);
+  position: relative;
+  isolation: isolate;
+}
+
+.current-price-link-row:focus-within {
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+  z-index: 2;
+}
+
+.current-price-link-row > .numeric-field-clip {
+  min-width: 0;
+  width: 100%;
+}
+
+.current-price-link-row .current-price-link-row__input,
+.current-price-link-row .current-price-link-row__input:focus,
+.current-price-link-row .current-price-link-row__input:focus-visible {
+  width: 100%;
+  min-width: 0;
+  border-radius: 0;
+  border-right: none;
+}
+
+.current-price-link-row:focus-within .current-price-link-row__input,
+.current-price-link-row:focus-within .order-mark-inline-btn {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.current-price-link-row .current-price-link-btn {
+  border-left: none;
+  border-right: 1px solid var(--color-border-subtle);
+  border-radius: 0;
+}
+
 .result-order-price-row {
   display: grid;
   grid-template-columns:
@@ -5590,6 +5641,24 @@ html[lang='en'] .trust-modal--service .disclaimer-sections p {
 .calc-viewport--scenario .number-stepper--with-trailing-slot:focus-within .order-mark-inline-btn:focus-visible {
   border-color: var(--scenario-accent);
   box-shadow: inset 1px 0 0 var(--scenario-accent);
+}
+
+.order-mark-inline-btn.price-link-inline-btn--active,
+.number-stepper--with-trailing-slot:focus-within .order-mark-inline-btn.price-link-inline-btn--active,
+.current-price-link-row:focus-within .order-mark-inline-btn.price-link-inline-btn--active {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 72%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-primary) 17%, var(--color-surface-2));
+  box-shadow:
+    inset 1px 0 0 color-mix(in srgb, var(--color-primary) 68%, transparent),
+    0 0 11px color-mix(in srgb, var(--color-primary) 48%, transparent);
+  text-shadow: 0 0 7px color-mix(in srgb, var(--color-primary) 74%, transparent);
+}
+
+.order-mark-inline-btn.price-link-inline-btn--active:hover:not(:disabled) {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 23%, var(--color-surface-2));
 }
 
 .number-stepper__btn:hover {

@@ -69,6 +69,16 @@ function visibleHistoryDiffs(
     { key: 'tickSize', label: messages.fields.tickSize.label, before: formatNumericValue(before.tickSize), after: formatNumericValue(after.tickSize) },
     { key: 'orderContracts', label: messages.fields.orderContracts.label, before: formatNumericValue(before.orderContracts), after: formatNumericValue(after.orderContracts) },
     { key: 'orderPrice', label: messages.fields.orderPrice.label, before: formatNumericValue(before.orderPrice), after: formatNumericValue(after.orderPrice) },
+    {
+      key: 'orderPriceLinked',
+      label: messages.calculatorHistory.diff.orderPriceLink,
+      before: before.orderPriceLinked
+        ? messages.calculatorHistory.diff.linked
+        : messages.calculatorHistory.diff.unlinked,
+      after: after.orderPriceLinked
+        ? messages.calculatorHistory.diff.linked
+        : messages.calculatorHistory.diff.unlinked,
+    },
   ].filter((entry) => entry.before !== entry.after)
 
   if (

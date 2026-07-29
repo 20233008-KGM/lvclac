@@ -382,6 +382,34 @@ describe('주문 시나리오', () => {
     expect(cleared.orderPrice).toBe(320_000)
   })
 
+  it('주문 비우기 — 주문 필드만 초기화하고 연동을 해제한다', () => {
+    const cleared = applyInputPatch(
+      { ...orderBase, orderPriceLinked: true, orderPrice: orderBase.currentPrice },
+      { clearOrderInputs: true },
+    )
+
+    expect(cleared.orderContracts).toBeUndefined()
+    expect(cleared.orderPrice).toBeUndefined()
+    expect(cleared.orderPriceLinked).toBe(false)
+    expect(cleared.accountEval).toBe(orderBase.accountEval)
+    expect(cleared.contracts).toBe(orderBase.contracts)
+    expect(cleared.contractAmount).toBe(orderBase.contractAmount)
+  })
+
+  it('주문 미리보기 중 비우기 — 진입 전 계좌 기준값을 복원하고 미리보기를 종료한다', () => {
+    const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
+    const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
+    const cleared = applyInputPatch(preview, { clearOrderInputs: true })
+
+    expect(isOrderScenarioModeActive(cleared)).toBe(false)
+    expect(cleared.orderContracts).toBeUndefined()
+    expect(cleared.orderPrice).toBeUndefined()
+    expect(cleared.orderPriceLinked).toBe(false)
+    expect(cleared.accountEval).toBe(orderBase.accountEval)
+    expect(cleared.contracts).toBe(orderBase.contracts)
+    expect(cleared.contractAmount).toBe(orderBase.contractAmount)
+  })
+
   it('Enter 2 — contracts/equity 반영, 모드 종료', () => {
     const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
     const preview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
@@ -421,5 +449,54 @@ describe('주문 시나리오', () => {
     const baseline = captureOrderScenarioBaseline(calculateOrder(orderBase))
     const orderPreview = applyInputPatch(orderBase, { commitOrderScenario: baseline })
     expect(isPreviewModeActive(orderPreview)).toBe(true)
+  })
+
+  it('현재가 연동을 켜면 주문가격을 즉시 현재가로 맞춘다', () => {
+    const linked = applyInputPatch(
+      { ...base, orderPrice: 340, orderPriceLinked: false },
+      { setOrderPriceLink: true },
+    )
+
+    expect(linked.orderPriceLinked).toBe(true)
+    expect(linked.orderPrice).toBe(350)
+  })
+
+  it('연동 중 현재가 갱신은 계좌평가금과 주문가격을 한 패치에서 함께 이동한다', () => {
+    const linked = { ...base, orderPrice: 350, orderPriceLinked: true }
+    const moved = applyInputPatch(linked, { applyMarkPrice: 355 })
+
+    expect(moved.currentPrice).toBe(355)
+    expect(moved.accountEval).toBe(10_000_010)
+    expect(moved.orderPrice).toBe(355)
+    expect(moved.orderPriceLinked).toBe(true)
+  })
+
+  it('연동 중 주문가격을 직접 만지면 같은 값이어도 즉시 연동을 해제한다', () => {
+    const linked = { ...base, orderPrice: 350, orderPriceLinked: true }
+    const edited = applyInputPatch(linked, { orderPrice: 350 })
+
+    expect(edited.orderPrice).toBe(350)
+    expect(edited.orderPriceLinked).toBe(false)
+  })
+
+  it('연동 해제 상태의 현 버튼식 1회 복사는 연동을 켜지 않는다', () => {
+    const copied = applyInputPatch(
+      { ...base, orderPrice: 340, orderPriceLinked: false },
+      { orderPrice: base.currentPrice },
+    )
+
+    expect(copied.orderPrice).toBe(350)
+    expect(copied.orderPriceLinked).toBe(false)
+  })
+
+  it('연동 주문을 계좌에 반영하면 다음 주문을 위해 현재가 연동을 유지한다', () => {
+    const linkedBase = applyInputPatch(orderBase, { setOrderPriceLink: true })
+    const baseline = captureOrderScenarioBaseline(calculateOrder(linkedBase))
+    const preview = applyInputPatch(linkedBase, { commitOrderScenario: baseline })
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+
+    expect(applied.orderContracts).toBeUndefined()
+    expect(applied.orderPriceLinked).toBe(true)
+    expect(applied.orderPrice).toBe(applied.currentPrice)
   })
 })

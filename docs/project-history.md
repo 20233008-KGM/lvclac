@@ -277,3 +277,8 @@
 - `dev` `/my` 숫자세트의 로컬 저장 안내를 `이 기기 세트` 카드 내부 아이콘 안내에서 이 기기·클라우드 그룹 아래의 작은 보조문구로 옮겼다. 문구는 `이 기기 세트는 이 브라우저에만 저장되며, 브라우저 데이터 삭제 시 함께 사라집니다.`와 대응 영문으로 짧게 정리하고 저장·클라우드·자동 기록 동작은 유지했다.
 - 검증: 관련 **12/12**·전체 Vitest **735/735**, TypeScript 포함 production build, 기존 `MyPage.tsx` effect 규칙 제외 변경 파일 ESLint, diff check 통과. UI 키트 1920×855·390×844 한영에서 카드 밖 하단 배치, 13px 보조문구, 패널 내부 가로 오버플로 0을 확인했다. 로그인 상태 실제 `/my` 데이터는 미검증이다.
 - 적용 커밋 `dev` **b5122ff**. Notion [Task LV-77](https://app.notion.com/p/3a526e6d586f81c5a4cfef4a338749f0) 갱신과 [Work Log](https://app.notion.com/p/3a526e6d586f81259419d6fb00e72423) 기록 완료. 푸시·배포는 수행하지 않았고 병행 중인 클라우드 활성 세트 선호도 변경은 커밋에서 제외했다.
+
+**2026-07-25 — AdSense 법인 연결·사이트 심사 요청**
+- 법인용 Google AdSense 지급 프로필과 `liqguard.com` 사이트 연결을 완료했다. Production에 `ca-pub-3778648907823044`, 정확한 `ads.txt`, 법인명·대표자·주소·사업자등록번호·개인정보 보호책임자를 설정하고 일반 검색 `noindex`는 유지한 채 `Mediapartners-Google`·`Google-Display-Ads-Bot`만 허용했다. Google CMP는 동의·거부·옵션 관리의 3가지 선택 메시지로 생성했다.
+- 검증: 전체 Vitest **720/720**, 변경 파일 ESLint, TypeScript 포함 production build 통과. `liqguard.com`에서 HTTP 200·AdSense meta·exact ads.txt·크롤러별 robots 허용·일반 검색 차단·meta/header noindex를 확인했다. Chrome 실화면에서 공식 법인정보와 소유권 확인 성공, `리뷰가 요청됨`, CMP 저장을 확인했고, 발견한 가짜 통신판매업 예시값은 미설정 시 숨기도록 교정했다.
+- 적용 커밋 `maintenance/public` **ce9fd03**, **5ac150e**, **b910d1a**, 최종 Vercel 배포 **dpl_89wepc9RxD2eGb6mHao5VGossbs2**. Notion [Task LV-8](https://app.notion.com/p/39926e6d586f8167ba2ec366525a5bdf)·[Work Log](https://app.notion.com/p/3a826e6d586f8120bff2c8b64542ac07)와 8월 7일 Google Calendar 일정을 갱신했다. 남은 외부 게이트는 Google 최종 승인·ads.txt 대시보드 반영·실제 광고 게재 및 VPN 기반 CMP QA다.

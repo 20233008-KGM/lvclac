@@ -194,6 +194,16 @@ function visibleHistoryDiffs(
       before: formatNumericValue(before.orderPrice),
       after: formatNumericValue(after.orderPrice),
     },
+    {
+      key: 'orderPriceLinked',
+      label: messages.calculatorHistory.diff.orderPriceLink,
+      before: before.orderPriceLinked
+        ? messages.calculatorHistory.diff.linked
+        : messages.calculatorHistory.diff.unlinked,
+      after: after.orderPriceLinked
+        ? messages.calculatorHistory.diff.linked
+        : messages.calculatorHistory.diff.unlinked,
+    },
   ]
 
   return entries.filter((entry) => entry.before !== entry.after)

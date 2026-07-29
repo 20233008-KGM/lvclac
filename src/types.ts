@@ -48,6 +48,8 @@ export interface CalculatorInputs {
   orderContracts?: number
   /** 주문 체결 가격 — 미입력 시 현재가와 동일하게 간주 */
   orderPrice?: number
+  /** true면 주문 가격이 현재가를 계속 따라간다. */
+  orderPriceLinked?: boolean
   /** accountEval 입력 시점의 포지션 — 탭 전환 MTM 보정용 */
   evalSnapshotSide?: PositionSide
   /** accountEval·시나리오 롤링 기준 현재가 */
@@ -179,6 +181,7 @@ export interface OrderResult {
 export const defaultInputs: CalculatorInputs = {
   mode: 'evaluate',
   positionSide: 'long',
+  orderPriceLinked: false,
 }
 
 /** 직접 증거금 테스트용 — ES: 약정금액 = 50×5000 */

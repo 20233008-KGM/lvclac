@@ -435,6 +435,7 @@ function OrderInputs({
   scenarioPriceLabel,
   useCurrentPriceShort,
   useCurrentPriceTitle,
+  unlinkOrderPriceTitle,
   stepUpLabel,
   stepDownLabel,
   tooltipLabel,
@@ -453,6 +454,7 @@ function OrderInputs({
   scenarioPriceLabel: string
   useCurrentPriceShort: string
   useCurrentPriceTitle: string
+  unlinkOrderPriceTitle: string
   stepUpLabel: string
   stepDownLabel: string
   tooltipLabel: string
@@ -534,16 +536,25 @@ function OrderInputs({
     if (currentPrice != null) onChange({ orderPrice: currentPrice })
   }
 
+  const orderPriceLinked = inputs.orderPriceLinked === true
+  const markButtonTitle = orderPriceLinked ? unlinkOrderPriceTitle : useCurrentPriceTitle
   const markInlineButton = (
     <button
       type="button"
-      className="order-mark-inline-btn"
-      aria-label={useCurrentPriceTitle}
-      title={useCurrentPriceTitle}
+      className={`order-mark-inline-btn${orderPriceLinked ? ' price-link-inline-btn--active' : ''}`}
+      aria-label={markButtonTitle}
+      aria-pressed={orderPriceLinked}
+      title={markButtonTitle}
       disabled={!canUseCurrentPrice}
-      onClick={fillOrderPriceWithCurrent}
+      onClick={() => {
+        if (orderPriceLinked) {
+          onChange({ setOrderPriceLink: false })
+          return
+        }
+        fillOrderPriceWithCurrent()
+      }}
     >
-      {useCurrentPriceShort}
+      {orderPriceLinked ? <span aria-hidden="true">🔗</span> : useCurrentPriceShort}
     </button>
   )
 
@@ -1012,6 +1023,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           scenarioPriceLabel={t.orderScenarioFieldPrice}
           useCurrentPriceShort={t.useCurrentPriceShort}
           useCurrentPriceTitle={t.useCurrentPriceTitle}
+          unlinkOrderPriceTitle={t.unlinkOrderPriceTitle}
           stepUpLabel={t.stepUp}
           stepDownLabel={t.stepDown}
           tooltipLabel={t.fieldTooltipLabel}

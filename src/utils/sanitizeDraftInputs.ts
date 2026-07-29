@@ -96,6 +96,8 @@ function cleanApplyUndoSnapshot(snapshot: CalculatorInputs['scenarioApplyUndoSna
  * UI(NumberInput 힌트)에서 입력 경고, precisionWarning 배너는 계산 결과만 검사한다.
  */
 export function sanitizeDraftInputs(inputs: CalculatorInputs): CalculatorInputs {
+  const currentPrice = cleanOptionalNumber(inputs.currentPrice)
+  const orderPriceLinked = inputs.orderPriceLinked === true && currentPrice != null
   return {
     ...inputs,
     accountEval: cleanOptionalNumber(inputs.accountEval),
@@ -108,10 +110,11 @@ export function sanitizeDraftInputs(inputs: CalculatorInputs): CalculatorInputs 
     contracts: cleanOptionalNumber(inputs.contracts),
     contractAmount: cleanOptionalNumber(inputs.contractAmount),
     contractAmountRole: cleanContractAmountRole(inputs.contractAmountRole),
-    currentPrice: cleanOptionalNumber(inputs.currentPrice),
+    currentPrice,
     contractMultiplier: cleanOptionalNumber(inputs.contractMultiplier),
     orderContracts: cleanOptionalNumber(inputs.orderContracts),
-    orderPrice: cleanOptionalNumber(inputs.orderPrice),
+    orderPrice: orderPriceLinked ? currentPrice : cleanOptionalNumber(inputs.orderPrice),
+    orderPriceLinked,
     mtmPriceAnchor: cleanOptionalNumber(inputs.mtmPriceAnchor),
     scenarioPrice: cleanOptionalNumber(inputs.scenarioPrice),
     scenarioAppliedPrice: cleanOptionalNumber(inputs.scenarioAppliedPrice),

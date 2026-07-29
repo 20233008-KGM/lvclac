@@ -175,6 +175,8 @@ function CurrentPriceField({
   tooltipLabel,
   tooltipGuideHref,
   tooltipGuideLinkLabel,
+  linkOrderPriceTitle,
+  unlinkOrderPriceTitle,
   disabled = false,
   rollPnlOnChange = false,
 }: {
@@ -186,6 +188,8 @@ function CurrentPriceField({
   tooltipLabel: string
   tooltipGuideHref?: string
   tooltipGuideLinkLabel?: string
+  linkOrderPriceTitle: string
+  unlinkOrderPriceTitle: string
   disabled?: boolean
   rollPnlOnChange?: boolean
 }) {
@@ -216,6 +220,24 @@ function CurrentPriceField({
     tooltipGuideHref,
     tooltipGuideLinkLabel,
   }
+  const orderPriceLinked = inputs.orderPriceLinked === true
+  const linkButtonTitle = orderPriceLinked ? unlinkOrderPriceTitle : linkOrderPriceTitle
+  const linkButton = (
+    <button
+      type="button"
+      className={`order-mark-inline-btn current-price-link-btn${orderPriceLinked ? ' price-link-inline-btn--active' : ''}`}
+      aria-label={linkButtonTitle}
+      aria-pressed={orderPriceLinked}
+      title={linkButtonTitle}
+      disabled={disabled || inputs.currentPrice == null}
+      onClick={(event) => {
+        event.preventDefault()
+        onChange({ setOrderPriceLink: !orderPriceLinked })
+      }}
+    >
+      <span aria-hidden="true">🔗</span>
+    </button>
+  )
 
   if (useStepper) {
     return (
@@ -232,6 +254,7 @@ function CurrentPriceField({
           onCommit={handleChange}
           onDeleteKey={rollPnlOnChange ? () => undefined : undefined}
           disabled={disabled}
+          trailingSlot={linkButton}
           enableDragScrub
           dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
           onChange={handleChange}
@@ -242,17 +265,21 @@ function CurrentPriceField({
 
   return (
     <Field {...fieldProps}>
-      <NumberInput
-        value={inputs.currentPrice}
-        allowDecimal={false}
-        placeholder={field.placeholder || undefined}
-        aria-labelledby="current-price-label"
-        disabled={disabled}
-        deferChangeUntilBlur={rollPnlOnChange}
-        onCommit={handleChange}
-        onDeleteKey={rollPnlOnChange ? () => undefined : undefined}
-        onChange={handleChange}
-      />
+      <div className="current-price-link-row">
+        <NumberInput
+          value={inputs.currentPrice}
+          allowDecimal={false}
+          placeholder={field.placeholder || undefined}
+          aria-labelledby="current-price-label"
+          className="current-price-link-row__input"
+          disabled={disabled}
+          deferChangeUntilBlur={rollPnlOnChange}
+          onCommit={handleChange}
+          onDeleteKey={rollPnlOnChange ? () => undefined : undefined}
+          onChange={handleChange}
+        />
+        {linkButton}
+      </div>
     </Field>
   )
 }
@@ -778,6 +805,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               tooltipLabel={t.fieldTooltipLabel}
               tooltipGuideHref={GUIDE_PATH}
               tooltipGuideLinkLabel={t.tooltipGuideLink}
+              linkOrderPriceTitle={t.linkOrderPriceTitle}
+              unlinkOrderPriceTitle={t.unlinkOrderPriceTitle}
               disabled={scenarioModeActive}
               rollPnlOnChange={setupComplete}
             />

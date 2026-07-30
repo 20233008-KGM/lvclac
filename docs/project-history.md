@@ -282,3 +282,8 @@
 - 법인용 Google AdSense 지급 프로필과 `liqguard.com` 사이트 연결을 완료했다. Production에 `ca-pub-3778648907823044`, 정확한 `ads.txt`, 법인명·대표자·주소·사업자등록번호·개인정보 보호책임자를 설정하고 일반 검색 `noindex`는 유지한 채 `Mediapartners-Google`·`Google-Display-Ads-Bot`만 허용했다. Google CMP는 동의·거부·옵션 관리의 3가지 선택 메시지로 생성했다.
 - 검증: 전체 Vitest **720/720**, 변경 파일 ESLint, TypeScript 포함 production build 통과. `liqguard.com`에서 HTTP 200·AdSense meta·exact ads.txt·크롤러별 robots 허용·일반 검색 차단·meta/header noindex를 확인했다. Chrome 실화면에서 공식 법인정보와 소유권 확인 성공, `리뷰가 요청됨`, CMP 저장을 확인했고, 발견한 가짜 통신판매업 예시값은 미설정 시 숨기도록 교정했다.
 - 적용 커밋 `maintenance/public` **ce9fd03**, **5ac150e**, **b910d1a**, 최종 Vercel 배포 **dpl_89wepc9RxD2eGb6mHao5VGossbs2**. Notion [Task LV-8](https://app.notion.com/p/39926e6d586f8167ba2ec366525a5bdf)·[Work Log](https://app.notion.com/p/3a826e6d586f8120bff2c8b64542ac07)와 8월 7일 Google Calendar 일정을 갱신했다. 남은 외부 게이트는 Google 최종 승인·ads.txt 대시보드 반영·실제 광고 게재 및 VPN 기반 CMP QA다.
+
+**2026-07-25 — 공개판 공통 선물 용어세트 단일 고정**
+- `maintenance/public`은 지수·종목·원자재 선물을 다루지만 상품별 용어를 선택하거나 바꾸지 않는다. 상단 용어 선택기를 제거하고 LanguageContext가 구버전 프리셋을 복원·영속화·오버라이드하지 않게 했으며, 한국어 `약정가격·계약승수(계약크기)`와 영어 `Entry price·Contract multiplier` 공통 용어를 항상 사용한다. 개인정보 문서에서도 용어 프리셋 저장 설명을 제거했고 계산식·입력값은 유지했다.
+- 검증: 집중 **25/25**·전체 Vitest **725/725**, TypeScript 포함 production build, diff check 통과. 변경 파일 ESLint는 신규 오류 없이 HEAD에도 있는 `LanguageContext.tsx` Fast Refresh 1건만 재현됐다. 인앱 브라우저에서 용어 combobox 0개, 한영 공통 용어, 새로고침 유지, 콘솔 오류 0을 확인했다.
+- 처음 만든 3종 선택 해석 **f2fa858**은 요구와 달라 최종 교정 커밋 **6dd0084**에서 바로잡았다. Notion 완료 [Task](https://app.notion.com/p/3a826e6d586f81988aa8d2b73fbd108d)·[Work Log](https://app.notion.com/p/3a826e6d586f81049448cadfa7dd6124)도 정정했다. `dev` 전파와 push·배포는 수행하지 않았다.

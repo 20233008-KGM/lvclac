@@ -25,6 +25,28 @@ describe('calculator focus-complete history wiring', () => {
     expect(stepper).toContain('onPointerUp: endPointerSession')
   })
 
+  it('keeps mobile steppers keyboard-free and cancels pending pointer sessions safely', () => {
+    const stepper = source('src/components/NumberStepper.tsx')
+    const input = source('src/components/NumberInput.tsx')
+
+    expect(stepper).toContain('shouldFocusInputForPointer(e.pointerType)')
+    expect(stepper).toContain('inputWasFocusedAtGestureStartRef')
+    expect(stepper).toContain('inputHandleRef.current?.adoptStepperValue(next)')
+    expect(stepper).toContain('onPointerCancel: cancelPointerSession')
+    expect(stepper).toContain('onLostPointerCapture: cancelPointerSession')
+    expect(input).toContain('isFocused: () => document.activeElement === inputElRef.current')
+    expect(input).toContain('adoptStepperValue: (next) =>')
+  })
+
+  it('keeps autosave driven by global inputs instead of DOM blur', () => {
+    const context = source('src/context/CalculatorContext.tsx')
+
+    expect(context).toContain('void persistInputs(inputs)')
+    expect(context).toContain(
+      '[authLoading, inputs, persistInputs, saveEnabled]',
+    )
+  })
+
   it('forwards history commit metadata through both calculator panels', () => {
     for (const path of ['src/components/InputPanel.tsx', 'src/components/ResultPanel.tsx']) {
       const panel = source(path)

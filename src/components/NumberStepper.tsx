@@ -14,6 +14,8 @@ import {
   HOLD_DELAY_MS,
   HOLD_INTERVAL_MS,
   resolvePointerUp,
+  resolveStepperBaseValue,
+  shouldFocusInputForPointer,
   shouldEnterScrub,
   type PointerMode,
 } from './numberStepperPointer'
@@ -102,12 +104,15 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
   const stepperInstanceIdRef = useRef(++nextNumberStepperInstanceId)
   const gestureGroupSerialRef = useRef(0)
   const gestureHistoryGroupRef = useRef<string | null>(null)
+  const inputWasFocusedAtGestureStartRef = useRef(false)
   const [scrubbingDelta, setScrubbingDelta] = useState<number | null>(null)
 
   useImperativeHandle(ref, () => ({
     commit: () => inputHandleRef.current?.commit() ?? false,
     readDraft: () => inputHandleRef.current?.readDraft(),
     focus: () => inputHandleRef.current?.focus(),
+    isFocused: () => inputHandleRef.current?.isFocused() === true,
+    adoptStepperValue: (next) => inputHandleRef.current?.adoptStepperValue(next),
   }))
 
   const focusInput = useCallback(() => {
@@ -139,22 +144,31 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 
   const minValue = allowNegative ? undefined : 0
 
-  const effectiveValue = useCallback(
-    () => (valueRef.current === undefined ? 0 : valueRef.current),
-    [],
-  )
+  const activeInputDraft = useCallback(() => {
+    const input = inputHandleRef.current
+    return {
+      inputFocused: inputWasFocusedAtGestureStartRef.current,
+      inputDraft: input?.readDraft(),
+    }
+  }, [])
 
   const scrubBaseValue = useCallback(() => {
-    if (valueRef.current != null) return valueRef.current
-    if (scrubSeedValue != null) return scrubSeedValue
-    return 0
-  }, [scrubSeedValue])
+    return resolveStepperBaseValue({
+      value: valueRef.current,
+      ...activeInputDraft(),
+      enableDragScrub: true,
+      scrubSeedValue,
+    })
+  }, [activeInputDraft, scrubSeedValue])
 
   const bumpBase = useCallback(() => {
-    if (valueRef.current != null) return valueRef.current
-    if (enableDragScrub) return scrubBaseValue()
-    return effectiveValue()
-  }, [enableDragScrub, effectiveValue, scrubBaseValue])
+    return resolveStepperBaseValue({
+      value: valueRef.current,
+      ...activeInputDraft(),
+      enableDragScrub,
+      scrubSeedValue,
+    })
+  }, [activeInputDraft, enableDragScrub, scrubSeedValue])
 
   const beginGestureHistoryGroup = useCallback(() => {
     gestureGroupSerialRef.current += 1
@@ -185,6 +199,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     const gestureStart = !gestureEmittedRef.current
     gestureEmittedRef.current = true
     valueRef.current = next
+    inputHandleRef.current?.adoptStepperValue(next)
     onChangeRef.current(next, {
       gestureStart,
       historyGroup: currentGestureHistoryGroup(),
@@ -267,7 +282,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
       setScrubbingDelta(session.delta)
 
       const seed = scrubBaseValue()
-      if (valueRef.current == null) {
+      if (valueRef.current !== seed) {
         emitChange(seed)
       }
     },
@@ -293,6 +308,13 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     resetPointerSession()
     commitGestureHistoryGroup()
   }, [bump, commitGestureHistoryGroup, emitChange, minValue, resetPointerSession, scrubBaseValue, step, stopHold])
+
+  const cancelPointerSession = useCallback(() => {
+    if (!pointerSessionRef.current) return
+    stopHold()
+    resetPointerSession()
+    commitGestureHistoryGroup()
+  }, [commitGestureHistoryGroup, resetPointerSession, stopHold])
 
   const scheduleHoldRepeat = useCallback(
     (delta: number) => {
@@ -324,8 +346,9 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
         }
         gestureEmittedRef.current = false
         beginGestureHistoryGroup()
-        focusInput()
+        inputWasFocusedAtGestureStartRef.current = inputHandleRef.current?.isFocused() === true
         e.currentTarget.setPointerCapture(e.pointerId)
+        if (shouldFocusInputForPointer(e.pointerType)) focusInput()
         startHold(delta)
       },
       onPointerUp: stopStepGesture,
@@ -352,7 +375,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
         }
         gestureEmittedRef.current = false
         beginGestureHistoryGroup()
-        focusInput()
+        inputWasFocusedAtGestureStartRef.current = inputHandleRef.current?.isFocused() === true
         e.currentTarget.setPointerCapture(e.pointerId)
 
         pointerSessionRef.current = {
@@ -362,6 +385,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
           delta,
           scrubAccumPx: 0,
         }
+        if (shouldFocusInputForPointer(e.pointerType)) focusInput()
         scheduleHoldRepeat(delta)
       },
       onPointerMove: (e: PointerEvent<HTMLButtonElement>) => {
@@ -381,8 +405,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
         }
       },
       onPointerUp: endPointerSession,
-      onPointerCancel: endPointerSession,
-      onLostPointerCapture: endPointerSession,
+      onPointerCancel: cancelPointerSession,
+      onLostPointerCapture: cancelPointerSession,
       onContextMenu: (e: MouseEvent) => e.preventDefault(),
     }
   }

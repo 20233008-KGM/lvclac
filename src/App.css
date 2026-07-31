@@ -4460,6 +4460,10 @@ input:focus:not(:focus-visible) {
   cursor: var(--cursor-scrub-vertical);
 }
 
+.number-stepper--drag-scrub .number-stepper__btn {
+  touch-action: none;
+}
+
 .number-stepper--scrub-active,
 .number-stepper--scrub-active * {
   cursor: var(--cursor-scrub-vertical) !important;

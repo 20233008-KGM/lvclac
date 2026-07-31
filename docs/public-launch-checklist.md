@@ -19,7 +19,7 @@ Vercel `lvclac` 프로젝트의 Production 환경에 아래 값을 입력한다.
 | `VITE_ADSENSE_CLIENT` | AdSense `ca-pub-...` client ID | 미입력 |
 | `VITE_AD_SLOT_*` | 각 광고 단위 숫자 ID | 미입력 |
 | `VITE_SITE_URL` | `https://liqguard.com` | 확인 필요 |
-| `ALLOW_INDEXING` | 공개 직전까지 `false`, Go 결정 뒤 `true` | 공개일 전환 |
+| `ALLOW_INDEXING` | `true` | 2026-07-31 검색 색인 조기 허용 |
 
 `ALLOW_INDEXING=true` 또는 `VITE_ADSENSE_CLIENT`가 설정되면 필수 운영자 정보가
 하나라도 비어 있는 production 빌드는 실패한다.
@@ -52,7 +52,10 @@ Vercel `lvclac` 프로젝트의 Production 환경에 아래 값을 입력한다.
 - 확인 결과가 개인정보처리방침의 국외 이전 표와 다르면 공개 전에 문구를 수정한다.
 - 법인명·대표자·주소·사업자등록번호·개인정보 보호책임자 표시를 전문가 또는 관할기관 기준으로 최종 검토한다.
 
-## 5. 공개일 검증
+## 5. 검색 개방·공개일 검증
+
+검색 개방은 2026-07-31에 먼저 수행한다. 정식 공개 공지와 나머지 런칭 검증은
+2026-08-07 일정을 유지한다.
 
 - `/`, `/guide`, `/formulas`, `/about`, `/terms`, `/privacy`가 모두 200으로 열리는지 확인한다.
 - 다른 제품·결제·계정·관리자 경로가 sitemap에 없고 홈으로 이동하는지 확인한다.

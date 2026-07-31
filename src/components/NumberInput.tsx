@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -25,6 +26,9 @@ export interface NumberInputHandle {
   /** defer 모드에서 입력 중 draft 값 읽기 */
   readDraft: () => number | undefined
   focus: () => void
+  isFocused: () => boolean
+  /** 스테퍼가 반영한 값을 입력 draft에도 즉시 맞추고 기존 타이핑 세션을 끝낸다. */
+  adoptStepperValue: (value: number | undefined) => void
 }
 
 export interface NumberInputChangeMeta {
@@ -91,34 +95,48 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   const inputInstanceIdRef = useRef(++nextNumberInputInstanceId)
   const historyGroupSerialRef = useRef(0)
   const historyGroupRef = useRef<string | null>(null)
-  const formatValue = isRate
-    ? (v: number | undefined | null) => formatRateForInput(v)
-    : (v: number | undefined | null) => formatNumberForInput(v, allowDecimal, allowNegative)
+  const formatValue = useCallback(
+    (next: number | undefined | null) =>
+      isRate
+        ? formatRateForInput(next)
+        : formatNumberForInput(next, allowDecimal, allowNegative),
+    [allowDecimal, allowNegative, isRate],
+  )
 
-  const formatRaw = isRate
-    ? formatRawRateInput
-    : (raw: string) => formatRawNumericInput(raw, allowDecimal, allowNegative)
+  const formatRaw = useCallback(
+    (raw: string) =>
+      isRate
+        ? formatRawRateInput(raw)
+        : formatRawNumericInput(raw, allowDecimal, allowNegative),
+    [allowDecimal, allowNegative, isRate],
+  )
 
   const [text, setText] = useState(() => formatValue(value))
+  const textRef = useRef(text)
   const [focused, setFocused] = useState(false)
   const [truncatedAttempt, setTruncatedAttempt] = useState(false)
 
+  const updateText = useCallback((next: string) => {
+    textRef.current = next
+    setText(next)
+  }, [])
+
+  const readDraftFromText = useCallback((): number | undefined => {
+    const parsed = parseFormattedInput(textRef.current)
+    if (parsed === '') return undefined
+    return normalizeInputValue(parsed, { isRate, allowDecimal })
+  }, [allowDecimal, isRate])
+
   useEffect(() => {
     if (!focused) {
-      setText(formatValue(value))
+      updateText(formatValue(value))
       setTruncatedAttempt(false)
       return
     }
     if (readDraftFromText() !== value) {
-      setText(formatValue(value))
+      updateText(formatValue(value))
     }
-  }, [value, focused, isRate, allowDecimal, allowNegative])
-
-  function readDraftFromText(): number | undefined {
-    const parsed = parseFormattedInput(text)
-    if (parsed === '') return undefined
-    return normalizeInputValue(parsed, { isRate, allowDecimal })
-  }
+  }, [focused, formatValue, readDraftFromText, updateText, value])
 
   const hintValue = focused ? readDraftFromText() : value
   const showHint = shouldShowDigitLimitHint(isRate, truncatedAttempt, hintValue)
@@ -146,7 +164,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   function commitFromText(): boolean {
     const normalized = readDraftFromText()
     if (normalized === undefined) {
-      setText(formatValue(value))
+      updateText(formatValue(value))
       return false
     }
     const handler = onCommit ?? onChange
@@ -158,7 +176,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     if (shouldCommit || historyGroupRef.current) {
       handler(normalized, currentChangeMeta(true))
     }
-    setText(formatValue(normalized))
+    updateText(formatValue(normalized))
     setFocused(false)
     setTruncatedAttempt(false)
     endHistoryGroup()
@@ -166,7 +184,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
   }
 
   function clearEntireValue() {
-    setText('')
+    updateText('')
     setTruncatedAttempt(false)
     if (deferChangeUntilBlur) {
       const handler = onCommit ?? onChange
@@ -180,6 +198,12 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
     commit: commitFromText,
     readDraft: readDraftFromText,
     focus: () => inputElRef.current?.focus(),
+    isFocused: () => document.activeElement === inputElRef.current,
+    adoptStepperValue: (next) => {
+      updateText(formatValue(next))
+      setTruncatedAttempt(false)
+      endHistoryGroup()
+    },
   }))
 
   const inputClass = [
@@ -229,16 +253,16 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
             if (!deferChangeUntilBlur) {
               setFocused(false)
               setTruncatedAttempt(false)
-              const parsed = parseFormattedInput(text)
+              const parsed = parseFormattedInput(textRef.current)
               if (parsed === '') {
                 onChange(undefined, currentChangeMeta(true))
-                setText(formatValue(value))
+                updateText(formatValue(value))
                 endHistoryGroup()
                 return
               }
               const normalized = normalizeInputValue(parsed, { isRate, allowDecimal })
               onChange(normalized, currentChangeMeta(true))
-              setText(formatValue(normalized))
+              updateText(formatValue(normalized))
               endHistoryGroup()
               return
             }
@@ -275,7 +299,7 @@ export const NumberInput = forwardRef<NumberInputHandle, NumberInputProps>(funct
           onChange={(e) => {
             const raw = e.target.value
             const formatted = formatRaw(raw)
-            setText(formatted)
+            updateText(formatted)
             if (
               !isRate &&
               wasIntegerDigitTruncated(raw, formatted, allowDecimal, allowNegative)

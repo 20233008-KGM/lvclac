@@ -15,6 +15,10 @@ export const FEEDBACK_STATUSES = [
 
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number]
 
+export const FEEDBACK_PRIORITIES = ['P0', 'P1', 'P2', 'P3'] as const
+
+export type FeedbackPriority = (typeof FEEDBACK_PRIORITIES)[number]
+
 export interface FeedbackPostAttachmentInput {
   name: string
   path: string
@@ -35,6 +39,8 @@ export interface FeedbackPostRow {
   author: string | null
   contact: string | null
   status: unknown
+  staff_reply: string | null
+  staff_replied_at: string | null
   attachments: unknown
   created_at: string
   updated_at: string
@@ -49,6 +55,11 @@ export interface FeedbackPostRecord {
   author: string
   contact: string
   status: FeedbackStatus
+  priority: FeedbackPriority
+  assignee: string
+  internalNote: string
+  staffReply: string
+  staffRepliedAt: string | null
   attachments: FeedbackPostAttachment[]
   createdAt: string
   updatedAt: string
@@ -71,12 +82,29 @@ export interface AdminFeedbackPostFilters {
   limit?: number
 }
 
+export interface FeedbackPostAdminDetailsRow {
+  post_id: string
+  priority: unknown
+  assignee: string | null
+  internal_note: string | null
+}
+
+export interface FeedbackTriageInput {
+  status: FeedbackStatus
+  priority: FeedbackPriority
+  assignee: string
+  internalNote: string
+  staffReply: string
+}
+
 type FeedbackPostResult<T> =
   | { data: T; error: null }
   | { data: null; error: string }
 
 const FEEDBACK_POST_COLUMNS =
-  'id,board_id,user_id,title,body,author,contact,status,attachments,created_at,updated_at'
+  'id,board_id,user_id,title,body,author,contact,status,staff_reply,staff_replied_at,attachments,created_at,updated_at'
+
+const FEEDBACK_ADMIN_DETAILS_COLUMNS = 'post_id,priority,assignee,internal_note'
 
 function unavailable<T>(): FeedbackPostResult<T> {
   return { data: null, error: 'supabase_not_configured' }
@@ -88,6 +116,10 @@ function mapError(error: { message?: string } | null | undefined): string {
 
 export function isFeedbackStatus(value: unknown): value is FeedbackStatus {
   return typeof value === 'string' && FEEDBACK_STATUSES.includes(value as FeedbackStatus)
+}
+
+export function isFeedbackPriority(value: unknown): value is FeedbackPriority {
+  return typeof value === 'string' && FEEDBACK_PRIORITIES.includes(value as FeedbackPriority)
 }
 
 function toBoardId(value: unknown): BoardId {
@@ -109,7 +141,10 @@ function toAttachments(value: unknown): FeedbackPostAttachment[] {
   return Array.isArray(value) ? value.filter(isAttachment) : []
 }
 
-export function rowToFeedbackPostRecord(row: FeedbackPostRow): FeedbackPostRecord {
+export function rowToFeedbackPostRecord(
+  row: FeedbackPostRow,
+  adminDetails?: FeedbackPostAdminDetailsRow | null,
+): FeedbackPostRecord {
   return {
     id: row.id,
     boardId: toBoardId(row.board_id),
@@ -119,6 +154,11 @@ export function rowToFeedbackPostRecord(row: FeedbackPostRow): FeedbackPostRecor
     author: row.author ?? '',
     contact: row.contact ?? '',
     status: isFeedbackStatus(row.status) ? row.status : 'new',
+    priority: isFeedbackPriority(adminDetails?.priority) ? adminDetails.priority : 'P2',
+    assignee: adminDetails?.assignee ?? '',
+    internalNote: adminDetails?.internal_note ?? '',
+    staffReply: row.staff_reply ?? '',
+    staffRepliedAt: row.staff_replied_at,
     attachments: toAttachments(row.attachments),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -163,7 +203,7 @@ export function createFeedbackPostsRepository(
         .order('created_at', { ascending: false })
 
       if (error) return { data: null, error: mapError(error) }
-      return { data: (data ?? []).map(rowToFeedbackPostRecord), error: null }
+      return { data: (data ?? []).map((row) => rowToFeedbackPostRecord(row)), error: null }
     },
 
     async fetchAdminPosts(
@@ -187,7 +227,24 @@ export function createFeedbackPostsRepository(
         .returns<FeedbackPostRow[]>()
 
       if (error) return { data: null, error: mapError(error) }
-      return { data: (data ?? []).map(rowToFeedbackPostRecord), error: null }
+      const rows = data ?? []
+      if (rows.length === 0) return { data: [], error: null }
+
+      const { data: detailRows, error: detailError } = await client
+        .from('feedback_post_admin_details')
+        .select(FEEDBACK_ADMIN_DETAILS_COLUMNS)
+        .in(
+          'post_id',
+          rows.map((row) => row.id),
+        )
+        .returns<FeedbackPostAdminDetailsRow[]>()
+
+      if (detailError) return { data: null, error: mapError(detailError) }
+      const detailsByPostId = new Map((detailRows ?? []).map((details) => [details.post_id, details]))
+      return {
+        data: rows.map((row) => rowToFeedbackPostRecord(row, detailsByPostId.get(row.id))),
+        error: null,
+      }
     },
 
     async createPost(
@@ -222,6 +279,45 @@ export function createFeedbackPostsRepository(
 
       if (error) return { data: null, error: mapError(error) }
       return { data: rowToFeedbackPostRecord(data), error: null }
+    },
+
+    async updatePostTriage(
+      postId: string,
+      input: FeedbackTriageInput,
+    ): Promise<FeedbackPostResult<FeedbackPostRecord>> {
+      if (!client) return unavailable()
+      if (!isFeedbackStatus(input.status)) {
+        return { data: null, error: 'invalid_feedback_status' }
+      }
+      if (!isFeedbackPriority(input.priority)) {
+        return { data: null, error: 'invalid_feedback_priority' }
+      }
+
+      const { error: updateError } = await client.rpc('update_feedback_post_triage', {
+        p_post_id: postId,
+        p_status: input.status,
+        p_priority: input.priority,
+        p_assignee: input.assignee,
+        p_internal_note: input.internalNote,
+        p_staff_reply: input.staffReply,
+      })
+      if (updateError) return { data: null, error: mapError(updateError) }
+
+      const { data: postRow, error: postError } = await client
+        .from('feedback_posts')
+        .select(FEEDBACK_POST_COLUMNS)
+        .eq('id', postId)
+        .single<FeedbackPostRow>()
+      if (postError) return { data: null, error: mapError(postError) }
+
+      const { data: detailRow, error: detailError } = await client
+        .from('feedback_post_admin_details')
+        .select(FEEDBACK_ADMIN_DETAILS_COLUMNS)
+        .eq('post_id', postId)
+        .single<FeedbackPostAdminDetailsRow>()
+      if (detailError) return { data: null, error: mapError(detailError) }
+
+      return { data: rowToFeedbackPostRecord(postRow, detailRow), error: null }
     },
 
     async uploadAttachments(

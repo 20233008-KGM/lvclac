@@ -13,6 +13,11 @@ const post: FeedbackPostRecord = {
   author: 'Trader Kim',
   contact: 'trader@example.com',
   status: 'new',
+  priority: 'P1',
+  assignee: 'Admin',
+  internalNote: 'Reproduced on Chrome',
+  staffReply: 'We are reviewing this report.',
+  staffRepliedAt: '2026-07-09T11:00:00.000Z',
   attachments: [],
   createdAt: '2026-07-09T10:00:00.000Z',
   updatedAt: '2026-07-09T10:00:00.000Z',
@@ -29,9 +34,11 @@ describe('AdminFeedbackView', () => {
     boardFilter: 'all' as const,
     statusFilter: 'all' as const,
     busyPostId: null,
+    savedPostId: null,
     onBoardFilterChange: vi.fn(),
     onStatusFilterChange: vi.fn(),
-    onStatusChange: vi.fn(),
+    onPostChange: vi.fn(),
+    onSave: vi.fn(),
     onRetry: vi.fn(),
   }
 
@@ -60,5 +67,9 @@ describe('AdminFeedbackView', () => {
     expect(html).toContain('trader@example.com')
     expect(html).toContain(en.adminFeedback.statusLabels.new)
     expect(html).toContain(en.adminFeedback.statusLabels.done)
+    expect(html).toContain(en.adminFeedback.priorityLabels.P1)
+    expect(html).toContain('Reproduced on Chrome')
+    expect(html).toContain('We are reviewing this report.')
+    expect(html).toContain(en.adminFeedback.save)
   })
 })

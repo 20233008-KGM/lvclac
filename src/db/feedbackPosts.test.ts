@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { BoardId } from '../config/boards'
 import {
   createFeedbackPostsRepository,
   isFeedbackStatus,
@@ -17,6 +16,8 @@ const row: FeedbackPostRow = {
   author: '',
   contact: 'me@example.com',
   status: 'new',
+  staff_reply: '',
+  staff_replied_at: null,
   attachments: [
     {
       name: 'screen.png',
@@ -46,6 +47,10 @@ describe('feedback posts repository helpers', () => {
       author: '',
       contact: 'me@example.com',
       status: 'new',
+      priority: 'P2',
+      assignee: '',
+      internalNote: '',
+      staffReply: '',
       attachments: [],
     })
   })
@@ -199,6 +204,32 @@ describe('feedback posts repository helpers', () => {
     const calls: Array<{ method: string; args: unknown[] }> = []
     const client = {
       from(table: string) {
+        if (table === 'feedback_post_admin_details') {
+          return {
+            select(columns: string) {
+              calls.push({ method: 'detail-select', args: [columns] })
+              return {
+                in(column: string, values: string[]) {
+                  calls.push({ method: 'in', args: [column, values] })
+                  return {
+                    returns: () =>
+                      Promise.resolve({
+                        data: [
+                          {
+                            post_id: 'post-1',
+                            priority: 'P1',
+                            assignee: 'Admin',
+                            internal_note: 'Reproduced',
+                          },
+                        ],
+                        error: null,
+                      }),
+                  }
+                },
+              }
+            },
+          }
+        }
         expect(table).toBe('feedback_posts')
         return {
           select(columns: string) {
@@ -228,13 +259,93 @@ describe('feedback posts repository helpers', () => {
     const result = await repo.fetchAdminPosts({ boardId: 'bugs', status: 'new', limit: 20 })
 
     expect(result.error).toBeNull()
+    expect(result.data?.[0]).toMatchObject({
+      priority: 'P1',
+      assignee: 'Admin',
+      internalNote: 'Reproduced',
+    })
     expect(calls).toEqual([
-      { method: 'select', args: ['id,board_id,user_id,title,body,author,contact,status,attachments,created_at,updated_at'] },
+      { method: 'select', args: ['id,board_id,user_id,title,body,author,contact,status,staff_reply,staff_replied_at,attachments,created_at,updated_at'] },
       { method: 'eq', args: ['board_id', 'bugs'] },
       { method: 'eq', args: ['status', 'new'] },
       { method: 'order', args: ['created_at', { ascending: false }] },
       { method: 'range', args: [0, 19] },
+      { method: 'detail-select', args: ['post_id,priority,assignee,internal_note'] },
+      { method: 'in', args: ['post_id', ['post-1']] },
     ])
+  })
+
+  it('updates triage fields through the atomic admin RPC', async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null })
+    const client = {
+      rpc,
+      from(table: string) {
+        if (table === 'feedback_posts') {
+          return {
+            select() {
+              return {
+                eq() {
+                  return {
+                    single: () =>
+                      Promise.resolve({
+                        data: { ...row, status: 'in_progress', staff_reply: 'Working on it' },
+                        error: null,
+                      }),
+                  }
+                },
+              }
+            },
+          }
+        }
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  single: () =>
+                    Promise.resolve({
+                      data: {
+                        post_id: 'post-1',
+                        priority: 'P1',
+                        assignee: 'Admin',
+                        internal_note: 'Reproduced',
+                      },
+                      error: null,
+                    }),
+                }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    const repo = createFeedbackPostsRepository(client as never)
+    const result = await repo.updatePostTriage('post-1', {
+      status: 'in_progress',
+      priority: 'P1',
+      assignee: 'Admin',
+      internalNote: 'Reproduced',
+      staffReply: 'Working on it',
+    })
+
+    expect(rpc).toHaveBeenCalledWith('update_feedback_post_triage', {
+      p_post_id: 'post-1',
+      p_status: 'in_progress',
+      p_priority: 'P1',
+      p_assignee: 'Admin',
+      p_internal_note: 'Reproduced',
+      p_staff_reply: 'Working on it',
+    })
+    expect(result).toMatchObject({
+      data: {
+        status: 'in_progress',
+        priority: 'P1',
+        internalNote: 'Reproduced',
+        staffReply: 'Working on it',
+      },
+      error: null,
+    })
   })
 
   it('updates admin status only with supported values', async () => {

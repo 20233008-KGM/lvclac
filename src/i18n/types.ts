@@ -675,6 +675,18 @@ export interface Messages {
     createdAt: string
     status: string
     updateError: string
+    save: string
+    saving: string
+    saved: string
+    priority: string
+    assignee: string
+    assigneePlaceholder: string
+    internalNote: string
+    internalNotePlaceholder: string
+    staffReply: string
+    staffReplyPlaceholder: string
+    staffReplyHint: string
+    priorityLabels: Record<import('../db/feedbackPosts').FeedbackPriority, string>
     statusLabels: Record<import('../db/feedbackPosts').FeedbackStatus, string>
   }
   marginMode: {
@@ -874,6 +886,10 @@ export interface Messages {
     attachmentTooMany: string
     submit: string
     anonymous: string
+    status: string
+    staffReply: string
+    staffRepliedAt: string
+    statusLabels: Record<import('../db/feedbackPosts').FeedbackStatus, string>
     items: Record<
       BoardId,
       { title: string; description: string; footerLabel: string }

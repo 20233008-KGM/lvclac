@@ -5,8 +5,10 @@ import { useAuth } from '../context/AuthContext'
 import type { AuthUser } from '../db/profile'
 import {
   createFeedbackPostsRepository,
+  FEEDBACK_PRIORITIES,
   FEEDBACK_STATUSES,
   type FeedbackPostRecord,
+  type FeedbackPriority,
   type FeedbackStatus,
 } from '../db/feedbackPosts'
 import { useLanguage } from '../i18n'
@@ -29,9 +31,11 @@ interface AdminFeedbackViewProps {
   boardFilter: BoardFilter
   statusFilter: StatusFilter
   busyPostId: string | null
+  savedPostId: string | null
   onBoardFilterChange: (value: BoardFilter) => void
   onStatusFilterChange: (value: StatusFilter) => void
-  onStatusChange: (postId: string, status: FeedbackStatus) => void
+  onPostChange: (postId: string, patch: Partial<FeedbackPostRecord>) => void
+  onSave: (post: FeedbackPostRecord) => void
   onRetry: () => void
 }
 
@@ -45,9 +49,11 @@ export function AdminFeedbackView({
   boardFilter,
   statusFilter,
   busyPostId,
+  savedPostId,
   onBoardFilterChange,
   onStatusFilterChange,
-  onStatusChange,
+  onPostChange,
+  onSave,
   onRetry,
 }: AdminFeedbackViewProps) {
   if (!user) {
@@ -132,61 +138,148 @@ export function AdminFeedbackView({
             <ul className="admin-feedback-list">
               {posts.map((post) => (
                 <li key={post.id} className="admin-feedback-post">
-                  <div className="admin-feedback-post__head">
-                    <div>
-                      <span className="admin-feedback-post__board">
-                        {boardsCopy.items[post.boardId].title}
-                      </span>
-                      <h2>{post.title}</h2>
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      onSave(post)
+                    }}
+                  >
+                    <div className="admin-feedback-post__head">
+                      <div>
+                        <span className="admin-feedback-post__board">
+                          {boardsCopy.items[post.boardId].title}
+                        </span>
+                        <h2>{post.title}</h2>
+                      </div>
+                      <div className="admin-feedback-post__routing">
+                        <label className="admin-feedback-status">
+                          <span>{copy.status}</span>
+                          <select
+                            value={post.status}
+                            disabled={busyPostId === post.id}
+                            onChange={(event) => {
+                              onPostChange(post.id, {
+                                status: event.currentTarget.value as FeedbackStatus,
+                              })
+                            }}
+                          >
+                            {FEEDBACK_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {copy.statusLabels[status]}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="admin-feedback-status">
+                          <span>{copy.priority}</span>
+                          <select
+                            value={post.priority}
+                            disabled={busyPostId === post.id}
+                            onChange={(event) => {
+                              onPostChange(post.id, {
+                                priority: event.currentTarget.value as FeedbackPriority,
+                              })
+                            }}
+                          >
+                            {FEEDBACK_PRIORITIES.map((priority) => (
+                              <option key={priority} value={priority}>
+                                {copy.priorityLabels[priority]}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
                     </div>
-                    <label className="admin-feedback-status">
-                      <span>{copy.status}</span>
-                      <select
-                        value={post.status}
-                        disabled={busyPostId === post.id}
-                        onChange={(event) => {
-                          onStatusChange(post.id, event.currentTarget.value as FeedbackStatus)
-                        }}
-                      >
-                        {FEEDBACK_STATUSES.map((status) => (
-                          <option key={status} value={status}>
-                            {copy.statusLabels[status]}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
 
-                  <p className="admin-feedback-post__body">{post.body}</p>
-                  <dl className="admin-feedback-meta">
-                    <div>
-                      <dt>{copy.author}</dt>
-                      <dd>{post.author || boardsCopy.anonymous}</dd>
+                    <p className="admin-feedback-post__body">{post.body}</p>
+                    <dl className="admin-feedback-meta">
+                      <div>
+                        <dt>{copy.author}</dt>
+                        <dd>{post.author || boardsCopy.anonymous}</dd>
+                      </div>
+                      <div>
+                        <dt>{copy.contact}</dt>
+                        <dd>{post.contact || '-'}</dd>
+                      </div>
+                      <div>
+                        <dt>{copy.createdAt}</dt>
+                        <dd>{formatPostDate(post.createdAt)}</dd>
+                      </div>
+                    </dl>
+                    {post.attachments.length > 0 && (
+                      <ul className="admin-feedback-attachments">
+                        {post.attachments.map((attachment) => (
+                          <li key={attachment.path}>
+                            {attachment.signedUrl ? (
+                              <a href={attachment.signedUrl} target="_blank" rel="noopener noreferrer">
+                                {attachment.name}
+                              </a>
+                            ) : (
+                              <span>{attachment.name}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="admin-feedback-triage-grid">
+                      <label>
+                        <span>{copy.assignee}</span>
+                        <input
+                          type="text"
+                          value={post.assignee}
+                          maxLength={120}
+                          placeholder={copy.assigneePlaceholder}
+                          disabled={busyPostId === post.id}
+                          onChange={(event) =>
+                            onPostChange(post.id, { assignee: event.currentTarget.value })
+                          }
+                        />
+                      </label>
+                      <label>
+                        <span>{copy.internalNote}</span>
+                        <textarea
+                          value={post.internalNote}
+                          maxLength={4000}
+                          rows={4}
+                          placeholder={copy.internalNotePlaceholder}
+                          disabled={busyPostId === post.id}
+                          onChange={(event) =>
+                            onPostChange(post.id, { internalNote: event.currentTarget.value })
+                          }
+                        />
+                      </label>
+                      <label>
+                        <span>{copy.staffReply}</span>
+                        <textarea
+                          value={post.staffReply}
+                          maxLength={4000}
+                          rows={4}
+                          placeholder={copy.staffReplyPlaceholder}
+                          disabled={busyPostId === post.id}
+                          onChange={(event) =>
+                            onPostChange(post.id, { staffReply: event.currentTarget.value })
+                          }
+                        />
+                        <small>{copy.staffReplyHint}</small>
+                      </label>
                     </div>
-                    <div>
-                      <dt>{copy.contact}</dt>
-                      <dd>{post.contact || '-'}</dd>
+
+                    <div className="admin-feedback-post__actions">
+                      <button
+                        type="submit"
+                        className="contact-form__submit"
+                        disabled={busyPostId === post.id}
+                      >
+                        {busyPostId === post.id ? copy.saving : copy.save}
+                      </button>
+                      {savedPostId === post.id && (
+                        <span className="contact-form__success" role="status">
+                          {copy.saved}
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <dt>{copy.createdAt}</dt>
-                      <dd>{formatPostDate(post.createdAt)}</dd>
-                    </div>
-                  </dl>
-                  {post.attachments.length > 0 && (
-                    <ul className="admin-feedback-attachments">
-                      {post.attachments.map((attachment) => (
-                        <li key={attachment.path}>
-                          {attachment.signedUrl ? (
-                            <a href={attachment.signedUrl} target="_blank" rel="noopener noreferrer">
-                              {attachment.name}
-                            </a>
-                          ) : (
-                            <span>{attachment.name}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  </form>
                 </li>
               ))}
             </ul>
@@ -209,6 +302,7 @@ export function AdminFeedbackPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busyPostId, setBusyPostId] = useState<string | null>(null)
+  const [savedPostId, setSavedPostId] = useState<string | null>(null)
 
   const loadPosts = useCallback(async () => {
     if (!user?.isAdmin) {
@@ -242,20 +336,38 @@ export function AdminFeedbackPage() {
   }, [boardFilter, repository, statusFilter, t.adminFeedback.loadError, user?.isAdmin])
 
   useEffect(() => {
-    void loadPosts()
+    const timeoutId = window.setTimeout(() => {
+      void loadPosts()
+    }, 0)
+    return () => window.clearTimeout(timeoutId)
   }, [loadPosts])
 
-  async function handleStatusChange(postId: string, status: FeedbackStatus) {
+  function handlePostChange(postId: string, patch: Partial<FeedbackPostRecord>) {
+    setSavedPostId(null)
+    setPosts((current) =>
+      current.map((post) => (post.id === postId ? { ...post, ...patch } : post)),
+    )
+  }
+
+  async function handleSave(post: FeedbackPostRecord) {
     if (busyPostId) return
-    setBusyPostId(postId)
+    setBusyPostId(post.id)
+    setSavedPostId(null)
     setError(null)
-    const result = await repository.updatePostStatus(postId, status)
+    const result = await repository.updatePostTriage(post.id, {
+      status: post.status,
+      priority: post.priority,
+      assignee: post.assignee,
+      internalNote: post.internalNote,
+      staffReply: post.staffReply,
+    })
     setBusyPostId(null)
     if (result.error !== null) {
       setError(t.adminFeedback.updateError)
       return
     }
-    setPosts((current) => current.map((post) => (post.id === postId ? result.data : post)))
+    setPosts((current) => current.map((item) => (item.id === post.id ? result.data : item)))
+    setSavedPostId(post.id)
   }
 
   return (
@@ -270,9 +382,11 @@ export function AdminFeedbackPage() {
         boardFilter={boardFilter}
         statusFilter={statusFilter}
         busyPostId={busyPostId}
+        savedPostId={savedPostId}
         onBoardFilterChange={setBoardFilter}
         onStatusFilterChange={setStatusFilter}
-        onStatusChange={(postId, status) => void handleStatusChange(postId, status)}
+        onPostChange={handlePostChange}
+        onSave={(post) => void handleSave(post)}
         onRetry={() => void loadPosts()}
       />
       <SiteFooter />

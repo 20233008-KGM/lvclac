@@ -4,10 +4,10 @@ import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
 import { openBillingPortal, startCheckout, type BillingPlan } from '../../db/billing'
 import { BillingUpgrade } from './BillingUpgrade'
+import { resolveBillingView } from './billingView'
 import '../../styles/pages.css'
 
 type BusyState = BillingPlan | 'portal' | null
-type BillingView = 'free' | 'pro' | 'failed' | 'success'
 
 /** ISO 날짜 문자열을 현재 언어의 긴 날짜 형식으로. 파싱 실패 시 원문 반환. */
 function formatDate(iso: string, lang: string): string {
@@ -125,7 +125,8 @@ function SuccessCheck() {
 }
 
 /**
- * 구독 결제 전용 페이지(/billing). useAuth + URL 파라미터에서 파생된 4개 상태를 분기한다.
+ * 구독 결제 전용 페이지(/billing). useAuth + URL 파라미터에서 파생된 5개 상태를 분기한다.
+ * - loading : 로그인 세션과 구독 상태 확인 중
  * - free    : 플랜 선택
  * - pro     : 구독 관리(활성 구독)
  * - failed  : 결제 실패 배너 + 플랜 선택(status === 'past_due')
@@ -134,9 +135,10 @@ function SuccessCheck() {
  */
 export function BillingPage() {
   const { t } = useLanguage()
+  const loadingLabel = t.myPage.loadingBody
   const copy = t.myPage.billing
   const page = copy.page
-  const { isPro, subscription, refreshSubscription } = useAuth()
+  const { loading: authLoading, isPro, subscription, refreshSubscription } = useAuth()
   const navigate = useNavigate()
   const mapError = useCheckoutError()
 
@@ -165,14 +167,12 @@ export function BillingPage() {
     )
   }, [checkoutParam, refreshSubscription])
 
-  const view: BillingView =
-    checkoutParam === 'success' && !leftSuccess
-      ? 'success'
-      : isPro
-        ? 'pro'
-        : subscription?.status === 'past_due'
-          ? 'failed'
-          : 'free'
+  const view = resolveBillingView({
+    authLoading,
+    checkoutSucceeded: checkoutParam === 'success' && !leftSuccess,
+    isPro,
+    subscriptionStatus: subscription?.status,
+  })
 
   const handleCheckout = useCallback(
     async (plan: BillingPlan) => {
@@ -200,6 +200,16 @@ export function BillingPage() {
   }, [mapError])
 
   const busyAny = busy !== null
+
+  if (view === 'loading') {
+    return (
+      <main className="my-page-route-loading" role="status" aria-label={loadingLabel}>
+        <span className="my-page-route-loading__spinner" aria-hidden="true" />
+        <span>{loadingLabel}</span>
+      </main>
+    )
+  }
+
   const renewsLabel = subscription?.currentPeriodEnd
     ? copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))
     : null

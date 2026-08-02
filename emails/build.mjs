@@ -32,9 +32,9 @@ const CONTACT = 'contact@liqguard.com'
 // 색을 강제 반전하는 클라이언트는 순수 흑백을 가장 공격적으로 뒤집기 때문에,
 // 살짝 오프셋된 색이 훨씬 얌전하게 처리된다.
 const LIGHT = {
-  page: '#f6f8fa',
+  page: '#e2e8f0',
   card: '#fdfdfe',
-  border: '#e3e8ef',
+  border: '#cbd5e1',
   heading: '#1a2233',
   text: '#4a5568',
   muted: '#6b7280',
@@ -47,13 +47,52 @@ const LIGHT = {
 const DARK = {
   page: '#0d1017',
   card: '#1e232d',
-  border: '#2a3040',
+  border: '#3a4354',
   heading: '#e8eaed',
   text: '#c3c9d4',
   muted: '#9aa3b2',
   faint: '#9aa3b2',
   divider: '#2a3040',
 }
+
+const channelToLinear = (channel) => {
+  const normalized = channel / 255
+  return normalized <= 0.04045
+    ? normalized / 12.92
+    : ((normalized + 0.055) / 1.055) ** 2.4
+}
+
+const luminance = (hex) => {
+  const value = Number.parseInt(hex.slice(1), 16)
+  return (
+    0.2126 * channelToLinear(value >> 16) +
+    0.7152 * channelToLinear((value >> 8) & 255) +
+    0.0722 * channelToLinear(value & 255)
+  )
+}
+
+const contrastRatio = (first, second) => {
+  const firstLuminance = luminance(first)
+  const secondLuminance = luminance(second)
+  return (
+    (Math.max(firstLuminance, secondLuminance) + 0.05) /
+    (Math.min(firstLuminance, secondLuminance) + 0.05)
+  )
+}
+
+const assertSurfaceSeparation = (name, palette) => {
+  const pageCard = contrastRatio(palette.page, palette.card)
+  const cardBorder = contrastRatio(palette.card, palette.border)
+  if (pageCard < 1.18 || cardBorder < 1.4) {
+    throw new Error(
+      `${name} 이메일 팔레트의 표면 구분이 부족합니다 ` +
+        `(page/card ${pageCard.toFixed(3)}, card/border ${cardBorder.toFixed(3)})`,
+    )
+  }
+}
+
+assertSurfaceSeparation('라이트', LIGHT)
+assertSurfaceSeparation('다크', DARK)
 
 // 라이트/다크 양쪽에서 동일하게 유지되는 브랜드 색. 이미 어두운 톤이라
 // 다크 카드와 자연스럽게 이어지고, 반전 클라이언트에서만 되돌려주면 된다.
@@ -191,7 +230,7 @@ function render(c) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="e-page" style="background-color:${LIGHT.page};padding:24px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="e-card" style="max-width:560px;background-color:${LIGHT.card};border-radius:12px;overflow:hidden;border:1px solid ${LIGHT.border};">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="e-card" style="max-width:560px;background-color:${LIGHT.card};border-radius:12px;overflow:hidden;border:1px solid ${LIGHT.border};box-shadow:0 8px 28px rgba(15,23,42,0.12);">
           <tr>
             <td class="e-header" style="background-color:${HEADER_BG};padding:28px 32px 24px;">
               <p class="e-faint" style="margin:0 0 8px;font-size:13px;line-height:1.4;color:${LIGHT.faint};letter-spacing:0.02em;">${BRAND}</p>

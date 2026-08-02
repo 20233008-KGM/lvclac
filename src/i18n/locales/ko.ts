@@ -505,8 +505,10 @@ export const ko: Messages = {
       notConfigured: '결제가 아직 설정되지 않았습니다. 잠시 후 다시 시도해 주세요.',
       checkoutError: '결제를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.',
       checkoutCanceled: '결제가 취소되었습니다.',
-      checkoutSuccess: '결제가 완료되었습니다. 구독 상태를 반영하는 중입니다.',
-      taxNote: '결제는 Paddle을 통해 안전하게 처리되며, 부가세는 지역에 따라 별도 부과될 수 있습니다.',
+      checkoutSuccess:
+        '결제가 완료되었습니다. 구독 상태를 반영하는 중입니다. 결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리합니다.',
+      taxNote:
+        '결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리하며, 부가세는 지역에 따라 별도 부과될 수 있습니다.',
       compareHeadPrice: '$5 / 월 · 연 $48',
       compareSubtitle: '지금 쓰는 것은 그대로 두고, 저장·자동화·기록을 한 번에 확장합니다.',
       compareFreeName: 'Free',
@@ -577,7 +579,8 @@ export const ko: Messages = {
         failedBody: '카드가 거절되었습니다. 카드 정보를 확인하거나 다른 결제 수단으로 다시 시도해 주세요.',
         retryAction: '다시 시도',
         successTitle: '결제가 완료되었습니다',
-        successBody: 'Pro 구독이 활성화되었습니다. 광고가 제거되고 Pro 전용 기능이 모두 열렸습니다. 구독 상태를 반영하는 중입니다.',
+        successBody:
+          'Pro 구독이 활성화되었습니다. 광고가 제거되고 Pro 전용 기능이 모두 열렸습니다. 구독 상태를 반영하는 중입니다. 결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리합니다.',
         summaryPlan: '플랜',
         summaryNextBilling: '다음 결제일',
         summaryPending: '반영 중…',
@@ -673,7 +676,7 @@ export const ko: Messages = {
           finalSublineMonthly: '월 $5 · 언제든 해지',
           finalSublineYearly: '연간 $48 · 월 $4 수준 · 2개월 무료',
           finalCta: '지금 바로 결제하기',
-          finalFinePrint: 'Paddle 안전 결제 · 언제든 해지',
+          finalFinePrint: '결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리합니다.',
           trust: ['Paddle 안전 결제', '언제든 해지 · 남은 기간까지 이용', '부가세 지역별 별도'],
         },
       },

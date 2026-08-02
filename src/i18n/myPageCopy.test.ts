@@ -29,6 +29,21 @@ describe('my page copy', () => {
     expect(en.myPage.setPasswordAction).toBe('Set password')
   })
 
+  it('identifies Paddle as the payment and receipt partner before and after checkout', () => {
+    const koPartnerNotice = '결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리합니다.'
+
+    expect(ko.myPage.billing.page.upgrade.finalFinePrint).toBe(koPartnerNotice)
+    expect(ko.myPage.billing.checkoutSuccess).toContain(koPartnerNotice)
+    expect(ko.myPage.billing.page.successBody).toContain(koPartnerNotice)
+    expect(ko.myPage.billing.taxNote).toContain('공식 결제 파트너 Paddle')
+
+    expect(en.myPage.billing.page.upgrade.finalFinePrint).toContain('official payment partner')
+    expect(en.myPage.billing.page.upgrade.finalFinePrint).toContain('receipts')
+    expect(en.myPage.billing.checkoutSuccess).toContain('official payment partner')
+    expect(en.myPage.billing.page.successBody).toContain('official payment partner')
+    expect(en.myPage.billing.taxNote).toContain('official payment partner')
+  })
+
   it('provides the order-history auto-save toggle copy in both languages', () => {
     expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 자동 저장')
     expect(ko.myPage.autoSaveOrderHistoryHint).toContain('자동 저장')

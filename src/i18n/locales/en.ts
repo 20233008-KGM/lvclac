@@ -516,8 +516,10 @@ export const en: Messages = {
       notConfigured: 'Billing is not set up yet. Please try again later.',
       checkoutError: 'Could not start checkout. Please try again shortly.',
       checkoutCanceled: 'Checkout was canceled.',
-      checkoutSuccess: 'Payment complete. Updating your subscription status…',
-      taxNote: 'Payments are processed securely by Paddle. VAT may apply depending on your region.',
+      checkoutSuccess:
+        'Payment complete. Updating your subscription status… Payments and receipts are handled by Paddle, our official payment partner.',
+      taxNote:
+        'Payments and receipts are handled by Paddle, our official payment partner. VAT may apply depending on your region.',
       compareHeadPrice: '$5 / mo · $48 / yr',
       compareSubtitle: 'Keep everything you use today, and expand saving, automation, and history in one step.',
       compareFreeName: 'Free',
@@ -588,7 +590,8 @@ export const en: Messages = {
         failedBody: 'Your card was declined. Check your card details or try a different payment method.',
         retryAction: 'Try again',
         successTitle: 'Payment complete',
-        successBody: 'Your Pro subscription is active. Ads are removed and all Pro-only features are unlocked. Updating your subscription status…',
+        successBody:
+          'Your Pro subscription is active. Ads are removed and all Pro-only features are unlocked. Updating your subscription status… Payments and receipts are handled by Paddle, our official payment partner.',
         summaryPlan: 'Plan',
         summaryNextBilling: 'Next billing date',
         summaryPending: 'Updating…',
@@ -684,7 +687,7 @@ export const en: Messages = {
           finalSublineMonthly: '$5 / month · cancel anytime',
           finalSublineYearly: '$48 / year · about $4 / month · 2 months free',
           finalCta: 'Check out now',
-          finalFinePrint: 'Secure checkout by Paddle · cancel anytime',
+          finalFinePrint: 'Payments and receipts are handled by our official payment partner, Paddle.',
           trust: ['Secure checkout by Paddle', 'Cancel anytime · keep access until period end', 'VAT varies by region'],
         },
       },

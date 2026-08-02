@@ -559,11 +559,27 @@ export interface Messages {
         manageTitle: string
         proPlanName: string
         activeBadge: string
+        cancelScheduledBadge: string
+        cancelScheduledBody: string
+        accessEndsOn: string
+        noFurtherBilling: string
         portalAction: string
         receiptsAction: string
         paymentMethodAction: string
         cancelNote: string
         cancelAction: string
+        manageCancellationAction: string
+        sandboxTitle: string
+        sandboxBody: string
+        sandboxSyncAction: string
+        sandboxCancelNowAction: string
+        sandboxCancelConfirm: string
+        sandboxCancelConfirmAction: string
+        sandboxCancelDismissAction: string
+        sandboxBusy: string
+        sandboxSyncSuccess: string
+        sandboxCancelSuccess: string
+        sandboxError: string
         /** 결제 실패 배너 */
         failedTitle: string
         failedBody: string

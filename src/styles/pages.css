@@ -5101,6 +5101,19 @@ a.my-page-compare-card__action {
   }
 }
 
+/* 관리 화면은 읽는 흐름이 끊기지 않는 단일 열 폭으로 제한한다. */
+.billing-page {
+  width: min(100%, 760px);
+}
+
+.billing-page-header {
+  margin-bottom: 18px;
+}
+
+.billing-panel {
+  padding: 20px;
+}
+
 /* 헤더: 제목/서브카피 + 우측 상태 배지 */
 .billing-hero {
   display: flex;
@@ -5393,6 +5406,12 @@ a.my-page-compare-card__action {
   border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
 }
 
+.billing-current__badge--scheduled {
+  background: var(--color-warning-muted);
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
 .billing-current__body {
   margin: 0;
   font-size: var(--font-size-sm);
@@ -5404,6 +5423,12 @@ a.my-page-compare-card__action {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--color-text-dim);
+}
+
+.billing-current__billing-stop {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-warning);
 }
 
 .billing-current__manage {
@@ -5497,6 +5522,76 @@ a.my-page-compare-card__action {
   cursor: not-allowed;
 }
 
+/* 관리자에게만 보이는 Paddle Sandbox 테스트 도구. */
+.billing-sandbox {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-md);
+  align-items: start;
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border: 1px dashed color-mix(in srgb, var(--color-warning) 50%, transparent);
+  border-radius: var(--radius);
+  background: var(--color-warning-muted);
+}
+
+.billing-sandbox__copy {
+  min-width: 0;
+}
+
+.billing-sandbox .billing-sandbox__title {
+  margin: 0;
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.billing-sandbox .billing-sandbox__body {
+  margin: 5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.billing-sandbox__actions {
+  display: grid;
+  justify-items: stretch;
+  gap: 8px;
+  min-width: 190px;
+}
+
+.billing-sandbox__button {
+  width: 100%;
+}
+
+.billing-sandbox__confirm {
+  max-width: 300px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+}
+
+.billing-sandbox .billing-sandbox__confirm p {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.billing-sandbox__confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.billing-sandbox__confirm-actions .btn {
+  width: auto;
+  min-height: 36px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
 /* 결제 완료 화면 */
 .billing-success {
   padding: calc(var(--space-xl) + var(--space-md)) var(--space-lg);
@@ -5576,6 +5671,29 @@ a.my-page-compare-card__action {
   .billing-benefits,
   .billing-actions {
     grid-template-columns: 1fr;
+  }
+
+  .billing-page {
+    padding-inline: 12px;
+  }
+
+  .billing-panel,
+  .billing-current {
+    padding: var(--space-md);
+  }
+
+  .billing-current__manage {
+    width: 100%;
+  }
+
+  .billing-sandbox {
+    grid-template-columns: 1fr;
+  }
+
+  .billing-sandbox__actions,
+  .billing-sandbox__confirm {
+    min-width: 0;
+    max-width: none;
   }
 }
 

@@ -1,7 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { BillingConfig, BillingDeps, BillingPlan } from './billingConfig.js'
 import { isBillingPlan, paddleApiBaseUrl, resolveBaseUrl } from './billingConfig.js'
-import { customerIdOf, syncSubscription } from './subscriptionSync.js'
+import {
+  customerIdOf,
+  syncSubscription,
+  type PaddleSubscription,
+} from './subscriptionSync.js'
 
 type JsonObject = Record<string, unknown>
 
@@ -15,6 +19,7 @@ export interface BillingResult {
     customerEmail?: string | null
     successUrl?: string
     received?: boolean
+    action?: string
     error?: string
   }
 }
@@ -122,6 +127,78 @@ export async function handlePortal(
   const url = portalSessionUrl(payload)
   if (!url) return fail(502, 'portal_url_missing')
   return { status: 200, body: { ok: true, url } }
+}
+
+export type SandboxSubscriptionAction = 'sync' | 'cancel_now'
+
+export interface SandboxSubscriptionRequest {
+  accessToken?: unknown
+  action?: unknown
+}
+
+/**
+ * 개발자용 Sandbox 구독 제어. Live 환경에서는 항상 닫혀 있으며,
+ * 관리자 권한과 현재 사용자가 소유한 구독을 서버에서 다시 확인한다.
+ */
+export async function handleSandboxSubscription(
+  config: BillingConfig | null,
+  request: SandboxSubscriptionRequest,
+  deps: BillingDeps,
+): Promise<BillingResult> {
+  if (!config) return fail(500, 'billing_not_configured')
+  if (config.paddleEnv !== 'sandbox') return fail(404, 'sandbox_control_unavailable')
+  if (request.action !== 'sync' && request.action !== 'cancel_now') {
+    return fail(400, 'invalid_sandbox_action')
+  }
+
+  const auth = await requireUser(deps, request.accessToken)
+  if ('error' in auth) return auth.error
+
+  const adminRow = await deps.admin
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', auth.user.id)
+    .maybeSingle<{ user_id: string }>()
+  if (adminRow.error) return fail(500, adminRow.error.message)
+  if (!adminRow.data) return fail(403, 'admin_required')
+
+  const subscriptionRow = await deps.admin
+    .from('subscriptions')
+    .select('provider_subscription_id')
+    .eq('user_id', auth.user.id)
+    .maybeSingle<{ provider_subscription_id: string | null }>()
+  if (subscriptionRow.error) return fail(500, subscriptionRow.error.message)
+
+  const subscriptionId = subscriptionRow.data?.provider_subscription_id
+  if (!subscriptionId) return fail(400, 'no_subscription')
+
+  const endpoint = `${paddleApiBaseUrl(config.paddleEnv)}/subscriptions/${encodeURIComponent(
+    subscriptionId,
+  )}${request.action === 'cancel_now' ? '/cancel' : ''}`
+  const response = await deps.fetch(endpoint, {
+    method: request.action === 'cancel_now' ? 'POST' : 'GET',
+    headers: {
+      authorization: `Bearer ${config.paddleApiKey}`,
+      'content-type': 'application/json',
+    },
+    ...(request.action === 'cancel_now'
+      ? { body: JSON.stringify({ effective_from: 'immediately' }) }
+      : {}),
+  })
+
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) {
+    return fail(
+      502,
+      request.action === 'cancel_now' ? 'sandbox_cancel_failed' : 'sandbox_sync_failed',
+    )
+  }
+  const subscription = asRecord(asRecord(payload)?.data) as PaddleSubscription | null
+  if (!subscription) return fail(502, 'subscription_payload_missing')
+
+  const syncResult = await syncSubscription(deps, subscription, auth.user.id)
+  if (!syncResult.ok) return fail(500, syncResult.error ?? 'sync_failed')
+  return { status: 200, body: { ok: true, action: request.action } }
 }
 
 export interface WebhookRequest {

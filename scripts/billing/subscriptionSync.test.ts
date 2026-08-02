@@ -3,6 +3,8 @@ import type { BillingDeps } from './billingConfig'
 import {
   customerIdOf,
   getPeriodEndIso,
+  getScheduledChangeAction,
+  getScheduledChangeEffectiveAtIso,
   mapPaddleStatus,
   type PaddleSubscription,
   syncSubscription,
@@ -35,6 +37,28 @@ describe('getPeriodEndIso', () => {
 
   it('returns null when unavailable', () => {
     expect(getPeriodEndIso({})).toBeNull()
+  })
+})
+
+describe('scheduled change mapping', () => {
+  it('normalizes a pending cancellation', () => {
+    const sub: PaddleSubscription = {
+      scheduled_change: {
+        action: 'cancel',
+        effective_at: '2027-08-02T03:04:05.000Z',
+      },
+    }
+    expect(getScheduledChangeAction(sub)).toBe('cancel')
+    expect(getScheduledChangeEffectiveAtIso(sub)).toBe('2027-08-02T03:04:05.000Z')
+  })
+
+  it('clears absent or invalid scheduled changes', () => {
+    expect(getScheduledChangeAction({ scheduled_change: null })).toBeNull()
+    expect(
+      getScheduledChangeEffectiveAtIso({
+        scheduled_change: { action: 'cancel', effective_at: 'not-a-date' },
+      }),
+    ).toBeNull()
   })
 })
 
@@ -84,6 +108,10 @@ describe('syncSubscription', () => {
     customer_id: 'ctm_1',
     status: 'active',
     current_billing_period: { ends_at: '2023-11-14T22:13:20.000Z' },
+    scheduled_change: {
+      action: 'cancel',
+      effective_at: '2023-11-14T22:13:20.000Z',
+    },
     custom_data: {},
   }
 
@@ -100,6 +128,8 @@ describe('syncSubscription', () => {
       provider_customer_id: 'ctm_1',
       provider_subscription_id: 'sub_1',
       status: 'active',
+      scheduled_change_action: 'cancel',
+      scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
     })
   })
 
@@ -114,6 +144,8 @@ describe('syncSubscription', () => {
       provider: 'paddle',
       status: 'active',
       provider_subscription_id: 'sub_1',
+      scheduled_change_action: 'cancel',
+      scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
     })
     expect(state.inserts).toHaveLength(0)
   })

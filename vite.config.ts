@@ -7,6 +7,7 @@ import { createBillingDeps, readBillingConfig } from './scripts/billing/billingC
 import {
   handleCheckout,
   handlePortal,
+  handleSandboxSubscription,
   handleWebhook,
 } from './scripts/billing/billingHandlers'
 import {
@@ -118,6 +119,23 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
             const result = await handlePortal(
               config,
               { accessToken: bearerToken(req), origin: requestOrigin(req) },
+              deps as never,
+            )
+            sendBillingJson(res, result.status, result.body)
+          } catch (error) {
+            guard(res, error)
+          }
+        })()
+      })
+
+      server.middlewares.use('/api/billing/sandbox-subscription', (req, res, next) => {
+        if (req.method !== 'POST') return next()
+        void (async () => {
+          try {
+            const body = await readBillingJson(req)
+            const result = await handleSandboxSubscription(
+              config,
+              { accessToken: bearerToken(req), action: body.action },
               deps as never,
             )
             sendBillingJson(res, result.status, result.body)

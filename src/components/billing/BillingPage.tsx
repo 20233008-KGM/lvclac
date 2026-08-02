@@ -2,12 +2,19 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
-import { openBillingPortal, startCheckout, type BillingPlan } from '../../db/billing'
+import {
+  controlSandboxSubscription,
+  openBillingPortal,
+  startCheckout,
+  type BillingPlan,
+  type SandboxSubscriptionAction,
+} from '../../db/billing'
 import { BillingUpgrade } from './BillingUpgrade'
 import { resolveBillingView } from './billingView'
+import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
 import '../../styles/pages.css'
 
-type BusyState = BillingPlan | 'portal' | null
+type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | 'sandbox-cancel' | null
 
 /** ISO 날짜 문자열을 현재 언어의 긴 날짜 형식으로. 파싱 실패 시 원문 반환. */
 function formatDate(iso: string, lang: string): string {
@@ -138,7 +145,7 @@ export function BillingPage() {
   const loadingLabel = t.myPage.loadingBody
   const copy = t.myPage.billing
   const page = copy.page
-  const { loading: authLoading, isPro, subscription, refreshSubscription } = useAuth()
+  const { user, loading: authLoading, isPro, subscription, refreshSubscription } = useAuth()
   const navigate = useNavigate()
   const mapError = useCheckoutError()
 
@@ -149,6 +156,7 @@ export function BillingPage() {
   // 배너 닫기(결제 실패에서 "다시 시도")와 결제 완료에서 "구독 관리 보기" 전환용 로컬 상태.
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [leftSuccess, setLeftSuccess] = useState(false)
+  const [showSandboxCancelConfirm, setShowSandboxCancelConfirm] = useState(false)
 
   // ?checkout= 값은 최초 렌더에서 한 번만 확정한다(아래 effect가 URL을 정리해도 뷰가 흔들리지 않도록).
   const checkoutParam = useMemo(() => readCheckoutParam(), [])
@@ -199,6 +207,26 @@ export function BillingPage() {
     }
   }, [mapError])
 
+  const handleSandboxAction = useCallback(
+    async (action: SandboxSubscriptionAction) => {
+      setBusy(action === 'sync' ? 'sandbox-sync' : 'sandbox-cancel')
+      setMessage(null)
+      const error = await controlSandboxSubscription(action)
+      if (error) {
+        setBusy(null)
+        setMessage(page.sandboxError)
+        return
+      }
+      await refreshSubscription()
+      setBusy(null)
+      setShowSandboxCancelConfirm(false)
+      setMessage(
+        action === 'sync' ? page.sandboxSyncSuccess : page.sandboxCancelSuccess,
+      )
+    },
+    [page.sandboxCancelSuccess, page.sandboxError, page.sandboxSyncSuccess, refreshSubscription],
+  )
+
   const busyAny = busy !== null
 
   if (view === 'loading') {
@@ -210,9 +238,15 @@ export function BillingPage() {
     )
   }
 
-  const renewsLabel = subscription?.currentPeriodEnd
-    ? copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))
+  const cancelScheduled = isCancellationScheduled(subscription)
+  const accessEnd = subscriptionAccessEnd(subscription)
+  const subscriptionDateLabel = accessEnd
+    ? (cancelScheduled ? page.accessEndsOn : copy.renewsOn).replace(
+        '{date}',
+        formatDate(accessEnd, t.lang),
+      )
     : null
+  const showSandboxTools = user?.isAdmin === true && import.meta.env.VITE_PADDLE_ENV === 'sandbox'
 
   // 상태 배지: 상태에 따라 라벨·색을 달리한다.
   const statusVariant = view === 'failed' ? 'failed' : view === 'pro' || view === 'success' ? 'pro' : 'free'
@@ -304,10 +338,23 @@ export function BillingPage() {
         <div className="billing-current__info">
           <div className="billing-current__name-row">
             <span className="billing-current__name">{page.proPlanName}</span>
-            <span className="billing-current__badge">{page.activeBadge}</span>
+            <span
+              className={`billing-current__badge${
+                cancelScheduled ? ' billing-current__badge--scheduled' : ''
+              }`}
+            >
+              {cancelScheduled ? page.cancelScheduledBadge : page.activeBadge}
+            </span>
           </div>
-          <p className="billing-current__body">{copy.proBody}</p>
-          {renewsLabel && <p className="billing-current__renews">{renewsLabel}</p>}
+          <p className="billing-current__body">
+            {cancelScheduled ? page.cancelScheduledBody : copy.proBody}
+          </p>
+          {subscriptionDateLabel && (
+            <p className="billing-current__renews">{subscriptionDateLabel}</p>
+          )}
+          {cancelScheduled && (
+            <p className="billing-current__billing-stop">{page.noFurtherBilling}</p>
+          )}
         </div>
         <button
           type="button"
@@ -347,16 +394,73 @@ export function BillingPage() {
       {benefits(page.benefitsTitleActive)}
 
       <div className="billing-cancel-row">
-        <p className="billing-cancel-note">{page.cancelNote}</p>
+        <p className="billing-cancel-note">
+          {cancelScheduled ? page.noFurtherBilling : page.cancelNote}
+        </p>
         <button
           type="button"
           className="billing-cancel-btn"
           disabled={busyAny}
           onClick={() => void handleManage()}
         >
-          {page.cancelAction}
+          {cancelScheduled ? page.manageCancellationAction : page.cancelAction}
         </button>
       </div>
+
+      {showSandboxTools && (
+        <section className="billing-sandbox" aria-labelledby="billing-sandbox-title">
+          <div className="billing-sandbox__copy">
+            <p id="billing-sandbox-title" className="billing-sandbox__title">
+              {page.sandboxTitle}
+            </p>
+            <p className="billing-sandbox__body">{page.sandboxBody}</p>
+          </div>
+          <div className="billing-sandbox__actions">
+            <button
+              type="button"
+              className="btn btn-ghost billing-sandbox__button"
+              disabled={busyAny}
+              onClick={() => void handleSandboxAction('sync')}
+            >
+              {busy === 'sandbox-sync' ? page.sandboxBusy : page.sandboxSyncAction}
+            </button>
+            {!showSandboxCancelConfirm ? (
+              <button
+                type="button"
+                className="billing-cancel-btn billing-sandbox__button"
+                disabled={busyAny}
+                onClick={() => setShowSandboxCancelConfirm(true)}
+              >
+                {page.sandboxCancelNowAction}
+              </button>
+            ) : (
+              <div className="billing-sandbox__confirm" role="alert">
+                <p>{page.sandboxCancelConfirm}</p>
+                <div className="billing-sandbox__confirm-actions">
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    disabled={busyAny}
+                    onClick={() => void handleSandboxAction('cancel_now')}
+                  >
+                    {busy === 'sandbox-cancel'
+                      ? page.sandboxBusy
+                      : page.sandboxCancelConfirmAction}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    disabled={busyAny}
+                    onClick={() => setShowSandboxCancelConfirm(false)}
+                  >
+                    {page.sandboxCancelDismissAction}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </section>
   )
 
@@ -405,10 +509,11 @@ export function BillingPage() {
   // free(업그레이드) 화면은 세로 스크롤 스냅 리디자인을 전폭으로 렌더한다.
   // pro/failed/success는 아래 기존 셸을 그대로 유지한다.
   if (view === 'free') {
+    const checkoutBusy = busy === 'monthly' || busy === 'yearly' || busy === 'portal' ? busy : null
     return (
       <BillingUpgrade
         copy={copy}
-        busy={busy}
+        busy={checkoutBusy}
         message={message}
         onCheckout={(plan) => void handleCheckout(plan)}
       />
@@ -427,13 +532,13 @@ export function BillingPage() {
               <h1>{page.pageTitle}</h1>
               <p>{page.pageSubtitle}</p>
             </div>
-            <div className="billing-hero__status">
+            {view !== 'pro' && <div className="billing-hero__status">
               <span className="billing-hero__status-label">{page.statusLabel}</span>
               <span className={`billing-status billing-status--${statusVariant}`}>
                 <span className="billing-status__dot" aria-hidden="true" />
                 {statusLabel}
               </span>
-            </div>
+            </div>}
           </div>
         </header>
 

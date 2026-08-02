@@ -15,6 +15,10 @@ export interface PaddleSubscription {
   status?: string | null
   current_billing_period?: { ends_at?: string | null } | null
   next_billed_at?: string | null
+  scheduled_change?: {
+    action?: string | null
+    effective_at?: string | null
+  } | null
   custom_data?: Record<string, unknown> | null
 }
 
@@ -42,6 +46,18 @@ export function getPeriodEndIso(sub: PaddleSubscription): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
+export function getScheduledChangeAction(sub: PaddleSubscription): string | null {
+  const action = sub.scheduled_change?.action
+  return typeof action === 'string' && action ? action : null
+}
+
+export function getScheduledChangeEffectiveAtIso(sub: PaddleSubscription): string | null {
+  const value = sub.scheduled_change?.effective_at
+  if (typeof value !== 'string' || !value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
 export function customerIdOf(
   value: PaddleSubscription | string | { id?: string | null } | null | undefined,
 ): string | null {
@@ -57,6 +73,8 @@ export interface SubscriptionPatch {
   provider_subscription_id: string | null
   status: SubscriptionStatus
   current_period_end: string | null
+  scheduled_change_action: string | null
+  scheduled_change_effective_at: string | null
   updated_at: string
 }
 
@@ -122,6 +140,8 @@ export async function syncSubscription(
     provider_subscription_id: sub.id ?? null,
     status: mapPaddleStatus(sub.status),
     current_period_end: getPeriodEndIso(sub),
+    scheduled_change_action: getScheduledChangeAction(sub),
+    scheduled_change_effective_at: getScheduledChangeEffectiveAtIso(sub),
     updated_at: new Date().toISOString(),
   })
 }

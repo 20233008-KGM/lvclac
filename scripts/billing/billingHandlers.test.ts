@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto'
 import { describe, it, expect } from 'vitest'
 import type { BillingConfig, BillingDeps } from './billingConfig'
-import { handleCheckout, handleWebhook } from './billingHandlers'
+import { handleCheckout, handleSandboxSubscription, handleWebhook } from './billingHandlers'
 
 const CONFIG: BillingConfig = {
   paddleApiKey: 'pdl_api',
@@ -78,6 +78,139 @@ describe('handleCheckout validation', () => {
   })
 })
 
+interface SandboxState {
+  isAdmin: boolean
+  fetches: Array<{ input: string; init?: { method?: string; body?: string } }>
+  updates: Record<string, unknown>[]
+}
+
+function makeSandboxDeps(state: SandboxState): BillingDeps {
+  const admin = {
+    auth: {
+      async getUser() {
+        return { data: { user: { id: 'user-1', email: 'u@example.com' } }, error: null }
+      },
+    },
+    from(table: string) {
+      let selected = ''
+      let update: Record<string, unknown> | null = null
+      const chain = {
+        select(columns: string) {
+          selected = columns
+          return chain
+        },
+        update(patch: Record<string, unknown>) {
+          update = patch
+          state.updates.push(patch)
+          return chain
+        },
+        eq() {
+          return chain
+        },
+        async maybeSingle() {
+          if (table === 'admin_users') {
+            return { data: state.isAdmin ? { user_id: 'user-1' } : null, error: null }
+          }
+          if (selected === 'provider_subscription_id') {
+            return { data: { provider_subscription_id: 'sub_1' }, error: null }
+          }
+          if (selected === 'id') return { data: { id: 'row_1' }, error: null }
+          return { data: null, error: null }
+        },
+        get error() {
+          return update ? null : undefined
+        },
+      }
+      return chain
+    },
+  }
+  return {
+    admin,
+    async fetch(input: string, init?: { method?: string; body?: string }) {
+      state.fetches.push({ input, init })
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            data: {
+              id: 'sub_1',
+              customer_id: 'ctm_1',
+              status: 'canceled',
+              current_billing_period: { ends_at: '2026-08-02T03:00:00.000Z' },
+              scheduled_change: null,
+            },
+          }
+        },
+        async text() {
+          return ''
+        },
+      }
+    },
+  } as unknown as BillingDeps
+}
+
+describe('handleSandboxSubscription', () => {
+  it('is unavailable outside Paddle Sandbox', async () => {
+    const result = await handleSandboxSubscription(
+      { ...CONFIG, paddleEnv: 'live' },
+      { accessToken: 'jwt', action: 'cancel_now' },
+      NOOP_DEPS,
+    )
+    expect(result.status).toBe(404)
+    expect(result.body.error).toBe('sandbox_control_unavailable')
+  })
+
+  it('requires an administrator', async () => {
+    const state: SandboxState = { isAdmin: false, fetches: [], updates: [] }
+    const result = await handleSandboxSubscription(
+      CONFIG,
+      { accessToken: 'jwt', action: 'cancel_now' },
+      makeSandboxDeps(state),
+    )
+    expect(result.status).toBe(403)
+    expect(result.body.error).toBe('admin_required')
+    expect(state.fetches).toHaveLength(0)
+  })
+
+  it('immediately cancels only the signed-in administrator subscription and syncs it', async () => {
+    const state: SandboxState = { isAdmin: true, fetches: [], updates: [] }
+    const result = await handleSandboxSubscription(
+      CONFIG,
+      { accessToken: 'jwt', action: 'cancel_now' },
+      makeSandboxDeps(state),
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.body.action).toBe('cancel_now')
+    expect(state.fetches).toHaveLength(1)
+    expect(state.fetches[0]).toMatchObject({
+      input: 'https://sandbox-api.paddle.com/subscriptions/sub_1/cancel',
+      init: { method: 'POST', body: JSON.stringify({ effective_from: 'immediately' }) },
+    })
+    expect(state.updates[0]).toMatchObject({
+      provider_subscription_id: 'sub_1',
+      status: 'canceled',
+      scheduled_change_action: null,
+      scheduled_change_effective_at: null,
+    })
+  })
+
+  it('can refresh the current Paddle state without canceling it', async () => {
+    const state: SandboxState = { isAdmin: true, fetches: [], updates: [] }
+    const result = await handleSandboxSubscription(
+      CONFIG,
+      { accessToken: 'jwt', action: 'sync' },
+      makeSandboxDeps(state),
+    )
+    expect(result.status).toBe(200)
+    expect(state.fetches[0]).toMatchObject({
+      input: 'https://sandbox-api.paddle.com/subscriptions/sub_1',
+      init: { method: 'GET' },
+    })
+  })
+})
+
 interface WebhookState {
   inserts: Record<string, unknown>[]
 }
@@ -137,6 +270,10 @@ describe('handleWebhook', () => {
         customer_id: 'ctm_1',
         status: 'active',
         current_billing_period: { ends_at: '2023-11-14T22:13:20.000Z' },
+        scheduled_change: {
+          action: 'cancel',
+          effective_at: '2023-11-14T22:13:20.000Z',
+        },
         custom_data: { user_id: 'user-1' },
       },
     }
@@ -151,6 +288,8 @@ describe('handleWebhook', () => {
       user_id: 'user-1',
       provider: 'paddle',
       status: 'active',
+      scheduled_change_action: 'cancel',
+      scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
     })
   })
 

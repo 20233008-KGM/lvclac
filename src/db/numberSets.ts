@@ -47,6 +47,11 @@ export interface NumberSetRecord {
   rollover: RolloverSettings
 }
 
+export interface NumberSetRevision {
+  id: string
+  updatedAt: string
+}
+
 export interface NumberSetDeletionSummary {
   orderHistoryCount: number
   accountSnapshotCount: number
@@ -129,6 +134,25 @@ export async function fetchNumberSets(
 
   if (error) return { data: null, error: mapError(error) }
   return { data: (data ?? []).map(rowToRecord), error: null }
+}
+
+export async function fetchNumberSetRevisions(
+  userId: string,
+): Promise<NumberSetResult<NumberSetRevision[]>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .select('id,updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .returns<Array<{ id: string; updated_at: string }>>()
+
+  if (error) return { data: null, error: mapError(error) }
+  return {
+    data: (data ?? []).map((row) => ({ id: row.id, updatedAt: row.updated_at })),
+    error: null,
+  }
 }
 
 export async function createNumberSet(

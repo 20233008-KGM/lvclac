@@ -29,7 +29,6 @@ import type {
 } from '../db/accountSnapshotAutomation'
 import {
   fetchNumberSetDeletionSummary,
-  fetchNumberSets,
   type RolloverSettings,
 } from '../db/numberSets'
 import {
@@ -53,6 +52,7 @@ import {
 import { authErrorMessage } from './auth/authMessages'
 import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
+import { useNavigate } from '../hooks/usePathname'
 import { calculateEvaluate } from '../calc/leverage'
 import { BillingPanel } from './billing/BillingPanel'
 import { NumberSetDetailModal } from './NumberSetDetailModal'
@@ -237,6 +237,7 @@ interface MyPageViewProps {
   onLoginClick: () => void
   onGoogleLogin: () => void
   onSignOut: () => void
+  onBackToCalculator?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
 /** 이메일/비밀번호 수단용 단색 아이콘. Google 로고와 아이콘 컬럼을 대칭으로 맞춘다. */
@@ -1235,6 +1236,7 @@ export function MyPageView({
   onLoginClick,
   onGoogleLogin,
   onSignOut,
+  onBackToCalculator,
 }: MyPageViewProps) {
   const hasEmail = linkedProviders.includes('email')
   const hasGoogle = linkedProviders.includes('google')
@@ -1281,7 +1283,7 @@ export function MyPageView({
     <div className="my-page-shell">
       <div className="my-page">
         <header className="my-page-header">
-          <a className="my-page-back" href="/">
+          <a className="my-page-back" href="/" onClick={onBackToCalculator}>
             {copy.backToCalculator}
           </a>
           <div className="my-page-hero">
@@ -1640,6 +1642,7 @@ export function MyPageView({
 
 export function MyPage() {
   const { t } = useLanguage()
+  const navigate = useNavigate()
   const {
     user,
     loading,
@@ -1656,6 +1659,7 @@ export function MyPage() {
   } = useAuth()
   const {
     numberSets,
+    hasCloudDraft,
     numberSetLimits,
     createNumberSet,
     renameNumberSet,
@@ -1683,15 +1687,6 @@ export function MyPage() {
     userId: string | null
     value: string | null
   }>({ userId: null, value: null })
-  const [storageState, setStorageState] = useState<{
-    userId: string | null
-    error: string | null
-    hasCloudInput: boolean
-  }>({
-    userId: null,
-    error: null,
-    hasCloudInput: false,
-  })
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [recordsState, setRecordsState] = useState<{
     userId: string | null
@@ -1747,7 +1742,7 @@ export function MyPage() {
     nicknameMessageState.userId === (user?.id ?? null) ? nicknameMessageState.value : null
   const identityMessage =
     identityMessageState.userId === (user?.id ?? null) ? identityMessageState.value : null
-  const hasCloudInput = user && storageState.userId === user.id ? storageState.hasCloudInput : false
+  const hasCloudInput = Boolean(user && hasCloudDraft)
   const recordsLoading = user && recordsState.userId === user.id ? recordsState.loading : false
   const recordsError = user && recordsState.userId === user.id ? recordsState.error : null
   const recordsNotice = user && recordsState.userId === user.id ? recordsState.notice : null
@@ -1770,50 +1765,20 @@ export function MyPage() {
     deleteSummaryRequestRef.current += 1
   }, [user?.id])
 
-  useEffect(() => {
-    if (!user) {
-      setStorageState({
-        userId: null,
-        error: null,
-        hasCloudInput: false,
-      })
+  const handleBackToCalculator = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) {
       return
     }
-
-    let active = true
-
-    fetchNumberSets(user.id)
-      .then((numberSetResult) => {
-        if (!active) return
-        if (numberSetResult.error) {
-          setStorageState({
-            userId: user.id,
-            error: t.myPage.storageError,
-            hasCloudInput: false,
-          })
-          return
-        }
-        const cloudSets = numberSetResult.data ?? []
-        setStorageState({
-          userId: user.id,
-          error: null,
-          hasCloudInput: cloudSets.length > 0,
-        })
-      })
-      .catch(() => {
-        if (active) {
-          setStorageState({
-            userId: user.id,
-            error: t.myPage.storageError,
-            hasCloudInput: false,
-          })
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [t.myPage.storageError, user])
+    event.preventDefault()
+    navigate('/')
+  }, [navigate])
 
   const loadRecordsSummary = useCallback(async () => {
     if (!user) {
@@ -2214,6 +2179,7 @@ export function MyPage() {
         passwordDraft={passwordDraft}
         passwordConfirmationDraft={passwordConfirmationDraft}
         supportHref={`mailto:${CONTACT_EMAIL}`}
+        onBackToCalculator={handleBackToCalculator}
         recordsSummaryPanel={
           user && isPro ? (
             <AccountRecordsSummaryPanel

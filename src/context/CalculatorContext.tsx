@@ -30,6 +30,7 @@ import {
   createNumberSet as createCloudNumberSet,
   deleteNumberSet,
   fetchNumberSets,
+  fetchNumberSetRevisions,
   renameNumberSet as renameCloudNumberSet,
   updateNumberSetMemo as updateCloudNumberSetMemo,
   setNumberSetPreset as setCloudNumberSetPreset,
@@ -67,6 +68,12 @@ import {
   resolveActiveCloudNumberSet,
   shouldOpenCloudAtStartup,
 } from './cloudStartupPreference'
+import {
+  cloudSnapshotMatchesRevision,
+  readCloudNumberSetSnapshot,
+  writeCloudNumberSetSnapshot,
+  type CloudNumberSetSnapshot,
+} from '../storage/cloudNumberSetSnapshot'
 
 const DRAFT_KEY = 'leverage_calculator_draft'
 const DRAFT_SAVED_AT_KEY = 'leverage_calculator_draft_saved_at'
@@ -353,6 +360,30 @@ async function fetchResolvedCloudNumberSetState(userId: string) {
   }
 }
 
+async function fetchCloudNumberSetRevisionState(
+  userId: string,
+  cachedActiveSetId: string | null,
+) {
+  const [revisionsResult, preferenceResult] = await Promise.all([
+    fetchNumberSetRevisions(userId),
+    fetchActiveCloudNumberSetId(userId),
+  ])
+  if (revisionsResult.error) {
+    return { data: null, error: revisionsResult.error }
+  }
+
+  const revisions = revisionsResult.data ?? []
+  const serverActiveId = preferenceResult.error ? null : preferenceResult.data
+  const selected = resolveActiveCloudNumberSet(revisions, serverActiveId, cachedActiveSetId)
+  return {
+    data: {
+      revisions,
+      activeSetId: selected?.id ?? null,
+    },
+    error: null,
+  }
+}
+
 function getInitialInputs(saveEnabled: boolean): CalculatorInputs {
   return saveEnabled ? loadDraft() ?? defaultInputs : defaultInputs
 }
@@ -383,6 +414,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     createCalculatorHistory(getInitialInputs(readSaveEnabled())),
   )
   const inputs = history.present
+  const inputsRef = useRef(inputs)
+  const presetRef = useRef(preset)
   const [syncStatus, setSyncStatus] = useState<SaveSyncStatus>('idle')
   const [syncError, setSyncError] = useState<string | null>(null)
   const [cloudSetId, setCloudSetId] = useState<string | null>(null)
@@ -390,7 +423,12 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [hasCloudDraft, setHasCloudDraft] = useState(false)
   const [localDraftSavedAt, setLocalDraftSavedAt] = useState(readActiveLocalDraftSavedAt)
   const [cloudDraftSavedAt, setCloudDraftSavedAt] = useState<string | null>(null)
+  const [cloudRevalidateNonce, setCloudRevalidateNonce] = useState(0)
   const cloudSetIdRef = useRef<string | null>(null)
+  const cloudNumberSetsRef = useRef<NumberSetRecord[]>([])
+  const cloudBootstrapUserIdRef = useRef<string | null>(null)
+  const cloudCacheWriteUserIdRef = useRef<string | null>(null)
+  const inputEditGenerationRef = useRef(0)
   const mountedRef = useRef(false)
   const storageBootstrapPendingRef = useRef(true)
   const suppressNextPersistRef = useRef(false)
@@ -412,6 +450,45 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     cloudSetIdRef.current = cloudSetId
   }, [cloudSetId])
+
+  useEffect(() => {
+    inputsRef.current = inputs
+  }, [inputs])
+
+  useEffect(() => {
+    presetRef.current = preset
+  }, [preset])
+
+  useEffect(() => {
+    cloudNumberSetsRef.current = cloudNumberSets
+  }, [cloudNumberSets])
+
+  useEffect(() => {
+    const requestCloudRevalidation = () => {
+      if (window.location.pathname === '/') {
+        setCloudRevalidateNonce((value) => value + 1)
+      }
+    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') requestCloudRevalidation()
+    }
+    window.addEventListener('popstate', requestCloudRevalidation)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener('popstate', requestCloudRevalidation)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeUserId || cloudCacheWriteUserIdRef.current !== activeUserId) return
+    const sets = cloudNumberSetsRef.current
+    const cachedActiveId = cloudSetId ?? readCachedActiveCloudNumberSetId()
+    const activeId = cachedActiveId && sets.some((set) => set.id === cachedActiveId)
+      ? cachedActiveId
+      : null
+    writeCloudNumberSetSnapshot(localStorage, activeUserId, sets, activeId)
+  }, [activeUserId, cloudNumberSets, cloudSetId])
 
   const rememberActiveCloudNumberSet = useCallback(
     async (userId: string, setId: string | null): Promise<string | null> => {
@@ -471,6 +548,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     patch: CalculatorInputPatch,
     options?: CalculatorHistoryOptions,
   ) => {
+    inputEditGenerationRef.current += 1
     setHistory((prev) => {
       const nextInputs = options?.historyOnly
         ? prev.present
@@ -480,6 +558,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetInputs = useCallback(() => {
+    inputEditGenerationRef.current += 1
     setHistory((prev) => recordCalculatorHistory(prev, { ...defaultInputs }))
   }, [])
 
@@ -491,16 +570,18 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const replaceNumberSetFromStorage = useCallback(
     (numberSet: { inputs: CalculatorInputs; presetId: PresetId | null }) => {
       replaceInputsFromStorage(numberSet.inputs)
-      const nextPreset = numberSet.presetId ?? preset
-      if (nextPreset !== preset) {
+      const currentPreset = presetRef.current
+      const nextPreset = numberSet.presetId ?? currentPreset
+      if (nextPreset !== currentPreset) {
         suppressNextPresetPersistRef.current = true
         setPreset(nextPreset)
       }
     },
-    [preset, replaceInputsFromStorage, setPreset],
+    [replaceInputsFromStorage, setPreset],
   )
 
   const undoInputs = useCallback(() => {
+    inputEditGenerationRef.current += 1
     setHistory((prev) => {
       if (hasOrderApplyUndo(prev.present)) {
         deleteOrderHistoryOnUndo()
@@ -510,10 +591,12 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   }, [deleteOrderHistoryOnUndo])
 
   const redoInputs = useCallback(() => {
+    inputEditGenerationRef.current += 1
     setHistory((prev) => redoCalculatorHistory(prev))
   }, [])
 
   const jumpHistory = useCallback((direction: CalculatorHistoryDirection, steps: number) => {
+    inputEditGenerationRef.current += 1
     const count = Math.max(0, Math.floor(steps))
     setHistory((prev) => {
       if (direction === 'undo') {
@@ -619,6 +702,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     },
     [activeUserId, preset, refreshLocalNumberSetState, rememberActiveCloudNumberSet, saveEnabled, storageMode],
   )
+  const persistInputsRef = useRef(persistInputs)
+
+  useEffect(() => {
+    persistInputsRef.current = persistInputs
+  }, [persistInputs])
 
   const setSaveEnabled = useCallback(
     async (enabled: boolean, mode: SaveStorageMode = storageMode): Promise<string | null> => {
@@ -1367,10 +1455,21 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (sessionLoading) return
     let active = true
+    let persistEditsAfterValidation = false
     storageBootstrapPendingRef.current = true
+    const inputGenerationAtStart = inputEditGenerationRef.current
 
     async function syncConfiguredStorage() {
       if (!active) return
+
+      if (!activeUserId) {
+        cloudBootstrapUserIdRef.current = null
+        cloudCacheWriteUserIdRef.current = null
+        cloudNumberSetsRef.current = []
+        setCloudNumberSets([])
+        setHasCloudDraft(false)
+        setCloudDraftSavedAt(null)
+      }
 
       if (!saveEnabled) {
         if (!devicePreferenceAtStartup && activeUserId) {
@@ -1385,8 +1484,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           }
 
           const { sets, selected, serverActiveId } = result.data
+          cloudNumberSetsRef.current = sets
           setCloudNumberSets(sets)
           setHasCloudDraft(sets.length > 0)
+          cloudCacheWriteUserIdRef.current = activeUserId
+          writeCloudNumberSetSnapshot(localStorage, activeUserId, sets, selected?.id ?? null)
           if (shouldOpenCloudAtStartup({
             hasDevicePreference: false,
             saveEnabled: false,
@@ -1440,13 +1542,69 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       if (!activeUserId) {
         setSyncStatus('idle')
         setSyncError(null)
-        setHasCloudDraft(false)
-        setCloudDraftSavedAt(null)
         return
       }
 
-      setSyncStatus('loading')
       setSyncError(null)
+      const alreadyBootstrapped = cloudBootstrapUserIdRef.current === activeUserId
+      let baseSnapshot: Pick<CloudNumberSetSnapshot, 'activeSetId' | 'sets'> | null = null
+
+      if (alreadyBootstrapped) {
+        baseSnapshot = {
+          activeSetId: cloudSetIdRef.current,
+          sets: cloudNumberSetsRef.current,
+        }
+      } else {
+        cloudBootstrapUserIdRef.current = activeUserId
+        cloudCacheWriteUserIdRef.current = null
+        const cached = readCloudNumberSetSnapshot(localStorage, activeUserId)
+        if (cached) {
+          const cachedSelected = cached.sets.find((set) => set.id === cached.activeSetId) ?? null
+          baseSnapshot = cached
+          cloudNumberSetsRef.current = cached.sets
+          setCloudNumberSets(cached.sets)
+          cloudSetIdRef.current = cachedSelected?.id ?? null
+          setCloudSetId(cachedSelected?.id ?? null)
+          setHasCloudDraft(cached.sets.length > 0)
+          setCloudDraftSavedAt(cachedSelected?.updatedAt ?? null)
+          if (cachedSelected) replaceNumberSetFromStorage(cachedSelected)
+          cloudCacheWriteUserIdRef.current = activeUserId
+          setSyncStatus(cachedSelected ? 'saved' : 'idle')
+        } else {
+          cloudNumberSetsRef.current = []
+          setCloudNumberSets([])
+          cloudSetIdRef.current = null
+          setCloudSetId(null)
+          setHasCloudDraft(false)
+          setCloudDraftSavedAt(null)
+          setSyncStatus('loading')
+        }
+      }
+
+      if (baseSnapshot) {
+        const revisionResult = await fetchCloudNumberSetRevisionState(
+          activeUserId,
+          baseSnapshot.activeSetId,
+        )
+        if (!active) return
+        if (revisionResult.error || !revisionResult.data) {
+          setSyncStatus('error')
+          setSyncError(revisionResult.error)
+          return
+        }
+        if (cloudSnapshotMatchesRevision(
+          baseSnapshot,
+          revisionResult.data.activeSetId,
+          revisionResult.data.revisions,
+        )) {
+          persistEditsAfterValidation = inputEditGenerationRef.current !== inputGenerationAtStart
+          setSyncStatus(baseSnapshot.activeSetId ? 'saved' : 'idle')
+          refreshLocalNumberSetState()
+          return
+        }
+      }
+
+      if (!baseSnapshot) setSyncStatus('loading')
       const result = await fetchResolvedCloudNumberSetState(activeUserId)
       if (!active) return
       if (result.error || !result.data) {
@@ -1455,10 +1613,20 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         return
       }
       const { sets, selected, serverActiveId } = result.data
+      const inputsChangedDuringValidation = inputEditGenerationRef.current !== inputGenerationAtStart
+      const baseSelected = baseSnapshot?.sets.find(
+        (set) => set.id === baseSnapshot?.activeSetId,
+      ) ?? null
+      const activeRevisionChanged =
+        (baseSnapshot?.activeSetId ?? null) !== (selected?.id ?? null)
+        || (baseSelected?.updatedAt ?? null) !== (selected?.updatedAt ?? null)
+      cloudNumberSetsRef.current = sets
       setCloudNumberSets(sets)
       if (selected) {
-        suppressNextPersistRef.current = true
-        replaceNumberSetFromStorage(selected)
+        if (activeRevisionChanged && !inputsChangedDuringValidation) {
+          suppressNextPersistRef.current = true
+          replaceNumberSetFromStorage(selected)
+        }
         cloudSetIdRef.current = selected.id
         setCloudSetId(selected.id)
         setHasCloudDraft(true)
@@ -1472,19 +1640,40 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             return
           }
         }
-        setSyncStatus('saved')
+        if (activeRevisionChanged && inputsChangedDuringValidation) {
+          setSyncStatus('error')
+          setSyncError('cloud_changed_while_editing')
+        } else {
+          persistEditsAfterValidation = inputsChangedDuringValidation
+          setSyncStatus('saved')
+        }
       } else {
-        replaceInputsFromStorage(defaultInputs)
+        if (activeRevisionChanged && !inputsChangedDuringValidation) {
+          replaceInputsFromStorage(defaultInputs)
+        }
+        cloudSetIdRef.current = null
         setCloudSetId(null)
         setHasCloudDraft(false)
         setCloudDraftSavedAt(null)
-        setSyncStatus('idle')
+        if (activeRevisionChanged && inputsChangedDuringValidation) {
+          setSyncStatus('error')
+          setSyncError('cloud_changed_while_editing')
+        } else {
+          persistEditsAfterValidation = inputsChangedDuringValidation
+          setSyncStatus('idle')
+        }
       }
+      cloudCacheWriteUserIdRef.current = activeUserId
+      writeCloudNumberSetSnapshot(localStorage, activeUserId, sets, selected?.id ?? null)
       refreshLocalNumberSetState()
     }
 
     void syncConfiguredStorage().finally(() => {
-      if (active) storageBootstrapPendingRef.current = false
+      if (!active) return
+      storageBootstrapPendingRef.current = false
+      if (persistEditsAfterValidation) {
+        void persistInputsRef.current(inputsRef.current)
+      }
     })
 
     return () => {
@@ -1492,6 +1681,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     }
   }, [
     activeUserId,
+    cloudRevalidateNonce,
     devicePreferenceAtStartup,
     refreshLocalNumberSetState,
     rememberActiveCloudNumberSet,

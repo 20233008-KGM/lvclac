@@ -24,6 +24,7 @@ import {
   type SubscriptionRecord,
 } from '../db/billing'
 import { shouldHydrateAuthSession } from './authBootstrap'
+import { clearCloudNumberSetSnapshot } from '../storage/cloudNumberSetSnapshot'
 
 /**
  * 인증 메서드는 성공 시 null, 실패/안내 시 코드 문자열을 반환합니다.
@@ -262,6 +263,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     if (!supabase) return
+    const signedOutUserId = latestUserId.current
+    if (signedOutUserId) clearCloudNumberSetSnapshot(localStorage, signedOutUserId)
     await supabase.auth.signOut()
     setSessionUserId(null)
     setUser(null)

@@ -282,13 +282,13 @@ describe('draft save slot UI', () => {
   it('does not reschedule cloud autosave when only the saved slot list changes', () => {
     const text = source('src/context/CalculatorContext.tsx')
     const persistStart = text.indexOf('const persistInputs = useCallback(')
-    const persistEnd = text.indexOf('const setSaveEnabled = useCallback(', persistStart)
+    const persistEnd = text.indexOf('const persistInputsRef = useRef(', persistStart)
     const persistBlock = text.slice(persistStart, persistEnd)
     const dependencyList = persistBlock.match(/\n\s+\[([^\]]+)\],\r?\n\s+\)\r?\n\s*$/)?.[1]
 
     expect(dependencyList).toBeDefined()
     expect(dependencyList).not.toMatch(/\bcloudNumberSets\b/)
-    expect(text).not.toContain('cloudNumberSetsRef')
+    expect(persistBlock).not.toContain('cloudNumberSetsRef')
   })
 
   it('persists empty inputs without deleting the active local or cloud number set', () => {
@@ -424,7 +424,7 @@ describe('draft save slot UI', () => {
     const text = source('src/context/CalculatorContext.tsx')
 
     expect(text).toContain('replaceNumberSetFromStorage')
-    expect(text).toContain('const nextPreset = numberSet.presetId ?? preset')
+    expect(text).toContain('const nextPreset = numberSet.presetId ?? currentPreset')
     expect(text).toContain('void setNumberSetPreset(storageMode, activeNumberSetId, preset)')
     expect(text).toContain('presetId: preset')
   })

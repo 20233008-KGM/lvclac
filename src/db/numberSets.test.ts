@@ -91,6 +91,17 @@ describe('number-set deletion summary', () => {
 })
 
 describe('number-set terminology preset storage', () => {
+  it('supports a lightweight id and updated_at revision probe before full hydration', () => {
+    const db = source('src/db/numberSets.ts')
+    const revisionStart = db.indexOf('export async function fetchNumberSetRevisions(')
+    const revisionEnd = db.indexOf('export async function createNumberSet(', revisionStart)
+    const revisionBlock = db.slice(revisionStart, revisionEnd)
+
+    expect(revisionBlock).toContain(".select('id,updated_at')")
+    expect(revisionBlock).not.toContain('inputs')
+    expect(revisionBlock).not.toContain('memo')
+  })
+
   it('adds a nullable constrained preset column for legacy-compatible cloud slots', () => {
     const migration = source('supabase/migrations/20260723010000_number_set_preset.sql')
 

@@ -23,6 +23,7 @@ import {
   isActiveSubscription,
   type SubscriptionRecord,
 } from '../db/billing'
+import { shouldHydrateAuthSession } from './authBootstrap'
 
 /**
  * 인증 메서드는 성공 시 null, 실패/안내 시 코드 문자열을 반환합니다.
@@ -31,6 +32,10 @@ import {
 interface AuthContextValue {
   user: AuthUser | null
   loading: boolean
+  /** 로컬 인증 저장소에서 초기 세션 확인이 끝났는지. 계정 부가정보 loading과 분리한다. */
+  sessionLoading: boolean
+  /** 초기 세션에서 즉시 읽은 계정 ID. 프로필·구독 조회를 기다리지 않고 클라우드 복원에 쓴다. */
+  sessionUserId: string | null
   /** Supabase 환경변수가 설정돼 인증을 쓸 수 있는지 */
   configured: boolean
   signInWithPassword: (email: string, password: string) => Promise<string | null>
@@ -81,12 +86,10 @@ function fallbackNickname(supaUser: SupabaseUser): string {
 
 async function buildUser(supaUser: SupabaseUser): Promise<AuthUser> {
   const email = supaUser.email ?? ''
-  const { nickname, autoSaveOrderHistory } = await ensureProfile(
-    supaUser.id,
-    email,
-    fallbackNickname(supaUser),
-  )
-  const isAdmin = await fetchIsAdmin(supaUser.id)
+  const [{ nickname, autoSaveOrderHistory }, isAdmin] = await Promise.all([
+    ensureProfile(supaUser.id, email, fallbackNickname(supaUser)),
+    fetchIsAdmin(supaUser.id),
+  ])
   return { id: supaUser.id, email, nickname, autoSaveOrderHistory, isAdmin }
 }
 
@@ -126,13 +129,17 @@ function providersOf(supaUser: SupabaseUser): string[] {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [linkedProviders, setLinkedProviders] = useState<string[]>([])
   const [subscription, setSubscription] = useState<SubscriptionRecord | null>(null)
   const [loading, setLoading] = useState(isSupabaseConfigured)
+  const [sessionLoading, setSessionLoading] = useState(isSupabaseConfigured)
   // 재설정 링크로 진입하면 Supabase가 PASSWORD_RECOVERY 이벤트를 발생시킨다.
   const [recoveryMode, setRecoveryMode] = useState(false)
   // 동시에 도착하는 auth 이벤트가 오래된 사용자로 덮어쓰지 않도록 최신 세션만 반영
   const latestUserId = useRef<string | null>(null)
+  const hydratedUserId = useRef<string | null>(null)
+  const hydratingUserId = useRef<string | null>(null)
 
   useEffect(() => {
     // 미설정 시 loading 초기값이 이미 false (isSupabaseConfigured) 이므로 추가 작업 없음
@@ -143,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const supaUser = session?.user ?? null
       latestUserId.current = supaUser?.id ?? null
       if (!supaUser) {
+        hydratedUserId.current = null
+        hydratingUserId.current = null
         if (active) {
           setUser(null)
           setLinkedProviders([])
@@ -150,30 +159,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return
       }
+      hydratingUserId.current = supaUser.id
       const providers = providersOf(supaUser)
-      const built = await buildUser(supaUser)
-      // 그 사이 더 최신 이벤트가 들어왔으면 무시
-      if (active && latestUserId.current === supaUser.id) {
-        setUser(built)
-        setLinkedProviders(providers)
-      }
-      const subResult = await fetchSubscription(supaUser.id)
-      if (active && latestUserId.current === supaUser.id) {
-        setSubscription(subResult.data)
+      try {
+        const [built, subResult] = await Promise.all([
+          buildUser(supaUser),
+          fetchSubscription(supaUser.id),
+        ])
+        // 그 사이 더 최신 이벤트가 들어왔으면 무시
+        if (active && latestUserId.current === supaUser.id) {
+          hydratedUserId.current = supaUser.id
+          setUser(built)
+          setLinkedProviders(providers)
+          setSubscription(subResult.data)
+        }
+      } finally {
+        if (hydratingUserId.current === supaUser.id) {
+          hydratingUserId.current = null
+        }
       }
     }
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => syncFromSession(data.session))
-      .finally(() => {
-        if (active) setLoading(false)
-      })
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       // 재설정 링크로 들어오면 복구 세션이 잡히며 이 이벤트가 발생한다.
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
-      void syncFromSession(session)
+      const sessionUserId = session?.user.id ?? null
+      latestUserId.current = sessionUserId
+      if (active) setSessionUserId(sessionUserId)
+      if (active && event === 'INITIAL_SESSION') setSessionLoading(false)
+
+      const shouldHydrate = shouldHydrateAuthSession({
+        event,
+        sessionUserId,
+        hydratedUserId: hydratedUserId.current,
+        hydratingUserId: hydratingUserId.current,
+      })
+      if (!shouldHydrate) {
+        if (active && event === 'INITIAL_SESSION') setLoading(false)
+        return
+      }
+
+      void syncFromSession(session).finally(() => {
+        if (active && event === 'INITIAL_SESSION') setLoading(false)
+      })
     })
 
     return () => {
@@ -235,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     if (!supabase) return
     await supabase.auth.signOut()
+    setSessionUserId(null)
     setUser(null)
     setLinkedProviders([])
     setSubscription(null)
@@ -336,6 +365,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
+        sessionLoading,
+        sessionUserId,
         configured: isSupabaseConfigured,
         signInWithPassword,
         signUpWithPassword,

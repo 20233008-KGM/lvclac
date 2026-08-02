@@ -358,9 +358,9 @@ function getInitialInputs(saveEnabled: boolean): CalculatorInputs {
 }
 
 export function CalculatorProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading, isPro } = useAuth()
+  const { user, sessionLoading, sessionUserId, isPro } = useAuth()
   const { preset, setPreset } = useLanguage()
-  const activeUserId = user?.id ?? null
+  const activeUserId = sessionUserId ?? user?.id ?? null
   const cloudAvailable = Boolean(activeUserId)
   const numberSetLimits: Record<SaveStorageMode, number> = useMemo(
     () => ({
@@ -392,6 +392,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [cloudDraftSavedAt, setCloudDraftSavedAt] = useState<string | null>(null)
   const cloudSetIdRef = useRef<string | null>(null)
   const mountedRef = useRef(false)
+  const storageBootstrapPendingRef = useRef(true)
   const suppressNextPersistRef = useRef(false)
   const suppressNextPresetPersistRef = useRef(false)
   const previousPresetRef = useRef(preset)
@@ -1364,8 +1365,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   }, [activeNumberSetId, preset, saveEnabled, setNumberSetPreset, storageMode])
 
   useEffect(() => {
-    if (authLoading) return
+    if (sessionLoading) return
     let active = true
+    storageBootstrapPendingRef.current = true
 
     async function syncConfiguredStorage() {
       if (!active) return
@@ -1481,25 +1483,27 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       refreshLocalNumberSetState()
     }
 
-    void syncConfiguredStorage()
+    void syncConfiguredStorage().finally(() => {
+      if (active) storageBootstrapPendingRef.current = false
+    })
 
     return () => {
       active = false
     }
   }, [
     activeUserId,
-    authLoading,
     devicePreferenceAtStartup,
     refreshLocalNumberSetState,
     rememberActiveCloudNumberSet,
     replaceInputsFromStorage,
     replaceNumberSetFromStorage,
     saveEnabled,
+    sessionLoading,
     storageMode,
   ])
 
   useEffect(() => {
-    if (authLoading) return
+    if (sessionLoading) return
     if (!activeUserId) return
     if (!devicePreferenceAtStartup && !saveEnabled) return
     if (saveEnabled && storageMode === 'cloud') return
@@ -1519,7 +1523,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false
     }
-  }, [activeUserId, authLoading, devicePreferenceAtStartup, refreshCloudNumberSetState, saveEnabled, storageMode])
+  }, [activeUserId, devicePreferenceAtStartup, refreshCloudNumberSetState, saveEnabled, sessionLoading, storageMode])
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -1530,7 +1534,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       suppressNextPersistRef.current = false
       return
     }
-    if (!saveEnabled || authLoading) return
+    if (!saveEnabled || sessionLoading || storageBootstrapPendingRef.current) return
 
     // 편집이 감지되는 즉시 미커밋(저장 대기) 상태로 표시해 저장 완료 체크(✓)를 숨긴다.
     // persistInputs가 500ms 뒤 실제 저장 결과('saved'/'idle'/'error')로 덮어쓴다.
@@ -1539,7 +1543,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       void persistInputs(inputs)
     }, 500)
     return () => window.clearTimeout(timer)
-  }, [authLoading, inputs, persistInputs, saveEnabled])
+  }, [inputs, persistInputs, saveEnabled, sessionLoading])
 
   return (
     <CalculatorContext.Provider

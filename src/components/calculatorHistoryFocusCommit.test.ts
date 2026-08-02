@@ -43,7 +43,7 @@ describe('calculator focus-complete history wiring', () => {
 
     expect(context).toContain('void persistInputs(inputs)')
     expect(context).toContain(
-      '[authLoading, inputs, persistInputs, saveEnabled]',
+      '[inputs, persistInputs, saveEnabled, sessionLoading]',
     )
   })
 

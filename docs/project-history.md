@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-08-02 — 회사 버그 제보 분류·메일 알림 운영 활성화**
+- `dev` **5cfff76**에서 기존 Supabase 피드백함에 P0~P3 우선순위·담당자·관리자 전용 내부 메모·제보자 공개 답변을 추가하고, Vercel 서버 함수와 service-role 전용 알림 장부를 통해 신규 제보를 Resend로 발송하도록 구현했다. `contact@farfield.software`는 현재 1인 Google Workspace의 `gyumin.kim@farfield.software` 별칭으로 유지하고 팀원이 늘면 Google Group 공동수신함으로 전환한다. public maintenance에는 로그인 관리자 흐름을 전파하지 않았다.
+- 원격 Supabase 마이그레이션 뒤 `private.is_admin()` 권한 누락으로 소유자 조회·등록이 403이 되던 기존 RLS 결함을 발견해 **0088c02**에서 authenticated에 private 스키마 사용과 해당 함수 실행만 복구했다. 운영 도메인에서 테스트 제보 저장, 알림 장부 1회 시도·오류 없음, Resend `delivered`, Gmail `contact@` 실수신을 확인하고 테스트 글과 연동 장부는 정확한 ID로 삭제했다.
+- 검증: 전체 Vitest **801/801**, production build, 변경 파일 ESLint, diff check, 원격 RLS·권한, Vercel Production **dpl_9WxWPqWN8GbAWYm9ekmL2NwPFTJw** `READY`, `/boards/bugs` 200, 비인증 `/api/feedback/notify` 401. 로그인 관리자 계정의 운영 도메인 분류·답변 실화면 저장만 후속 QA로 분리했다. Notion 완료 [Task LV-100](https://app.notion.com/p/3af26e6d586f81dd823dc0735cfa354c)·[Work Log](https://app.notion.com/p/3af26e6d586f81f8a09df9d3da1d4af1)·[계획](https://app.notion.com/p/3af26e6d586f810f9283e558f324f4c3) 기록 완료.
+
 **2026-07-23 — 계정별 클라우드 작업공간 복원·마이페이지 로딩 개선 dev 배포**
 - `dev`는 마지막 활성 클라우드 숫자세트를 `profiles.active_cloud_number_set_id`에 계정 단위로 저장하고 새 브라우저에서 복원한다. 브라우저가 이미 선택한 로컬 저장·저장 안 함은 보존한다. 계정 메뉴는 마이페이지 청크를 유휴·호버·포커스 시 미리 불러오며, 라우트와 인증 복원 중에는 로그인 마케팅 대신 중립 로더를 표시한다. 로컬 저장 최초 안내의 데이터 삭제 위험 문장만 밑줄 강조하고 지속적인 안내 재열기 링크는 제거했다.
 - 검증: 전체 Vitest **760/760**, TypeScript 포함 production build, 원격 Supabase schema smoke 통과. 변경 파일 ESLint는 추가 오류 없이 HEAD에도 존재하는 effect/Fast Refresh 6건만 재현됐다. `devpilgrm.liqguard.com`에서 HTTP 200·DEV 배지·noindex·브라우저 콘솔 오류 0을 확인했고 공개 `liqguard.com` 배포는 그대로 유지했다. 로그인된 실제 계정의 다중 브라우저 활성 슬롯 저장 왕복은 미검증이다.

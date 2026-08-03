@@ -7811,6 +7811,10 @@ a.site-footer__link:hover {
   font-family: inherit;
 }
 
+.welcome-rail__step:disabled {
+  cursor: default;
+}
+
 .welcome-rail__chip {
   width: 30px;
   height: 30px;
@@ -7968,6 +7972,42 @@ a.site-footer__link:hover {
 
 .welcome-fade {
   animation: welcomeFade 0.28s ease both;
+}
+
+/* 첫 화면: 선택을 요구하지 않고 서비스 효용과 제작 의도를 차분하게 소개한다. */
+.welcome-intro {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.welcome-intro__item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 15px 2px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.welcome-intro__item:last-child {
+  border-bottom: none;
+}
+
+.welcome-intro__index {
+  padding-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+}
+
+.welcome-intro__item p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--color-text-muted);
 }
 
 /* ── 푸터 ── */
@@ -8302,7 +8342,7 @@ a.site-footer__link:hover {
 
 /* 사용법 패널 */
 .welcome-usage {
-  margin-top: 16px;
+  margin-top: 0;
   padding: 16px 18px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-subtle);

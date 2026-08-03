@@ -691,6 +691,7 @@ export interface Messages {
     skip: string
     greetingTitle: string
     greetingBody: string
+    greetingHighlights: [string, string, string]
     regionTitle: string
     regionBody: string
     regions: Record<'KR' | 'US' | 'EU' | 'JP' | 'OTHER', string>
@@ -707,6 +708,7 @@ export interface Messages {
     stageHasPosition: string
     stageHasPositionDesc: string
     usageTitle: string
+    usageStepBody: string
     usageFirstBody: string[]
     usageNoneBody: string[]
     usageHasPositionBody: string[]
@@ -720,8 +722,8 @@ export interface Messages {
     saveNoDesc: string
     disclaimerStepTitle: string
     disclaimerStepBody: string
-    /** 좌측 레일 세로 스테퍼 & 우측 헤더 섹션명(5단계, 순서대로) */
-    stepNav: [string, string, string, string, string]
+    /** 좌측 레일 세로 스테퍼 & 우측 헤더 섹션명(6단계, 순서대로) */
+    stepNav: [string, string, string, string, string, string]
     /** STEP01 지역 선택 위 안내문 */
     regionPrompt: string
     /** 좌측 레일 하단 안내(자물쇠) */

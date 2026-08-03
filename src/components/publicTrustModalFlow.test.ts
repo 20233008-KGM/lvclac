@@ -18,11 +18,12 @@ describe('public trust modal flow', () => {
     )
   })
 
-  it('keeps service notice before device storage and shares the active gate', () => {
-    expect(disclaimer).toContain("mode === 'required' && (open || saveConsentOpen)")
-    expect(disclaimer.indexOf('{open && (')).toBeLessThan(
-      disclaimer.indexOf('{saveConsentOpen && ('),
+  it('keeps welcome and legacy recovery modals inside one active gate', () => {
+    expect(disclaimer).toContain(
+      "mode === 'required' && (welcomeOpen || open || saveConsentOpen)",
     )
+    expect(disclaimer).toContain('<WelcomeFlow onComplete={handleWelcomeComplete} />')
+    expect(disclaimer).toContain('<PublicSaveConsentModal')
     expect(disclaimer).toContain('firstVisitGateActive')
   })
 

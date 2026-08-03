@@ -24,6 +24,8 @@ import {
   writeDisclaimerAck,
   writeDisclaimerSkip,
 } from './serviceDisclaimerLogic'
+import { shouldShowWelcome, writeWelcomeCompleted } from './welcomeFlowLogic'
+import { WelcomeFlow } from './WelcomeFlow'
 import { CloudIcon, LocalComputerIcon } from './StorageModeIcons'
 import { TrustModalFrame } from './TrustModalFrame'
 
@@ -141,27 +143,44 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
 
 export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const [welcomeOpen, setWelcomeOpen] = useState(() =>
+    shouldShowWelcome(pathname, localStorage, sessionStorage),
+  )
   const [open, setOpen] = useState(
-    () => shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
+    () =>
+      !shouldShowWelcome(pathname, localStorage, sessionStorage) &&
+      shouldAutoShowDisclaimer(pathname, localStorage, sessionStorage),
   )
   const [saveConsentResolved, setSaveConsentResolved] = useState(false)
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
   const saveConsentOpen =
+    !welcomeOpen &&
     !open &&
     !saveConsentResolved &&
     shouldShowPublicSaveConsent(pathname, localStorage)
-  const firstVisitGateActive = mode === 'required' && (open || saveConsentOpen)
+  const firstVisitGateActive =
+    mode === 'required' && (welcomeOpen || open || saveConsentOpen)
 
   const showAgain = () => {
     setMode('info')
     setOpen(true)
   }
 
+  const handleWelcomeComplete = () => {
+    writeDisclaimerAck(sessionStorage)
+    writeDisclaimerSkip(localStorage, true)
+    writeWelcomeCompleted(localStorage)
+    setSkipActive(true)
+    setWelcomeOpen(false)
+  }
+
   return (
     <FirstVisitFlowContext.Provider value={{ skipActive, showAgain, firstVisitGateActive }}>
       {children}
-      {open && (
+      {welcomeOpen ? (
+        <WelcomeFlow onComplete={handleWelcomeComplete} />
+      ) : open && (
         <DisclaimerModalContent
           mode={mode}
           onClose={() => setOpen(false)}

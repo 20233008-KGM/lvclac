@@ -728,9 +728,14 @@ export const en: Messages = {
     back: 'Back',
     start: 'Agree & start',
     skip: 'Skip',
-    greetingTitle: 'Welcome to the futures liquidation calculator',
+    greetingTitle: 'Welcome to LiqGuard',
     greetingBody:
-      "Pick a few things and we'll tailor the on-screen terms and tips to you. Takes about 30 seconds.",
+      'LiqGuard brings liquidation price, margin, and leverage for a futures position into one view, and lets you preview how an order could change them.',
+    greetingHighlights: [
+      'See the current risk and liquidation threshold of an open position in one place.',
+      'Preview how a new order could change your account and liquidation price before it fills.',
+      'We built LiqGuard to make complex derivatives calculations easier to read and verify. You can use it without signing in, and saved calculator inputs stay in this browser only.',
+    ],
     regionTitle: 'Where do you trade?',
     regionBody:
       'Used to set your display language and default auto-snapshot time zone. You can change it anytime.',
@@ -748,6 +753,7 @@ export const en: Messages = {
     stageHasPosition: 'I hold a position',
     stageHasPositionDesc: 'I have an open position and want to check my liquidation price.',
     usageTitle: "Here's how to use it",
+    usageStepBody: 'Here are the values to enter first and the calculation order for your situation.',
     usageFirstBody: [
       "You don't need to fill in every field.",
       'Fill just account equity, contract multiplier, and the margin rates.',
@@ -766,7 +772,8 @@ export const en: Messages = {
     guideLink: 'See the full guide',
     mathLink: 'Curious about the math? See the formulas',
     saveTitle: 'Save your inputs on this device?',
-    saveBody: "Saved values stay inside this browser and never leave it. You can change this anytime in My Page or the margin section.",
+    saveBody:
+      "Saved values stay inside this browser and aren't sent to a server. Clearing this browser's site data deletes them, and you can change the choice anytime from the calculator's storage menu.",
     saveYes: 'Save on this device',
     saveYesDesc: 'Your inputs are still here when you come back.',
     saveNo: "Don't save",
@@ -774,12 +781,12 @@ export const en: Messages = {
     disclaimerStepTitle: 'Before you start',
     disclaimerStepBody:
       'This calculator is for reference only. Trading futures and derivatives carries risk of loss exceeding your principal, and liquidation rules vary by broker and exchange.',
-    stepNav: ['Welcome · Region', 'Instrument', 'Your situation', 'Save inputs', 'Before you start'],
+    stepNav: ['Welcome', 'Margin method', 'Your situation', 'Your guide', 'Save inputs', 'Before you start'],
     regionPrompt: 'Choose where you live or where you mainly trade.',
     railHint: 'About 30 seconds. You can change any setting later.',
     marginDivider: 'Margin input method',
     doneTitle: "You're all set!",
-    doneBody: "We've tailored the calculator screen and tips to your choices. Now go calculate your liquidation price.",
+    doneBody: "We've prepared the calculator and guidance for your choices. Now go calculate your liquidation price.",
   },
   fieldHint: {
     dismiss: 'Dismiss',

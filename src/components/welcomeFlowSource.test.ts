@@ -24,25 +24,50 @@ describe('WelcomeFlow 접근성/구조', () => {
     expect(welcome).not.toContain('e.target === e.currentTarget')
   })
 
-  it('완료 시 지역→시간대 저장 + ack 체크 전 시작 불가', () => {
-    expect(welcome).toContain('writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))')
+  it('공개 저장 성공 확인 + ack 체크 전 시작 불가', () => {
+    expect(welcome).toContain("await setSaveEnabled(true, 'local')")
+    expect(welcome).toContain('if (error) {')
+    expect(welcome).toContain('setSaveError(t.draftSave.statusError)')
+    expect(welcome).toContain('return')
+    expect(welcome).toContain("writePublicSaveConsent(localStorage, 'local')")
+    expect(welcome).toContain('pauseSaving()')
+    expect(welcome).toContain("writePublicSaveConsent(localStorage, 'off')")
+    expect(welcome).toContain('role="alert"')
     expect(welcome).toContain('disabled={!draft.ackChecked}')
+  })
+
+  it('환영·거래상황·맞춤 사용법을 각각 별도 단계로 렌더', () => {
+    const greetingStart = welcome.indexOf('{stepIndex === 0 && (')
+    const marginStart = welcome.indexOf('{stepIndex === 1 && (')
+    const stageStart = welcome.indexOf('{stepIndex === 2 && (')
+    const usageStart = welcome.indexOf('{stepIndex === 3 && (')
+    const saveStart = welcome.indexOf('{stepIndex === 4 && (')
+
+    expect(welcome.slice(greetingStart, marginStart)).toContain('welcome-intro')
+    expect(welcome.slice(stageStart, usageStart)).not.toContain('welcome-usage')
+    expect(welcome.slice(usageStart, saveStart)).toContain('welcome-usage')
+  })
+
+  it('공개 컨텍스트 사용 + 미방문 단계 우회 차단', () => {
+    expect(welcome).toContain("from '../context/PublicCalculatorContext'")
+    expect(welcome).not.toContain("from '../context/CalculatorContext'")
+    expect(welcome).toContain('disabled={i > furthestStep}')
+    expect(welcome).toContain('stepIndex / WELCOME_LAST_STEP')
   })
 })
 
 describe('DisclaimerProvider 게이트 배선', () => {
-  it('공개 계산기는 온보딩 없이 면책 확인 뒤 로컬 저장 동의를 렌더', () => {
-    expect(provider).not.toContain('welcomeOpen ?')
-    expect(provider).not.toContain('<WelcomeFlow')
-    expect(provider).toContain('{open && (')
+  it('신규 방문자는 WelcomeFlow, 중단된 기존 방문자는 레거시 모달을 렌더', () => {
+    expect(provider).toContain('welcomeOpen ?')
+    expect(provider).toContain('<WelcomeFlow onComplete={handleWelcomeComplete} />')
     expect(provider).toContain('<DisclaimerModalContent')
     expect(provider).toContain('{saveConsentOpen && (')
     expect(provider).toContain('<PublicSaveConsentModal')
   })
 
-  it('완료 시 면책 ack/skip만 저장', () => {
+  it('완료 시 면책 ack/skip + 온보딩 완료 플래그 저장', () => {
     expect(provider).toContain('writeDisclaimerAck(sessionStorage)')
     expect(provider).toContain('writeDisclaimerSkip(localStorage, true)')
-    expect(provider).not.toContain('writeWelcomeCompleted(localStorage)')
+    expect(provider).toContain('writeWelcomeCompleted(localStorage)')
   })
 })

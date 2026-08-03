@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { ko } from '../i18n/locales/ko'
 
 // 이 프로젝트 Vitest 환경엔 DOM 하니스가 없어(overlayPortalLayout.test.ts 관례),
 // 모달의 접근성/게이트 배선은 소스 텍스트 검증으로 보장한다.
@@ -46,6 +47,14 @@ describe('WelcomeFlow 접근성/구조', () => {
     expect(welcome.slice(greetingStart, marginStart)).toContain('welcome-intro')
     expect(welcome.slice(stageStart, usageStart)).not.toContain('welcome-usage')
     expect(welcome.slice(usageStart, saveStart)).toContain('welcome-usage')
+    expect(welcome.slice(usageStart, saveStart)).toContain('<ol className="welcome-usage__list">')
+    expect(welcome.slice(usageStart, saveStart)).toContain("draft.stage === 'hasPosition'")
+    expect(welcome.slice(usageStart, saveStart)).toContain('usageCaptureBody')
+  })
+
+  it('보유 포지션 사용법에 같은 화면 캡처 안내를 제공', () => {
+    expect(ko.welcome.usageCaptureBody).toContain('계좌평가금액과 현재가는 가능하면 한 화면에서 캡처')
+    expect(ko.welcome.usageCaptureBody).toContain('증권사의 종합잔고 페이지')
   })
 
   it('공개 컨텍스트 사용 + 미방문 단계 우회 차단', () => {

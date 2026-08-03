@@ -709,9 +709,11 @@ export interface Messages {
     stageHasPositionDesc: string
     usageTitle: string
     usageStepBody: string
-    usageFirstBody: string[]
-    usageNoneBody: string[]
-    usageHasPositionBody: string[]
+    usageFirstBody: Array<{ title: string; body: string; fields?: string[] }>
+    usageNoneBody: Array<{ title: string; body: string; fields?: string[] }>
+    usageHasPositionBody: Array<{ title: string; body: string; fields?: string[] }>
+    usageCaptureTitle: string
+    usageCaptureBody: string
     guideLink: string
     mathLink: string
     saveTitle: string

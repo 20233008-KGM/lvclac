@@ -63,6 +63,14 @@ function IconInfo() {
     </svg>
   )
 }
+function IconCamera() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 7h3l1.4-2h5.2L16 7h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" />
+      <circle cx="12" cy="13" r="3.2" />
+    </svg>
+  )
+}
 function IconWarning() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="welcome-warn__icon" aria-hidden="true">
@@ -421,17 +429,42 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
                           <span className="welcome-usage__head-icon">
                             <IconInfo />
                           </span>
-                          <span className="welcome-usage__head-text">{c.usageTitle}</span>
+                          <span className="welcome-usage__head-text">
+                            {draft.stage === 'hasPosition'
+                              ? c.stageHasPosition
+                              : draft.stage === 'noPosition'
+                                ? c.stageNone
+                                : c.stageFirst}
+                          </span>
                         </div>
-                        <div className="welcome-usage__list">
-                          {usageBody.map((line, i) => (
-                            <div className="welcome-usage__item" key={i}>
+                        <ol className="welcome-usage__list">
+                          {usageBody.map((item, i) => (
+                            <li className="welcome-usage__item" key={item.title}>
                               <span className="welcome-usage__num">{i + 1}</span>
-                              <span className="welcome-usage__text">{line}</span>
-                            </div>
+                              <span className="welcome-usage__content">
+                                <strong className="welcome-usage__title">{item.title}</strong>
+                                <span className="welcome-usage__text">{item.body}</span>
+                                {item.fields && (
+                                  <span className="welcome-usage__fields" aria-label={item.fields.join(', ')}>
+                                    {item.fields.map((field) => (
+                                      <span className="welcome-usage__field" key={field}>{field}</span>
+                                    ))}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
                           ))}
-                        </div>
+                        </ol>
                       </div>
+                      {draft.stage === 'hasPosition' && (
+                        <aside className="welcome-capture-tip">
+                          <span className="welcome-capture-tip__icon"><IconCamera /></span>
+                          <span className="welcome-capture-tip__copy">
+                            <strong>{c.usageCaptureTitle}</strong>
+                            <span>{c.usageCaptureBody}</span>
+                          </span>
+                        </aside>
+                      )}
                       <div className="welcome-links">
                         <a className="welcome-link" href={GUIDE_PATH} target="_blank" rel="noopener noreferrer">
                           {c.guideLink}

@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-08-02 — 인증 이메일 카드·배경 구분 강화 및 Supabase 반영**
+- `dev` **a0b701e**에서 Gmail이 사용하는 라이트 인라인 페이지/카드 대비가 1.047:1에 불과해 경계가 붙어 보이던 원인을 수정했다. 라이트 페이지 `#e2e8f0`·카드 `#fdfdfe`·테두리 `#cbd5e1`, 다크 테두리 `#3a4354`와 보조 그림자를 적용하고 페이지/카드 1.18:1·카드/테두리 1.4:1 미만이면 생성을 중단하는 가드를 추가했다. 가입 확인·복구·매직 링크·이메일 변경 4종과 한영 프리뷰 8종을 재생성했다.
+- 검증: 라이트 페이지/카드 **1.213:1**·카드/테두리 **1.461:1**, 다크 페이지/카드 **1.208:1**·카드/테두리 **1.583:1**. 변경 파일 ESLint, 전체 Vitest **804/804**, production build, diff check를 통과했고 Supabase Management API에서 원격 4종 HTML과 로컬 생성물 일치·SMTP 활성·Site URL `https://devpilgrm.liqguard.com` 유지를 확인했다.
+- 원격 Supabase 템플릿 업로드 완료. `farfieldsoftware+liqguard-auth-20260802122630@gmail.com`으로 실제 회원가입 메일을 보내 2026-08-02 12:26 KST Gmail 수신, 발신자·제목·한국어 본문·카드 경계·인증 버튼을 확인했고 버튼 실행 뒤 개발 도메인 리다이렉트·URL 토큰 제거·`LiqGuard Email QA` 세션 생성까지 통과했다. 인증샷은 `C:/Users/rlarb/.codex/visualizations/2026/08/02/019fc072-5bd5-7752-8870-32610996dfda/liqguard-auth-email-gmail-20260802-1226.png`에 보관했다. iOS·Android 메일 앱 렌더링은 미검증이고 테스트 계정은 삭제하지 않았다. Notion 완료 [Task LV-102](https://app.notion.com/p/3b026e6d586f819487d1f0f478a80e0c)·[Work Log](https://app.notion.com/p/3b026e6d586f81069dd9c2c426ddfcaa)·Release Notes·QA / Test Plan 기록 완료.
+
 **2026-08-02 — Paddle `/billing` Free 화면 플래시 수정**
 - `dev` **15e99bf**에서 구독 상태 조회 전 기본 `isPro=false`를 실제 Free 상태로 단정하던 분기를 `loading`으로 분리했다. Pro 계정의 `/billing` 직접 진입·새로고침 중에는 업그레이드 화면 대신 중립 계정 로더를 표시하고, 결제 성공 화면은 구독 새로고침 전에도 우선 표시한다.
 - 검증: 상태 분기 집중 **3/3**·전체 Vitest **804/804**, 변경 파일 ESLint, TypeScript 포함 production build, diff check 통과. 처음 빌드와 병렬로 돌린 XLSX 테스트 1개가 5초 제한에 걸렸지만 단독 및 전체 순차 재실행에서 통과했다. [Task LV-101](https://app.notion.com/p/3af26e6d586f81daaabbc6fcaee0f5bf)과 [Work Log](https://app.notion.com/p/3b026e6d586f815fa24bd072026232be)를 갱신했다. push·배포·운영 도메인 브라우저 QA는 수행하지 않았고, 같은 Task의 온보딩 재노출·해지 예약 표시는 후속으로 남아 있다.

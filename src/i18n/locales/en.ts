@@ -822,22 +822,58 @@ export const en: Messages = {
     stageHasPosition: 'I hold a position',
     stageHasPositionDesc: 'I have an open position and want to check my liquidation price.',
     usageTitle: "Here's how to use it",
-    usageStepBody: 'Here are the values to enter first and the calculation order for your situation.',
+    usageStepBody: 'Only the three steps you need right now.',
     usageFirstBody: [
-      "You don't need to fill in every field.",
-      'Fill just account equity, contract multiplier, and the margin rates.',
-      'Then enter order size and price in the "Order" fields — your liquidation price appears. Mark price and open contracts can wait.',
+      {
+        title: 'Enter only the essentials',
+        body: "You don't need to fill every field.",
+        fields: ['Account equity', 'Contract multiplier', 'Margin rates'],
+      },
+      {
+        title: 'Enter the order',
+        body: 'Add size and price under “Order.”',
+        fields: ['Order size', 'Order price'],
+      },
+      {
+        title: 'Check liquidation price',
+        body: 'The result appears right away. Leave mark price and open contracts blank for now.',
+      },
     ],
     usageNoneBody: [
-      'No position yet? Start with your account values.',
-      'Account equity, contract multiplier, and the margin rates.',
-      'Then place an entry in the "Order" fields to preview your liquidation price. You can leave mark price blank.',
+      {
+        title: 'Enter account values',
+        body: 'Start with these fields.',
+        fields: ['Account equity', 'Contract multiplier', 'Margin rates'],
+      },
+      {
+        title: 'Enter your planned position',
+        body: 'Add the size and price under “Order.”',
+        fields: ['Order size', 'Order price'],
+      },
+      {
+        title: 'Preview liquidation price',
+        body: 'Review the result before opening the position. You can leave mark price blank.',
+      },
     ],
     usageHasPositionBody: [
-      'Enter your holdings to see your current liquidation price.',
-      'Fill in account equity, open contracts, entry price, mark price, and margin.',
-      'Use "Order" to preview how averaging in or out shifts your liquidation price.',
+      {
+        title: 'Gather values from one moment',
+        body: 'Check your account and market price together.',
+        fields: ['Account equity', 'Mark price'],
+      },
+      {
+        title: 'Enter your position',
+        body: 'Fill these fields and your margin.',
+        fields: ['Open contracts', 'Entry price', 'Contract multiplier'],
+      },
+      {
+        title: 'Check risk now and after an order',
+        body: 'Review the current liquidation price, then use “Order” to preview the change.',
+      },
     ],
+    usageCaptureTitle: 'Before entering values',
+    usageCaptureBody:
+      "If possible, capture account equity and mark price together in one screenshot. They're usually available on your broker's account summary page.",
     guideLink: 'See the full guide',
     mathLink: 'Curious about the math? See the formulas',
     saveTitle: 'Save your inputs on this device?',

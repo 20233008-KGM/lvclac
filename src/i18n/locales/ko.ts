@@ -138,8 +138,9 @@ export const ko: Messages = {
     skipModalLabel: '다시 이 창을 띄우지 않기',
     clearedModalTitle: '저장 해제',
     deleteConfirmTitle: '저장값 삭제',
-    deleteConfirmBody: '이 기기에 저장된 입력값을 삭제할까요?\n삭제하면 되돌릴 수 없습니다.',
-    cloudDeleteConfirmBody: '클라우드에 저장된 입력값을 삭제할까요?\n삭제하면 되돌릴 수 없습니다.',
+    deleteConfirmBody: '현재 이 기기 숫자세트를 삭제하고 저장을 끌까요?\n삭제하면 되돌릴 수 없습니다.',
+    cloudDeleteConfirmBody:
+      '현재 클라우드 숫자세트를 삭제하고 저장을 끌까요?\n이 세트에 연결된 주문·스냅샷 기록도 함께 삭제되며 되돌릴 수 없습니다.',
     deleteConfirm: '삭제',
     deleteCancel: '취소',
     confirm: '확인',

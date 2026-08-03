@@ -141,8 +141,9 @@ export const en: Messages = {
     skipModalLabel: "Don't show this again",
     clearedModalTitle: 'Save disabled',
     deleteConfirmTitle: 'Delete saved inputs',
-    deleteConfirmBody: 'Delete the inputs saved on this device?\nThis cannot be undone.',
-    cloudDeleteConfirmBody: 'Delete the inputs saved to the cloud?\nThis cannot be undone.',
+    deleteConfirmBody: 'Delete the active number set on this device and stop saving?\nThis cannot be undone.',
+    cloudDeleteConfirmBody:
+      'Delete the active cloud number set and stop saving?\nLinked order and snapshot records will also be deleted. This cannot be undone.',
     deleteConfirm: 'Delete',
     deleteCancel: 'Cancel',
     confirm: 'OK',

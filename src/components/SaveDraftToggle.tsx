@@ -35,7 +35,7 @@ const SKIP_ENABLE_MODAL_KEY = 'leverage_save_enable_modal_skip'
 const DRAFT_SLOT_DRAG_TYPE = 'application/x-lvclac-draft-slot'
 const NUMBER_SET_DRAG_TYPE = 'application/x-lvclac-number-set'
 
-type ModalKind = 'enable' | null
+type ModalKind = 'enable' | 'delete-confirm' | null
 
 type SaveSlot = 'off' | SaveStorageMode
 type NumberSetDragIdentity = { mode: SaveStorageMode; setId: string }
@@ -255,6 +255,7 @@ export function SaveDraftToggle() {
     numberSetLimits,
     setSaveEnabled,
     pauseSaving,
+    deleteSavedData,
     setStorageMode,
     selectNumberSet,
     createNumberSet,
@@ -266,6 +267,7 @@ export function SaveDraftToggle() {
   const navigate = useNavigate()
   const [modal, setModal] = useState<ModalKind>(null)
   const [pendingMode, setPendingMode] = useState<SaveStorageMode | null>(null)
+  const [pendingDeleteMode, setPendingDeleteMode] = useState<SaveStorageMode | null>(null)
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -436,6 +438,28 @@ export function SaveDraftToggle() {
 
   const cancelEnable = () => {
     setPendingMode(null)
+    setModal(null)
+  }
+
+  const confirmDelete = () => {
+    const mode = pendingDeleteMode
+    if (!mode || busy) return
+    setBusy(true)
+    setNotice(null)
+    void deleteSavedData(mode).then((error) => {
+      setBusy(false)
+      if (error) {
+        setNotice(t.draftSave.statusError)
+        return
+      }
+      setPendingDeleteMode(null)
+      setModal(null)
+    })
+  }
+
+  const cancelDelete = () => {
+    if (busy) return
+    setPendingDeleteMode(null)
     setModal(null)
   }
 
@@ -687,7 +711,12 @@ export function SaveDraftToggle() {
       return
     }
 
-    if (saveEnabled && storageMode === mode) return
+    if (saveEnabled && storageMode === mode) {
+      if (!storedForMode(mode)) return
+      setPendingDeleteMode(mode)
+      setModal('delete-confirm')
+      return
+    }
 
     if (!saveEnabled) {
       if (mode !== storageMode) {
@@ -1054,6 +1083,31 @@ export function SaveDraftToggle() {
             lines={enableBody}
             emphasis={modalIsCloud ? undefined : t.draftSave.localDataLossEmphasis}
           />
+        </DraftSaveModal>
+      )}
+
+      {modal === 'delete-confirm' && (
+        <DraftSaveModal
+          title={t.draftSave.deleteConfirmTitle}
+          confirmLabel={t.draftSave.deleteConfirm}
+          onConfirm={confirmDelete}
+          onDismiss={cancelDelete}
+          footer={
+            <button
+              type="button"
+              className="link-btn draft-save-delete-cancel"
+              disabled={busy}
+              onClick={cancelDelete}
+            >
+              {t.draftSave.deleteCancel}
+            </button>
+          }
+        >
+          <p className="disclaimer-modal-text draft-save-delete-text">
+            {pendingDeleteMode === 'cloud'
+              ? t.draftSave.cloudDeleteConfirmBody
+              : t.draftSave.deleteConfirmBody}
+          </p>
         </DraftSaveModal>
       )}
 

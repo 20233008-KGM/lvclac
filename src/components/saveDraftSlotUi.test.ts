@@ -66,14 +66,25 @@ describe('draft save slot UI', () => {
     expect(css).toContain('.draft-save-slot circle')
   })
 
-  it('asks to delete stored data when clicking the already-active save slot', () => {
+  it('confirms and deletes the active number set when clicking the active save slot again', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
-    const ctx = source('src/context/CalculatorContext.tsx')
 
-    expect(text).not.toContain("setModal('delete-confirm')")
-    expect(text).not.toContain('setPendingDeleteMode(mode)')
-    expect(ctx).toContain('deleteNumberSetById')
-    expect(text).not.toContain('deleteConfirmTitle')
+    expect(text).toContain("type ModalKind = 'enable' | 'delete-confirm' | null")
+    expect(text).toMatch(
+      /if \(saveEnabled && storageMode === mode\) \{\s+if \(!storedForMode\(mode\)\) return\s+setPendingDeleteMode\(mode\)\s+setModal\('delete-confirm'\)/,
+    )
+    expect(text).toContain('void deleteSavedData(mode).then((error) => {')
+    expect(text).toContain("modal === 'delete-confirm'")
+    expect(text).toContain('t.draftSave.deleteConfirmTitle')
+    expect(text).toContain('t.draftSave.cloudDeleteConfirmBody')
+  })
+
+  it('keeps the delete confirmation open when deleting the active slot fails', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+
+    expect(text).toMatch(
+      /if \(error\) \{\s+setNotice\(t\.draftSave\.statusError\)\s+return\s+\}\s+setPendingDeleteMode\(null\)\s+setModal\(null\)/,
+    )
   })
 
   it('keeps the no-save slot non-destructive by pausing instead of deleting', () => {

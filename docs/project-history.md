@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-08-02 — Paddle `/billing` Free 화면 플래시 수정**
+- `dev` **15e99bf**에서 구독 상태 조회 전 기본 `isPro=false`를 실제 Free 상태로 단정하던 분기를 `loading`으로 분리했다. Pro 계정의 `/billing` 직접 진입·새로고침 중에는 업그레이드 화면 대신 중립 계정 로더를 표시하고, 결제 성공 화면은 구독 새로고침 전에도 우선 표시한다.
+- 검증: 상태 분기 집중 **3/3**·전체 Vitest **804/804**, 변경 파일 ESLint, TypeScript 포함 production build, diff check 통과. 처음 빌드와 병렬로 돌린 XLSX 테스트 1개가 5초 제한에 걸렸지만 단독 및 전체 순차 재실행에서 통과했다. [Task LV-101](https://app.notion.com/p/3af26e6d586f81daaabbc6fcaee0f5bf)과 [Work Log](https://app.notion.com/p/3b026e6d586f815fa24bd072026232be)를 갱신했다. push·배포·운영 도메인 브라우저 QA는 수행하지 않았고, 같은 Task의 온보딩 재노출·해지 예약 표시는 후속으로 남아 있다.
+
 **2026-07-23 — 숫자세트 ‘매일 기록’ 체크 행 UX**
 - `dev` 마이페이지 클라우드 숫자세트를 `[매일 기록 체크박스] [이름] [상세·삭제]` 한 줄 열 구조로 바꾸고 열 라벨은 그룹 위에 한 번만 표시한다. 체크된 행은 옅은 파랑으로 강조하며 체크박스만 기존 `onSetAutoSnapshot(storageMode, setId, enabled)` 경로를 호출한다. Pro는 모든 행을 선택할 수 있고 무료 사용자는 신규 활성화 열을 숨기되 이미 활성인 세트는 해제할 수 있다. 로컬 세트·DB·cron·`autoSnapshotEnabled` 계약은 그대로다.
 - 검증: 관련 **9/9**·전체 Vitest **748/748**, TypeScript, production build, 변경 파일 ESLint(기존 `MyPage.tsx` effect 규칙 제외), diff check 통과. UI 키트 한영 1920·1023·428·390px에서 긴 이름·상세/롤오버·Tab/Space, 32px 클릭 영역, 행 내부 가로 오버플로 0을 확인했다. 로그인된 Pro 실제 저장 왕복은 미검증이다.

@@ -150,7 +150,7 @@ function CheckBadge() {
 
 /**
  * 첫 진입 통합 환영 온보딩(2패널: 좌측 세로 스테퍼 + 우측 헤더/콘텐츠/푸터).
- * 지역·거래종목·거래상태·짧은 사용법·면책동의를 하나의 관문으로 묶는다.
+ * 인사·지역·거래종목·거래상태·짧은 사용법·면책동의를 하나의 관문으로 묶는다.
  * 면책 ack/skip + 온보딩 완료 플래그 커밋은 부모(DisclaimerProvider)가 onComplete에서 수행하고,
  * 여기서는 언어·프리셋(라이브)·자동스냅샷 시간대만 반영한다.
  * 표현 계층만 교체 — welcomeReducer 상태 머신과 부수효과는 그대로 유지.
@@ -169,6 +169,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
   )
 
   const [finished, setFinished] = useState(false)
+  const [furthestStep, setFurthestStep] = useState(0)
   const finishTimer = useRef<number | null>(null)
   const headingRef = useRef<HTMLHeadingElement | null>(null)
 
@@ -222,6 +223,17 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
     dispatch({ type: 'setSave', saveLocal })
   }
 
+  function goNext() {
+    const nextStep = Math.min(stepIndex + 1, WELCOME_LAST_STEP)
+    setFurthestStep((current) => Math.max(current, nextStep))
+    dispatch({ type: 'next' })
+  }
+
+  function skipToDisclaimer() {
+    setFurthestStep(WELCOME_LAST_STEP)
+    dispatch({ type: 'goto', step: WELCOME_LAST_STEP })
+  }
+
   function complete() {
     if (!draft.ackChecked) return
     // 명시적으로 '저장 안 함'을 고른 경우에만 아무것도 남기지 않는다(=매 새로고침 fresh).
@@ -267,13 +279,15 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
 
   const isLast = stepIndex === WELCOME_LAST_STEP
   const nextDisabled =
-    (stepIndex === 1 && draft.marginMode === null) ||
-    (stepIndex === 2 && draft.stage === null) ||
-    (stepIndex === 3 && draft.saveLocal === null)
+    (stepIndex === 2 && draft.marginMode === null) ||
+    (stepIndex === 3 && draft.stage === null) ||
+    (stepIndex === 5 && draft.saveLocal === null)
 
   // 진행(파랑) 라인 높이: 활성 칩 상단 가장자리에서 멈추도록 -15px 보정.
   const railFillHeight =
-    stepIndex === 0 ? '0px' : `calc((100% - 44px) * ${stepIndex / 4} - 15px)`
+    stepIndex === 0
+      ? '0px'
+      : `calc((100% - 44px) * ${stepIndex / WELCOME_LAST_STEP} - 15px)`
 
   return (
     <div className="disclaimer-overlay welcome-overlay" role="presentation">
@@ -313,6 +327,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                     type="button"
                     className="welcome-rail__step"
                     aria-current={active ? 'step' : undefined}
+                    disabled={i > furthestStep}
                     onClick={() => dispatch({ type: 'goto', step: i })}
                   >
                     <span className={`welcome-rail__chip welcome-rail__chip--${state}`}>
@@ -365,6 +380,19 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
               <div className="welcome-panel__content">
                 <div className="welcome-fade" key={stepIndex}>
                   {stepIndex === 0 && (
+                    <div className="welcome-intro" aria-label={c.greetingTitle}>
+                      {c.greetingHighlights.map((highlight, index) => (
+                        <div className="welcome-intro__item" key={highlight}>
+                          <span className="welcome-intro__index" aria-hidden="true">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <p>{highlight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {stepIndex === 1 && (
                     <>
                       <p className="welcome-prompt">{c.regionPrompt}</p>
                       <div
@@ -392,7 +420,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                     </>
                   )}
 
-                  {stepIndex === 1 && (
+                  {stepIndex === 2 && (
                     <>
                       <div
                         className="welcome-grid welcome-grid--3"
@@ -447,9 +475,8 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                     </>
                   )}
 
-                  {stepIndex === 2 && (
-                    <>
-                      <div className="welcome-stack" role="group" aria-label={c.stageTitle}>
+                  {stepIndex === 3 && (
+                    <div className="welcome-stack" role="group" aria-label={c.stageTitle}>
                         {stageCards.map((card) => {
                           const on = draft.stage === card.id
                           return (
@@ -475,27 +502,27 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                             </button>
                           )
                         })}
-                      </div>
+                    </div>
+                  )}
 
-                      {draft.stage && (
-                        <div className="welcome-usage">
-                          <div className="welcome-usage__head">
-                            <span className="welcome-usage__head-icon">
-                              <IconInfo />
-                            </span>
-                            <span className="welcome-usage__head-text">{c.usageTitle}</span>
-                          </div>
-                          <div className="welcome-usage__list">
-                            {usageBody.map((line, i) => (
-                              <div className="welcome-usage__item" key={i}>
-                                <span className="welcome-usage__num">{i + 1}</span>
-                                <span className="welcome-usage__text">{line}</span>
-                              </div>
-                            ))}
-                          </div>
+                  {stepIndex === 4 && (
+                    <>
+                      <div className="welcome-usage">
+                        <div className="welcome-usage__head">
+                          <span className="welcome-usage__head-icon">
+                            <IconInfo />
+                          </span>
+                          <span className="welcome-usage__head-text">{c.usageTitle}</span>
                         </div>
-                      )}
-
+                        <div className="welcome-usage__list">
+                          {usageBody.map((line, i) => (
+                            <div className="welcome-usage__item" key={i}>
+                              <span className="welcome-usage__num">{i + 1}</span>
+                              <span className="welcome-usage__text">{line}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                       <div className="welcome-links">
                         <a
                           className="welcome-link"
@@ -519,7 +546,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                     </>
                   )}
 
-                  {stepIndex === 3 && (
+                  {stepIndex === 5 && (
                     <div className="welcome-grid welcome-grid--2" role="group" aria-label={c.saveTitle}>
                       <button
                         type="button"
@@ -550,7 +577,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                     </div>
                   )}
 
-                  {stepIndex === 4 && (
+                  {stepIndex === 6 && (
                     <>
                       <div className="welcome-legal">
                         {t.legal.sections.map((section) => (
@@ -610,7 +637,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                       <button
                         type="button"
                         className="welcome-btn welcome-btn--primary"
-                        onClick={() => dispatch({ type: 'next' })}
+                        onClick={goNext}
                         disabled={nextDisabled}
                       >
                         {c.next}
@@ -623,7 +650,7 @@ export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => 
                   <button
                     type="button"
                     className="welcome-skip"
-                    onClick={() => dispatch({ type: 'goto', step: WELCOME_LAST_STEP })}
+                    onClick={skipToDisclaimer}
                   >
                     {c.skip}
                   </button>
@@ -642,10 +669,14 @@ function stepTitle(step: number, c: import('../i18n').Messages['welcome']): stri
     case 0:
       return c.greetingTitle
     case 1:
-      return c.instrumentTitle
+      return c.regionTitle
     case 2:
-      return c.stageTitle
+      return c.instrumentTitle
     case 3:
+      return c.stageTitle
+    case 4:
+      return c.usageTitle
+    case 5:
       return c.saveTitle
     default:
       return c.disclaimerStepTitle
@@ -657,10 +688,14 @@ function stepBody(step: number, c: import('../i18n').Messages['welcome']): strin
     case 0:
       return c.greetingBody
     case 1:
-      return c.instrumentBody
+      return c.regionBody
     case 2:
-      return c.stageBody
+      return c.instrumentBody
     case 3:
+      return c.stageBody
+    case 4:
+      return c.usageStepBody
+    case 5:
       return c.saveBody
     default:
       return c.disclaimerStepBody

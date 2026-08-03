@@ -785,8 +785,14 @@ export const ko: Messages = {
     back: '이전',
     start: '동의하고 시작',
     skip: '건너뛰기',
-    greetingTitle: '선물 청산 계산기에 오신 걸 환영해요',
-    greetingBody: '몇 가지만 고르면 화면 용어와 안내를 당신에게 맞춰 드릴게요. 30초면 끝나요.',
+    greetingTitle: 'LiqGuard에 오신 걸 환영해요',
+    greetingBody:
+      'LiqGuard는 선물 포지션의 청산가·증거금·레버리지를 한 화면에서 확인하고, 주문 전후 변화를 미리 계산하는 도구예요.',
+    greetingHighlights: [
+      '보유 포지션의 현재 위험과 청산 기준을 한곳에서 확인하세요.',
+      '새 주문이 계좌와 청산가를 어떻게 바꾸는지 체결 전에 살펴보세요.',
+      '복잡한 파생상품 계산을 더 읽기 쉽고 확인 가능하게 만들었습니다. 몇 가지만 고르면 거래 환경에 맞춰 용어·저장·입력 안내를 준비할게요.',
+    ],
     regionTitle: '어디에서 거래하시나요?',
     regionBody:
       '화면 언어와 자동 스냅샷 시간대 기본값을 맞추는 데 써요. 나중에 언제든 바꿀 수 있어요.',
@@ -804,6 +810,7 @@ export const ko: Messages = {
     stageHasPosition: '계좌에 상품이 있어요',
     stageHasPositionDesc: '보유 중인 포지션이 있고, 현재 청산가를 확인하고 싶어요.',
     usageTitle: '이렇게 쓰면 돼요',
+    usageStepBody: '선택하신 거래 상황에 맞춰 먼저 채울 값과 계산 순서를 정리했어요.',
     usageFirstBody: [
       '모든 칸을 채울 필요 없어요.',
       '계좌 평가금 · 계약승수 · 유지/개시증거금률만 채우세요.',
@@ -831,7 +838,7 @@ export const ko: Messages = {
     disclaimerStepTitle: '시작하기 전에',
     disclaimerStepBody:
       '이 계산기는 참고용이에요. 금융·파생상품 거래에는 원금 초과 손실 위험이 있고, 증권사·거래소마다 청산 규정이 다를 수 있어요.',
-    stepNav: ['환영 · 지역', '거래 종목', '거래 상황', '입력 저장', '시작 전 확인'],
+    stepNav: ['환영', '지역', '거래 종목', '거래 상황', '맞춤 사용법', '입력 저장', '시작 전 확인'],
     regionPrompt: '거주하시는 지역 또는 주거래 시장의 위치를 선택해주세요.',
     railHint: '약 30초면 끝나요. 모든 설정은 나중에 언제든 바꿀 수 있어요.',
     marginDivider: '증거금 입력 방식',

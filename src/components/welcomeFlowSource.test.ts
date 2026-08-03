@@ -28,6 +28,24 @@ describe('WelcomeFlow 접근성/구조', () => {
     expect(welcome).toContain('writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))')
     expect(welcome).toContain('disabled={!draft.ackChecked}')
   })
+
+  it('환영·거래상황·맞춤 사용법을 각각 별도 단계로 렌더', () => {
+    const greetingStart = welcome.indexOf('{stepIndex === 0 && (')
+    const regionStart = welcome.indexOf('{stepIndex === 1 && (')
+    const stageStart = welcome.indexOf('{stepIndex === 3 && (')
+    const usageStart = welcome.indexOf('{stepIndex === 4 && (')
+    const saveStart = welcome.indexOf('{stepIndex === 5 && (')
+
+    expect(greetingStart).toBeGreaterThan(-1)
+    expect(welcome.slice(greetingStart, regionStart)).toContain('welcome-intro')
+    expect(welcome.slice(stageStart, usageStart)).not.toContain('welcome-usage')
+    expect(welcome.slice(usageStart, saveStart)).toContain('welcome-usage')
+  })
+
+  it('미방문 단계 우회 차단 + 전체 단계 수 기반 진행선', () => {
+    expect(welcome).toContain('disabled={i > furthestStep}')
+    expect(welcome).toContain('stepIndex / WELCOME_LAST_STEP')
+  })
 })
 
 describe('DisclaimerProvider 게이트 배선', () => {

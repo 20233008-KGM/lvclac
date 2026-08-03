@@ -9,9 +9,9 @@ import {
 const init = () => makeInitialDraft('KR', 'index')
 
 describe('welcomeReducer', () => {
-  it('WELCOME_STEP_COUNT는 5, LAST는 4', () => {
-    expect(WELCOME_STEP_COUNT).toBe(5)
-    expect(WELCOME_LAST_STEP).toBe(4)
+  it('WELCOME_STEP_COUNT는 7, LAST는 6', () => {
+    expect(WELCOME_STEP_COUNT).toBe(7)
+    expect(WELCOME_LAST_STEP).toBe(6)
   })
 
   it('next는 마지막 단계에서 clamp', () => {

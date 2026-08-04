@@ -7,14 +7,13 @@ import {
   openBillingPortal,
   startCheckout,
   type BillingPlan,
-  type SandboxSubscriptionAction,
 } from '../../db/billing'
 import { BillingUpgrade } from './BillingUpgrade'
 import { resolveBillingView } from './billingView'
 import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
 import '../../styles/pages.css'
 
-type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | 'sandbox-cancel' | null
+type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | null
 
 /** ISO 날짜 문자열을 현재 언어의 긴 날짜 형식으로. 파싱 실패 시 원문 반환. */
 function formatDate(iso: string, lang: string): string {
@@ -156,7 +155,6 @@ export function BillingPage() {
   // 배너 닫기(결제 실패에서 "다시 시도")와 결제 완료에서 "구독 관리 보기" 전환용 로컬 상태.
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [leftSuccess, setLeftSuccess] = useState(false)
-  const [showSandboxCancelConfirm, setShowSandboxCancelConfirm] = useState(false)
 
   // ?checkout= 값은 최초 렌더에서 한 번만 확정한다(아래 effect가 URL을 정리해도 뷰가 흔들리지 않도록).
   const checkoutParam = useMemo(() => readCheckoutParam(), [])
@@ -207,25 +205,19 @@ export function BillingPage() {
     }
   }, [mapError])
 
-  const handleSandboxAction = useCallback(
-    async (action: SandboxSubscriptionAction) => {
-      setBusy(action === 'sync' ? 'sandbox-sync' : 'sandbox-cancel')
-      setMessage(null)
-      const error = await controlSandboxSubscription(action)
-      if (error) {
-        setBusy(null)
-        setMessage(page.sandboxError)
-        return
-      }
-      await refreshSubscription()
+  const handleSandboxSync = useCallback(async () => {
+    setBusy('sandbox-sync')
+    setMessage(null)
+    const error = await controlSandboxSubscription('sync')
+    if (error) {
       setBusy(null)
-      setShowSandboxCancelConfirm(false)
-      setMessage(
-        action === 'sync' ? page.sandboxSyncSuccess : page.sandboxCancelSuccess,
-      )
-    },
-    [page.sandboxCancelSuccess, page.sandboxError, page.sandboxSyncSuccess, refreshSubscription],
-  )
+      setMessage(page.sandboxError)
+      return
+    }
+    await refreshSubscription()
+    setBusy(null)
+    setMessage(page.sandboxSyncSuccess)
+  }, [page.sandboxError, page.sandboxSyncSuccess, refreshSubscription])
 
   const busyAny = busy !== null
 
@@ -420,44 +412,10 @@ export function BillingPage() {
               type="button"
               className="btn btn-ghost billing-sandbox__button"
               disabled={busyAny}
-              onClick={() => void handleSandboxAction('sync')}
+              onClick={() => void handleSandboxSync()}
             >
               {busy === 'sandbox-sync' ? page.sandboxBusy : page.sandboxSyncAction}
             </button>
-            {!showSandboxCancelConfirm ? (
-              <button
-                type="button"
-                className="billing-cancel-btn billing-sandbox__button"
-                disabled={busyAny}
-                onClick={() => setShowSandboxCancelConfirm(true)}
-              >
-                {page.sandboxCancelNowAction}
-              </button>
-            ) : (
-              <div className="billing-sandbox__confirm" role="alert">
-                <p>{page.sandboxCancelConfirm}</p>
-                <div className="billing-sandbox__confirm-actions">
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    disabled={busyAny}
-                    onClick={() => void handleSandboxAction('cancel_now')}
-                  >
-                    {busy === 'sandbox-cancel'
-                      ? page.sandboxBusy
-                      : page.sandboxCancelConfirmAction}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    disabled={busyAny}
-                    onClick={() => setShowSandboxCancelConfirm(false)}
-                  >
-                    {page.sandboxCancelDismissAction}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </section>
       )}

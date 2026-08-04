@@ -1,4 +1,5 @@
 import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
+import { SandboxSubscriptionReset } from './SandboxSubscriptionReset'
 
 interface PresetSelectProps {
   /** 'fixed' = 화면 좌상단 상시 노출(언어 토글 아래), 'inline' = 마이페이지 등 본문 내 */
@@ -30,7 +31,12 @@ export function PresetSelect({ variant = 'inline' }: PresetSelectProps) {
   )
 
   if (variant === 'fixed') {
-    return <div className="preset-select preset-select--fixed">{control}</div>
+    return (
+      <>
+        <div className="preset-select preset-select--fixed">{control}</div>
+        <SandboxSubscriptionReset />
+      </>
+    )
   }
 
   return (

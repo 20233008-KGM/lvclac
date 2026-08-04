@@ -138,7 +138,7 @@ export interface SandboxSubscriptionRequest {
 
 /**
  * 개발자용 Sandbox 구독 제어. Live 환경에서는 항상 닫혀 있으며,
- * 관리자 권한과 현재 사용자가 소유한 구독을 서버에서 다시 확인한다.
+ * 현재 로그인 사용자가 소유한 구독만 서버에서 다시 확인한다.
  */
 export async function handleSandboxSubscription(
   config: BillingConfig | null,
@@ -153,14 +153,6 @@ export async function handleSandboxSubscription(
 
   const auth = await requireUser(deps, request.accessToken)
   if ('error' in auth) return auth.error
-
-  const adminRow = await deps.admin
-    .from('admin_users')
-    .select('user_id')
-    .eq('user_id', auth.user.id)
-    .maybeSingle<{ user_id: string }>()
-  if (adminRow.error) return fail(500, adminRow.error.message)
-  if (!adminRow.data) return fail(403, 'admin_required')
 
   const subscriptionRow = await deps.admin
     .from('subscriptions')

@@ -5564,34 +5564,6 @@ a.my-page-compare-card__action {
   width: 100%;
 }
 
-.billing-sandbox__confirm {
-  max-width: 300px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
-}
-
-.billing-sandbox .billing-sandbox__confirm p {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.billing-sandbox__confirm-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.billing-sandbox__confirm-actions .btn {
-  width: auto;
-  min-height: 36px;
-  padding-inline: 12px;
-  font-size: 12px;
-}
-
 /* 결제 완료 화면 */
 .billing-success {
   padding: calc(var(--space-xl) + var(--space-md)) var(--space-lg);
@@ -5690,8 +5662,7 @@ a.my-page-compare-card__action {
     grid-template-columns: 1fr;
   }
 
-  .billing-sandbox__actions,
-  .billing-sandbox__confirm {
+  .billing-sandbox__actions {
     min-width: 0;
     max-width: none;
   }

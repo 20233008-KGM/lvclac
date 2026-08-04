@@ -79,9 +79,9 @@ describe('handleCheckout validation', () => {
 })
 
 interface SandboxState {
-  isAdmin: boolean
   fetches: Array<{ input: string; init?: { method?: string; body?: string } }>
   updates: Record<string, unknown>[]
+  filters: Array<{ table: string; column: string; value: unknown }>
 }
 
 function makeSandboxDeps(state: SandboxState): BillingDeps {
@@ -104,13 +104,11 @@ function makeSandboxDeps(state: SandboxState): BillingDeps {
           state.updates.push(patch)
           return chain
         },
-        eq() {
+        eq(column: string, value: unknown) {
+          state.filters.push({ table, column, value })
           return chain
         },
         async maybeSingle() {
-          if (table === 'admin_users') {
-            return { data: state.isAdmin ? { user_id: 'user-1' } : null, error: null }
-          }
           if (selected === 'provider_subscription_id') {
             return { data: { provider_subscription_id: 'sub_1' }, error: null }
           }
@@ -161,20 +159,18 @@ describe('handleSandboxSubscription', () => {
     expect(result.body.error).toBe('sandbox_control_unavailable')
   })
 
-  it('requires an administrator', async () => {
-    const state: SandboxState = { isAdmin: false, fetches: [], updates: [] }
+  it('requires a signed-in user', async () => {
     const result = await handleSandboxSubscription(
       CONFIG,
-      { accessToken: 'jwt', action: 'cancel_now' },
-      makeSandboxDeps(state),
+      { action: 'cancel_now' },
+      NOOP_DEPS,
     )
-    expect(result.status).toBe(403)
-    expect(result.body.error).toBe('admin_required')
-    expect(state.fetches).toHaveLength(0)
+    expect(result.status).toBe(401)
+    expect(result.body.error).toBe('missing_access_token')
   })
 
-  it('immediately cancels only the signed-in administrator subscription and syncs it', async () => {
-    const state: SandboxState = { isAdmin: true, fetches: [], updates: [] }
+  it('immediately cancels only the signed-in user subscription and syncs it', async () => {
+    const state: SandboxState = { fetches: [], updates: [], filters: [] }
     const result = await handleSandboxSubscription(
       CONFIG,
       { accessToken: 'jwt', action: 'cancel_now' },
@@ -183,6 +179,11 @@ describe('handleSandboxSubscription', () => {
 
     expect(result.status).toBe(200)
     expect(result.body.action).toBe('cancel_now')
+    expect(state.filters).toContainEqual({
+      table: 'subscriptions',
+      column: 'user_id',
+      value: 'user-1',
+    })
     expect(state.fetches).toHaveLength(1)
     expect(state.fetches[0]).toMatchObject({
       input: 'https://sandbox-api.paddle.com/subscriptions/sub_1/cancel',
@@ -197,7 +198,7 @@ describe('handleSandboxSubscription', () => {
   })
 
   it('can refresh the current Paddle state without canceling it', async () => {
-    const state: SandboxState = { isAdmin: true, fetches: [], updates: [] }
+    const state: SandboxState = { fetches: [], updates: [], filters: [] }
     const result = await handleSandboxSubscription(
       CONFIG,
       { accessToken: 'jwt', action: 'sync' },

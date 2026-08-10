@@ -35,6 +35,19 @@ describe('MemoEditorWindow production contract', () => {
     expect(css).toContain('.memo-editor-window{inset:12px')
   })
 
+  it('uses a solid default memo background with a persisted opacity control', () => {
+    expect(source).toContain("const MEMO_EDITOR_OPACITY_DEFAULT = 100")
+    expect(source).toContain("MEMO_EDITOR_OPACITY_STORAGE_KEY")
+    expect(source).toContain('type="range"')
+    expect(source).toContain('memoBackgroundOpacity')
+    expect(css).toContain('var(--memo-editor-opacity,100%)')
+    expect(css).toContain('background:var(--color-bg-elevated)')
+    expect(css).toContain(
+      'background:color-mix(in srgb,var(--color-surface) var(--memo-editor-opacity,100%),transparent)',
+    )
+    expect(css).not.toContain('background:var(--panel-bg)')
+  })
+
   it('offers number-set memos only on cloud slots', () => {
     expect(slotSource).toContain("mode === 'cloud' && (")
     expect(slotSource).toContain('cloudNumberSets.find((set) => set.id === memoSetId)')

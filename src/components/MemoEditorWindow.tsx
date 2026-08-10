@@ -4,6 +4,7 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -13,6 +14,31 @@ export type MemoSaveState = 'saved' | 'saving' | 'error'
 
 export interface MemoEditorHandle {
   save: () => Promise<boolean>
+}
+
+const MEMO_EDITOR_OPACITY_STORAGE_KEY = 'lvclac:memo-editor-opacity'
+const MEMO_EDITOR_OPACITY_MIN = 60
+const MEMO_EDITOR_OPACITY_MAX = 100
+const MEMO_EDITOR_OPACITY_DEFAULT = 100
+
+function normalizeMemoEditorOpacity(value: number) {
+  if (!Number.isFinite(value)) return MEMO_EDITOR_OPACITY_DEFAULT
+  return Math.min(
+    MEMO_EDITOR_OPACITY_MAX,
+    Math.max(MEMO_EDITOR_OPACITY_MIN, Math.round(value / 5) * 5),
+  )
+}
+
+function readMemoEditorOpacity() {
+  if (typeof window === 'undefined') return MEMO_EDITOR_OPACITY_DEFAULT
+  try {
+    const stored = window.localStorage.getItem(MEMO_EDITOR_OPACITY_STORAGE_KEY)
+    return stored == null
+      ? MEMO_EDITOR_OPACITY_DEFAULT
+      : normalizeMemoEditorOpacity(Number(stored))
+  } catch {
+    return MEMO_EDITOR_OPACITY_DEFAULT
+  }
 }
 
 export function MemoIcon({ filled = false }: { filled?: boolean }) {
@@ -192,6 +218,7 @@ export function MemoEditorWindow({
   const { t } = useLanguage()
   const { value, saveState, save, updateValue } = useMemoAutosave(initialMemo, onSave)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const [editorOpacity, setEditorOpacity] = useState(readMemoEditorOpacity)
   const panelRef = useRef<HTMLElement>(null)
   const dragRef = useRef<{ pointerId: number; dx: number; dy: number } | null>(null)
 
@@ -245,6 +272,20 @@ export function MemoEditorWindow({
   }
 
   const statusText = memoStatusText(saveState, value, t.accountRecords)
+  const editorStyle = {
+    ...(position ? { left: position.x, top: position.y, right: 'auto', bottom: 'auto' } : {}),
+    '--memo-editor-opacity': `${editorOpacity}%`,
+  } as CSSProperties
+
+  const updateEditorOpacity = (nextValue: number) => {
+    const normalized = normalizeMemoEditorOpacity(nextValue)
+    setEditorOpacity(normalized)
+    try {
+      window.localStorage.setItem(MEMO_EDITOR_OPACITY_STORAGE_KEY, String(normalized))
+    } catch {
+      // The visual setting still applies for this session when storage is unavailable.
+    }
+  }
 
   return createPortal(
     <section
@@ -252,7 +293,7 @@ export function MemoEditorWindow({
       className="memo-editor-window"
       role="dialog"
       aria-label={title}
-      style={position ? { left: position.x, top: position.y, right: 'auto', bottom: 'auto' } : undefined}
+      style={editorStyle}
     >
       <header
         className="memo-editor-window__head"
@@ -294,8 +335,26 @@ export function MemoEditorWindow({
         onChange={(event) => updateValue(event.target.value)}
       />
       <footer className="memo-editor-window__foot">
-        <span>{value.length} / 500</span>
-        <span>{t.accountRecords.memoAutoSaveHint}</span>
+        <div className="memo-editor-window__meta">
+          <span>{value.length} / 500</span>
+          <span className="memo-editor-window__autosave-hint">
+            {t.accountRecords.memoAutoSaveHint}
+          </span>
+        </div>
+        <label className="memo-editor-window__opacity">
+          <span>{t.accountRecords.memoBackgroundOpacity}</span>
+          <input
+            type="range"
+            min={MEMO_EDITOR_OPACITY_MIN}
+            max={MEMO_EDITOR_OPACITY_MAX}
+            step={5}
+            value={editorOpacity}
+            aria-label={t.accountRecords.memoBackgroundOpacity}
+            aria-valuetext={`${editorOpacity}%`}
+            onChange={(event) => updateEditorOpacity(Number(event.target.value))}
+          />
+          <output>{editorOpacity}%</output>
+        </label>
       </footer>
     </section>,
     document.body,

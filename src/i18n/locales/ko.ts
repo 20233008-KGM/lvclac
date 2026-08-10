@@ -221,6 +221,7 @@ export const ko: Messages = {
     memoEmptySaved: '빈 메모로 저장됨',
     memoSaveError: '저장하지 못함 · 다시 입력하면 재시도',
     memoAutoSaveHint: '입력하면 자동 저장',
+    memoBackgroundOpacity: '배경 불투명도',
     memoClose: '메모 닫기',
     memoPlaceholder: '시장 상황이나 판단 근거를 적어두세요.',
     deleteError: '기록을 삭제하지 못했습니다.',

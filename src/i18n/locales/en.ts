@@ -225,6 +225,7 @@ export const en: Messages = {
     memoEmptySaved: 'Empty memo saved',
     memoSaveError: 'Could not save · edit to retry',
     memoAutoSaveHint: 'Changes save automatically',
+    memoBackgroundOpacity: 'Background opacity',
     memoClose: 'Close memo',
     memoPlaceholder: 'Write down market context or the reason behind your decision.',
     deleteError: 'Could not delete this record.',

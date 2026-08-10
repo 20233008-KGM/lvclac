@@ -229,6 +229,7 @@ export interface Messages {
     memoEmptySaved: string
     memoSaveError: string
     memoAutoSaveHint: string
+    memoBackgroundOpacity: string
     memoClose: string
     memoPlaceholder: string
     deleteError: string

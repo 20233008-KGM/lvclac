@@ -408,6 +408,14 @@ describe('draft save slot UI', () => {
     expect(css).toContain('.draft-number-set-menu {')
   })
 
+  it('keeps the memo focus ring inside its fixed button box', () => {
+    const css = source('src/App.css')
+
+    expect(css).toMatch(
+      /\.memo-note-button:hover,\s*\.memo-note-button:focus-visible\s*\{[\s\S]*border-color: transparent;[\s\S]*box-shadow: inset 0 0 0 1px/,
+    )
+  })
+
   it('keeps number-set names inside the menu instead of the closed save row', () => {
     const text = source('src/components/SaveDraftToggle.tsx')
 

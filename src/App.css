@@ -2793,6 +2793,7 @@ input:focus:not(:focus-visible) {
   color: var(--color-text-dim);
   font-size: 11px;
   font-weight: 700;
+  line-height: 16px;
 }
 
 .draft-number-set-menu__group-glyph {
@@ -2829,7 +2830,7 @@ input:focus:not(:focus-visible) {
   padding: 0 2px 1px 21px;
   color: var(--color-text-dim);
   font-size: 11px;
-  line-height: 1.45;
+  line-height: 16px;
 }
 
 .draft-number-set-menu__storage-note--empty {
@@ -2928,6 +2929,7 @@ input:focus:not(:focus-visible) {
   color: #cfd4dc;
   font-size: 13px;
   font-weight: 600;
+  line-height: 20px;
 }
 
 /* 방향 라벨 — 시각은 색점이 담당하므로 스크린리더에만 노출 */
@@ -2952,6 +2954,7 @@ input:focus:not(:focus-visible) {
   color: var(--color-text-dim);
   font-family: var(--font-mono);
   font-size: 11px;
+  line-height: 20px;
   white-space: nowrap;
 }
 
@@ -7566,11 +7569,11 @@ a.site-footer__link:hover {
   }
 }
 /* 메모 편집기: 슬롯·스냅샷·주문기록 공통 */
-.memo-note-button{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text-muted);cursor:pointer;opacity:0;transition:opacity 120ms ease,color 120ms ease,box-shadow 120ms ease,background 120ms ease}
+.memo-note-button{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--color-text-muted);cursor:pointer;opacity:0;transition:opacity 120ms ease,color 120ms ease,box-shadow 120ms ease,background 120ms ease}
 .memo-note-button svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.memo-note-button--filled{color:var(--accent);opacity:1}
+.memo-note-button--filled{color:var(--color-primary);opacity:1}
 .draft-number-set-menu__item:hover .memo-note-button,.draft-number-set-menu__item:focus-within .memo-note-button,.records-timeline-card:hover .memo-note-button,.records-timeline-card:focus-within .memo-note-button,.memo-note-button:focus-visible,.draft-number-set-menu__item--active .memo-note-button{opacity:1}
-.memo-note-button:hover,.memo-note-button:focus-visible{color:var(--accent);border-color: transparent;background:color-mix(in srgb,var(--accent) 10%,transparent);box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--accent) 38%,transparent);outline:none}
+.memo-note-button:hover,.memo-note-button:focus-visible{color:var(--color-primary);border-color: transparent;background:color-mix(in srgb,var(--color-primary) 10%,transparent);box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--color-primary) 38%,transparent);outline:none}
 .memo-editor-window{position:fixed;z-index:1600;top:96px;right:24px;width:min(560px,calc(100vw - 24px));height:min(653px,calc(100vh - 120px));display:flex;flex-direction:column;padding:20px;border:1px solid color-mix(in srgb,var(--color-border) 82%,white 8%);border-radius:16px;background:var(--color-bg-elevated);background:color-mix(in srgb,var(--color-bg-elevated) var(--memo-editor-opacity,100%),transparent);box-shadow:0 28px 80px rgb(0 0 0 / 52%)}
 .memo-editor-window.is-dragging{box-shadow:0 32px 96px rgb(0 0 0 / 64%)}
 .memo-editor-window__head{display:flex;align-items:center;min-height:38px;gap:12px;padding-bottom:14px;border-bottom:1px solid color-mix(in srgb,var(--color-border) 70%,transparent);cursor:grab;user-select:none;touch-action:none}

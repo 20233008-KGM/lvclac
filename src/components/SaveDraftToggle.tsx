@@ -479,7 +479,7 @@ export function SaveDraftToggle() {
     const gap = 8
     const viewportPadding = 12
     const width = Math.min(320, Math.max(240, window.innerWidth - 24))
-    const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12)
+    const left = Math.round(Math.min(Math.max(12, rect.left), window.innerWidth - width - 12))
     const desiredHeight = Math.min(320, window.innerHeight - viewportPadding * 2)
     const measuredHeight = numberSetMenuRef.current?.offsetHeight
     const menuHeight = Math.min(measuredHeight ?? desiredHeight, desiredHeight)
@@ -487,10 +487,12 @@ export function SaveDraftToggle() {
     const spaceAbove = rect.top - gap - viewportPadding
     const openAbove = spaceBelow < menuHeight && spaceAbove > spaceBelow
     const availableHeight = openAbove ? spaceAbove : spaceBelow
-    const maxHeight = Math.min(desiredHeight, Math.max(180, availableHeight))
-    const top = openAbove
-      ? Math.max(viewportPadding, rect.top - gap - Math.min(menuHeight, maxHeight))
-      : Math.min(rect.bottom + gap, window.innerHeight - viewportPadding - maxHeight)
+    const maxHeight = Math.floor(Math.min(desiredHeight, Math.max(180, availableHeight)))
+    const top = Math.round(
+      openAbove
+        ? Math.max(viewportPadding, rect.top - gap - Math.min(menuHeight, maxHeight))
+        : Math.min(rect.bottom + gap, window.innerHeight - viewportPadding - maxHeight),
+    )
     setNumberSetMenuStyle({
       position: 'fixed',
       top,

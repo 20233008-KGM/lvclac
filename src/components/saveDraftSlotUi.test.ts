@@ -414,6 +414,19 @@ describe('draft save slot UI', () => {
     expect(css).toMatch(
       /\.memo-note-button:hover,\s*\.memo-note-button:focus-visible\s*\{[\s\S]*border-color: transparent;[\s\S]*box-shadow: inset 0 0 0 1px/,
     )
+    expect(css).toContain('color:var(--color-primary)')
+    expect(css).toContain('.memo-note-button--filled{color:var(--color-primary)')
+  })
+
+  it('pixel-aligns the floating number-set menu so thin memo rings render cleanly', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const css = source('src/App.css')
+
+    expect(text).toContain('const left = Math.round(')
+    expect(text).toContain('const maxHeight = Math.floor(')
+    expect(text).toContain('const top = Math.round(')
+    expect(css).toContain('line-height: 16px;')
+    expect(css).toContain('line-height: 20px;')
   })
 
   it('keeps number-set names inside the menu instead of the closed save row', () => {

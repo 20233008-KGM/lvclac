@@ -18,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
       <PublicCalculatorProvider>
         <DisclaimerProvider>
           <GoogleConsentProvider>
-            <LanguageToggle variant="fixed" />
+            {import.meta.env.DEV && <LanguageToggle variant="fixed" />}
             <App />
             <Suspense fallback={null}>
               <Analytics />

@@ -1735,27 +1735,11 @@ html[data-zone='contact'] body {
 }
 
 .public-info-zone .contact-channel {
-  position: relative;
   width: 100%;
-  padding: clamp(20px, 3vw, 28px);
-  border: 1px solid color-mix(in srgb, var(--public-info-accent) 24%, var(--public-info-rule));
-  border-radius: var(--radius-md);
-  background:
-    radial-gradient(72% 110% at 0% 0%, var(--public-info-accent-muted), transparent 72%),
-    color-mix(in srgb, var(--color-surface-2) 74%, transparent);
-  box-shadow: 0 22px 48px -42px rgb(0 0 0 / 92%);
-  overflow: hidden;
-}
-
-.public-info-zone .contact-channel::before {
-  position: absolute;
-  top: 0;
-  right: 24px;
-  left: 24px;
-  height: 1px;
-  content: '';
-  background: linear-gradient(90deg, transparent, var(--public-info-accent), transparent);
-  opacity: 0.65;
+  padding: clamp(22px, 3vw, 30px);
+  border: 1px solid var(--public-info-rule);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-surface-2) 72%, var(--color-bg));
 }
 
 .public-info-zone .contact-channel__heading h2,
@@ -1768,10 +1752,10 @@ html[data-zone='contact'] body {
 
 .public-info-zone .contact-kicker {
   margin: 0 0 var(--space-xs);
-  color: var(--public-info-accent);
+  color: color-mix(in srgb, var(--public-info-accent) 78%, var(--color-text-muted));
   font-size: var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
 }
 
 .public-info-zone .contact-channel__heading > p:last-child {
@@ -1785,20 +1769,18 @@ html[data-zone='contact'] body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-sm);
-  margin-top: clamp(18px, 3vw, 24px);
-  padding: 8px 8px 8px clamp(16px, 3vw, 22px);
-  border: 1px solid var(--public-info-rule);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-bg) 42%, transparent);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 2.5%);
+  margin-top: clamp(20px, 3vw, 26px);
+  padding: 14px 0;
+  border-top: 1px solid var(--public-info-rule);
+  border-bottom: 1px solid var(--public-info-rule);
 }
 
 .public-info-zone .contact-email {
   min-width: 0;
   margin: 0;
-  color: var(--public-info-accent);
-  font-size: clamp(18px, 2.4vw, 22px);
-  font-weight: 700;
+  color: var(--color-text);
+  font-size: clamp(18px, 2.2vw, 21px);
+  font-weight: 650;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
   user-select: all;
@@ -1817,12 +1799,12 @@ html[data-zone='contact'] body {
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--public-info-accent) 40%, var(--public-info-rule));
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--public-info-accent-muted) 74%, var(--color-surface-2));
-  color: var(--public-info-accent);
+  border: 1px solid var(--public-info-rule);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
 }
 
 .public-info-zone .contact-copy-button svg {
@@ -1835,10 +1817,9 @@ html[data-zone='contact'] body {
 }
 
 .public-info-zone .contact-copy-button:hover {
-  border-color: var(--public-info-accent);
-  background: color-mix(in srgb, var(--public-info-accent-muted) 90%, var(--color-surface-2));
+  border-color: color-mix(in srgb, var(--public-info-accent) 62%, var(--public-info-rule));
+  background: rgb(255 255 255 / 3%);
   color: var(--color-text);
-  transform: translateY(-1px);
 }
 
 .public-info-zone .contact-copy-button[data-copy-status='copied'] {
@@ -1875,7 +1856,7 @@ html[data-zone='contact'] body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  margin-top: var(--space-md);
+  margin-top: var(--space-lg);
 }
 
 .public-info-zone .contact-channel__footer > p {
@@ -1892,9 +1873,10 @@ html[data-zone='contact'] body {
   min-height: 38px;
   align-items: center;
   gap: 8px;
-  padding: 0 var(--space-md);
-  border: 1px solid var(--public-info-rule);
-  border-radius: 9px;
+  padding: 0 0 1px;
+  border: 0;
+  border-bottom: 1px solid var(--public-info-rule);
+  border-radius: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   font-weight: 650;
@@ -1917,8 +1899,7 @@ html[data-zone='contact'] body {
 }
 
 .public-info-zone .contact-mail-link:hover {
-  border-color: color-mix(in srgb, var(--public-info-accent) 55%, var(--public-info-rule));
-  background: rgb(255 255 255 / 2.5%);
+  border-color: var(--public-info-accent);
   color: var(--color-text);
 }
 
@@ -1929,18 +1910,21 @@ html[data-zone='contact'] body {
 .public-info-zone .contact-guidance__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 0;
   margin: var(--space-lg) 0 0;
   padding: 0;
+  border-top: 1px solid var(--public-info-rule);
+  border-bottom: 1px solid var(--public-info-rule);
   list-style: none;
 }
 
 .public-info-zone .contact-guidance__grid li {
   min-width: 0;
-  padding: clamp(18px, 3vw, 22px);
-  border: 1px solid var(--public-info-rule);
-  border-radius: 12px;
-  background: rgb(255 255 255 / 1.8%);
+  padding: clamp(20px, 3vw, 24px);
+}
+
+.public-info-zone .contact-guidance__grid li + li {
+  border-left: 1px solid var(--public-info-rule);
 }
 
 .public-info-zone .contact-guidance__index {
@@ -1974,6 +1958,11 @@ html[data-zone='contact'] body {
   .public-info-zone .contact-guidance__index {
     margin-bottom: var(--space-md);
   }
+
+  .public-info-zone .contact-guidance__grid li + li {
+    border-top: 1px solid var(--public-info-rule);
+    border-left: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1984,8 +1973,7 @@ html[data-zone='contact'] body {
   }
 
   .public-info-zone .contact-mail-link {
-    width: 100%;
-    justify-content: center;
+    width: auto;
   }
 
   .public-info-zone .contact-email {

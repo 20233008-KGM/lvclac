@@ -24,11 +24,14 @@ describe('public contact page', () => {
 
   it('uses a restrained responsive contact layout and publishes the route', () => {
     expect(css).toMatch(/\.contact-channel\s*{[^}]*width:\s*100%/s)
-    expect(css).toMatch(/\.contact-email-row/)
+    expect(css).not.toMatch(/\.contact-channel\s*{[^}]*radial-gradient/s)
+    expect(css).toMatch(/\.contact-email-row\s*{[^}]*border-top:/s)
+    expect(css).toMatch(/\.contact-email-row\s*{[^}]*border-bottom:/s)
     expect(css).toMatch(/\.contact-copy-button\s*{/)
     expect(css).toMatch(
-      /\.contact-guidance__grid\s*{[^}]*grid-template-columns:\s*repeat\(3,/s,
+      /\.contact-guidance__grid\s*{[^}]*grid-template-columns:\s*repeat\(3,[^}]*border-top:/s,
     )
+    expect(css).toMatch(/\.contact-guidance__grid li \+ li\s*{[^}]*border-left:/s)
     expect(css).toMatch(/@media \(max-width: 520px\)[\s\S]*\.contact-mail-link/)
     expect(sitemap).toContain('<loc>https://liqguard.com/contact</loc>')
   })

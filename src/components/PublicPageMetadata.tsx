@@ -37,6 +37,11 @@ const PAGE_METADATA = {
       description:
         'LiqGuard를 만들고 운영하는 Farfield Software의 운영 원칙과 회사 정보를 소개합니다.',
     },
+    '/contact': {
+      title: '문의하기 | LiqGuard',
+      description:
+        'LiqGuard와 Farfield Software의 영업 관련 제안, 버그 제보 및 기타 문의 방법을 안내합니다.',
+    },
     '/terms': {
       title: '이용약관 | LiqGuard',
       description: 'LiqGuard 무료 선물 계산기 이용 조건과 책임 범위를 안내합니다.',
@@ -76,6 +81,11 @@ const PAGE_METADATA = {
       title: 'About Farfield Software | LiqGuard',
       description:
         'Learn about Farfield Software, the company that builds and operates LiqGuard.',
+    },
+    '/contact': {
+      title: 'Contact | LiqGuard',
+      description:
+        'Contact LiqGuard and Farfield Software with business proposals, bug reports, and other inquiries.',
     },
     '/terms': {
       title: 'Terms of Use | LiqGuard',

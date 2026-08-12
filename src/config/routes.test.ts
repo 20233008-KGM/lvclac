@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isAdFreePublicInfoPath,
   isCompanyPath,
+  isContactPath,
   isLegalPath,
   isAdminFeedbackPath,
   isMyPagePath,
@@ -20,6 +21,8 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/about/')).toBe(true)
     expect(isAdFreePublicInfoPath('/company')).toBe(true)
     expect(isAdFreePublicInfoPath('/company/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/contact')).toBe(true)
+    expect(isAdFreePublicInfoPath('/contact/')).toBe(true)
     expect(isAdFreePublicInfoPath('/terms')).toBe(true)
     expect(isAdFreePublicInfoPath('/terms/')).toBe(true)
     expect(isAdFreePublicInfoPath('/privacy')).toBe(true)
@@ -38,6 +41,12 @@ describe('routes', () => {
     expect(isCompanyPath('/company')).toBe(true)
     expect(isCompanyPath('/company/')).toBe(true)
     expect(isCompanyPath('/company/team')).toBe(false)
+  })
+
+  it('recognizes the public contact route with optional trailing slash', () => {
+    expect(isContactPath('/contact')).toBe(true)
+    expect(isContactPath('/contact/')).toBe(true)
+    expect(isContactPath('/contact/team')).toBe(false)
   })
 
   it('recognizes the public updates route with optional trailing slash', () => {

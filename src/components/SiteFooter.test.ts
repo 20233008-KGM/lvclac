@@ -12,12 +12,12 @@ describe('public-lite footer links', () => {
     expect(source).toContain("{ label: '사용 가이드', href: GUIDE_PATH }")
     expect(source).toContain("{ label: '업데이트', href: UPDATES_PATH }")
     expect(source).toContain("{ label: '회사 소개', href: COMPANY_PATH }")
-    expect(source).toContain("label: '문의하기'")
+    expect(source).toContain("{ label: '문의하기', href: CONTACT_PATH }")
     expect(source).toContain("{ label: 'Service overview', href: ABOUT_PATH }")
     expect(source).toContain("{ label: 'User guide', href: GUIDE_PATH }")
     expect(source).toContain("{ label: 'Updates', href: UPDATES_PATH }")
     expect(source).toContain("{ label: 'About us', href: COMPANY_PATH }")
-    expect(source).toContain("label: 'Contact'")
+    expect(source).toContain("{ label: 'Contact', href: CONTACT_PATH }")
     expect(source).not.toContain('FORMULAS_PATH')
     expect(source).toContain("bottomTerms: '이용약관'")
     expect(source).toContain("bottomPrivacy: '개인정보처리방침'")
@@ -27,7 +27,7 @@ describe('public-lite footer links', () => {
     expect(source).not.toContain("{ label: 'Calculator', href: '/' }")
     expect(source).not.toContain("{ label: '이용약관', href: TERMS_PATH }")
     expect(source).not.toContain("{ label: '개인정보처리방침', href: PRIVACY_PATH }")
-    expect(source).toContain('PUBLIC_OPERATOR_INFO.contactEmail')
+    expect(source).toContain('CONTACT_PATH')
     expect(source).toContain('openPrivacySettings')
     expect(source).toContain('<DisclaimerShowAgainLink variant="footer-nav" />')
     expect(source).not.toContain('<DisclaimerShowAgainLink variant="footer" />')
@@ -46,7 +46,7 @@ describe('public-lite footer links', () => {
       source.indexOf("{ label: '사용 가이드', href: GUIDE_PATH }"),
     )
     expect(source.indexOf("{ label: '회사 소개', href: COMPANY_PATH }")).toBeLessThan(
-      source.indexOf("label: '문의하기'"),
+      source.indexOf("{ label: '문의하기', href: CONTACT_PATH }"),
     )
   })
 

@@ -1,6 +1,7 @@
 import {
   ABOUT_PATH,
   COMPANY_PATH,
+  CONTACT_PATH,
   GUIDE_PATH,
   PRIVACY_PATH,
   TERMS_PATH,
@@ -34,10 +35,7 @@ const footerCopy = {
         title: 'Company',
         links: [
           { label: '회사 소개', href: COMPANY_PATH },
-          {
-            label: '문의하기',
-            href: `mailto:${PUBLIC_OPERATOR_INFO.contactEmail}`,
-          },
+          { label: '문의하기', href: CONTACT_PATH },
         ],
       },
       {
@@ -68,10 +66,7 @@ const footerCopy = {
         title: 'Company',
         links: [
           { label: 'About us', href: COMPANY_PATH },
-          {
-            label: 'Contact',
-            href: `mailto:${PUBLIC_OPERATOR_INFO.contactEmail}`,
-          },
+          { label: 'Contact', href: CONTACT_PATH },
         ],
       },
       {

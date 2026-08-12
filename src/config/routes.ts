@@ -2,6 +2,7 @@ export const FORMULAS_PATH = '/formulas'
 export const GUIDE_PATH = '/guide'
 export const ABOUT_PATH = '/about'
 export const COMPANY_PATH = '/company'
+export const CONTACT_PATH = '/contact'
 export const UPDATES_PATH = '/updates'
 export const MY_PAGE_PATH = '/my'
 export const BILLING_PATH = '/billing'
@@ -35,6 +36,10 @@ export function isCompanyPath(pathname: string): boolean {
   return matchesPath(pathname, COMPANY_PATH)
 }
 
+export function isContactPath(pathname: string): boolean {
+  return matchesPath(pathname, CONTACT_PATH)
+}
+
 export function isUpdatesPath(pathname: string): boolean {
   return matchesPath(pathname, UPDATES_PATH)
 }
@@ -45,6 +50,7 @@ export function isAdFreePublicInfoPath(pathname: string): boolean {
     isFormulasPath(pathname) ||
     isAboutPath(pathname) ||
     isCompanyPath(pathname) ||
+    isContactPath(pathname) ||
     isUpdatesPath(pathname) ||
     matchesPath(pathname, TERMS_PATH) ||
     matchesPath(pathname, PRIVACY_PATH)

@@ -21,6 +21,8 @@ describe('public content entry points', () => {
     expect(app).toContain('<AboutPage />')
     expect(app).toContain('const companyPath = isCompanyPath(pathname)')
     expect(app).toContain('<CompanyPage />')
+    expect(app).toContain('const contactPath = isContactPath(pathname)')
+    expect(app).toContain('<ContactPage />')
     expect(button).toContain('href={GUIDE_PATH}')
     expect(button).toContain('navigate(GUIDE_PATH)')
   })

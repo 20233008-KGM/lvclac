@@ -15,6 +15,7 @@ import { GuidePage } from './components/GuidePage'
 import { FormulasPage } from './components/FormulasPage'
 import { AboutPage } from './components/AboutPage'
 import { CompanyPage } from './components/CompanyPage'
+import { ContactPage } from './components/ContactPage'
 import { HowToUseButton } from './components/HowToUseButton'
 import {
   fieldHintActive,
@@ -30,6 +31,7 @@ import { UpdatesPage } from './components/UpdatesPage'
 import {
   isAboutPath,
   isCompanyPath,
+  isContactPath,
   isFormulasPath,
   isGuidePath,
   isLegalPath,
@@ -220,6 +222,7 @@ function AppRouter() {
   const formulasPath = isFormulasPath(pathname)
   const aboutPath = isAboutPath(pathname)
   const companyPath = isCompanyPath(pathname)
+  const contactPath = isContactPath(pathname)
   const updatesPath = isUpdatesPath(pathname)
 
   useEffect(() => {
@@ -229,13 +232,14 @@ function AppRouter() {
       !formulasPath &&
       !aboutPath &&
       !companyPath &&
+      !contactPath &&
       !updatesPath &&
       legalKind !== 'terms' &&
       legalKind !== 'privacy'
     ) {
       window.history.replaceState(null, '', '/')
     }
-  }, [aboutPath, companyPath, formulasPath, guidePath, legalKind, pathname, updatesPath])
+  }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, updatesPath])
 
   const metadata = <PublicPageMetadata pathname={pathname} />
 
@@ -271,6 +275,15 @@ function AppRouter() {
       <>
         {metadata}
         <CompanyPage />
+      </>
+    )
+  }
+
+  if (contactPath) {
+    return (
+      <>
+        {metadata}
+        <ContactPage />
       </>
     )
   }

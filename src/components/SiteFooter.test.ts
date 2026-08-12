@@ -135,5 +135,8 @@ describe('public review footer labels', () => {
     )
     expect(css).toMatch(/\.page-content \{[\s\S]*?gap: var\(--space-md\);/)
     expect(css).toMatch(/\.site-footer \{[\s\S]*?margin-top: var\(--space-md\);/)
+    expect(css).toMatch(
+      /\.content-risk-notice \+ \.site-footer \{[\s\S]*?margin-top: 0;/,
+    )
   })
 })

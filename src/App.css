@@ -6184,6 +6184,11 @@ a.site-footer__link:hover {
   text-align: center;
 }
 
+/* The risk notice and footer form one conceptual group; keep only the parent gap. */
+.content-risk-notice + .site-footer {
+  margin-top: 0;
+}
+
 .content-risk-notice__text {
   margin: 0;
   font-size: var(--font-size-sm);

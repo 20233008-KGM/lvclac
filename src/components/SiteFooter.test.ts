@@ -131,8 +131,9 @@ describe('public review footer labels', () => {
 
   it('keeps the accepted calculator notice and footer spacing', () => {
     expect(css).toMatch(
-      /\.content-risk-notice \{[\s\S]*?margin: calc\(var\(--space-xl\) \* 2 \+ var\(--space-md\)\) 0 0;/,
+      /\.content-risk-notice \{[\s\S]*?margin: calc\(var\(--space-xl\) \* 2\) 0 0;/,
     )
+    expect(css).toMatch(/\.page-content \{[\s\S]*?gap: var\(--space-md\);/)
     expect(css).toMatch(/\.site-footer \{[\s\S]*?margin-top: var\(--space-md\);/)
   })
 })

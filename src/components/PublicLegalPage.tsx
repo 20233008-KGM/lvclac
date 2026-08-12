@@ -6,9 +6,9 @@ import {
 import type { LegalPageKind } from '../config/routes'
 import { PRIVACY_PATH, TERMS_PATH } from '../config/routes'
 import { useLanguage, type Locale } from '../i18n'
-import { PublicInfoShell } from './PublicInfoShell'
+import { BackToCalculatorLink, PublicInfoShell } from './PublicInfoShell'
 
-type PublicLegalKind = Extract<LegalPageKind, 'terms' | 'privacy'>
+type PublicLegalKind = LegalPageKind
 
 interface LegalTable {
   headers: string[]
@@ -40,7 +40,8 @@ function operatorSection(locale: Locale): LegalSection {
   }
 }
 
-function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> {
+// eslint-disable-next-line react-refresh/only-export-components -- Legal documents are exported for deterministic bilingual content tests.
+export function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> {
   const operatorName = publicOperatorDisplayName()
   const email = PUBLIC_OPERATOR_INFO.contactEmail
 
@@ -48,9 +49,9 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
     return {
       terms: {
         title: '이용약관',
-        effective: '시행일: 2026년 8월 7일',
+        effective: '시행일: 2026년 8월 11일',
         intro:
-          '본 약관은 LiqGuard 무료 선물 계산기와 관련 공개 정보 페이지의 이용 조건을 정합니다.',
+          '본 약관은 LiqGuard 무료 기능과 Paddle 승인 후 판매되는 Pro 구독 및 관련 공개 정보 페이지의 이용 조건을 정합니다.',
         sections: [
           operatorSection(locale),
           {
@@ -68,9 +69,9 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
             ],
           },
           {
-            title: '3. 기기 내 저장',
+            title: '3. 저장 및 계정 기능',
             paragraphs: [
-              '이용자가 로컬 저장을 선택하면 계산기 입력값이 현재 브라우저의 localStorage에 저장됩니다. 해당 값은 LiqGuard 계정이나 서버 데이터베이스에 저장되지 않습니다.',
+              '이용자가 이 기기 저장을 선택하면 계산기 입력값이 현재 브라우저의 localStorage에 저장됩니다. 로그인 후 클라우드 저장이나 기록 기능을 선택하면 입력값, 숫자세트, 주문 시뮬레이션 기록과 계좌 스냅샷이 이용자 계정에 연결된 서버 데이터베이스에 저장될 수 있습니다.',
               '공용 기기, 브라우저 확장 프로그램, 악성 프로그램, 기기 분실, 브라우저 데이터 삭제 또는 저장소 오류로 데이터가 노출되거나 사라질 수 있습니다. 중요한 계좌 정보의 별도 보관 수단으로 사용해서는 안 됩니다.',
             ],
           },
@@ -82,33 +83,41 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
             ],
           },
           {
-            title: '5. 지식재산권',
+            title: '5. Pro 구독과 결제',
+            paragraphs: [
+              'Pro 구독 판매는 Paddle Live 계정과 liqguard.com 도메인 승인이 완료되고 결제 기능이 활성화된 뒤 시작됩니다.',
+              '판매가 시작되면 Paddle은 Merchant of Record로서 결제 처리, 관련 세금, 송장과 영수증, 구독 결제 지원, 취소 및 적격 환불을 담당합니다. 월간·연간 구독은 이용자가 취소할 때까지 각 결제 주기마다 자동 갱신됩니다.',
+              '플랜별 가격과 제공 기능은 요금제 페이지에 표시하며, 환불과 취소 절차는 환불 정책을 따릅니다.',
+            ],
+          },
+          {
+            title: '6. 지식재산권',
             paragraphs: [
               '서비스의 프로그램, 화면 구성, 문서와 자체 작성 콘텐츠에 관한 권리는 관련 법령 또는 별도 라이선스에 따라 운영자에게 귀속됩니다.',
               '이용자는 개인적인 계산과 검토 목적으로 서비스를 사용할 수 있으나, 서비스 전체를 복제·재판매하거나 출처를 오인하게 해서는 안 됩니다.',
             ],
           },
           {
-            title: '6. 서비스 변경과 중단',
+            title: '7. 서비스 변경과 중단',
             paragraphs: [
               '운영자는 정확성, 보안, 법령 또는 운영상 필요에 따라 서비스와 계산 방식을 변경하거나 일시 중단할 수 있습니다. 중요한 변경은 가능한 범위에서 서비스에 안내합니다.',
             ],
           },
           {
-            title: '7. 책임 제한',
+            title: '8. 책임 제한',
             paragraphs: [
               '법령이 허용하는 범위에서 운영자는 서비스 이용, 계산 차이, 저장 데이터 손실, 외부 서비스 장애 또는 투자 판단으로 발생한 직접·간접 손해와 기회 손실에 책임을 부담하지 않습니다.',
               '운영자의 고의 또는 중대한 과실로 인한 책임까지 배제하는 의미는 아닙니다.',
             ],
           },
           {
-            title: '8. 준거법과 분쟁',
+            title: '9. 준거법과 분쟁',
             paragraphs: [
               `본 약관은 대한민국 법령을 따릅니다. 서비스 관련 문의 또는 분쟁은 먼저 ${email}로 협의를 요청할 수 있으며, 해결되지 않는 경우 관계 법령이 정한 관할 법원 또는 분쟁조정 절차를 따릅니다.`,
             ],
           },
           {
-            title: '9. 약관 변경',
+            title: '10. 약관 변경',
             paragraphs: [
               '약관이 변경되면 시행일과 주요 변경 내용을 이 페이지에 표시합니다. 변경된 약관은 표시된 시행일부터 적용됩니다.',
             ],
@@ -117,9 +126,9 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
       },
       privacy: {
         title: '개인정보처리방침',
-        effective: '시행일: 2026년 8월 7일',
+        effective: '시행일: 2026년 8월 11일',
         intro:
-          `${operatorName}는 LiqGuard 공개 서비스에서 처리되는 정보와 이용자의 권리를 다음과 같이 안내합니다. 공개판은 회원가입·로그인·클라우드 저장을 제공하지 않습니다.`,
+          `${operatorName}는 LiqGuard에서 처리되는 정보와 이용자의 권리를 다음과 같이 안내합니다. 계산기는 로그인 없이 사용할 수 있으며, 계정·클라우드 저장·기록·구독 기능은 이용자가 해당 기능을 선택한 경우에만 관련 정보를 처리합니다.`,
         sections: [
           operatorSection(locale),
           {
@@ -138,6 +147,24 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
                   '언어, 면책 확인, 로컬 저장 선택, 개인정보·쿠키 선택',
                   '이용자 설정 유지와 반복 안내 방지',
                   '설정별 localStorage 삭제 또는 브라우저 사이트 데이터 삭제 시까지',
+                ],
+                [
+                  '계정 및 인증',
+                  '이메일 주소, 표시 이름, 인증 제공자, 계정 식별자',
+                  '로그인, 계정 식별, 보안, 계정 지원',
+                  '계정 삭제 시까지. 법령상 보존 또는 보안 대응이 필요한 정보는 해당 기간까지',
+                ],
+                [
+                  '클라우드 저장 및 기록',
+                  '계산기 입력값, 숫자세트, 주문 시뮬레이션 기록, 계좌 스냅샷과 저장 시각',
+                  '다른 기기에서의 복원, 기록 조회, Pro 기능 제공',
+                  '이용자가 개별 기록 또는 계정을 삭제할 때까지. 백업은 제공자 정책에 따라 제한된 기간 잔존할 수 있음',
+                ],
+                [
+                  '구독 및 결제 상태',
+                  'Paddle 고객·구독 식별자, 플랜, 구독 상태, 결제 주기와 갱신일',
+                  'Pro 권한 제공, 구독 상태 동기화, 결제 지원',
+                  '계정 또는 구독 관계 종료 후 관련 법령과 Paddle 정책에 따른 기간',
                 ],
                 [
                   '지역 쿠키',
@@ -175,8 +202,8 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
           {
             title: '2. 계산기 입력값의 처리',
             paragraphs: [
-              '계산기 입력값은 이용자가 로컬 저장을 선택한 경우에만 해당 브라우저의 localStorage에 저장됩니다. 운영자는 이 값을 서버로 전송하거나 판매하지 않습니다.',
-              '입력값 비우기는 저장된 계산기 입력도 함께 삭제합니다. 브라우저의 사이트 데이터 삭제 기능을 이용해 언어·동의 설정을 포함한 모든 로컬 데이터를 제거할 수도 있습니다.',
+              '이 기기 저장을 선택한 계산기 입력값은 해당 브라우저의 localStorage에만 저장됩니다. 클라우드 저장이나 기록 기능을 선택하면 입력값과 기록이 이용자 계정에 연결된 Supabase 데이터베이스로 전송되어 저장될 수 있습니다. 운영자는 계산기 입력값을 판매하지 않습니다.',
+              '활성 저장 슬롯을 다시 선택해 저장값을 삭제하거나 각 기록의 삭제 기능을 이용할 수 있습니다. 브라우저의 사이트 데이터 삭제 기능으로 로컬 입력값과 언어·동의 설정을 제거할 수도 있습니다.',
             ],
           },
           {
@@ -186,6 +213,8 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
               rows: [
                 ['Vercel Inc.', '웹 호스팅, 전송, 보안 로그, Web Analytics', '접속·기기·집계 이용 정보'],
                 ['Google LLC', 'GA4 이용 분석, AdSense 광고와 동의 관리', '쿠키·기기·접속·이용·광고 정보'],
+                ['Supabase Inc.', '인증, 계정 데이터베이스, 클라우드 저장과 기록', '계정·인증·계산기 저장·기록 정보'],
+                ['Paddle', 'Merchant of Record, 결제, 세금, 영수증, 구독과 환불 지원', '구매자·거래·구독·세금·지원 정보'],
               ],
             },
           },
@@ -205,6 +234,18 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
                   '미국 및 Google 데이터센터 운영 국가 · 동의 후 암호화된 네트워크 전송',
                   'GA4 분석, AdSense 광고 제공·측정·부정 이용 방지',
                   'GA4 설정 및 Google 광고·개인정보 정책에 따른 기간',
+                ],
+                [
+                  'Supabase Inc.',
+                  'Supabase 프로젝트 리전 및 지원 운영 국가 · 로그인 또는 클라우드 기능 이용 시 암호화된 네트워크 전송',
+                  '인증, 계정 데이터베이스, 클라우드 저장과 기록',
+                  '계정·기록 삭제 및 Supabase 백업·보안 정책에 따른 기간',
+                ],
+                [
+                  'Paddle',
+                  '영국 및 Paddle 인프라 운영 국가 · 결제 또는 구독 지원 이용 시 암호화된 네트워크 전송',
+                  '결제, 세금, 영수증, 구독 관리, 환불과 구매자 지원',
+                  '관련 법령, 거래 기록 의무 및 Paddle 개인정보 정책에 따른 기간',
                 ],
               ],
             },
@@ -231,7 +272,7 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
             title: '6. 정보주체의 권리와 행사방법',
             paragraphs: [
               `개인정보 처리에 관한 열람, 정정, 삭제, 처리정지 또는 문의는 ${email}로 요청할 수 있습니다. 본인 확인이 필요한 요청에는 권리 보호를 위해 추가 확인을 요청할 수 있습니다.`,
-              '브라우저에 저장된 값은 입력값 비우기 또는 브라우저 사이트 데이터 삭제로 직접 제거할 수 있습니다.',
+              '브라우저에 저장된 값은 입력값 비우기 또는 브라우저 사이트 데이터 삭제로 직접 제거할 수 있습니다. 계정·클라우드 저장값·기록은 서비스 내 삭제 기능 또는 문의를 통해 삭제를 요청할 수 있습니다.',
             ],
           },
           {
@@ -260,7 +301,53 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
           {
             title: '9. 처리방침 변경',
             paragraphs: [
-              '처리방침이 변경되면 시행일과 변경 내용을 이 페이지에 표시합니다. 광고·분석 도구, 저장 방식 또는 운영 주체가 바뀌면 관련 내용을 함께 갱신합니다.',
+              '처리방침이 변경되면 시행일과 변경 내용을 이 페이지에 표시합니다. 계정, 저장, 결제, 광고·분석 도구 또는 운영 주체가 바뀌면 관련 내용을 함께 갱신합니다.',
+            ],
+          },
+        ],
+      },
+      refund: {
+        title: '환불 정책',
+        effective: '시행일: 2026년 8월 11일',
+        intro:
+          '본 정책은 Paddle Live 결제가 활성화된 뒤 판매되는 LiqGuard Pro 월간·연간 구독의 취소와 환불 요청에 적용됩니다.',
+        sections: [
+          operatorSection(locale),
+          {
+            title: '1. 판매 및 결제 주체',
+            paragraphs: [
+              'LiqGuard Pro 구독은 Paddle을 통해 판매됩니다. Paddle은 Merchant of Record로서 구매자 결제, 관련 세금, 송장과 영수증, 결제 지원 및 적격 환불을 처리합니다.',
+            ],
+          },
+          {
+            title: '2. 환불 요청 방법',
+            paragraphs: [
+              `구매 확인 이메일의 지원 링크 또는 paddle.net의 Paddle 주문 지원을 이용하세요. 제품 접근이나 기능 문제는 ${email}로 문의할 수 있으며, 필요한 경우 Paddle 지원 경로를 안내합니다.`,
+            ],
+          },
+          {
+            title: '3. 환불 가능 여부',
+            paragraphs: [
+              '환불 가능 여부는 Paddle 구매자 약관, 구매자의 지역에 적용되는 법률, 구매 시점, 이용 내역과 요청 사유에 따라 검토됩니다. 본 정책은 법령에 따른 철회·환불 권리를 제한하지 않습니다.',
+            ],
+          },
+          {
+            title: '4. 구독 취소와 환불의 차이',
+            paragraphs: [
+              '구독을 취소하면 다음 자동 갱신이 중단되며, 별도 안내가 없는 한 이미 결제한 기간이 끝날 때까지 Pro 기능을 이용할 수 있습니다.',
+              '구독 취소가 현재 결제 기간의 자동 환불을 의미하지는 않습니다. 환불이 필요하면 별도로 Paddle 주문 지원에 요청해야 합니다.',
+            ],
+          },
+          {
+            title: '5. 승인된 환불과 서비스 접근',
+            paragraphs: [
+              '환불이 승인되면 Paddle은 가능한 경우 원래 결제 수단으로 처리합니다. 실제 입금 시점은 은행과 카드사에 따라 달라질 수 있으며, 환불된 구독의 Pro 접근 권한은 종료될 수 있습니다.',
+            ],
+          },
+          {
+            title: '6. 제품 지원',
+            paragraphs: [
+              `계정 접근, 계산기 동작 또는 Pro 기능 문제는 ${email}로 알려주세요. 환불 요청과 별개로 기술 문제 해결을 지원합니다.`,
             ],
           },
         ],
@@ -271,9 +358,9 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
   return {
     terms: {
       title: 'Terms of Use',
-      effective: 'Effective: August 7, 2026',
+      effective: 'Effective: August 11, 2026',
       intro:
-        'These terms govern the free LiqGuard futures calculator and its public information pages.',
+        'These terms govern LiqGuard Free features, Pro subscriptions sold after Paddle approval, and related public information pages.',
       sections: [
         operatorSection(locale),
         {
@@ -291,9 +378,9 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
           ],
         },
         {
-          title: '3. On-device storage',
+          title: '3. Storage and account features',
           paragraphs: [
-            'If you select local saving, calculator inputs are stored in this browser localStorage and are not stored in a LiqGuard account or server database.',
+            'If you select on-device saving, calculator inputs are stored in this browser localStorage. If you sign in and select cloud saving or records, inputs, number sets, order-simulation history, and account snapshots may be stored in a server database linked to your account.',
             'Stored values may be exposed or lost on shared devices, through browser extensions or malware, device loss, browser-data deletion, or storage errors.',
           ],
         },
@@ -305,33 +392,41 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
           ],
         },
         {
-          title: '5. Intellectual property',
+          title: '5. Pro subscriptions and billing',
+          paragraphs: [
+            'Pro subscription sales begin only after Paddle live-account and liqguard.com domain approval are complete and live checkout is enabled.',
+            'Once sales begin, Paddle acts as merchant of record for payment processing, applicable taxes, invoices and receipts, billing support, cancellation, and eligible refunds. Monthly and yearly subscriptions renew for each billing period until canceled.',
+            'The pricing page lists plan prices and included features. The Refund Policy explains cancellation and refund procedures.',
+          ],
+        },
+        {
+          title: '6. Intellectual property',
           paragraphs: [
             'Software, interface design, documentation, and original content are protected by applicable rights and licenses.',
             'You may use the service for personal calculation and review, but may not reproduce or resell the service as a whole or misrepresent its source.',
           ],
         },
         {
-          title: '6. Changes and availability',
+          title: '7. Changes and availability',
           paragraphs: [
             'We may change or temporarily suspend the service or calculation methods for accuracy, security, legal, or operational reasons.',
           ],
         },
         {
-          title: '7. Limitation of liability',
+          title: '8. Limitation of liability',
           paragraphs: [
             'To the extent permitted by law, the operator is not liable for direct or indirect loss, lost opportunities, calculation differences, local-data loss, external-service failures, or investment decisions.',
             'This does not exclude liability that cannot legally be excluded, including intentional misconduct or gross negligence.',
           ],
         },
         {
-          title: '8. Governing law and disputes',
+          title: '9. Governing law and disputes',
           paragraphs: [
             `These terms are governed by the laws of the Republic of Korea. Contact ${email} first for service disputes; unresolved matters follow applicable courts or dispute-resolution procedures.`,
           ],
         },
         {
-          title: '9. Changes to these terms',
+          title: '10. Changes to these terms',
           paragraphs: [
             'We will show the effective date and material changes on this page. Updated terms apply from the displayed effective date.',
           ],
@@ -340,9 +435,9 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
     },
     privacy: {
       title: 'Privacy Policy',
-      effective: 'Effective: August 7, 2026',
+      effective: 'Effective: August 11, 2026',
       intro:
-        `${operatorName} explains below how information is handled in the public LiqGuard service. The public version has no account, sign-in, or cloud storage.`,
+        `${operatorName} explains below how information is handled in LiqGuard. The calculator works without sign-in. Account, cloud-storage, records, and subscription information is processed only when you choose to use the related feature.`,
       sections: [
         operatorSection(locale),
         {
@@ -361,6 +456,24 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
                 'Language, disclaimer acknowledgement, local-save and privacy choices',
                 'Keep settings and avoid repeating notices',
                 'Until the related localStorage value or browser site data is deleted',
+              ],
+              [
+                'Account and authentication',
+                'Email address, display name, authentication provider, and account identifier',
+                'Sign-in, account identification, security, and account support',
+                'Until account deletion; information required by law or for security is retained for the applicable period',
+              ],
+              [
+                'Cloud storage and records',
+                'Calculator inputs, number sets, order-simulation history, account snapshots, and save times',
+                'Cross-device restore, record access, and Pro features',
+                'Until you delete the record or account; backups may remain for a limited period under provider policy',
+              ],
+              [
+                'Subscription and billing status',
+                'Paddle customer and subscription identifiers, plan, status, billing period, and renewal date',
+                'Pro access, subscription synchronization, and billing support',
+                'After the account or subscription relationship ends, for periods required by law and Paddle policy',
               ],
               [
                 'Region cookie',
@@ -398,8 +511,8 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
         {
           title: '2. Calculator inputs',
           paragraphs: [
-            'Calculator inputs are stored only in this browser localStorage when you choose local saving. We do not transmit or sell those inputs.',
-            'Clearing calculator inputs also removes the saved calculator draft. Browser controls can remove all local LiqGuard data.',
+            'Inputs saved on this device remain in this browser localStorage. If you select cloud saving or records, inputs and records may be transmitted to and stored in the Supabase database linked to your account. We do not sell calculator inputs.',
+            'You can reselect the active save slot to delete its saved inputs or use each record deletion control. Browser controls can remove local inputs and language or consent settings.',
           ],
         },
         {
@@ -409,6 +522,8 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
             rows: [
               ['Vercel Inc.', 'Hosting, delivery, security logs, Web Analytics', 'Access, device, and aggregate usage data'],
               ['Google LLC', 'GA4 analytics, AdSense advertising, consent management', 'Cookie, device, access, usage, and ad data'],
+              ['Supabase Inc.', 'Authentication, account database, cloud storage, and records', 'Account, authentication, saved calculator, and record data'],
+              ['Paddle', 'Merchant of record, payments, tax, receipts, subscriptions, and refund support', 'Buyer, transaction, subscription, tax, and support data'],
             ],
           },
         },
@@ -428,6 +543,18 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
                 'United States and Google data-center locations; encrypted network transfer after the applicable choice',
                 'GA4 analytics and AdSense delivery, measurement, and invalid-traffic prevention',
                 'Under GA4 settings and Google advertising and privacy policies',
+              ],
+              [
+                'Supabase Inc.',
+                'Configured Supabase project region and support locations; encrypted network transfer when sign-in or cloud features are used',
+                'Authentication, account database, cloud storage, and records',
+                'Until account or record deletion and under Supabase backup and security policies',
+              ],
+              [
+                'Paddle',
+                'United Kingdom and Paddle infrastructure locations; encrypted network transfer when billing or subscription support is used',
+                'Payments, tax, receipts, subscription management, refunds, and buyer support',
+                'Under applicable law, transaction-record obligations, and Paddle privacy policy',
               ],
             ],
           },
@@ -451,7 +578,7 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
           title: '6. Your rights',
           paragraphs: [
             `Contact ${email} to request access, correction, deletion, restriction, or information about processing. We may request reasonable verification to protect your rights.`,
-            'You can directly remove browser-stored values by clearing calculator inputs or browser site data.',
+            'You can directly remove browser-stored values by clearing calculator inputs or browser site data. Use in-service deletion controls or contact us to request deletion of account, cloud, or record data.',
           ],
         },
         {
@@ -474,7 +601,53 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
         {
           title: '9. Policy changes',
           paragraphs: [
-            'We will display the effective date and material changes here. We will update this policy when storage, analytics, advertising, or the operator changes.',
+            'We will display the effective date and material changes here. We will update this policy when account, storage, billing, analytics, advertising, or operator details change.',
+          ],
+        },
+      ],
+    },
+    refund: {
+      title: 'Refund Policy',
+      effective: 'Effective: August 11, 2026',
+      intro:
+        'This policy applies to cancellation and refund requests for LiqGuard Pro Monthly and Pro Yearly subscriptions after Paddle live checkout is enabled.',
+      sections: [
+        operatorSection(locale),
+        {
+          title: '1. Seller and payment provider',
+          paragraphs: [
+            'LiqGuard Pro subscriptions are sold through Paddle. Paddle acts as merchant of record for buyer payments, applicable taxes, invoices and receipts, billing support, and eligible refunds.',
+          ],
+        },
+        {
+          title: '2. How to request a refund',
+          paragraphs: [
+            `Use the support link in your purchase email or Paddle order support at paddle.net. For product access or functionality issues, contact ${email}; we can direct you to the appropriate Paddle support route when needed.`,
+          ],
+        },
+        {
+          title: '3. Refund eligibility',
+          paragraphs: [
+            'Eligibility is reviewed under Paddle buyer terms, laws that apply in the buyer location, purchase timing, usage, and the reason for the request. This policy does not limit statutory withdrawal or refund rights.',
+          ],
+        },
+        {
+          title: '4. Cancellation compared with a refund',
+          paragraphs: [
+            'Canceling stops the next automatic renewal. Unless otherwise stated, Pro access continues until the end of the paid period.',
+            'Cancellation does not automatically refund the current billing period. Submit a separate refund request through Paddle order support when a refund is needed.',
+          ],
+        },
+        {
+          title: '5. Approved refunds and access',
+          paragraphs: [
+            'If approved, Paddle returns funds to the original payment method where possible. Bank and card timing varies, and Pro access for the refunded subscription may end.',
+          ],
+        },
+        {
+          title: '6. Product support',
+          paragraphs: [
+            `Report account access, calculator, or Pro feature issues to ${email}. Product troubleshooting is available separately from the refund process.`,
           ],
         },
       ],
@@ -485,9 +658,8 @@ function buildDocuments(locale: Locale): Record<PublicLegalKind, LegalDocument> 
 export function PublicLegalPage({ kind }: { kind: PublicLegalKind }) {
   const { locale } = useLanguage()
   const page = buildDocuments(locale)[kind]
-  const homeLabel = locale === 'ko' ? '계산기로 돌아가기' : 'Back to calculator'
   const eyebrow = locale === 'ko' ? 'LiqGuard · 법적 고지' : 'LiqGuard · Legal'
-  const activePath = kind === 'terms' ? TERMS_PATH : PRIVACY_PATH
+  const activePath = kind === 'terms' ? TERMS_PATH : kind === 'privacy' ? PRIVACY_PATH : null
 
   return (
     <PublicInfoShell
@@ -550,9 +722,7 @@ export function PublicLegalPage({ kind }: { kind: PublicLegalKind }) {
               </section>
             ))}
         </div>
-        <a className="btn btn-primary public-legal-home" href="/">
-          {homeLabel}
-        </a>
+        <BackToCalculatorLink className="public-legal-home" />
       </div>
     </PublicInfoShell>
   )

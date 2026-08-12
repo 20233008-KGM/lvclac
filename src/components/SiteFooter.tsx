@@ -3,7 +3,9 @@ import {
   COMPANY_PATH,
   CONTACT_PATH,
   GUIDE_PATH,
+  PRICING_PATH,
   PRIVACY_PATH,
+  REFUND_POLICY_PATH,
   TERMS_PATH,
   UPDATES_PATH,
 } from '../config/routes'
@@ -26,6 +28,7 @@ const footerCopy = {
         title: 'Product',
         links: [
           { label: '서비스 소개', href: ABOUT_PATH },
+          { label: 'Pro 요금제', href: PRICING_PATH },
           { label: '사용 가이드', href: GUIDE_PATH },
           { label: '업데이트', href: UPDATES_PATH },
         ],
@@ -41,12 +44,14 @@ const footerCopy = {
       {
         id: 'legal',
         title: 'Legal',
-        links: [],
+        links: [
+          { label: '이용약관', href: TERMS_PATH },
+          { label: '개인정보처리방침', href: PRIVACY_PATH },
+          { label: '환불 정책', href: REFUND_POLICY_PATH },
+        ],
       },
     ],
     privacySettings: '개인정보·쿠키 설정',
-    bottomTerms: '이용약관',
-    bottomPrivacy: '개인정보처리방침',
   },
   en: {
     description:
@@ -57,6 +62,7 @@ const footerCopy = {
         title: 'Product',
         links: [
           { label: 'Service overview', href: ABOUT_PATH },
+          { label: 'Pro pricing', href: PRICING_PATH },
           { label: 'User guide', href: GUIDE_PATH },
           { label: 'Updates', href: UPDATES_PATH },
         ],
@@ -72,12 +78,14 @@ const footerCopy = {
       {
         id: 'legal',
         title: 'Legal',
-        links: [],
+        links: [
+          { label: 'Terms', href: TERMS_PATH },
+          { label: 'Privacy', href: PRIVACY_PATH },
+          { label: 'Refund policy', href: REFUND_POLICY_PATH },
+        ],
       },
     ],
     privacySettings: 'Privacy and cookie settings',
-    bottomTerms: 'Terms',
-    bottomPrivacy: 'Privacy',
   },
 } as const
 
@@ -150,9 +158,6 @@ export function SiteFooter() {
                           {copy.privacySettings}
                         </button>
                       </li>
-                      <li>
-                        <DisclaimerShowAgainLink variant="footer-nav" />
-                      </li>
                     </>
                   )}
                 </ul>
@@ -175,26 +180,7 @@ export function SiteFooter() {
         <div className="site-footer__bottom">
           <p className="site-footer__copy">{t.footer.copyright}</p>
           <div className="site-footer__bottom-actions">
-            <a
-              className="site-footer__bottom-link"
-              href={TERMS_PATH}
-              onClick={(event) => {
-                event.preventDefault()
-                navigate(TERMS_PATH)
-              }}
-            >
-              {copy.bottomTerms}
-            </a>
-            <a
-              className="site-footer__bottom-link"
-              href={PRIVACY_PATH}
-              onClick={(event) => {
-                event.preventDefault()
-                navigate(PRIVACY_PATH)
-              }}
-            >
-              {copy.bottomPrivacy}
-            </a>
+            <DisclaimerShowAgainLink variant="footer" />
           </div>
         </div>
       </div>

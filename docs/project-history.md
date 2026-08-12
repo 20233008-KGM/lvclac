@@ -9,6 +9,11 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-08-03 — 개발·공개 첫방문 온보딩 재구성 및 운영 배포**
+- `dev` **9aa95bf**에서 첫방문 흐름을 환영→지역→종목·증거금→거래 상황→맞춤 사용법→입력 저장→시작 전 확인의 7단계로 분리했다. `maintenance/public` **71b376b**는 지역·상품·로그인·클라우드를 제외한 환영→증거금 방식→거래 상황→맞춤 사용법→로컬 저장→시작 전 확인의 6단계로 같은 2패널 구조를 다시 연결했다. 두 흐름 모두 첫 화면을 선택 없는 제품 인사로 만들고, 상황 선택 뒤 별도 다음 화면에서 맞춤 3개 안내와 가이드·수식 링크를 보여준다.
+- 공개판은 실제 로컬 저장 성공 뒤에만 다음 단계로 이동하고 실패 시 같은 화면에 오류를 남기며, 저장 안 함은 저장 중지와 온보딩 완료를 분리한다. 기존 면책·공개 저장 기록이 있는 방문자는 새 흐름을 건너뛰고, 레거시 서비스 안내·저장 선택과 푸터 재열기는 중간 이탈 호환 경로로 유지한다. `WelcomeFlow`·레거시 2종을 `firstVisitGateActive`에 함께 묶어 개인정보/CMP가 겹치지 않게 했다.
+- 검증: dev 전체 Vitest **833/833**, public **757/757**, 공개 지역·CMP Playwright **7/7**, 양쪽 production build·변경 파일 ESLint·diff check 통과. 데스크톱·375px 로컬 브라우저와 운영에서 진행 레일·필수 게이트·상황/사용법 분리·공개 신규 완료 후 재로드 재노출 없음·콘솔 경고/오류 0을 확인했다. Vercel Production **dpl_2mWu2exHpQKgCLaxdsp4nUG5ZpbA**(`devpilgrm.liqguard.com`)와 **dpl_25VLn9gkNjHn66XmYxRmJ2sg6cGC**(`liqguard.com`)가 `READY`다. 실제 저장소 장애 주입과 규제 지역 실제 IP Google CMP는 남았다. Notion 완료 [Task LV-106](https://app.notion.com/p/3b126e6d586f8149a761e9c5d8d7ecdb)·[QA](https://app.notion.com/p/3b126e6d586f8129b8cff525f6687c78)·[Work Log](https://app.notion.com/p/3b126e6d586f813cb4d5f5a47fd66342)·[Release](https://app.notion.com/p/3b126e6d586f816b9909ebad5ba61757)와 2026-08-07 Calendar 공개 일정 갱신 완료.
+
 **2026-08-02 — 인증 이메일 카드·배경 구분 강화 및 Supabase 반영**
 - `dev` **a0b701e**에서 Gmail이 사용하는 라이트 인라인 페이지/카드 대비가 1.047:1에 불과해 경계가 붙어 보이던 원인을 수정했다. 라이트 페이지 `#e2e8f0`·카드 `#fdfdfe`·테두리 `#cbd5e1`, 다크 테두리 `#3a4354`와 보조 그림자를 적용하고 페이지/카드 1.18:1·카드/테두리 1.4:1 미만이면 생성을 중단하는 가드를 추가했다. 가입 확인·복구·매직 링크·이메일 변경 4종과 한영 프리뷰 8종을 재생성했다.
 - 검증: 라이트 페이지/카드 **1.213:1**·카드/테두리 **1.461:1**, 다크 페이지/카드 **1.208:1**·카드/테두리 **1.583:1**. 변경 파일 ESLint, 전체 Vitest **804/804**, production build, diff check를 통과했고 Supabase Management API에서 원격 4종 HTML과 로컬 생성물 일치·SMTP 활성·Site URL `https://devpilgrm.liqguard.com` 유지를 확인했다.
@@ -341,6 +346,11 @@
 - `dev` **a1a839e**에서 마이페이지→계산기 복귀를 SPA 이동으로 바꿔 CalculatorProvider 메모리를 유지하고, 실제 새로고침·새 탭은 계정별 브라우저 snapshot을 즉시 복원한 뒤 active cloud set ID와 모든 세트의 `id,updated_at`만 비교하도록 했다. revision이 다를 때만 전체 입력을 다시 읽고, 미저장 편집의 서버 덮어쓰기와 로그아웃·계정 전환의 캐시 노출을 차단했다.
 - 검증: 집중 **49/49**·전체 Vitest **830/830**, TypeScript 포함 production build, diff check 통과. 운영 마이페이지 링크와 브라우저 기본 뒤로가기 모두 document navigation **0회**, 활성 세트·입력 유지, 전체 `inputs` 조회 **0회**였고 active ID·revision 2건만 조회했다. 1,200ms 지연 재로드에서도 전체 입력 조회 없이 cache-first 표시와 콘솔 경고·오류 0을 확인했다.
 - `origin/dev` 푸시와 Vercel Production **dpl_BSgogLmdrTBT3zkwUbCNkCUEqbx4** `READY`·`devpilgrm.liqguard.com` 200 확인 완료. 실제 교차 기기 변경 E2E와 기기·회선별 절대 시간은 남았다. Notion 완료 [Task LV-104](https://app.notion.com/p/3b026e6d586f81b2929deb9c764a5cb4)·[ADR](https://app.notion.com/p/3b026e6d586f8120ac04f115e57a4cfb)·[Work Log](https://app.notion.com/p/3b026e6d586f81e791c3dacf0aadc6b7)·QA / Test Plan·Release Notes 기록 완료. public은 로그인·클라우드가 없어 앱 코드 전파 대상이 아니다.
+
+**2026-08-03 — 활성 저장 슬롯 재클릭 삭제 회귀 복원**
+- `dev` **6e3a13d**에서 다중 숫자세트 UI 도입 때 단순 `return`으로 바뀐 활성 로컬·클라우드 저장 슬롯 재클릭 분기를 기존 삭제 확인 흐름에 다시 연결했다. 확인 후 현재 활성 숫자세트를 삭제하고 입력을 초기화하며 저장을 끄고, 삭제 실패 시 확인창을 유지하면서 중복 실행을 막는다. 입력 패널 `비우기`의 숫자세트·연결 기록 보존 계약은 그대로다.
+- 클라우드 숫자세트 삭제는 연결 주문·스냅샷 기록도 함께 삭제되는 실제 범위를 한영 확인 문구에 명시했다. 검증: 집중 **42/42**·전체 Vitest **831/831**, TypeScript, 변경 파일 ESLint, production build, diff check 통과. 로컬 실브라우저에서 `12,345,678` 저장→활성 슬롯 재클릭→확인창→삭제 후 입력 공란·`저장 안 함` 활성·로컬 아이콘 stored/active 제거·콘솔 경고/오류 0을 확인했다.
+- `origin/dev` 푸시와 Vercel Production **dpl_AdBqFpQVTagnXfcyqdfLwMnEMwvv** `READY`·`devpilgrm.liqguard.com` 반영을 완료했다. 운영 브라우저에서도 동일한 로컬 삭제 흐름과 콘솔 경고/오류 0을 재확인했다. 실제 계정 클라우드 삭제는 수행하지 않았고 public은 별도 저장 UI라 이번 배포 대상이 아니다. Notion 완료 [Task](https://app.notion.com/p/3b126e6d586f81028b08fbe9db86ad07)·[QA](https://app.notion.com/p/3b126e6d586f81dd9ddbe9198f9ec242)·[Work Log](https://app.notion.com/p/3b126e6d586f810898c8c63d59f282da)·[Release](https://app.notion.com/p/3b126e6d586f81c297e4f3e0a7b0d399) 기록 완료.
 
 **2026-08-03 — 공개·DEV 첫방문 맞춤 사용법 가독성 개선**
 - `maintenance/public` **7ff466c**에서 첫방문 `4 / 6 · 맞춤 사용법`의 긴 동일 위계 문장을 상황 배지→3단계 순서 목록→굵은 행동 제목·짧은 설명→입력값 칩으로 재구성했다. 보유 포지션을 선택한 경우에만 카메라 아이콘과 함께 계좌평가금액·현재가를 가능하면 한 화면에서 캡처하고 증권사 종합잔고 페이지에서 확인하라는 안내를 표시한다. `dev` **86d359a**는 같은 정보 구조와 한영 카피·`ol/li/strong/aside` 접근성 마크업을 `5 / 7` 단계에 수동 이식하면서 지역·종목·저장·인증·클라우드 동작을 유지했다.

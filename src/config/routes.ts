@@ -52,8 +52,10 @@ export function isAdFreePublicInfoPath(pathname: string): boolean {
     isCompanyPath(pathname) ||
     isContactPath(pathname) ||
     isUpdatesPath(pathname) ||
+    isPricingPath(pathname) ||
     matchesPath(pathname, TERMS_PATH) ||
-    matchesPath(pathname, PRIVACY_PATH)
+    matchesPath(pathname, PRIVACY_PATH) ||
+    matchesPath(pathname, REFUND_POLICY_PATH)
   )
 }
 

@@ -14,17 +14,17 @@ describe('public-lite indexing middleware', () => {
     expect(shouldNoIndexPath('/my', false)).toBe(true)
   })
 
-  it('publishes only the six public v1 URLs after launch', () => {
+  it('publishes the public product and legal URLs after launch', () => {
     const body = sitemapBody(new Request('https://lvclac.example/sitemap.xml'), true)
 
     expect(body).toContain('<loc>https://lvclac.example</loc>')
     expect(body).toContain('<loc>https://lvclac.example/guide</loc>')
     expect(body).toContain('<loc>https://lvclac.example/formulas</loc>')
     expect(body).toContain('<loc>https://lvclac.example/about</loc>')
+    expect(body).toContain('<loc>https://lvclac.example/pricing</loc>')
     expect(body).toContain('<loc>https://lvclac.example/terms</loc>')
     expect(body).toContain('<loc>https://lvclac.example/privacy</loc>')
-    expect(body).not.toContain('/pricing')
-    expect(body).not.toContain('/refund-policy')
-    expect(body.match(/<url>/g)).toHaveLength(6)
+    expect(body).toContain('<loc>https://lvclac.example/refund-policy</loc>')
+    expect(body.match(/<url>/g)).toHaveLength(8)
   })
 })

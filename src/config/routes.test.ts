@@ -33,6 +33,10 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/formulas/')).toBe(true)
     expect(isAdFreePublicInfoPath('/updates')).toBe(true)
     expect(isAdFreePublicInfoPath('/updates/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/pricing')).toBe(true)
+    expect(isAdFreePublicInfoPath('/pricing/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/refund-policy')).toBe(true)
+    expect(isAdFreePublicInfoPath('/refund-policy/')).toBe(true)
 
     expect(isAdFreePublicInfoPath('/')).toBe(false)
   })

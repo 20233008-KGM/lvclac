@@ -17,6 +17,9 @@ describe('calculator resize scope', () => {
     expect(css).toContain(":root[data-calc-resize='custom'] .content-risk-notice__text")
     expect(css).toContain(":root[data-calc-resize='custom'] .public-seo-summary")
     expect(css).toContain(":root[data-calc-resize='custom'] .site-footer")
+    expect(app.indexOf('<PublicHomeSeoSummary />')).toBeLessThan(
+      app.indexOf('<ContentRiskNotice />'),
+    )
     expect(app.indexOf('<ContentRiskNotice />')).toBeLessThan(app.indexOf('<SiteFooter />'))
     expect(footer).not.toContain('<ContentRiskNotice />')
     expect(css).toContain('var(--calc-static-content-offset, 0px)')

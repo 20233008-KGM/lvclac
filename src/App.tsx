@@ -27,6 +27,8 @@ import {
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { PublicLegalPage } from './components/PublicLegalPage'
+import { PricingReviewPage } from './components/PaddleReviewPages'
+import { PublicHomeSeoSummary } from './components/PublicSeoContent'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
 import { UpdatesPage } from './components/UpdatesPage'
 import {
@@ -36,6 +38,7 @@ import {
   isFormulasPath,
   isGuidePath,
   isLegalPath,
+  isPricingPath,
   isUpdatesPath,
 } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
@@ -237,6 +240,7 @@ function CalculatorApp() {
             </div>
           </div>
         </div>
+        <PublicHomeSeoSummary />
         <ContentRiskNotice />
         <SiteFooter />
       </PageShell>
@@ -253,6 +257,7 @@ function AppRouter() {
   const companyPath = isCompanyPath(pathname)
   const contactPath = isContactPath(pathname)
   const updatesPath = isUpdatesPath(pathname)
+  const pricingPath = isPricingPath(pathname)
 
   useEffect(() => {
     if (
@@ -263,12 +268,12 @@ function AppRouter() {
       !companyPath &&
       !contactPath &&
       !updatesPath &&
-      legalKind !== 'terms' &&
-      legalKind !== 'privacy'
+      !pricingPath &&
+      !legalKind
     ) {
       window.history.replaceState(null, '', '/')
     }
-  }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, updatesPath])
+  }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, pricingPath, updatesPath])
 
   const metadata = <PublicPageMetadata pathname={pathname} />
 
@@ -326,7 +331,16 @@ function AppRouter() {
     )
   }
 
-  if (legalKind === 'terms' || legalKind === 'privacy') {
+  if (pricingPath) {
+    return (
+      <>
+        {metadata}
+        <PricingReviewPage />
+      </>
+    )
+  }
+
+  if (legalKind) {
     return (
       <>
         {metadata}

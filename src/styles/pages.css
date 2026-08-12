@@ -531,6 +531,64 @@ html[lang='en'] .public-info-hero {
   padding: clamp(24px, 5vw, 48px);
 }
 
+.public-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.public-pricing-card,
+.public-pricing-notes {
+  border: 1px solid var(--public-info-rule);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 2.2%);
+}
+
+.public-pricing-card {
+  padding: clamp(20px, 3vw, 28px);
+}
+
+.public-pricing-card h2,
+.public-pricing-notes h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+}
+
+.public-pricing-price {
+  margin: var(--space-md) 0 0;
+  color: var(--public-info-accent);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.public-pricing-description {
+  min-height: 3.4em;
+  margin: var(--space-sm) 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.public-review-list {
+  display: grid;
+  gap: var(--space-xs);
+  margin: var(--space-md) 0 0;
+  padding-left: 1.2em;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+.public-review-list li::marker {
+  color: var(--public-info-accent);
+}
+
+.public-pricing-notes {
+  margin-top: var(--space-lg);
+  padding: clamp(20px, 3vw, 28px);
+}
+
 .public-info-document[data-info-navigation='hidden'] .public-info-hero {
   min-height: 0;
 }
@@ -820,6 +878,10 @@ html[lang='en'] .public-info-hero {
   flex-direction: column;
 }
 
+.public-info-zone .public-legal-home {
+  align-self: flex-end;
+}
+
 .public-info-zone .public-legal-effective {
   align-self: flex-start;
   margin: 0 0 var(--space-md);
@@ -864,6 +926,14 @@ html[lang='en'] .public-info-hero {
 }
 
 @media (max-width: 720px) {
+  .public-pricing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .public-pricing-description {
+    min-height: 0;
+  }
+
   .public-info-nav__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

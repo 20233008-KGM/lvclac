@@ -2,16 +2,22 @@ import { describe, expect, it } from 'vitest'
 import { publicReviewCopy } from './PaddleReviewPages'
 
 describe('public Paddle review page copy', () => {
-  it('provides Korean copy for product, pricing, and refund policy pages', () => {
-    expect(publicReviewCopy.ko.product.title).toBe('선물 계산기')
+  it('provides specific Korean plan deliverables', () => {
     expect(publicReviewCopy.ko.pricing.title).toBe('요금제')
-    expect(publicReviewCopy.ko.legal.refund.title).toBe('환불 정책')
-    expect(publicReviewCopy.ko.legal.refund.sections[0].body).toContain('Paddle')
+    expect(publicReviewCopy.ko.pricing.plans[1].features).toEqual([
+      '광고 완전 제거.',
+      '로컬 숫자세트 10개와 클라우드 숫자세트 10개.',
+      '계좌 스냅샷 매일 자동 저장.',
+      '주문 기록 무제한 아카이브.',
+    ])
+    expect(publicReviewCopy.ko.pricing.billingItems.join(' ')).toContain('Paddle')
   })
 
-  it('keeps English copy for Paddle reviewers', () => {
-    expect(publicReviewCopy.en.product.title).toBe('Futures Calculator')
+  it('keeps equivalent English pricing copy for Paddle reviewers', () => {
     expect(publicReviewCopy.en.pricing.title).toBe('Pricing')
-    expect(publicReviewCopy.en.legal.refund.title).toBe('Refund Policy')
+    expect(publicReviewCopy.en.pricing.plans[1].features).toContain(
+      'Unlimited order-history archive.',
+    )
+    expect(publicReviewCopy.en.pricing.billingItems.join(' ')).toContain('Paddle')
   })
 })

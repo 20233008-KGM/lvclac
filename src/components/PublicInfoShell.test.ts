@@ -8,6 +8,8 @@ import {
 } from './publicInfoNavigation'
 
 const pagesCss = readFileSync(resolve('src/styles/pages.css'), 'utf8')
+const shellSource = readFileSync(resolve('src/components/PublicInfoShell.tsx'), 'utf8')
+const legalSource = readFileSync(resolve('src/components/PublicLegalPage.tsx'), 'utf8')
 
 describe('public information shell navigation', () => {
   it('keeps the same five routes in Korean and English', () => {
@@ -58,5 +60,13 @@ describe('public information shell navigation', () => {
     expect(pagesCss).toMatch(
       /\.public-info-zone \.site-footer\s*{[^}]*width:\s*100%;[^}]*margin-top:\s*var\(--space-xl\);[^}]*margin-inline:\s*0;/s,
     )
+  })
+
+  it('reuses the header back-link component at the end of legal documents', () => {
+    expect(shellSource).toContain('export function BackToCalculatorLink')
+    expect(shellSource).toContain('<BackToCalculatorLink />')
+    expect(legalSource).toContain('<BackToCalculatorLink className="public-legal-home" />')
+    expect(legalSource).not.toContain('className="btn btn-primary public-legal-home"')
+    expect(pagesCss).toMatch(/\.public-info-zone \.public-legal-home\s*{[^}]*align-self:\s*flex-end;/s)
   })
 })

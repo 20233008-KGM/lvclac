@@ -5,6 +5,9 @@ import {
   adsTxtContent,
   transformPublicIndexHtml,
 } from './scripts/publicLaunchAssets'
+import {
+  writePublicRouteHtmlAssets,
+} from './scripts/publicSeoAssets'
 import { assertPublicLaunchReady } from './scripts/publicLaunchValidation'
 
 export default defineConfig(({ command, mode }) => {
@@ -12,6 +15,7 @@ export default defineConfig(({ command, mode }) => {
   const allowIndexing = env.ALLOW_INDEXING === 'true'
   const adsenseClient = env.VITE_ADSENSE_CLIENT?.trim()
   const generatedAdsTxt = adsTxtContent(adsenseClient)
+  const siteUrl = env.VITE_SITE_URL?.trim() || 'https://liqguard.com'
 
   if (command === 'build' && mode === 'production') {
     assertPublicLaunchReady(env)
@@ -32,6 +36,9 @@ export default defineConfig(({ command, mode }) => {
             fileName: 'ads.txt',
             source: generatedAdsTxt,
           })
+        },
+        closeBundle() {
+          writePublicRouteHtmlAssets('dist', siteUrl)
         },
       },
     ],

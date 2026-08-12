@@ -5,7 +5,9 @@ import {
   ABOUT_PATH,
   FORMULAS_PATH,
   GUIDE_PATH,
+  PRICING_PATH,
   PRIVACY_PATH,
+  REFUND_POLICY_PATH,
   TERMS_PATH,
 } from './src/config/routes.js'
 
@@ -15,8 +17,10 @@ const PUBLIC_PATHS = [
   GUIDE_PATH,
   FORMULAS_PATH,
   ABOUT_PATH,
+  PRICING_PATH,
   TERMS_PATH,
   PRIVACY_PATH,
+  REFUND_POLICY_PATH,
 ]
 
 function allowIndexing(): boolean {

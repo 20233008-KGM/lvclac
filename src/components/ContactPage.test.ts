@@ -23,6 +23,7 @@ describe('public contact page', () => {
   })
 
   it('uses a restrained responsive contact layout and publishes the route', () => {
+    expect(css).toMatch(/\.contact-channel\s*{[^}]*width:\s*min\(100%, 740px\)/s)
     expect(css).toMatch(/\.contact-email-row/)
     expect(css).toMatch(/\.contact-copy-button\s*{/)
     expect(css).toMatch(

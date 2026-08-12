@@ -1731,12 +1731,14 @@ html[data-zone='contact'] body {
 /* Contact page inside the shared public information shell */
 .public-info-zone .contact-main {
   display: grid;
-  gap: clamp(40px, 7vw, 64px);
+  gap: clamp(32px, 5vw, 48px);
 }
 
 .public-info-zone .contact-channel {
   position: relative;
-  padding: clamp(24px, 4vw, 36px);
+  width: min(100%, 740px);
+  justify-self: center;
+  padding: clamp(20px, 3vw, 28px);
   border: 1px solid color-mix(in srgb, var(--public-info-accent) 24%, var(--public-info-rule));
   border-radius: var(--radius-md);
   background:
@@ -1749,8 +1751,8 @@ html[data-zone='contact'] body {
 .public-info-zone .contact-channel::before {
   position: absolute;
   top: 0;
-  right: 32px;
-  left: 32px;
+  right: 24px;
+  left: 24px;
   height: 1px;
   content: '';
   background: linear-gradient(90deg, transparent, var(--public-info-accent), transparent);
@@ -1784,10 +1786,10 @@ html[data-zone='contact'] body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-sm);
-  margin-top: clamp(24px, 4vw, 32px);
+  margin-top: clamp(18px, 3vw, 24px);
   padding: 8px 8px 8px clamp(16px, 3vw, 22px);
   border: 1px solid var(--public-info-rule);
-  border-radius: 12px;
+  border-radius: 10px;
   background: color-mix(in srgb, var(--color-bg) 42%, transparent);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 2.5%);
 }
@@ -1796,7 +1798,7 @@ html[data-zone='contact'] body {
   min-width: 0;
   margin: 0;
   color: var(--public-info-accent);
-  font-size: clamp(20px, 3vw, 26px);
+  font-size: clamp(18px, 2.4vw, 22px);
   font-weight: 700;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
@@ -1811,8 +1813,8 @@ html[data-zone='contact'] body {
 
 .public-info-zone .contact-copy-button {
   display: inline-flex;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   align-items: center;
   justify-content: center;
   padding: 0;
@@ -1825,8 +1827,8 @@ html[data-zone='contact'] body {
 }
 
 .public-info-zone .contact-copy-button svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   stroke: currentColor;
   stroke-width: 1.8;
   stroke-linecap: round;
@@ -1873,12 +1875,12 @@ html[data-zone='contact'] body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   margin-top: var(--space-md);
 }
 
 .public-info-zone .contact-channel__footer > p {
-  max-width: 530px;
+  max-width: 440px;
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
@@ -1888,7 +1890,7 @@ html[data-zone='contact'] body {
 .public-info-zone .contact-mail-link {
   display: inline-flex;
   flex: 0 0 auto;
-  min-height: 42px;
+  min-height: 38px;
   align-items: center;
   gap: 8px;
   padding: 0 var(--space-md);

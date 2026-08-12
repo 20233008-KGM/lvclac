@@ -204,9 +204,9 @@ function CalculatorApp() {
                 <div {...getHandleProps('right')} aria-label={t.resizeColumns} />
               </main>
             </div>
-            <ContentRiskNotice />
           </div>
         </div>
+        <ContentRiskNotice />
         <SiteFooter />
       </PageShell>
     </LayoutProvider>

@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 const hook = readFileSync(resolve('src/hooks/useGridResize.ts'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
+const app = readFileSync(resolve('src/App.tsx'), 'utf8')
+const footer = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 
 describe('calculator resize scope', () => {
   it('keeps the home explanation and footer centered at their default widths', () => {
@@ -15,6 +17,8 @@ describe('calculator resize scope', () => {
     expect(css).toContain(":root[data-calc-resize='custom'] .content-risk-notice__text")
     expect(css).toContain(":root[data-calc-resize='custom'] .public-seo-summary")
     expect(css).toContain(":root[data-calc-resize='custom'] .site-footer")
+    expect(app.indexOf('<ContentRiskNotice />')).toBeLessThan(app.indexOf('<SiteFooter />'))
+    expect(footer).not.toContain('<ContentRiskNotice />')
     expect(css).toContain('var(--calc-static-content-offset, 0px)')
     expect(css).toContain('var(--calc-static-content-width, var(--layout-max-width))')
   })

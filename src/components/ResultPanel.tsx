@@ -556,7 +556,7 @@ function OrderInputs({
 
   return (
     <div
-      className={`result-order-fields fh-order${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
+      className={`result-order-fields${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
     >
       <div className="field result-order-field result-order-field--contracts">
         <span className="result-order-field__label field-label-row" id="order-contracts-label">
@@ -868,7 +868,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       </section>
 
       <section
-        className={`panel result-panel result-panel--order${orderScenarioActive ? ' result-panel--order--preview' : ''}`}
+        className={`panel result-panel result-panel--order fh-order${orderScenarioActive ? ' result-panel--order--preview' : ''}`}
       >
         <div className="result-panel--order__head">
           <h2 className="result-panel--order__title">

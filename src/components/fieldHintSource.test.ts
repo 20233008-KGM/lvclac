@@ -25,8 +25,9 @@ describe('field hint 배선 (클래스 계약)', () => {
     }
   })
 
-  it('ResultPanel: 주문 필드 래퍼에 fh-order', () => {
-    expect(result).toContain('fh-order')
+  it('ResultPanel: 주문 섹션에 fh-order를 한 번만 둔다', () => {
+    expect(result).toContain('result-panel--order fh-order')
+    expect(result.match(/fh-order/g)).toHaveLength(1)
   })
 
   it('App.css: 모든 fh-* 클래스와 3단계 셀렉터 존재', () => {
@@ -38,6 +39,8 @@ describe('field hint 배선 (클래스 계약)', () => {
     }
     expect(css).toContain('.header-how-btn--guide-active')
     expect(css).toContain('.header-field-guide-callout')
+    expect(css).toContain('right: 0')
+    expect(css).not.toContain('left: calc(100% + 6px)')
     expect(css).not.toContain('.field-hint-banner')
   })
 })

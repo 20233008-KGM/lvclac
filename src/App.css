@@ -8814,10 +8814,7 @@ a.site-footer__link:hover {
 /* 거래 상태별 필드 인디케이터 (상단 안내 모드 + 강조/흐림) */
 [data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row::after,
 [data-field-hint] .fh-mark .field-label-row::after,
-[data-field-hint] .fh-order .field-label-row::after {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 6px);
+[data-field-hint] .fh-order > .result-panel--order__head .result-panel--order__title::after {
   display: grid;
   place-items: center;
   width: 17px;
@@ -8829,13 +8826,31 @@ a.site-footer__link:hover {
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
+}
+
+[data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row::after,
+[data-field-hint] .fh-mark .field-label-row::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
   transform: translateY(-50%);
 }
 
 [data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row,
-[data-field-hint] .fh-mark .field-label-row,
-[data-field-hint] .fh-order .field-label-row {
+[data-field-hint] .fh-mark .field-label-row {
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding-right: 25px;
+}
+
+[data-field-hint] .fh-mark .field-label-row::after {
+  right: calc(2.5rem + var(--space-sm));
+}
+
+[data-field-hint] .fh-order > .result-panel--order__head .result-panel--order__title::after {
+  flex: 0 0 17px;
 }
 
 [data-field-hint='firstTrade'] .fh-equity > .field-label-row::after,
@@ -8856,13 +8871,13 @@ a.site-footer__link:hover {
   content: '3';
 }
 
-[data-field-hint='firstTrade'] .fh-order .field-label-row::after,
-[data-field-hint='noPosition'] .fh-order .field-label-row::after,
+[data-field-hint='firstTrade'] .fh-order > .result-panel--order__head .result-panel--order__title::after,
+[data-field-hint='noPosition'] .fh-order > .result-panel--order__head .result-panel--order__title::after,
 [data-field-hint='hasPosition'] .fh-margin > .field-label-row::after {
   content: '4';
 }
 
-[data-field-hint='hasPosition'] .fh-order .field-label-row::after {
+[data-field-hint='hasPosition'] .fh-order > .result-panel--order__head .result-panel--order__title::after {
   content: '5';
 }
 

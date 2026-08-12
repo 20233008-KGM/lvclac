@@ -18,7 +18,7 @@ import {
 } from '../calc/mtmLink'
 import type { CalculatorHistoryOptions } from '../context/calculatorHistory'
 import type { CalculatorInputs, EvaluateResult, OrderResult, TotalMarginKind } from '../types'
-import { FORMULAS_PATH } from '../config/routes'
+import { FORMULAS_PATH, localizedPublicPath } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { maxAddableLabel } from '../utils/positionLabels'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
@@ -765,7 +765,7 @@ function OrderResults({
 }
 
 export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const navigate = useNavigate()
   const { orderContracts, orderPrice, positionSide } = inputs
   const f = t.fields
@@ -845,10 +845,10 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           <div className="result-panel__head-actions">
             <a
               className="result-panel__head-btn"
-              href={FORMULAS_PATH}
+              href={localizedPublicPath(FORMULAS_PATH, locale)}
               onClick={(event) => {
                 event.preventDefault()
-                navigate(FORMULAS_PATH)
+                navigate(localizedPublicPath(FORMULAS_PATH, locale))
               }}
             >
               {t.formulas.title}

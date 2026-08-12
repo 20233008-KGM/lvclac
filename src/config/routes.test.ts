@@ -10,6 +10,10 @@ import {
   isProductPath,
   isRecordsPath,
   isUpdatesPath,
+  isCalculatorHomePath,
+  isGuidePath,
+  localizedPublicPath,
+  publicPathWithoutLocale,
   ADMIN_FEEDBACK_PATH,
   MY_PAGE_PATH,
   RECORDS_PATH,
@@ -37,8 +41,21 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/pricing/')).toBe(true)
     expect(isAdFreePublicInfoPath('/refund-policy')).toBe(true)
     expect(isAdFreePublicInfoPath('/refund-policy/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/en/guide')).toBe(true)
+    expect(isAdFreePublicInfoPath('/en/privacy/')).toBe(true)
 
     expect(isAdFreePublicInfoPath('/')).toBe(false)
+  })
+
+  it('maps public routes between stable Korean and English URLs', () => {
+    expect(isCalculatorHomePath('/')).toBe(true)
+    expect(isCalculatorHomePath('/en')).toBe(true)
+    expect(isCalculatorHomePath('/en/')).toBe(true)
+    expect(isGuidePath('/en/guide')).toBe(true)
+    expect(publicPathWithoutLocale('/en/formulas')).toBe('/formulas')
+    expect(localizedPublicPath('/guide', 'en')).toBe('/en/guide')
+    expect(localizedPublicPath('/en/guide', 'ko')).toBe('/guide')
+    expect(isMyPagePath('/en/my')).toBe(false)
   })
 
   it('recognizes the public company route with optional trailing slash', () => {

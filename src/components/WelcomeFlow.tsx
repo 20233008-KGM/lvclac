@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
-import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
+import { FORMULAS_PATH, GUIDE_PATH, localizedPublicPath } from '../config/routes'
 import { usePublicCalculator } from '../context/PublicCalculatorContext'
 import { useLanguage } from '../i18n'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
@@ -466,11 +466,11 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
                         </aside>
                       )}
                       <div className="welcome-links">
-                        <a className="welcome-link" href={GUIDE_PATH} target="_blank" rel="noopener noreferrer">
+                        <a className="welcome-link" href={localizedPublicPath(GUIDE_PATH, locale)} target="_blank" rel="noopener noreferrer">
                           {c.guideLink}
                           <IconArrowUpRight />
                         </a>
-                        <a className="welcome-link" href={FORMULAS_PATH} target="_blank" rel="noopener noreferrer">
+                        <a className="welcome-link" href={localizedPublicPath(FORMULAS_PATH, locale)} target="_blank" rel="noopener noreferrer">
                           {c.mathLink}
                           <IconArrowUpRight />
                         </a>

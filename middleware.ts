@@ -3,25 +3,35 @@
 import { next } from '@vercel/functions'
 import {
   ABOUT_PATH,
+  COMPANY_PATH,
+  CONTACT_PATH,
   FORMULAS_PATH,
   GUIDE_PATH,
   PRICING_PATH,
   PRIVACY_PATH,
   REFUND_POLICY_PATH,
   TERMS_PATH,
+  UPDATES_PATH,
+  localizedPublicPath,
 } from './src/config/routes.js'
 
 const NO_INDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
-const PUBLIC_PATHS = [
+const PUBLIC_BASE_PATHS = [
   '/',
   GUIDE_PATH,
   FORMULAS_PATH,
+  UPDATES_PATH,
   ABOUT_PATH,
+  COMPANY_PATH,
+  CONTACT_PATH,
   PRICING_PATH,
   TERMS_PATH,
   PRIVACY_PATH,
   REFUND_POLICY_PATH,
 ]
+const PUBLIC_PATHS = (['ko', 'en'] as const).flatMap((locale) =>
+  PUBLIC_BASE_PATHS.map((path) => localizedPublicPath(path, locale)),
+)
 
 function allowIndexing(): boolean {
   return process.env.ALLOW_INDEXING === 'true'

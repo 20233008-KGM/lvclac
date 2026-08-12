@@ -19,6 +19,17 @@
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/refund-policy", "destination": "/refund-policy.html" },
+    { "source": "/en", "destination": "/en.html" },
+    { "source": "/en/guide", "destination": "/en-guide.html" },
+    { "source": "/en/formulas", "destination": "/en-formulas.html" },
+    { "source": "/en/updates", "destination": "/en-updates.html" },
+    { "source": "/en/about", "destination": "/en-about.html" },
+    { "source": "/en/company", "destination": "/en-company.html" },
+    { "source": "/en/contact", "destination": "/en-contact.html" },
+    { "source": "/en/pricing", "destination": "/en-pricing.html" },
+    { "source": "/en/terms", "destination": "/en-terms.html" },
+    { "source": "/en/privacy", "destination": "/en-privacy.html" },
+    { "source": "/en/refund-policy", "destination": "/en-refund-policy.html" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

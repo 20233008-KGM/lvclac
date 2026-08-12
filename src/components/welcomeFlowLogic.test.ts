@@ -24,6 +24,7 @@ function store(initial: Record<string, string> = {}) {
 describe('shouldShowWelcome', () => {
   it('신규 방문자(마커 없음, 계산기 경로)에게 노출', () => {
     expect(shouldShowWelcome('/', store(), store())).toBe(true)
+    expect(shouldShowWelcome('/en', store(), store())).toBe(true)
   })
 
   it('공개 계산기 홈 외 경로에선 미노출', () => {

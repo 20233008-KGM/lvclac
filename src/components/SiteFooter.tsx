@@ -8,6 +8,7 @@ import {
   REFUND_POLICY_PATH,
   TERMS_PATH,
   UPDATES_PATH,
+  localizedPublicPath,
 } from '../config/routes'
 import {
   PUBLIC_OPERATOR_INFO,
@@ -99,6 +100,7 @@ export function SiteFooter() {
   const navigate = useNavigate()
   const copy = footerCopy[locale]
   const operatorDetails = publicFooterOperatorDetails(locale)
+  const homePath = localizedPublicPath('/', locale)
 
   return (
     <footer className="site-footer">
@@ -107,10 +109,10 @@ export function SiteFooter() {
           <div className="site-footer__brand">
             <a
               className="site-footer__wordmark"
-              href="/"
+              href={homePath}
               onClick={(event) => {
                 event.preventDefault()
-                navigate('/')
+                navigate(homePath)
               }}
             >
               <img
@@ -129,24 +131,27 @@ export function SiteFooter() {
               <div key={column.title} className="site-footer__col">
                 <h2 className="site-footer__col-title">{column.title}</h2>
                 <ul className="site-footer__col-list">
-                  {column.links.map((link) => (
-                    <li key={link.href}>
+                  {column.links.map((link) => {
+                    const href = localizedPublicPath(link.href, locale)
+                    return (
+                      <li key={link.href}>
                       <a
                         className="site-footer__link"
-                        href={link.href}
+                        href={href}
                         onClick={
-                          isInternalPath(link.href)
+                          isInternalPath(href)
                             ? (event) => {
                                 event.preventDefault()
-                                navigate(link.href)
+                                navigate(href)
                               }
                             : undefined
                         }
                       >
                         {link.label}
                       </a>
-                    </li>
-                  ))}
+                      </li>
+                    )
+                  })}
                   {column.id === 'legal' && (
                     <>
                       <li>

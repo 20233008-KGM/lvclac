@@ -2,7 +2,7 @@ import {
   PUBLIC_OPERATOR_INFO,
   publicRepresentativeDisplayName,
 } from '../config/operator'
-import { ABOUT_PATH } from '../config/routes'
+import { ABOUT_PATH, localizedPublicPath } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { PublicInfoShell } from './PublicInfoShell'
@@ -87,6 +87,7 @@ export function CompanyPage() {
   const navigate = useNavigate()
   const copy = companyCopy[locale]
   const representative = publicRepresentativeDisplayName(locale)
+  const aboutPath = localizedPublicPath(ABOUT_PATH, locale)
 
   return (
     <PublicInfoShell
@@ -128,10 +129,10 @@ export function CompanyPage() {
           </div>
           <a
             className="company-product-link"
-            href={ABOUT_PATH}
+            href={aboutPath}
             onClick={(event) => {
               event.preventDefault()
-              navigate(ABOUT_PATH)
+              navigate(aboutPath)
             }}
           >
             {copy.productLink}

@@ -18,8 +18,8 @@ describe('public SEO content', () => {
   })
 
   it('links the calculator, guide, and formulas with descriptive text', () => {
-    expect(source).toContain('href={GUIDE_PATH}')
-    expect(source).toContain('href={FORMULAS_PATH}')
+    expect(source).toContain('href={localizedPublicPath(GUIDE_PATH, locale)}')
+    expect(source).toContain('href={localizedPublicPath(FORMULAS_PATH, locale)}')
     expect(source).toContain('청산가·증거금 계산 공식 보기')
     expect(source).toContain('선물 청산가 계산기 사용법 보기')
     expect(guideSource).toContain('<PublicDocumentNext current="guide" />')

@@ -24,15 +24,15 @@ describe('public content entry points', () => {
     expect(app).toContain('<CompanyPage />')
     expect(app).toContain('const contactPath = isContactPath(pathname)')
     expect(app).toContain('<ContactPage />')
-    expect(button).toContain('href={GUIDE_PATH}')
-    expect(button).toContain('navigate(GUIDE_PATH)')
+    expect(button).toContain('href={localizedPublicPath(GUIDE_PATH, locale)}')
+    expect(button).toContain('navigate(localizedPublicPath(GUIDE_PATH, locale))')
   })
 
   it('links the result header to the formula reference', () => {
     const resultPanel = source('src/components/ResultPanel.tsx')
 
-    expect(resultPanel).toContain('href={FORMULAS_PATH}')
-    expect(resultPanel).toContain('navigate(FORMULAS_PATH)')
+    expect(resultPanel).toContain('href={localizedPublicPath(FORMULAS_PATH, locale)}')
+    expect(resultPanel).toContain('navigate(localizedPublicPath(FORMULAS_PATH, locale))')
     expect(resultPanel).toContain('{t.formulas.title}')
     expect(resultPanel).toContain('result-panel__head-actions')
   })

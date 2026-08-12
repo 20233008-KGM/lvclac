@@ -8,6 +8,7 @@ import {
   PRIVACY_PATH,
   REFUND_POLICY_PATH,
   TERMS_PATH,
+  localizedPublicPath,
 } from '../config/routes'
 import { usePathname } from '../hooks/usePathname'
 import { usePublicCalculator } from '../context/PublicCalculatorContext'
@@ -103,15 +104,18 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
   const isFooter = variant === 'footer'
 
   if (isFooter) {
+    const termsPath = localizedPublicPath(TERMS_PATH, locale)
+    const privacyPath = localizedPublicPath(PRIVACY_PATH, locale)
+    const refundPath = localizedPublicPath(REFUND_POLICY_PATH, locale)
     return (
       <div className="site-footer__legal">
-        <a className="link-btn" href={TERMS_PATH}>
+        <a className="link-btn" href={termsPath}>
           {t.legal.termsLink}
         </a>
-        <a className="link-btn" href={PRIVACY_PATH}>
+        <a className="link-btn" href={privacyPath}>
           {t.legal.privacyLink}
         </a>
-        <a className="link-btn" href={REFUND_POLICY_PATH}>
+        <a className="link-btn" href={refundPath}>
           {footerLegalCopy[locale].refundPolicy}
         </a>
       </div>

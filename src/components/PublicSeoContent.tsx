@@ -1,4 +1,4 @@
-import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
+import { FORMULAS_PATH, GUIDE_PATH, localizedPublicPath } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import '../styles/publicSeo.css'
@@ -76,8 +76,8 @@ export function PublicHomeSeoSummary() {
         <p key={paragraph}>{paragraph}</p>
       ))}
       <nav className="public-seo-links" aria-label={content.title}>
-        <InternalLink href={GUIDE_PATH}>{content.guideLink}</InternalLink>
-        <InternalLink href={FORMULAS_PATH}>{content.formulasLink}</InternalLink>
+        <InternalLink href={localizedPublicPath(GUIDE_PATH, locale)}>{content.guideLink}</InternalLink>
+        <InternalLink href={localizedPublicPath(FORMULAS_PATH, locale)}>{content.formulasLink}</InternalLink>
       </nav>
     </section>
   )
@@ -86,7 +86,10 @@ export function PublicHomeSeoSummary() {
 export function PublicDocumentNext({ current }: { current: 'guide' | 'formulas' }) {
   const { locale } = useLanguage()
   const content = copy[locale][current]
-  const target = current === 'guide' ? FORMULAS_PATH : GUIDE_PATH
+  const target = localizedPublicPath(
+    current === 'guide' ? FORMULAS_PATH : GUIDE_PATH,
+    locale,
+  )
 
   return (
     <aside className="public-document-next" aria-labelledby={`public-${current}-next-title`}>
@@ -94,7 +97,7 @@ export function PublicDocumentNext({ current }: { current: 'guide' | 'formulas' 
       <p>{content.body}</p>
       <div className="public-seo-links">
         <InternalLink href={target}>{content.link}</InternalLink>
-        <InternalLink href="/">{copy[locale].calculatorLink}</InternalLink>
+        <InternalLink href={localizedPublicPath('/', locale)}>{copy[locale].calculatorLink}</InternalLink>
       </div>
     </aside>
   )

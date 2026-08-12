@@ -1,13 +1,14 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  PUBLIC_PAGE_PATHS,
+  PUBLIC_PAGE_VARIANTS,
   publicPageMetadata,
-  type PublicPagePath,
+  publicPageVariant,
 } from '../src/config/publicPageMetadata'
+import { localizedPublicPath } from '../src/config/routes'
 
 export interface PublicRouteSeoOptions {
-  path: PublicPagePath
+  path: string
   siteUrl: string
 }
 
@@ -28,12 +29,12 @@ function upsertMeta(
   return html.replace('</head>', `    ${element}\n  </head>`)
 }
 
-export function publicRouteAssetName(path: PublicPagePath): string {
-  return path === '/' ? 'index.html' : `${path.slice(1)}.html`
+export function publicRouteAssetName(path: string): string {
+  return path === '/' ? 'index.html' : `${path.slice(1).replaceAll('/', '-')}.html`
 }
 
 export function publicRouteRewrites(): Array<{ source: string; destination: string }> {
-  return PUBLIC_PAGE_PATHS.filter((path) => path !== '/').map((path) => ({
+  return PUBLIC_PAGE_VARIANTS.filter(({ path }) => path !== '/').map(({ path }) => ({
     source: path,
     destination: `/${publicRouteAssetName(path)}`,
   }))
@@ -43,14 +44,23 @@ export function transformPublicRouteHtml(
   html: string,
   { path, siteUrl }: PublicRouteSeoOptions,
 ): string {
-  const metadata = publicPageMetadata('ko', path)
+  const variant = publicPageVariant(path)
+  const metadata = publicPageMetadata(variant.locale, variant.basePath)
   const normalizedSiteUrl = siteUrl.replace(/\/$/, '')
-  const canonicalUrl = path === '/' ? normalizedSiteUrl : `${normalizedSiteUrl}${path}`
+  const canonicalUrl = variant.path === '/'
+    ? normalizedSiteUrl
+    : `${normalizedSiteUrl}${variant.path}`
+  const koreanPath = localizedPublicPath(variant.basePath, 'ko')
+  const englishPath = localizedPublicPath(variant.basePath, 'en')
+  const koreanUrl = koreanPath === '/' ? normalizedSiteUrl : `${normalizedSiteUrl}${koreanPath}`
+  const englishUrl = `${normalizedSiteUrl}${englishPath}`
   const title = escapeHtml(metadata.title)
   const description = escapeHtml(metadata.description)
   const canonical = escapeHtml(canonicalUrl)
 
-  let next = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
+  let next = html
+    .replace(/<html\s+lang=["'][^"']*["']/i, `<html lang="${variant.locale}"`)
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
   next = upsertMeta(
     next,
     /<meta\s+name=["']description["'][^>]*>/i,
@@ -76,6 +86,31 @@ export function transformPublicRouteHtml(
     /<link\s+rel=["']canonical["'][^>]*>/i,
     `<link rel="canonical" href="${canonical}" />`,
   )
+  next = upsertMeta(
+    next,
+    /<link\s+rel=["']alternate["']\s+hreflang=["']ko["'][^>]*>/i,
+    `<link rel="alternate" hreflang="ko" href="${escapeHtml(koreanUrl)}" />`,
+  )
+  next = upsertMeta(
+    next,
+    /<link\s+rel=["']alternate["']\s+hreflang=["']en["'][^>]*>/i,
+    `<link rel="alternate" hreflang="en" href="${escapeHtml(englishUrl)}" />`,
+  )
+  next = upsertMeta(
+    next,
+    /<link\s+rel=["']alternate["']\s+hreflang=["']x-default["'][^>]*>/i,
+    `<link rel="alternate" hreflang="x-default" href="${escapeHtml(koreanUrl)}" />`,
+  )
+  next = upsertMeta(
+    next,
+    /<meta\s+property=["']og:locale["'][^>]*>/i,
+    `<meta property="og:locale" content="${variant.locale === 'ko' ? 'ko_KR' : 'en_US'}" />`,
+  )
+  next = upsertMeta(
+    next,
+    /<meta\s+property=["']og:locale:alternate["'][^>]*>/i,
+    `<meta property="og:locale:alternate" content="${variant.locale === 'ko' ? 'en_US' : 'ko_KR'}" />`,
+  )
 
   return next
 }
@@ -84,10 +119,10 @@ export function writePublicRouteHtmlAssets(outputDir: string, siteUrl: string): 
   const indexPath = resolve(outputDir, 'index.html')
   const baseHtml = readFileSync(indexPath, 'utf8')
 
-  for (const path of PUBLIC_PAGE_PATHS) {
+  for (const { path } of PUBLIC_PAGE_VARIANTS) {
     const routeHtml = transformPublicRouteHtml(baseHtml, { path, siteUrl })
     writeFileSync(resolve(outputDir, publicRouteAssetName(path)), routeHtml, 'utf8')
   }
 }
 
-export { PUBLIC_PAGE_PATHS }
+export { PUBLIC_PAGE_VARIANTS }

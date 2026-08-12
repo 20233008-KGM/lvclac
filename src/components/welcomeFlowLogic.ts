@@ -5,6 +5,7 @@ import {
   type WritableStorageLike,
 } from './serviceDisclaimerLogic'
 import { readPublicSaveConsent } from './publicSaveConsent'
+import { isCalculatorHomePath } from '../config/routes'
 
 /** 첫 진입 환영 온보딩 완료 여부(영구, localStorage). */
 export const WELCOME_COMPLETED_KEY = 'leverage-welcome-completed-v1'
@@ -39,7 +40,7 @@ export function shouldShowWelcome(
   local: StorageLike,
   session: StorageLike,
 ): boolean {
-  if (pathname !== '/') return false
+  if (!isCalculatorHomePath(pathname)) return false
   if (readWelcomeCompleted(local)) return false
   if (readDisclaimerSkip(local)) return false
   if (readDisclaimerAck(session)) return false

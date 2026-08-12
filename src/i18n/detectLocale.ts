@@ -6,6 +6,7 @@ export const GEO_COOKIE = 'leverage_geo_country'
 
 export type LocaleDetectionSource =
   | 'url'
+  | 'path'
   | 'stored'
   | 'session'
   | 'country'
@@ -13,6 +14,7 @@ export type LocaleDetectionSource =
 
 export interface LocaleDetectionSignals {
   urlLocale?: string | null
+  pathLocale?: string | null
   storedLocale?: string | null
   sessionLocale?: string | null
   country?: string | null
@@ -50,6 +52,9 @@ export function resolveLocale(signals: LocaleDetectionSignals): LocaleDetectionR
   const urlLocale = supportedLocale(signals.urlLocale)
   if (urlLocale) return { locale: urlLocale, source: 'url' }
 
+  const pathLocale = supportedLocale(signals.pathLocale)
+  if (pathLocale) return { locale: pathLocale, source: 'path' }
+
   const storedLocale = supportedLocale(signals.storedLocale)
   if (storedLocale) return { locale: storedLocale, source: 'stored' }
 
@@ -69,6 +74,7 @@ export function resolveLocale(signals: LocaleDetectionSignals): LocaleDetectionR
 export function shouldFetchGeoFromSignals(signals: LocaleDetectionSignals): boolean {
   return !(
     supportedLocale(signals.urlLocale) ||
+    supportedLocale(signals.pathLocale) ||
     supportedLocale(signals.storedLocale) ||
     supportedLocale(signals.sessionLocale) ||
     signals.country?.trim()
@@ -82,11 +88,18 @@ export function localeFromUrlParam(): Locale | null {
   return lang === 'en' || lang === 'ko' ? lang : null
 }
 
+export function localeFromPathname(pathname: string): Locale {
+  return pathname === '/en' || pathname === '/en/' || pathname.startsWith('/en/')
+    ? 'en'
+    : 'ko'
+}
+
 export function detectInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'ko'
 
   const result = resolveLocale({
     urlLocale: localeFromUrlParam(),
+    pathLocale: localeFromPathname(window.location.pathname),
     storedLocale: localStorage.getItem(STORAGE_KEY),
     sessionLocale: sessionStorage.getItem(SESSION_DETECTED_KEY),
     country: getCookie(GEO_COOKIE),
@@ -103,6 +116,7 @@ export function shouldFetchGeo(): boolean {
   if (typeof window === 'undefined') return false
   return shouldFetchGeoFromSignals({
     urlLocale: localeFromUrlParam(),
+    pathLocale: localeFromPathname(window.location.pathname),
     storedLocale: localStorage.getItem(STORAGE_KEY),
     sessionLocale: sessionStorage.getItem(SESSION_DETECTED_KEY),
     country: getCookie(GEO_COOKIE),

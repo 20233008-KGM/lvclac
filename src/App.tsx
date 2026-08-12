@@ -31,7 +31,9 @@ import { PricingReviewPage } from './components/PaddleReviewPages'
 import { PublicHomeSeoSummary } from './components/PublicSeoContent'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
 import { UpdatesPage } from './components/UpdatesPage'
+import { LocaleRouteLink } from './components/LocaleRouteLink'
 import {
+  isCalculatorHomePath,
   isAboutPath,
   isCompanyPath,
   isContactPath,
@@ -190,6 +192,7 @@ function CalculatorApp() {
                   <p className="app-intro">{t.appIntro}</p>
                 </div>
                 <div className="header-right">
+                  <LocaleRouteLink className="header-locale-link" />
                   {isCustom && (
                     <button
                       type="button"
@@ -261,7 +264,7 @@ function AppRouter() {
 
   useEffect(() => {
     if (
-      pathname !== '/' &&
+      !isCalculatorHomePath(pathname) &&
       !guidePath &&
       !formulasPath &&
       !aboutPath &&
@@ -271,7 +274,7 @@ function AppRouter() {
       !pricingPath &&
       !legalKind
     ) {
-      window.history.replaceState(null, '', '/')
+      window.history.replaceState(null, '', pathname.startsWith('/en/') ? '/en' : '/')
     }
   }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, pricingPath, updatesPath])
 

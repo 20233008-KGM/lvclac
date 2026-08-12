@@ -8,6 +8,8 @@ import {
   type PublicInfoPath,
 } from './publicInfoNavigation'
 import { SiteFooter } from './SiteFooter'
+import { LocaleRouteLink } from './LocaleRouteLink'
+import { localizedPublicPath } from '../config/routes'
 import '../styles/pages.css'
 
 export type PublicInfoTone = 'product-doc' | 'company' | 'legal'
@@ -29,15 +31,16 @@ interface BackToCalculatorLinkProps {
 export function BackToCalculatorLink({ className }: BackToCalculatorLinkProps) {
   const { locale } = useLanguage()
   const navigate = useNavigate()
+  const homePath = localizedPublicPath('/', locale)
   const backLabel = locale === 'ko' ? '계산기로 돌아가기' : 'Back to calculator'
 
   return (
     <a
       className={['public-info-back', className].filter(Boolean).join(' ')}
-      href="/"
+      href={homePath}
       onClick={(event) => {
         event.preventDefault()
-        navigate('/')
+        navigate(homePath)
       }}
     >
       <span aria-hidden="true">←</span>
@@ -60,6 +63,7 @@ export function PublicInfoShell({
   const navigation = publicInfoNavigation(locale)
   const navLabel = locale === 'ko' ? 'LiqGuard 정보 페이지' : 'LiqGuard information pages'
   const spaceLabel = locale === 'ko' ? '문서 공간' : 'Information'
+  const homePath = localizedPublicPath('/', locale)
 
   useEffect(() => {
     document.documentElement.dataset.zone = 'public-info'
@@ -81,10 +85,10 @@ export function PublicInfoShell({
           <div className="public-info-header__top">
             <a
               className="public-info-brand"
-              href="/"
+              href={homePath}
               onClick={(event) => {
                 event.preventDefault()
-                navigate('/')
+                navigate(homePath)
               }}
             >
               <img
@@ -98,7 +102,10 @@ export function PublicInfoShell({
               </span>
               <span className="public-info-brand__space">{spaceLabel}</span>
             </a>
-            <BackToCalculatorLink />
+            <div className="public-info-header__actions">
+              <LocaleRouteLink className="public-info-back" />
+              <BackToCalculatorLink />
+            </div>
           </div>
 
           <div className="public-info-hero">

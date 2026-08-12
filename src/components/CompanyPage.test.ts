@@ -15,7 +15,8 @@ describe('public company page', () => {
     expect(source).not.toContain('publicFooterOperatorDetails(locale)')
     expect(source).not.toContain('company-details__grid')
     expect(source).toContain('PUBLIC_OPERATOR_INFO.contactEmail')
-    expect(source).toContain('href={ABOUT_PATH}')
+    expect(source).toContain('href={aboutPath}')
+    expect(source).toContain('localizedPublicPath(ABOUT_PATH, locale)')
   })
 
   it('separates the company mission, direction, principles, product, and stewardship in both locales', () => {

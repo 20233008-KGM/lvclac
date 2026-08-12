@@ -8,7 +8,7 @@ import {
   transformPublicRouteHtml,
 } from './publicSeoAssets'
 
-const baseHtml = `<!doctype html><html><head>
+const baseHtml = `<!doctype html><html lang="ko"><head>
 <title>선물 계산기</title>
 <meta name="description" content="default" />
 <meta property="og:title" content="default" />
@@ -36,12 +36,34 @@ describe('public SEO assets', () => {
     expect(html.match(/rel="canonical"/g)).toHaveLength(1)
   })
 
+  it('renders English URLs with English metadata and reciprocal language links', () => {
+    const html = transformPublicRouteHtml(baseHtml, {
+      path: '/en/guide',
+      siteUrl: 'https://liqguard.com',
+    })
+
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain(`<title>${PUBLIC_PAGE_METADATA.en['/guide'].title}</title>`)
+    expect(html).toContain('<link rel="canonical" href="https://liqguard.com/en/guide" />')
+    expect(html).toContain('<link rel="alternate" hreflang="ko" href="https://liqguard.com/guide" />')
+    expect(html).toContain('<link rel="alternate" hreflang="en" href="https://liqguard.com/en/guide" />')
+    expect(html).toContain('<link rel="alternate" hreflang="x-default" href="https://liqguard.com/guide" />')
+    expect(html).toContain('<meta property="og:locale" content="en_US" />')
+    expect(html).toContain('<meta property="og:locale:alternate" content="ko_KR" />')
+  })
+
   it('keeps the root at index.html and emits one asset per public route', () => {
     expect(publicRouteAssetName('/')).toBe('index.html')
     expect(publicRouteAssetName('/refund-policy')).toBe('refund-policy.html')
+    expect(publicRouteAssetName('/en')).toBe('en.html')
+    expect(publicRouteAssetName('/en/guide')).toBe('en-guide.html')
     expect(publicRouteRewrites()).toContainEqual({
       source: '/formulas',
       destination: '/formulas.html',
+    })
+    expect(publicRouteRewrites()).toContainEqual({
+      source: '/en/formulas',
+      destination: '/en-formulas.html',
     })
   })
 

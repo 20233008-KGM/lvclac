@@ -1,5 +1,5 @@
 import { useId, useState, type RefObject } from 'react'
-import { GUIDE_PATH } from '../config/routes'
+import { GUIDE_PATH, localizedPublicPath } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
@@ -17,7 +17,7 @@ export function HowToUseButton({
   fieldGuideActive?: boolean
   onFieldGuideToggle?: () => void
 } = {}) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const navigate = useNavigate()
   const h = t.howToUse
   const id = useId()
@@ -108,10 +108,10 @@ export function HowToUseButton({
           <p className="header-how-tooltip__link-row">
             <a
               className="header-how-tooltip__guide-btn"
-              href={GUIDE_PATH}
+              href={localizedPublicPath(GUIDE_PATH, locale)}
               onClick={(event) => {
                 event.preventDefault()
-                navigate(GUIDE_PATH)
+                navigate(localizedPublicPath(GUIDE_PATH, locale))
               }}
             >
               {h.guideLink}

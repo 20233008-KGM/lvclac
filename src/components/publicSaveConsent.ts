@@ -1,4 +1,5 @@
 import type { StorageLike, WritableStorageLike } from './serviceDisclaimerLogic'
+import { isCalculatorHomePath } from '../config/routes'
 
 export const PUBLIC_SAVE_CONSENT_KEY = 'leverage-public-save-consent-v1'
 
@@ -28,5 +29,5 @@ export function shouldShowPublicSaveConsent(
   pathname: string,
   storage: StorageLike,
 ): boolean {
-  return pathname === '/' && readPublicSaveConsent(storage) == null
+  return isCalculatorHomePath(pathname) && readPublicSaveConsent(storage) == null
 }

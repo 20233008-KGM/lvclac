@@ -22,6 +22,7 @@ function store(initial: Record<string, string> = {}) {
 describe('public save consent gate', () => {
   it('shows only on the calculator home before a decision', () => {
     expect(shouldShowPublicSaveConsent('/', store())).toBe(true)
+    expect(shouldShowPublicSaveConsent('/en', store())).toBe(true)
     expect(shouldShowPublicSaveConsent('/guide', store())).toBe(false)
     expect(shouldShowPublicSaveConsent('/terms', store())).toBe(false)
   })

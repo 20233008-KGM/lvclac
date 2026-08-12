@@ -1,3 +1,9 @@
+import {
+  isEnglishPublicPath,
+  localizedPublicPath,
+  publicPathWithoutLocale,
+} from './routes'
+
 export type PublicLocale = 'ko' | 'en'
 
 export const PUBLIC_PAGE_METADATA = {
@@ -117,11 +123,38 @@ export const PUBLIC_PAGE_PATHS = Object.keys(
   PUBLIC_PAGE_METADATA.ko,
 ) as PublicPagePath[]
 
+export interface PublicPageVariant {
+  path: string
+  basePath: PublicPagePath
+  locale: PublicLocale
+}
+
+export const PUBLIC_PAGE_VARIANTS: PublicPageVariant[] = (
+  ['ko', 'en'] as const
+).flatMap((locale) =>
+  PUBLIC_PAGE_PATHS.map((basePath) => ({
+    path: localizedPublicPath(basePath, locale),
+    basePath,
+    locale,
+  })),
+)
+
 export function normalizePublicPagePath(pathname: string): PublicPagePath {
-  const normalized = pathname !== '/' ? pathname.replace(/\/$/, '') : '/'
+  const basePath = publicPathWithoutLocale(pathname)
+  const normalized = basePath !== '/' ? basePath.replace(/\/$/, '') : '/'
   return normalized in PUBLIC_PAGE_METADATA.ko ? (normalized as PublicPagePath) : '/'
 }
 
 export function publicPageMetadata(locale: PublicLocale, pathname: string) {
   return PUBLIC_PAGE_METADATA[locale][normalizePublicPagePath(pathname)]
+}
+
+export function publicPageVariant(pathname: string): PublicPageVariant {
+  const locale: PublicLocale = isEnglishPublicPath(pathname) ? 'en' : 'ko'
+  const basePath = normalizePublicPagePath(pathname)
+  return {
+    locale,
+    basePath,
+    path: localizedPublicPath(basePath, locale),
+  }
 }

@@ -682,6 +682,35 @@ input:focus:not(:focus-visible) {
   gap: var(--space-sm);
 }
 
+.header-locale-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.header-locale-link:hover {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.public-info-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
 .header-how-tooltip-anchor {
   position: relative;
   display: inline-flex;

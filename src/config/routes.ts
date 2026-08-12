@@ -13,6 +13,7 @@ export const PRICING_PATH = '/pricing'
 export const TERMS_PATH = '/terms'
 export const PRIVACY_PATH = '/privacy'
 export const REFUND_POLICY_PATH = '/refund-policy'
+export const ENGLISH_PATH_PREFIX = '/en'
 
 export type LegalPageKind = 'terms' | 'privacy' | 'refund'
 
@@ -20,28 +21,59 @@ function matchesPath(pathname: string, path: string): boolean {
   return pathname === path || pathname === `${path}/`
 }
 
+export function isEnglishPublicPath(pathname: string): boolean {
+  return pathname === ENGLISH_PATH_PREFIX
+    || pathname === `${ENGLISH_PATH_PREFIX}/`
+    || pathname.startsWith(`${ENGLISH_PATH_PREFIX}/`)
+}
+
+export function publicPathWithoutLocale(pathname: string): string {
+  if (pathname === ENGLISH_PATH_PREFIX || pathname === `${ENGLISH_PATH_PREFIX}/`) {
+    return '/'
+  }
+  if (pathname.startsWith(`${ENGLISH_PATH_PREFIX}/`)) {
+    return pathname.slice(ENGLISH_PATH_PREFIX.length) || '/'
+  }
+  return pathname
+}
+
+export function localizedPublicPath(pathname: string, locale: 'ko' | 'en'): string {
+  const basePath = publicPathWithoutLocale(pathname)
+  const normalized = basePath !== '/' ? basePath.replace(/\/$/, '') : '/'
+  if (locale === 'ko') return normalized
+  return normalized === '/' ? ENGLISH_PATH_PREFIX : `${ENGLISH_PATH_PREFIX}${normalized}`
+}
+
+export function isCalculatorHomePath(pathname: string): boolean {
+  return matchesPath(publicPathWithoutLocale(pathname), '/')
+}
+
+function matchesLocalizedPublicPath(pathname: string, path: string): boolean {
+  return matchesPath(publicPathWithoutLocale(pathname), path)
+}
+
 export function isFormulasPath(pathname: string): boolean {
-  return matchesPath(pathname, FORMULAS_PATH)
+  return matchesLocalizedPublicPath(pathname, FORMULAS_PATH)
 }
 
 export function isGuidePath(pathname: string): boolean {
-  return matchesPath(pathname, GUIDE_PATH)
+  return matchesLocalizedPublicPath(pathname, GUIDE_PATH)
 }
 
 export function isAboutPath(pathname: string): boolean {
-  return matchesPath(pathname, ABOUT_PATH)
+  return matchesLocalizedPublicPath(pathname, ABOUT_PATH)
 }
 
 export function isCompanyPath(pathname: string): boolean {
-  return matchesPath(pathname, COMPANY_PATH)
+  return matchesLocalizedPublicPath(pathname, COMPANY_PATH)
 }
 
 export function isContactPath(pathname: string): boolean {
-  return matchesPath(pathname, CONTACT_PATH)
+  return matchesLocalizedPublicPath(pathname, CONTACT_PATH)
 }
 
 export function isUpdatesPath(pathname: string): boolean {
-  return matchesPath(pathname, UPDATES_PATH)
+  return matchesLocalizedPublicPath(pathname, UPDATES_PATH)
 }
 
 export function isAdFreePublicInfoPath(pathname: string): boolean {
@@ -53,9 +85,9 @@ export function isAdFreePublicInfoPath(pathname: string): boolean {
     isContactPath(pathname) ||
     isUpdatesPath(pathname) ||
     isPricingPath(pathname) ||
-    matchesPath(pathname, TERMS_PATH) ||
-    matchesPath(pathname, PRIVACY_PATH) ||
-    matchesPath(pathname, REFUND_POLICY_PATH)
+    matchesLocalizedPublicPath(pathname, TERMS_PATH) ||
+    matchesLocalizedPublicPath(pathname, PRIVACY_PATH) ||
+    matchesLocalizedPublicPath(pathname, REFUND_POLICY_PATH)
   )
 }
 
@@ -80,13 +112,13 @@ export function isProductPath(pathname: string): boolean {
 }
 
 export function isPricingPath(pathname: string): boolean {
-  return matchesPath(pathname, PRICING_PATH)
+  return matchesLocalizedPublicPath(pathname, PRICING_PATH)
 }
 
 export function isLegalPath(pathname: string): LegalPageKind | null {
-  if (matchesPath(pathname, TERMS_PATH)) return 'terms'
-  if (matchesPath(pathname, PRIVACY_PATH)) return 'privacy'
-  if (matchesPath(pathname, REFUND_POLICY_PATH)) return 'refund'
+  if (matchesLocalizedPublicPath(pathname, TERMS_PATH)) return 'terms'
+  if (matchesLocalizedPublicPath(pathname, PRIVACY_PATH)) return 'privacy'
+  if (matchesLocalizedPublicPath(pathname, REFUND_POLICY_PATH)) return 'refund'
   return null
 }
 

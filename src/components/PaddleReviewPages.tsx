@@ -138,6 +138,7 @@ export function PricingReviewPage() {
       eyebrow={pricing.eyebrow}
       title={pricing.title}
       lead={pricing.lead}
+      showNavigation={false}
     >
       <div className="public-pricing-grid">
         {pricing.plans.map((plan) => (

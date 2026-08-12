@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { publicReviewCopy } from './PaddleReviewPages'
+
+const source = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
 
 describe('public Paddle review page copy', () => {
   it('provides specific Korean plan deliverables', () => {
@@ -19,5 +23,11 @@ describe('public Paddle review page copy', () => {
       'Unlimited order-history archive.',
     )
     expect(publicReviewCopy.en.pricing.billingItems.join(' ')).toContain('Paddle')
+  })
+
+  it('keeps the five-page information navigator off the pricing page', () => {
+    expect(source).toMatch(
+      /export function PricingReviewPage\(\)[\s\S]*?<PublicInfoShell[\s\S]*?showNavigation=\{false\}/,
+    )
   })
 })

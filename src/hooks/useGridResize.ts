@@ -222,6 +222,7 @@ export function useGridResize(persist: boolean, contentVersion?: unknown) {
       '--calc-ad-w-left',
       '--calc-ad-w-right',
       '--calc-static-content-offset',
+      '--calc-static-content-width',
     ]) {
       root.style.removeProperty(prop)
     }
@@ -259,6 +260,10 @@ export function useGridResize(persist: boolean, contentVersion?: unknown) {
     root.style.setProperty('--calc-outer-right', `${right.outer}px`)
     root.style.setProperty('--calc-inner-right', `${right.inner}px`)
     root.style.setProperty('--calc-static-content-offset', `${(rightX - leftX) / 2}px`)
+    root.style.setProperty(
+      '--calc-static-content-width',
+      `${Math.max(0, W - geo.leftX0 - geo.rightX0)}px`,
+    )
     root.dataset.calcResize = 'custom'
     if (left.hidden) root.dataset.calcAdLeftHidden = ''
     else delete root.dataset.calcAdLeftHidden

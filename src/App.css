@@ -1592,15 +1592,27 @@ input:focus:not(:focus-visible) {
   :root[data-calc-resize='custom'] .content-risk-notice,
   :root[data-calc-resize='custom'] .public-seo-summary {
     flex: 0 0 auto;
-    width: min(var(--layout-max-width), calc(100vw - var(--space-lg)));
+    width: min(
+      var(--calc-static-content-width, var(--layout-max-width)),
+      calc(100vw - var(--space-lg))
+    );
     margin-right: 0;
     margin-left: 50%;
     transform: translateX(calc(-50% + var(--calc-static-content-offset, 0px)));
   }
 
+  :root[data-calc-resize='custom'] .content-risk-notice__text {
+    width: 100%;
+    margin-inline: auto;
+    text-align: center;
+  }
+
   :root[data-calc-resize='custom'] .site-footer {
     flex: 0 0 auto;
-    width: min(calc(var(--layout-max-width) - 20px), calc(100vw - var(--space-xl)));
+    width: min(
+      calc(var(--calc-static-content-width, var(--layout-max-width)) - 20px),
+      calc(100vw - var(--space-xl))
+    );
     margin-right: 0;
     margin-left: 50%;
     transform: translateX(calc(-50% + var(--calc-static-content-offset, 0px)));

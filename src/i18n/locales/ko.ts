@@ -410,6 +410,8 @@ export const ko: Messages = {
     autoSnapshotRegionLabel: '지역 (시간대)',
     autoSnapshotTimeZoneSearchPlaceholder: '도시·시간대 검색 (예: Seoul)',
     autoSnapshotSlotToggleLabel: '매일 기록',
+    autoSnapshotColumnLabel: '자동 기록',
+    numberSetInstrumentColumnLabel: '거래종목',
     autoSnapshotSlotHelp:
       '켜 둔 세트는 위 환경설정에서 정한 시각에 계좌 기록으로 저장해요. 값이 바뀐 날만 저장됩니다.',
     autoSnapshotSlotCountNote: '매일 기록 중: 클라우드 세트 {count}개',

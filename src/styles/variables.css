@@ -87,6 +87,7 @@
   --label-gap: 6px;
   --ctrl-h: 34px;
   --row-min: 48px;
+  --mypage-control-width: 176px;
   --mypage-panel-max: 720px;
   --mypage-row-max: 520px;
 }

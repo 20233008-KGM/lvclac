@@ -11,11 +11,12 @@ describe('calculator history menu', () => {
     expect(source).not.toContain('currentInputs')
   })
 
-  it('renders compact two-line rows with aligned final values', () => {
+  it('renders compact rows without duplicating the final value', () => {
     expect(source).toContain('calculator-history-menu__item-head')
     expect(source).toContain('calculator-history-menu__item-label')
-    expect(source).toContain('calculator-history-menu__item-value')
     expect(source).toContain('calculator-history-menu__item-detail')
+    expect(source).toContain('calculator-history-menu__item-value')
+    expect(source).not.toContain('value: diff.after')
     expect(css).toContain('font-variant-numeric: tabular-nums')
     expect(css).toContain('width: min(22rem, calc(100vw - 16px))')
   })

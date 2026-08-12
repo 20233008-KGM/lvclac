@@ -838,6 +838,10 @@ html[lang='en'] .public-info-hero {
   flex-direction: column;
 }
 
+.public-info-zone .public-legal-home {
+  align-self: flex-end;
+}
+
 .public-info-zone .public-legal-effective {
   align-self: flex-start;
   margin: 0 0 var(--space-md);
@@ -3904,7 +3908,7 @@ html[data-zone='about'] body {
 }
 
 .my-page-setting-line .preset-select__control {
-  width: 176px;
+  width: var(--mypage-control-width);
   max-width: 100%;
   min-height: 34px;
   height: 34px;
@@ -3916,16 +3920,16 @@ html[data-zone='about'] body {
 .my-page-automation-control {
   display: grid;
   gap: var(--space-sm);
-  width: 360px;
+  width: calc(var(--mypage-control-width) * 2 + var(--space-sm));
   max-width: 100%;
 }
 
 .my-page-automation-fields {
   display: grid;
-  /* 거래종목(preset) 셀렉트와 동일한 176px 두 칸으로 맞춰 세 입력의 너비를 통일한다.
-     176 + 176 + 8(gap) = 360px로 컨트롤 폭에 정확히 들어가 넘치지 않는다.
+  /* 거래종목(preset) 셀렉트와 동일한 공용 컨트롤 폭 두 칸으로 맞춘다.
+     두 컨트롤 폭 + 간격이 상위 컨트롤 폭에 정확히 들어가 넘치지 않는다.
      긴 시간대 이름은 입력칸에서 잘리되(툴팁·드롭다운으로 전체 확인) 정렬은 유지한다. */
-  grid-template-columns: 176px 176px;
+  grid-template-columns: repeat(2, var(--mypage-control-width));
   gap: var(--space-sm);
   align-items: end;
 }
@@ -3984,7 +3988,7 @@ html[data-zone='about'] body {
   margin: 0;
   padding: 4px;
   list-style: none;
-  /* 입력칸(176px)보다 넓게 펼쳐 긴 시간대 이름도 목록에선 다 보이게 한다.
+  /* 공용 폭의 입력칸보다 넓게 펼쳐 긴 시간대 이름도 목록에선 다 보이게 한다.
      좁은 입력에 갇히지 않도록 min-width는 입력폭, 실제 폭은 내용에 맞춰 최대 320px까지. */
   min-width: 100%;
   width: max-content;
@@ -4206,10 +4210,10 @@ html[data-zone='about'] body {
   transform: rotate(180deg);
 }
 
-/* 숫자세트: 위치(이 기기/클라우드)별 2열 그룹 카드. */
+/* 숫자세트: 위치(이 기기/클라우드)별 그룹을 세로로 쌓아 슬롯에 전체 폭을 준다. */
 .my-page-number-set-groups {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--space-sm);
   align-items: start;
   margin-top: var(--space-md);
@@ -4265,7 +4269,7 @@ html[data-zone='about'] body {
 
 .my-page-number-set-list-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 48px auto;
+  grid-template-columns: var(--mypage-control-width) 72px var(--mypage-control-width) minmax(70px, 1fr);
   gap: 6px;
   align-items: center;
   padding: 0 var(--space-sm);
@@ -4281,24 +4285,25 @@ html[data-zone='about'] body {
 
 .my-page-number-set-row {
   display: grid;
+  grid-template-columns: var(--mypage-control-width) 72px var(--mypage-control-width) minmax(70px, 1fr);
   gap: 6px;
+  align-items: start;
   padding: var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
 }
 
 .my-page-number-set-row-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
-  align-items: center;
+  display: contents;
 }
 
 .my-page-number-set-row-main--with-auto {
-  grid-template-columns: minmax(0, 1fr) 48px auto;
+  display: contents;
 }
 
 .my-page-number-set-row-main > input {
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
   min-height: 32px;
   height: 32px;
@@ -4315,14 +4320,19 @@ html[data-zone='about'] body {
 }
 
 .my-page-number-set-row-actions {
+  grid-column: 4;
+  grid-row: 1;
+  justify-self: end;
   display: flex;
   gap: 6px;
 }
 
 .my-page-number-set-row-auto {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   place-items: center;
-  min-width: 48px;
+  min-width: 0;
   min-height: 32px;
 }
 
@@ -4331,18 +4341,22 @@ html[data-zone='about'] body {
 }
 
 .my-page-number-set-row-preset {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-sm);
+  grid-column: 3;
+  grid-row: 1;
+  display: block;
   min-width: 0;
 }
 
 .my-page-number-set-row-preset > span {
-  color: var(--color-text-dim);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+  border: 0;
 }
 
 .my-page-number-set-row-preset select {
@@ -4363,10 +4377,17 @@ html[data-zone='about'] body {
   outline-offset: 2px;
 }
 
+/* 상태 배너와 펼침 영역은 슬롯의 관리 열 아래에서 전체 폭을 사용한다. */
+.my-page-number-set-row > .my-page-rollover-banner,
+.my-page-number-set-row > .my-page-number-set-detail,
+.my-page-number-set-row > .my-page-rollover {
+  grid-column: 1 / -1;
+}
+
 /* 상세보기 펼침: 세트 기준값 미니 그리드. */
 .my-page-number-set-detail {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   padding: var(--space-sm);
   border: 1px solid var(--color-border-subtle);
@@ -4418,7 +4439,7 @@ html[data-zone='about'] body {
 
 .my-page-rollover-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, var(--mypage-control-width));
   gap: var(--space-sm);
   align-items: end;
 }
@@ -4453,8 +4474,7 @@ html[data-zone='about'] body {
   outline-offset: 2px;
 }
 
-/* 날짜 입력칸(다음 예정일)은 두 칸을 다 차지해 힌트와 폭을 맞춘다. */
-.my-page-rollover-fields label:last-of-type,
+/* 자동 계산 안내는 세 설정 열 전체 폭을 사용한다. */
 .my-page-rollover-fields .my-page-field-help {
   grid-column: 1 / -1;
 }
@@ -4775,6 +4795,71 @@ a.my-page-compare-card__action {
 }
 
 @media (max-width: 620px) {
+  .my-page-automation-control {
+    width: 100%;
+  }
+
+  .my-page-automation-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .my-page-number-set-list-head {
+    display: none;
+  }
+
+  .my-page-number-set-row {
+    grid-template-columns: 1fr;
+  }
+
+  .my-page-number-set-row-main,
+  .my-page-number-set-row-main--with-auto {
+    grid-column: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .my-page-number-set-row-main--with-auto {
+    grid-template-columns: minmax(0, 1fr) 48px auto;
+  }
+
+  .my-page-number-set-row-main > input,
+  .my-page-number-set-row-auto,
+  .my-page-number-set-row-actions {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .my-page-number-set-row-preset {
+    grid-column: 1;
+    grid-row: auto;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .my-page-number-set-row-preset > span {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    color: var(--color-text-dim);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+  }
+
+  .my-page-number-set-detail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-page-rollover-fields {
+    grid-template-columns: 1fr;
+  }
+
   .my-page-plans {
     grid-template-columns: 1fr;
   }
@@ -4958,18 +5043,6 @@ a.my-page-compare-card__action {
 
   .my-page-setting-line__control {
     justify-content: flex-start;
-  }
-
-  .my-page-automation-control {
-    width: 100%;
-  }
-
-  .my-page-automation-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .my-page-number-set-groups {
-    grid-template-columns: 1fr;
   }
 
   .records-summary-link {

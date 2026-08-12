@@ -414,6 +414,8 @@ export interface Messages {
     autoSnapshotRegionLabel: string
     autoSnapshotTimeZoneSearchPlaceholder: string
     autoSnapshotSlotToggleLabel: string
+    autoSnapshotColumnLabel: string
+    numberSetInstrumentColumnLabel: string
     autoSnapshotSlotHelp: string
     autoSnapshotSlotCountNote: string
     rolloverTitle: string

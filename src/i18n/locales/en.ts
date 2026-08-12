@@ -418,6 +418,8 @@ export const en: Messages = {
     autoSnapshotRegionLabel: 'Region (time zone)',
     autoSnapshotTimeZoneSearchPlaceholder: 'Search city or time zone (e.g. Seoul)',
     autoSnapshotSlotToggleLabel: 'Record daily',
+    autoSnapshotColumnLabel: 'Auto record',
+    numberSetInstrumentColumnLabel: 'Instrument',
     autoSnapshotSlotHelp:
       'Enabled sets are saved to your account records at the time chosen in Preferences above. Days with no changes are skipped.',
     autoSnapshotSlotCountNote: 'Recording daily: {count} cloud set(s)',

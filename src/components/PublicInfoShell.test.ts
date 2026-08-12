@@ -58,6 +58,13 @@ describe('dev public information shell navigation', () => {
     expect(shellSource).toContain('{showNavigation && (')
   })
 
+  it('reuses the header back-link component at the end of legal documents', () => {
+    expect(shellSource).toContain('export function BackToCalculatorLink')
+    expect(shellSource).toContain('<BackToCalculatorLink />')
+    expect(legalSource).toContain('<BackToCalculatorLink className="public-legal-home" />')
+    expect(pagesCss).toMatch(/\.public-info-zone \.public-legal-home\s*{[^}]*align-self:\s*flex-end;/s)
+  })
+
   it('supports footer-only documents without adding them to the five-page navigator', () => {
     expect(shellSource).toContain('activePath: PublicInfoPath | null')
     expect(shellSource).toContain('showNavigation?: boolean')

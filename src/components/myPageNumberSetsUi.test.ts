@@ -70,6 +70,7 @@ describe('my page number-set management UI', () => {
   it('provides a standalone number-set panel with per-location groups', () => {
     const text = source('src/components/MyPage.tsx')
     const css = source('src/styles/pages.css')
+    const variables = source('src/styles/variables.css')
 
     expect(text).toContain('NumberSetPreferencesPanel')
     expect(text).toContain('copy.numberSetsTitle')
@@ -83,6 +84,15 @@ describe('my page number-set management UI', () => {
     expect(css).toContain('.my-page-number-sets')
     expect(css).toContain('.my-page-number-set-row')
     expect(css).toContain('.my-page-number-set-groups')
+    const groupsRule = css.match(/\.my-page-number-set-groups\s*\{([^}]*)\}/)?.[1]
+    expect(groupsRule).toContain('grid-template-columns: 1fr')
+    expect(groupsRule).not.toContain('repeat(2')
+    const rowRule = css.match(/\.my-page-number-set-row\s*\{([^}]*)\}/)?.[1]
+    expect(variables).toContain('--mypage-control-width: 176px')
+    expect(rowRule).toContain('grid-template-columns: var(--mypage-control-width) 72px var(--mypage-control-width) minmax(70px, 1fr)')
+    expect(css).toContain('justify-self: end')
+    expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
+    expect(css).toContain('grid-template-columns: repeat(3, var(--mypage-control-width))')
   })
 
   it('renders one daily-record switch column after the name column in both locales', () => {
@@ -90,7 +100,9 @@ describe('my page number-set management UI', () => {
     const enHtml = renderPanel('en', true)
 
     expect(koHtml).toContain(ko.myPage.autoSnapshotSlotHelp)
-    expect(koHtml.match(/my-page-number-set-list-head/g)).toHaveLength(1)
+    expect(koHtml.match(/my-page-number-set-list-head/g)).toHaveLength(2)
+    expect(koHtml).toContain('자동 기록')
+    expect(koHtml.match(/거래종목/g)).toHaveLength(2)
     expect(koHtml).toContain('type="checkbox"')
     expect(koHtml).toContain('checked=""')
     expect(koHtml).toContain('toggle-switch__track')
@@ -98,7 +110,9 @@ describe('my page number-set management UI', () => {
     expect(koHtml).toContain('cloud-cloud-1: 매일 기록')
     expect(koHtml).toContain('매일 기록 중: 클라우드 세트 1개')
     expect(enHtml).toContain(en.myPage.autoSnapshotSlotHelp)
-    expect(enHtml.match(/my-page-number-set-list-head/g)).toHaveLength(1)
+    expect(enHtml.match(/my-page-number-set-list-head/g)).toHaveLength(2)
+    expect(enHtml).toContain('Auto record')
+    expect(enHtml).toContain('Instrument')
     expect(enHtml).toContain('cloud-cloud-1: Record daily')
     expect(enHtml).toContain('Recording daily: 1 cloud set(s)')
   })
@@ -108,7 +122,9 @@ describe('my page number-set management UI', () => {
 
     expect(html).not.toContain(ko.myPage.autoSnapshotSlotHelp)
     expect(html).not.toContain('매일 기록 중')
-    expect(html).not.toContain('my-page-number-set-list-head')
+    expect(html.match(/my-page-number-set-list-head/g)).toHaveLength(2)
+    expect(html).not.toContain('자동 기록')
+    expect(html.match(/거래종목/g)).toHaveLength(2)
     expect(html).not.toContain('type="checkbox"')
     expect(html).toContain(`local-local-1: ${ko.glossaryPreset.label}`)
   })
@@ -116,7 +132,8 @@ describe('my page number-set management UI', () => {
   it('keeps an already-enabled free cloud set removable without enabling inactive rows', () => {
     const html = renderPanel('ko', false, true)
 
-    expect(html.match(/my-page-number-set-list-head/g)).toHaveLength(1)
+    expect(html.match(/my-page-number-set-list-head/g)).toHaveLength(2)
+    expect(html).toContain('자동 기록')
     expect(html.match(/type="checkbox"/g)).toHaveLength(1)
     expect(html).toContain('checked=""')
     expect(html).toContain('my-page-number-set-row-auto--empty')

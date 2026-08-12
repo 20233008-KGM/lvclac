@@ -256,7 +256,6 @@ function describeHistoryMove(move: CalculatorHistoryMove, messages: Messages) {
     const [diff] = diffs
     return {
       label: diff.label,
-      value: diff.after,
       detail: `${diff.before} → ${diff.after}`,
     }
   }

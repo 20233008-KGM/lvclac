@@ -4,7 +4,7 @@ import { CONTACT_EMAIL } from '../config/site'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage, type Locale } from '../i18n'
 import { LanguageToggle } from './LanguageToggle'
-import { PublicInfoShell } from './PublicInfoShell'
+import { BackToCalculatorLink, PublicInfoShell } from './PublicInfoShell'
 import { LegalLinks } from './ServiceDisclaimer'
 import { AuthButton } from './auth/AuthButton'
 import '../styles/pages.css'
@@ -601,6 +601,7 @@ export function PublicLegalPage({ kind }: { kind: LegalPageKind }) {
               {doc.contactBodySuffix}
             </p>
           </section>
+          <BackToCalculatorLink className="public-legal-home" />
         </div>
       </PublicInfoShell>
     )

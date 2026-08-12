@@ -1061,13 +1061,12 @@ function NumberSetGroup({
           {automationNote}
         </p>
       )}
-      {showAutoSnapshotColumn && (
-        <div className="my-page-number-set-list-head" aria-hidden="true">
-          <span />
-          <span>{copy.autoSnapshotSlotToggleLabel}</span>
-          <span />
-        </div>
-      )}
+      <div className="my-page-number-set-list-head" aria-hidden="true">
+        <span />
+        <span>{showAutoSnapshotColumn ? copy.autoSnapshotColumnLabel : null}</span>
+        <span>{copy.numberSetInstrumentColumnLabel}</span>
+        <span />
+      </div>
       <ul className="my-page-number-set-list">
         {sets.map((numberSet) => (
           <NumberSetRow
@@ -1091,7 +1090,7 @@ function NumberSetGroup({
   )
 }
 
-/** 숫자세트 독립 패널: 환경설정과 분리된 최상위 섹션, 위치별 2열 그룹 카드. */
+/** 숫자세트 독립 패널: 환경설정과 분리된 최상위 섹션, 위치별 그룹을 1열로 쌓는다. */
 export function NumberSetPreferencesPanel({
   copy,
   presetCopy,

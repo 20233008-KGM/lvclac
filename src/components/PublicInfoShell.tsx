@@ -23,6 +23,30 @@ interface PublicInfoShellProps {
   children: ReactNode
 }
 
+interface BackToCalculatorLinkProps {
+  className?: string
+}
+
+export function BackToCalculatorLink({ className }: BackToCalculatorLinkProps) {
+  const { locale } = useLanguage()
+  const navigate = useNavigate()
+  const backLabel = locale === 'ko' ? '계산기로 돌아가기' : 'Back to calculator'
+
+  return (
+    <a
+      className={['public-info-back', className].filter(Boolean).join(' ')}
+      href="/"
+      onClick={(event) => {
+        event.preventDefault()
+        navigate('/')
+      }}
+    >
+      <span aria-hidden="true">←</span>
+      {backLabel}
+    </a>
+  )
+}
+
 export function PublicInfoShell({
   activePath,
   tone,
@@ -35,7 +59,6 @@ export function PublicInfoShell({
   const { locale } = useLanguage()
   const navigate = useNavigate()
   const navigation = publicInfoNavigation(locale)
-  const backLabel = locale === 'ko' ? '계산기로 돌아가기' : 'Back to calculator'
   const navLabel = locale === 'ko' ? 'LiqGuard 정보 페이지' : 'LiqGuard information pages'
   const spaceLabel = locale === 'ko' ? '문서 공간' : 'Information'
 
@@ -79,17 +102,7 @@ export function PublicInfoShell({
               </a>
 
               <div className="public-info-header__actions">
-                <a
-                  className="public-info-back"
-                  href="/"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    navigate('/')
-                  }}
-                >
-                  <span aria-hidden="true">←</span>
-                  {backLabel}
-                </a>
+                <BackToCalculatorLink />
                 <AuthButton variant="header" />
               </div>
             </div>

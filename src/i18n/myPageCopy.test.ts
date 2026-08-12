@@ -65,10 +65,14 @@ describe('my page copy', () => {
     expect(ko.myPage.numberSetsLimitNote).toContain('각 위치 최대 10개')
     expect(ko.myPage.addLocalNumberSet).toBe('이 기기 세트 추가')
     expect(ko.myPage.addCloudNumberSet).toBe('클라우드 세트 추가')
+    expect(ko.myPage.autoSnapshotColumnLabel).toBe('자동 기록')
+    expect(ko.myPage.numberSetInstrumentColumnLabel).toBe('거래종목')
     expect(en.myPage.numberSetsTitle).toBe('Number sets')
     expect(en.myPage.numberSetsLimitNote).toContain('up to 10 per location')
     expect(en.myPage.addLocalNumberSet).toBe('Add device set')
     expect(en.myPage.addCloudNumberSet).toBe('Add cloud set')
+    expect(en.myPage.autoSnapshotColumnLabel).toBe('Auto record')
+    expect(en.myPage.numberSetInstrumentColumnLabel).toBe('Instrument')
   })
 
   it('provides number-set detail modal copy for both languages', () => {

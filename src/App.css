@@ -8826,31 +8826,23 @@ a.site-footer__link:hover {
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
-}
-
-[data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row::after,
-[data-field-hint] .fh-mark .field-label-row::after {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
+  flex: 0 0 17px;
+  order: -1;
 }
 
 [data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row,
 [data-field-hint] .fh-mark .field-label-row {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  padding-right: 25px;
 }
 
-[data-field-hint] .fh-mark .field-label-row::after {
-  right: calc(2.5rem + var(--space-sm));
-}
-
-[data-field-hint] .fh-order > .result-panel--order__head .result-panel--order__title::after {
-  flex: 0 0 17px;
+[data-field-hint] .fh-mark .field-label-action-slot {
+  margin-left: auto;
 }
 
 [data-field-hint='firstTrade'] .fh-equity > .field-label-row::after,

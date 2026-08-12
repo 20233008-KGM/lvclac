@@ -39,7 +39,9 @@ describe('field hint 배선 (클래스 계약)', () => {
     }
     expect(css).toContain('.header-how-btn--guide-active')
     expect(css).toContain('.header-field-guide-callout')
-    expect(css).toContain('right: 0')
+    expect(css).toContain('order: -1')
+    expect(css).not.toContain('right: calc(2.5rem + var(--space-sm))')
+    expect(css).not.toContain('padding-right: 25px')
     expect(css).not.toContain('left: calc(100% + 6px)')
     expect(css).not.toContain('.field-hint-banner')
   })

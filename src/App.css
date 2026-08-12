@@ -1586,6 +1586,25 @@ input:focus:not(:focus-visible) {
   :root[data-calc-resize='custom'] .page-content {
     max-width: none;
   }
+
+  /* 좌·우 리사이저는 계산기/광고 영역만 바꾼다.
+     하단 설명과 푸터는 기본 콘텐츠 폭과 화면 중앙을 유지한다. */
+  :root[data-calc-resize='custom'] .content-risk-notice,
+  :root[data-calc-resize='custom'] .public-seo-summary {
+    flex: 0 0 auto;
+    width: min(var(--layout-max-width), calc(100vw - var(--space-lg)));
+    margin-right: 0;
+    margin-left: 50%;
+    transform: translateX(calc(-50% + var(--calc-static-content-offset, 0px)));
+  }
+
+  :root[data-calc-resize='custom'] .site-footer {
+    flex: 0 0 auto;
+    width: min(calc(var(--layout-max-width) - 20px), calc(100vw - var(--space-xl)));
+    margin-right: 0;
+    margin-left: 50%;
+    transform: translateX(calc(-50% + var(--calc-static-content-offset, 0px)));
+  }
 }
 
 .loading-screen {

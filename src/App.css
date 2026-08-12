@@ -7428,29 +7428,29 @@ a.site-footer__link:hover {
   text-align: center;
 }
 
-/* Home post-calculator rhythm: 64px → 40px → 40px including .page-content gap. */
+/* Home post-calculator rhythm: 96px → 64px → 64px including .page-content gap. */
 .calc-viewport + .public-seo-summary {
-  margin-top: calc(var(--space-md) * 3);
+  margin-top: calc(var(--space-md) * 5);
   margin-bottom: 0;
 }
 
 .public-seo-summary + .content-risk-notice {
-  margin-top: calc(var(--space-md) + var(--space-sm));
+  margin-top: calc(var(--space-xl) + var(--space-md));
 }
 
 .content-risk-notice + .site-footer {
-  margin-top: calc(var(--space-md) + var(--space-sm));
+  margin-top: calc(var(--space-xl) + var(--space-md));
 }
 
 @media (max-width: 640px) {
-  /* Mobile rhythm: 40px → 28px → 28px including .page-content gap. */
+  /* Mobile rhythm: 56px → 40px → 40px including .page-content gap. */
   .calc-viewport + .public-seo-summary {
-    margin-top: calc(var(--space-md) + var(--space-sm));
+    margin-top: calc(var(--space-xl) + var(--space-sm));
   }
 
   .public-seo-summary + .content-risk-notice,
   .content-risk-notice + .site-footer {
-    margin-top: calc(var(--space-sm) + var(--space-xs));
+    margin-top: calc(var(--space-md) + var(--space-sm));
   }
 }
 

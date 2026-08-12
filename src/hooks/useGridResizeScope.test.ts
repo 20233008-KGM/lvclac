@@ -1,0 +1,20 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+const hook = readFileSync(resolve('src/hooks/useGridResize.ts'), 'utf8')
+const css = readFileSync(resolve('src/App.css'), 'utf8')
+
+describe('calculator resize scope', () => {
+  it('keeps the risk notice and footer at their pre-resize widths', () => {
+    expect(hook).toContain("'--calc-static-content-offset'")
+    expect(hook).toContain("'--calc-static-content-width'")
+    expect(hook).toContain("`${(rightX - leftX) / 2}px`")
+    expect(hook).toContain('`${Math.max(0, W - geo.leftX0 - geo.rightX0)}px`')
+    expect(css).toContain(":root[data-calc-resize='custom'] .content-risk-notice")
+    expect(css).toContain(":root[data-calc-resize='custom'] .content-risk-notice__text")
+    expect(css).toContain(":root[data-calc-resize='custom'] .site-footer")
+    expect(css).toContain('var(--calc-static-content-offset, 0px)')
+    expect(css).toContain('var(--calc-static-content-width, var(--layout-max-width))')
+  })
+})

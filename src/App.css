@@ -689,6 +689,11 @@ input:focus:not(:focus-visible) {
 }
 
 .header-how-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
   min-height: 36px;
   padding: 0 var(--space-md);
   border: 1px solid var(--color-border-subtle);
@@ -699,6 +704,79 @@ input:focus:not(:focus-visible) {
   line-height: 1;
   color: var(--color-text-muted);
   cursor: help;
+}
+
+.header-how-btn--guide-active {
+  border-color: color-mix(in srgb, var(--color-primary) 72%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface-2));
+  color: var(--color-text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  cursor: pointer;
+}
+
+.header-field-guide-callout {
+  position: absolute;
+  z-index: 1200;
+  top: calc(100% + 10px);
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  width: min(282px, calc(100vw - 32px));
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 48%, var(--color-border-subtle));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface-2) 94%, var(--color-primary) 6%);
+  color: var(--color-text);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 32%);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  text-align: left;
+  pointer-events: none;
+  transition: opacity 120ms ease, visibility 120ms ease;
+  animation: header-field-guide-callout 5s both;
+}
+
+@keyframes header-field-guide-callout {
+  0%, 88% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.header-field-guide-callout::before {
+  content: '';
+  position: absolute;
+  right: 24px;
+  bottom: 100%;
+  border: 6px solid transparent;
+  border-bottom-color: color-mix(in srgb, var(--color-primary) 48%, var(--color-border-subtle));
+}
+
+.header-field-guide-callout__dot {
+  width: 7px;
+  height: 7px;
+  margin: 6px 9px 0 0;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.header-how-tooltip-anchor:hover .header-field-guide-callout,
+.header-how-tooltip-anchor:focus-within .header-field-guide-callout {
+  animation: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-field-guide-callout {
+    animation-duration: 1ms;
+    animation-delay: 5s;
+  }
 }
 
 .header-how-btn:hover,
@@ -8733,48 +8811,59 @@ a.site-footer__link:hover {
   }
 }
 
-/* 거래 상태별 필드 인디케이터 (코치 배너 + 강조/흐림) */
-.field-hint-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  margin: 0 0 var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-2);
-}
-
-.field-hint-banner__icon {
-  font-size: 1.1rem;
-  line-height: 1.4;
-  flex-shrink: 0;
-}
-
-.field-hint-banner__text {
-  flex: 1;
-  margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
-  color: var(--color-text);
-}
-
-.field-hint-banner__close {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: 1.3rem;
+/* 거래 상태별 필드 인디케이터 (상단 안내 모드 + 강조/흐림) */
+[data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row::after,
+[data-field-hint] .fh-mark .field-label-row::after,
+[data-field-hint] .fh-order .field-label-row::after {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 6px);
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 58%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-2));
+  color: color-mix(in srgb, var(--color-primary) 78%, white 22%);
+  font-size: 10px;
+  font-weight: 700;
   line-height: 1;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
+  transform: translateY(-50%);
 }
 
-.field-hint-banner__close:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
+[data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row,
+[data-field-hint] .fh-mark .field-label-row,
+[data-field-hint] .fh-order .field-label-row {
+  position: relative;
+}
+
+[data-field-hint='firstTrade'] .fh-equity > .field-label-row::after,
+[data-field-hint='noPosition'] .fh-equity > .field-label-row::after,
+[data-field-hint='hasPosition'] .fh-equity > .field-label-row::after {
+  content: '1';
+}
+
+[data-field-hint='firstTrade'] .fh-mult > .field-label-row::after,
+[data-field-hint='noPosition'] .fh-mult > .field-label-row::after,
+[data-field-hint='hasPosition'] .fh-mark .field-label-row::after {
+  content: '2';
+}
+
+[data-field-hint='firstTrade'] .fh-margin > .field-label-row::after,
+[data-field-hint='noPosition'] .fh-margin > .field-label-row::after,
+[data-field-hint='hasPosition'] :is(.fh-entry, .fh-contracts) > .field-label-row::after {
+  content: '3';
+}
+
+[data-field-hint='firstTrade'] .fh-order .field-label-row::after,
+[data-field-hint='noPosition'] .fh-order .field-label-row::after,
+[data-field-hint='hasPosition'] .fh-margin > .field-label-row::after {
+  content: '4';
+}
+
+[data-field-hint='hasPosition'] .fh-order .field-label-row::after {
+  content: '5';
 }
 
 .fh-equity :is(.numeric-field, .number-stepper, .result-order-price-row),

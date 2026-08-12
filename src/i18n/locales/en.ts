@@ -825,7 +825,10 @@ export const en: Messages = {
     doneBody: "We've prepared the calculator and guidance for your choices. Now go calculate your liquidation price.",
   },
   fieldHint: {
-    dismiss: 'Dismiss',
+    activeButton: 'Guide on',
+    enable: 'Turn field guide on',
+    disable: 'Turn field guide off',
+    callout: 'We numbered the fields you need for your selected setup.',
     firstTrade:
       'Fill just account equity, contract multiplier, and margin rates, then enter an order in the highlighted "Order" fields — your liquidation price appears. Mark price and open contracts can wait.',
     noPosition:

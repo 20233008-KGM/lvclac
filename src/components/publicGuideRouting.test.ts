@@ -12,7 +12,8 @@ describe('public content entry points', () => {
     const button = source('src/components/HowToUseButton.tsx')
 
     expect(app).toContain("import { HowToUseButton } from './components/HowToUseButton'")
-    expect(app).toContain('<HowToUseButton />')
+    expect(app).toContain('<HowToUseButton')
+    expect(app).toContain('fieldGuideActive={fieldHintOn}')
     expect(app).toContain('const guidePath = isGuidePath(pathname)')
     expect(app).toContain('<GuidePage />')
     expect(app).toContain('const formulasPath = isFormulasPath(pathname)')

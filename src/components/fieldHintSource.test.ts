@@ -12,9 +12,11 @@ const css = readFileSync(resolve('src/App.css'), 'utf8')
 const FIELD_CLASSES = ['fh-equity', 'fh-entry', 'fh-contracts', 'fh-mark', 'fh-mult', 'fh-margin']
 
 describe('field hint 배선 (클래스 계약)', () => {
-  it('App: data-field-hint 속성 + 배너 렌더', () => {
+  it('App: data-field-hint 속성 + 상단 사용법 토글 배선', () => {
     expect(app).toContain('data-field-hint=')
-    expect(app).toContain('<FieldHintBanner')
+    expect(app).toContain('fieldGuideActive={fieldHintOn}')
+    expect(app).toContain("window.addEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)")
+    expect(app).not.toContain('<FieldHintBanner')
   })
 
   it('InputPanel: 핵심 입력 필드에 fh-* 클래스', () => {
@@ -34,5 +36,8 @@ describe('field hint 배선 (클래스 계약)', () => {
     for (const s of ['firstTrade', 'noPosition', 'hasPosition']) {
       expect(css, `CSS missing selector ${s}`).toContain(`[data-field-hint='${s}']`)
     }
+    expect(css).toContain('.header-how-btn--guide-active')
+    expect(css).toContain('.header-field-guide-callout')
+    expect(css).not.toContain('.field-hint-banner')
   })
 })

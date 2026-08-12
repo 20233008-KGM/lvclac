@@ -13,7 +13,7 @@ describe('post-calculator vertical rhythm', () => {
       /\.public-seo-summary \+ \.content-risk-notice \{[\s\S]*?margin-top: calc\(var\(--space-xl\) \+ var\(--space-md\)\);/,
     )
     expect(css).toMatch(
-      /\.content-risk-notice \+ \.site-footer \{[\s\S]*?margin-top: 0;/,
+      /\.content-risk-notice \+ \.site-footer \{[\s\S]*?margin-top: var\(--space-sm\);/,
     )
   })
 
@@ -25,7 +25,7 @@ describe('post-calculator vertical rhythm', () => {
       /@media \(max-width: 640px\) \{[\s\S]*?\.public-seo-summary \+ \.content-risk-notice \{[\s\S]*?margin-top: calc\(var\(--space-md\) \+ var\(--space-sm\)\);/,
     )
     expect(css).toMatch(
-      /@media \(max-width: 640px\) \{[\s\S]*?\.content-risk-notice \+ \.site-footer \{[\s\S]*?margin-top: 0;/,
+      /@media \(max-width: 640px\) \{[\s\S]*?\.content-risk-notice \+ \.site-footer \{[\s\S]*?margin-top: var\(--space-sm\);/,
     )
   })
 })

@@ -8827,7 +8827,7 @@ a.site-footer__link:hover {
   font-weight: 700;
   line-height: 1;
   flex: 0 0 17px;
-  order: -1;
+  order: 1;
 }
 
 [data-field-hint] :is(.fh-equity, .fh-entry, .fh-contracts, .fh-mult, .fh-margin) > .field-label-row,
@@ -8842,6 +8842,7 @@ a.site-footer__link:hover {
 }
 
 [data-field-hint] .fh-mark .field-label-action-slot {
+  order: 2;
   margin-left: auto;
 }
 

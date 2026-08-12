@@ -7428,6 +7428,32 @@ a.site-footer__link:hover {
   text-align: center;
 }
 
+/* Home post-calculator rhythm: 48px → 32px → 32px including .page-content gap. */
+.calc-viewport + .public-seo-summary {
+  margin-top: calc(var(--space-md) * 2);
+  margin-bottom: 0;
+}
+
+.public-seo-summary + .content-risk-notice {
+  margin-top: var(--space-md);
+}
+
+.content-risk-notice + .site-footer {
+  margin-top: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  /* Mobile rhythm: 32px → 24px → 24px including .page-content gap. */
+  .calc-viewport + .public-seo-summary {
+    margin-top: var(--space-md);
+  }
+
+  .public-seo-summary + .content-risk-notice,
+  .content-risk-notice + .site-footer {
+    margin-top: var(--space-sm);
+  }
+}
+
 .content-risk-notice__text {
   margin: 0;
   font-size: var(--font-size-sm);

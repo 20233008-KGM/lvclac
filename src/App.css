@@ -7428,7 +7428,7 @@ a.site-footer__link:hover {
   text-align: center;
 }
 
-/* Home post-calculator rhythm: 96px → 64px → 64px including .page-content gap. */
+/* Home post-calculator rhythm: 96px → 64px → 16px including .page-content gap. */
 .calc-viewport + .public-seo-summary {
   margin-top: calc(var(--space-md) * 5);
   margin-bottom: 0;
@@ -7439,18 +7439,21 @@ a.site-footer__link:hover {
 }
 
 .content-risk-notice + .site-footer {
-  margin-top: calc(var(--space-xl) + var(--space-md));
+  margin-top: 0;
 }
 
 @media (max-width: 640px) {
-  /* Mobile rhythm: 56px → 40px → 40px including .page-content gap. */
+  /* Mobile rhythm: 56px → 40px → 16px including .page-content gap. */
   .calc-viewport + .public-seo-summary {
     margin-top: calc(var(--space-xl) + var(--space-sm));
   }
 
-  .public-seo-summary + .content-risk-notice,
-  .content-risk-notice + .site-footer {
+  .public-seo-summary + .content-risk-notice {
     margin-top: calc(var(--space-md) + var(--space-sm));
+  }
+
+  .content-risk-notice + .site-footer {
+    margin-top: 0;
   }
 }
 

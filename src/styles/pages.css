@@ -1736,8 +1736,7 @@ html[data-zone='contact'] body {
 
 .public-info-zone .contact-channel {
   position: relative;
-  width: min(100%, 740px);
-  justify-self: center;
+  width: 100%;
   padding: clamp(20px, 3vw, 28px);
   border: 1px solid color-mix(in srgb, var(--public-info-accent) 24%, var(--public-info-rule));
   border-radius: var(--radius-md);

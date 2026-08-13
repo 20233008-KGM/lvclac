@@ -478,14 +478,29 @@ function OrderInputs({
   const orderReady =
     inputs.orderContracts != null && inputs.orderPrice != null
 
+  function orderInputHistoryOptions(
+    meta?: NumberInputChangeMeta & { gestureStart?: boolean },
+  ): CalculatorHistoryOptions | undefined {
+    return orderScenarioActive
+      ? { historyTransient: 'update' }
+      : historyOptions(meta)
+  }
+
   function commitOrderScenario() {
     const baseline = captureOrderScenarioBaseline(orderResult)
-    onChange({ commitOrderScenario: baseline })
+    onChange(
+      { commitOrderScenario: baseline },
+      { historyTransient: 'begin' },
+    )
   }
 
   function applyOrderScenario() {
+    const beforeInputs = applyInputPatch(inputs, { clearOrderScenario: true })
     const afterInputs = applyInputPatch(inputs, { applyOrderScenario: true })
-    onChange({ applyOrderScenario: true })
+    onChange(
+      { applyOrderScenario: true },
+      { historyBefore: beforeInputs },
+    )
     onApplyOrderScenario?.(inputs, afterInputs, orderResult)
   }
 
@@ -533,7 +548,12 @@ function OrderInputs({
   )
 
   function fillOrderPriceWithCurrent() {
-    if (currentPrice != null) onChange({ orderPrice: currentPrice })
+    if (currentPrice != null) {
+      onChange(
+        { orderPrice: currentPrice },
+        orderScenarioActive ? { historyTransient: 'update' } : undefined,
+      )
+    }
   }
 
   const orderPriceLinked = inputs.orderPriceLinked === true
@@ -586,7 +606,9 @@ function OrderInputs({
               dragScrubPxPerTick={CONTRACTS_SCRUB_PX_PER_TICK}
               scrubSeedValue={0}
               onEnterKey={handleOrderEnter}
-              onChange={(v, meta) => onChange({ orderContracts: v }, historyOptions(meta))}
+              onChange={(v, meta) =>
+                onChange({ orderContracts: v }, orderInputHistoryOptions(meta))
+              }
             />
           </div>
         </div>
@@ -619,7 +641,9 @@ function OrderInputs({
                 dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
                 scrubSeedValue={currentPrice}
                 onEnterKey={handleOrderEnter}
-                onChange={(v, meta) => onChange({ orderPrice: v }, historyOptions(meta))}
+                onChange={(v, meta) =>
+                  onChange({ orderPrice: v }, orderInputHistoryOptions(meta))
+                }
               />
             ) : (
               <div className="result-order-price-row">
@@ -631,7 +655,9 @@ function OrderInputs({
                   aria-labelledby="order-price-label"
                   className="result-order-price-row__input"
                   onEnterKey={handleOrderEnter}
-                  onChange={(v, meta) => onChange({ orderPrice: v }, historyOptions(meta))}
+                  onChange={(v, meta) =>
+                    onChange({ orderPrice: v }, orderInputHistoryOptions(meta))
+                  }
                 />
                 {markInlineButton}
               </div>
@@ -648,7 +674,12 @@ function OrderInputs({
               title={clearLabel}
               tabIndex={orderScenarioActive ? 0 : -1}
               aria-hidden={!orderScenarioActive}
-              onClick={() => onChange({ clearOrderScenario: true })}
+              onClick={() =>
+                onChange(
+                  { clearOrderScenario: true },
+                  { historyTransient: 'cancel' },
+                )
+              }
             >
               esc
             </button>
@@ -905,7 +936,10 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
 
   function handleMarginKindSelect(kind: TotalMarginKind) {
     if (dontShowAgainMarginKind) setSkipMarginKindAsk(true)
-    onChange({ totalMarginKind: kind })
+    onChange(
+      { totalMarginKind: kind },
+      orderScenarioActive ? { historyTransient: 'update' } : undefined,
+    )
     setMarginKindModalOpen(false)
   }
 
@@ -921,7 +955,10 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
       e.preventDefault()
-      onChange({ clearOrderScenario: true })
+      onChange(
+        { clearOrderScenario: true },
+        { historyTransient: 'cancel' },
+      )
     }
 
     window.addEventListener('keydown', handleKeyDown)

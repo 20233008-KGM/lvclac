@@ -553,7 +553,16 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       const nextInputs = options?.historyOnly
         ? prev.present
         : applyInputPatch(prev.present, patch)
-      return recordCalculatorHistory(prev, nextInputs, options)
+      const historyOptions =
+        options?.historyTransient && options.historyTransient !== 'cancel'
+          ? {
+              ...options,
+              historyTransientTarget: applyInputPatch(nextInputs, {
+                clearOrderScenario: true,
+              }),
+            }
+          : options
+      return recordCalculatorHistory(prev, nextInputs, historyOptions)
     })
   }, [])
 
@@ -583,7 +592,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const undoInputs = useCallback(() => {
     inputEditGenerationRef.current += 1
     setHistory((prev) => {
-      if (hasOrderApplyUndo(prev.present)) {
+      if (!prev.transientEdit && hasOrderApplyUndo(prev.present)) {
         deleteOrderHistoryOnUndo()
       }
       return undoCalculatorHistory(prev)
@@ -601,6 +610,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setHistory((prev) => {
       if (direction === 'undo') {
         let probe = prev
+        if (probe.transientEdit) {
+          probe = undoCalculatorHistory(probe)
+        }
         for (let i = 0; i < count; i += 1) {
           if (!probe.canUndo) break
           if (hasOrderApplyUndo(probe.present)) {

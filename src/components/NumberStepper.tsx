@@ -67,6 +67,8 @@ interface PointerSession {
   scrubAccumPx: number
 }
 
+const HISTORY_GESTURE_SETTLE_MS = 300
+
 let nextNumberStepperInstanceId = 0
 
 export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(function NumberStepper(
@@ -99,6 +101,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
   const inputHandleRef = useRef<NumberInputHandle>(null)
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const historyCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pointerSessionRef = useRef<PointerSession | null>(null)
   const gestureEmittedRef = useRef(false)
   const stepperInstanceIdRef = useRef(++nextNumberStepperInstanceId)
@@ -131,6 +134,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     return () => {
       if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current)
       if (holdIntervalRef.current) clearInterval(holdIntervalRef.current)
+      if (historyCommitTimeoutRef.current) clearTimeout(historyCommitTimeoutRef.current)
     }
   }, [])
 
@@ -171,6 +175,11 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
   }, [activeInputDraft, enableDragScrub, scrubSeedValue])
 
   const beginGestureHistoryGroup = useCallback(() => {
+    if (historyCommitTimeoutRef.current) {
+      clearTimeout(historyCommitTimeoutRef.current)
+      historyCommitTimeoutRef.current = null
+    }
+    if (gestureHistoryGroupRef.current) return
     gestureGroupSerialRef.current += 1
     gestureHistoryGroupRef.current = `number-stepper-${stepperInstanceIdRef.current}-${gestureGroupSerialRef.current}`
   }, [])
@@ -194,6 +203,14 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     })
     endGestureHistoryGroup()
   }, [endGestureHistoryGroup])
+
+  const scheduleGestureHistoryCommit = useCallback(() => {
+    if (historyCommitTimeoutRef.current) clearTimeout(historyCommitTimeoutRef.current)
+    historyCommitTimeoutRef.current = setTimeout(() => {
+      historyCommitTimeoutRef.current = null
+      commitGestureHistoryGroup()
+    }, HISTORY_GESTURE_SETTLE_MS)
+  }, [commitGestureHistoryGroup])
 
   const emitChange = useCallback((next: number | undefined) => {
     const gestureStart = !gestureEmittedRef.current
@@ -227,8 +244,8 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
 
   const stopStepGesture = useCallback(() => {
     stopHold()
-    commitGestureHistoryGroup()
-  }, [commitGestureHistoryGroup, stopHold])
+    scheduleGestureHistoryCommit()
+  }, [scheduleGestureHistoryCommit, stopHold])
 
   const startHold = useCallback(
     (delta: number) => {
@@ -306,15 +323,15 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     }
 
     resetPointerSession()
-    commitGestureHistoryGroup()
-  }, [bump, commitGestureHistoryGroup, emitChange, minValue, resetPointerSession, scrubBaseValue, step, stopHold])
+    scheduleGestureHistoryCommit()
+  }, [bump, emitChange, minValue, resetPointerSession, scheduleGestureHistoryCommit, scrubBaseValue, step, stopHold])
 
   const cancelPointerSession = useCallback(() => {
     if (!pointerSessionRef.current) return
     stopHold()
     resetPointerSession()
-    commitGestureHistoryGroup()
-  }, [commitGestureHistoryGroup, resetPointerSession, stopHold])
+    scheduleGestureHistoryCommit()
+  }, [resetPointerSession, scheduleGestureHistoryCommit, stopHold])
 
   const scheduleHoldRepeat = useCallback(
     (delta: number) => {

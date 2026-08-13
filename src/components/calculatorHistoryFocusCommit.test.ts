@@ -15,12 +15,14 @@ describe('calculator focus-complete history wiring', () => {
     expect(input).toContain('handler(normalized, currentChangeMeta(true))')
   })
 
-  it('commits stepper click, hold, and scrub groups only when the gesture ends', () => {
+  it('settles adjacent stepper clicks, holds, and scrubs into one history group', () => {
     const stepper = source('src/components/NumberStepper.tsx')
 
     expect(stepper).toContain('commitGestureHistoryGroup')
     expect(stepper).toContain('historyCommit: true')
     expect(stepper).toContain('historyOnly: true')
+    expect(stepper).toContain('HISTORY_GESTURE_SETTLE_MS = 300')
+    expect(stepper).toContain('scheduleGestureHistoryCommit()')
     expect(stepper).toContain('onPointerUp: stopStepGesture')
     expect(stepper).toContain('onPointerUp: endPointerSession')
   })
@@ -53,5 +55,14 @@ describe('calculator focus-complete history wiring', () => {
       expect(panel).toContain('historyCommit: meta.historyCommit')
       expect(panel).toContain('historyOnly: meta.historyOnly')
     }
+  })
+
+  it('keeps order preview edits transient and cancels both Escape paths cleanly', () => {
+    const panel = source('src/components/ResultPanel.tsx')
+
+    expect(panel.match(/orderInputHistoryOptions\(meta\)/g)).toHaveLength(3)
+    expect(panel).toContain("{ historyTransient: 'begin' }")
+    expect(panel).toContain('{ historyBefore: beforeInputs }')
+    expect(panel.match(/historyTransient: 'cancel'/g)).toHaveLength(2)
   })
 })

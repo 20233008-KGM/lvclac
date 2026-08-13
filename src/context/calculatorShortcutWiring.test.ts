@@ -22,6 +22,10 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('getCalculatorHistoryMoves')
     expect(text).toContain('jumpCalculatorHistory')
     expect(text).toContain('options?.historyOnly')
+    expect(text).toContain('options?.historyTransient')
+    expect(text).toContain('historyTransientTarget')
+    expect(text).toContain('!prev.transientEdit && hasOrderApplyUndo(prev.present)')
+    expect(text).toContain('if (probe.transientEdit)')
   })
 
   it('handles Ctrl+Z and Ctrl+Shift+Z once at the calculator app level', () => {

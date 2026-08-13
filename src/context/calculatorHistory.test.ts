@@ -323,6 +323,131 @@ describe('calculator history', () => {
     expect(history.pendingEdit).toBeUndefined()
   })
 
+  it('keeps order preview transient and records only the final apply', () => {
+    let history = createCalculatorHistory(orderInputs)
+    const baseline = captureOrderScenarioBaseline(calculateOrder(history.present))
+    const preview = applyInputPatch(history.present, { commitOrderScenario: baseline })
+
+    history = recordCalculatorHistory(history, preview, {
+      historyTransient: 'begin',
+      historyTransientTarget: applyInputPatch(preview, { clearOrderScenario: true }),
+    })
+
+    expect(isOrderScenarioModeActive(history.present)).toBe(true)
+    expect(history.past).toHaveLength(0)
+    expect(getCalculatorHistoryMoves(history).undo).toHaveLength(0)
+
+    const adjusted = applyInputPatch(history.present, { orderContracts: 2 })
+    const finalDraft = applyInputPatch(adjusted, { clearOrderScenario: true })
+    history = recordCalculatorHistory(history, adjusted, {
+      historyTransient: 'update',
+      historyTransientTarget: finalDraft,
+    })
+
+    const applied = applyInputPatch(history.present, { applyOrderScenario: true })
+    history = recordCalculatorHistory(history, applied, { historyBefore: finalDraft })
+
+    expect(history.past).toHaveLength(1)
+    expect(history.present.contracts).toBe(4)
+    expect(isOrderScenarioModeActive(history.present)).toBe(false)
+
+    history = undoCalculatorHistory(history)
+    expect(isOrderScenarioModeActive(history.present)).toBe(false)
+    expect(history.present.contracts).toBe(2)
+    expect(history.present.orderContracts).toBe(2)
+    expect(history.present.orderPrice).toBe(345)
+
+    history = redoCalculatorHistory(history)
+    expect(history.present.contracts).toBe(4)
+    expect(history.present.orderContracts).toBeUndefined()
+    expect(history.present.orderPrice).toBeUndefined()
+  })
+
+  it('cancels order preview without creating a committed history entry', () => {
+    let history = createCalculatorHistory(orderInputs)
+    const baseline = captureOrderScenarioBaseline(calculateOrder(history.present))
+    const preview = applyInputPatch(history.present, { commitOrderScenario: baseline })
+    const cancelTarget = applyInputPatch(preview, { clearOrderScenario: true })
+
+    history = recordCalculatorHistory(history, preview, {
+      historyTransient: 'begin',
+      historyTransientTarget: cancelTarget,
+    })
+    history = recordCalculatorHistory(history, cancelTarget, {
+      historyTransient: 'cancel',
+    })
+
+    expect(history.past).toHaveLength(0)
+    expect(history.future).toHaveLength(0)
+    expect(history.transientEdit).toBeUndefined()
+    expect(isOrderScenarioModeActive(history.present)).toBe(false)
+  })
+
+  it('absorbs a late focus or stepper edit into the active preview', () => {
+    let history = createCalculatorHistory(orderInputs)
+    const baseline = captureOrderScenarioBaseline(calculateOrder(history.present))
+    const preview = applyInputPatch(history.present, { commitOrderScenario: baseline })
+    const cancelTarget = applyInputPatch(preview, { clearOrderScenario: true })
+
+    history = recordCalculatorHistory(history, preview, {
+      historyTransient: 'begin',
+      historyTransientTarget: cancelTarget,
+    })
+    history = recordCalculatorHistory(
+      history,
+      applyInputPatch(history.present, { orderContracts: 2 }),
+      { historyGroup: 'late-preview-gesture' },
+    )
+    expect(history.pendingEdit).toBeUndefined()
+    expect(history.transientEdit).toBeDefined()
+
+    history = recordCalculatorHistory(history, cancelTarget, {
+      historyTransient: 'cancel',
+    })
+    history = commitCalculatorHistoryGroup(history, 'late-preview-gesture')
+
+    expect(history.pendingEdit).toBeUndefined()
+    expect(history.transientEdit).toBeUndefined()
+    expect(history.past).toHaveLength(0)
+  })
+
+  it('uses undo to cancel an active preview before older committed history', () => {
+    let history = createCalculatorHistory(orderInputs)
+    history = recordCalculatorHistory(history, { ...orderInputs, orderPrice: 346 })
+    const baseline = captureOrderScenarioBaseline(calculateOrder(history.present))
+    const preview = applyInputPatch(history.present, { commitOrderScenario: baseline })
+    const cancelTarget = applyInputPatch(preview, { clearOrderScenario: true })
+    history = recordCalculatorHistory(history, preview, {
+      historyTransient: 'begin',
+      historyTransientTarget: cancelTarget,
+    })
+
+    history = undoCalculatorHistory(history)
+    expect(history.present.orderPrice).toBe(346)
+    expect(isOrderScenarioModeActive(history.present)).toBe(false)
+    expect(history.past).toHaveLength(1)
+
+    history = undoCalculatorHistory(history)
+    expect(history.present.orderPrice).toBe(345)
+  })
+
+  it('cancels a preview before jumping across committed history entries', () => {
+    let history = createCalculatorHistory(orderInputs)
+    history = recordCalculatorHistory(history, { ...orderInputs, orderPrice: 346 })
+    const baseline = captureOrderScenarioBaseline(calculateOrder(history.present))
+    const preview = applyInputPatch(history.present, { commitOrderScenario: baseline })
+    history = recordCalculatorHistory(history, preview, {
+      historyTransient: 'begin',
+      historyTransientTarget: applyInputPatch(preview, { clearOrderScenario: true }),
+    })
+
+    expect(getCalculatorHistoryMoves(history).undo[0].target.orderPrice).toBe(345)
+
+    history = jumpCalculatorHistory(history, 'undo', 1)
+    expect(history.present.orderPrice).toBe(345)
+    expect(isOrderScenarioModeActive(history.present)).toBe(false)
+  })
+
   it('undoes and redoes scenario apply state', () => {
     let history = createCalculatorHistory(markInputs)
     history = recordCalculatorHistory(

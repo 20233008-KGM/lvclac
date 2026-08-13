@@ -543,6 +543,27 @@ input:focus:not(:focus-visible) {
   gap: var(--space-sm);
 }
 
+.header-locale-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.header-locale-link:hover {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
 .header-how-tooltip-anchor {
   position: relative;
   display: inline-flex;
@@ -1445,8 +1466,9 @@ input:focus:not(:focus-visible) {
   }
 
   /* 좌·우 리사이저는 계산기/광고 영역만 바꾼다.
-     하단 투자위험 안내와 푸터는 리사이즈 직전 폭과 화면 중앙을 유지한다. */
-  :root[data-calc-resize='custom'] .content-risk-notice {
+     하단 설명과 푸터는 리사이즈 직전 폭과 화면 중앙을 유지한다. */
+  :root[data-calc-resize='custom'] .content-risk-notice,
+  :root[data-calc-resize='custom'] .public-seo-summary {
     flex: 0 0 auto;
     width: min(
       var(--calc-static-content-width, var(--layout-max-width)),
@@ -6184,9 +6206,33 @@ a.site-footer__link:hover {
   text-align: center;
 }
 
-/* The risk notice and footer form one conceptual group with a small visual gap. */
+/* Home post-calculator rhythm: 96px → 64px → 24px including .page-content gap. */
+.calc-viewport + .public-seo-summary {
+  margin-top: calc(var(--space-md) * 5);
+  margin-bottom: 0;
+}
+
+.public-seo-summary + .content-risk-notice {
+  margin-top: calc(var(--space-xl) + var(--space-md));
+}
+
 .content-risk-notice + .site-footer {
   margin-top: var(--space-sm);
+}
+
+@media (max-width: 640px) {
+  /* Mobile rhythm: 56px → 40px → 24px including .page-content gap. */
+  .calc-viewport + .public-seo-summary {
+    margin-top: calc(var(--space-xl) + var(--space-sm));
+  }
+
+  .public-seo-summary + .content-risk-notice {
+    margin-top: calc(var(--space-md) + var(--space-sm));
+  }
+
+  .content-risk-notice + .site-footer {
+    margin-top: var(--space-sm);
+  }
 }
 
 .content-risk-notice__text {

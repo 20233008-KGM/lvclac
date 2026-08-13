@@ -8,12 +8,13 @@ const app = readFileSync(resolve('src/App.tsx'), 'utf8')
 const footer = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 
 describe('calculator resize scope', () => {
-  it('keeps the risk notice and footer at their pre-resize widths', () => {
+  it('keeps the public summary, risk notice, and footer at their pre-resize widths', () => {
     expect(hook).toContain("'--calc-static-content-offset'")
     expect(hook).toContain("'--calc-static-content-width'")
     expect(hook).toContain("`${(rightX - leftX) / 2}px`")
     expect(hook).toContain('`${Math.max(0, W - geo.leftX0 - geo.rightX0)}px`')
     expect(css).toContain(":root[data-calc-resize='custom'] .content-risk-notice")
+    expect(css).toContain(":root[data-calc-resize='custom'] .public-seo-summary")
     expect(css).toContain(":root[data-calc-resize='custom'] .content-risk-notice__text")
     expect(css).toContain(":root[data-calc-resize='custom'] .site-footer")
     expect(app.indexOf('<ContentRiskNotice />')).toBeLessThan(app.indexOf('<SiteFooter />'))

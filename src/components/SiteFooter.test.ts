@@ -68,7 +68,12 @@ describe('public review footer labels', () => {
     )
 
     expect(columns.map((column) => column.title)).toEqual(['제품', '회사', '의견 보내기', '약관 및 정책'])
-    expect(columns[0].links.map((link) => link.label)).toEqual(['서비스 소개', 'Pro 요금제', '이용 가이드'])
+    expect(columns[0].links.map((link) => link.label)).toEqual([
+      '서비스 소개',
+      'Pro 요금제',
+      '이용 가이드',
+      '업데이트',
+    ])
     expect(columns[0].links[0].href).toBe(ABOUT_PATH)
     expect(columns[0].links[2].href).toBe(GUIDE_PATH)
     expect(columns[1].links[0]).toEqual({ label: '회사 소개', href: COMPANY_PATH })
@@ -91,11 +96,13 @@ describe('public review footer labels', () => {
       '서비스 소개',
       'Pro 요금제',
       '이용 가이드',
+      '업데이트',
     ])
     expect(enColumns[0].links.map((link) => link.label)).toEqual([
       'Service overview',
       'Pro Pricing',
       'User guide',
+      'Updates',
     ])
   })
 

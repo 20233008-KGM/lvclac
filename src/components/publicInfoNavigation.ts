@@ -4,6 +4,8 @@ import {
   GUIDE_PATH,
   PRIVACY_PATH,
   TERMS_PATH,
+  localizedPublicPath,
+  publicPathWithoutLocale,
 } from '../config/routes'
 import type { Locale } from '../i18n'
 
@@ -18,7 +20,7 @@ export const PUBLIC_INFO_PATHS = [
 export type PublicInfoPath = (typeof PUBLIC_INFO_PATHS)[number]
 
 interface PublicInfoNavigationItem {
-  path: PublicInfoPath
+  path: string
   label: string
 }
 
@@ -40,12 +42,15 @@ const navigationCopy: Record<Locale, readonly PublicInfoNavigationItem[]> = {
 }
 
 export function publicInfoNavigation(locale: Locale) {
-  return navigationCopy[locale]
+  return navigationCopy[locale].map((item) => ({
+    ...item,
+    path: localizedPublicPath(item.path, locale),
+  }))
 }
 
 export function publicInfoAriaCurrent(
-  path: PublicInfoPath,
+  path: string,
   activePath: PublicInfoPath | null,
 ): 'page' | undefined {
-  return path === activePath ? 'page' : undefined
+  return publicPathWithoutLocale(path) === activePath ? 'page' : undefined
 }

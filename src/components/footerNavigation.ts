@@ -1,4 +1,11 @@
-import { GUIDE_PATH, PRICING_PATH, PRIVACY_PATH, REFUND_POLICY_PATH, TERMS_PATH } from '../config/routes'
+import {
+  GUIDE_PATH,
+  PRICING_PATH,
+  PRIVACY_PATH,
+  REFUND_POLICY_PATH,
+  TERMS_PATH,
+  UPDATES_PATH,
+} from '../config/routes'
 import type { Locale, Messages } from '../i18n'
 
 type FooterColumn = Messages['footer']['columns'][number]
@@ -12,6 +19,11 @@ type FooterPolicyLabels = {
 export const paddleReviewFooterLinks: Record<Locale, { label: string; href: string }[]> = {
   ko: [{ label: 'Pro 요금제', href: PRICING_PATH }],
   en: [{ label: 'Pro Pricing', href: PRICING_PATH }],
+}
+
+export const updatesFooterLinks: Record<Locale, { label: string; href: string }[]> = {
+  ko: [{ label: '업데이트', href: UPDATES_PATH }],
+  en: [{ label: 'Updates', href: UPDATES_PATH }],
 }
 
 export const footerPolicyColumnTitles: Record<Locale, string> = {
@@ -37,6 +49,7 @@ export function buildFooterColumns(
         ...(primaryLink ? [primaryLink] : []),
         ...reviewLinks,
         ...(guideLink ? [guideLink] : []),
+        ...updatesFooterLinks[locale],
       ]
 
       return { ...column, links }

@@ -4,10 +4,18 @@ import {
   isLegalPath,
   isAdminFeedbackPath,
   isCompanyPath,
+  isEnglishPublicPath,
+  isGuidePath,
+  isLocalizablePublicPath,
   isMyPagePath,
   isPricingPath,
   isProductPath,
   isRecordsPath,
+  isUpdatesPath,
+  localizedPublicPath,
+  publicPathWithoutLocale,
+  updateDetailPath,
+  updateIdFromPath,
   ADMIN_FEEDBACK_PATH,
   MY_PAGE_PATH,
   RECORDS_PATH,
@@ -19,6 +27,33 @@ describe('routes', () => {
     expect(isCompanyPath('/company')).toBe(true)
     expect(isCompanyPath('/company/')).toBe(true)
     expect(isCompanyPath('/company/team')).toBe(false)
+  })
+
+  it('maps English public routes without changing private dev routes', () => {
+    expect(isEnglishPublicPath('/en')).toBe(true)
+    expect(isEnglishPublicPath('/en/guide')).toBe(true)
+    expect(publicPathWithoutLocale('/en/guide')).toBe('/guide')
+    expect(localizedPublicPath('/guide', 'en')).toBe('/en/guide')
+    expect(localizedPublicPath('/en/guide', 'ko')).toBe('/guide')
+    expect(isGuidePath('/en/guide')).toBe(true)
+    expect(isLocalizablePublicPath('/en/guide')).toBe(true)
+    expect(isLocalizablePublicPath('/my')).toBe(false)
+    expect(isMyPagePath('/en/my')).toBe(false)
+  })
+
+  it('recognizes localized update list and detail routes', () => {
+    expect(isUpdatesPath('/updates')).toBe(true)
+    expect(isUpdatesPath('/en/updates/')).toBe(true)
+    expect(updateIdFromPath('/updates/2026-08-12-beta-experience')).toBe(
+      '2026-08-12-beta-experience',
+    )
+    expect(updateIdFromPath('/en/updates/2026-08-12-beta-experience')).toBe(
+      '2026-08-12-beta-experience',
+    )
+    expect(updateIdFromPath('/updates/nested/post')).toBe(null)
+    expect(updateDetailPath('2026-08-12-beta-experience', 'en')).toBe(
+      '/en/updates/2026-08-12-beta-experience',
+    )
   })
 
   it('recognizes the my page route with optional trailing slash', () => {

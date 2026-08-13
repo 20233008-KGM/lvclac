@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { localeFromBrowserLanguage, localeFromCountry } from './detectLocale'
+import {
+  localeFromBrowserLanguage,
+  localeFromCountry,
+  localeFromPathname,
+} from './detectLocale'
 
 describe('localeFromCountry', () => {
   it('maps KR to Korean', () => {
@@ -21,5 +25,14 @@ describe('localeFromBrowserLanguage', () => {
   it('maps other browser languages to English', () => {
     expect(localeFromBrowserLanguage('en-US')).toBe('en')
     expect(localeFromBrowserLanguage('ja')).toBe('en')
+  })
+})
+
+describe('localeFromPathname', () => {
+  it('uses English for /en public routes without overriding other routes', () => {
+    expect(localeFromPathname('/en')).toBe('en')
+    expect(localeFromPathname('/en/updates/release')).toBe('en')
+    expect(localeFromPathname('/updates')).toBeNull()
+    expect(localeFromPathname('/my')).toBeNull()
   })
 })

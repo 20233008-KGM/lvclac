@@ -1,8 +1,10 @@
 import { useEffect, type ReactNode } from 'react'
 import { PUBLIC_OPERATOR_INFO } from '../config/operator'
+import { localizedPublicPath } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { AuthButton } from './auth/AuthButton'
+import { LocaleRouteLink } from './LocaleRouteLink'
 import {
   publicInfoAriaCurrent,
   publicInfoNavigation,
@@ -30,15 +32,16 @@ interface BackToCalculatorLinkProps {
 export function BackToCalculatorLink({ className }: BackToCalculatorLinkProps) {
   const { locale } = useLanguage()
   const navigate = useNavigate()
+  const homePath = localizedPublicPath('/', locale)
   const backLabel = locale === 'ko' ? '계산기로 돌아가기' : 'Back to calculator'
 
   return (
     <a
       className={['public-info-back', className].filter(Boolean).join(' ')}
-      href="/"
+      href={homePath}
       onClick={(event) => {
         event.preventDefault()
-        navigate('/')
+        navigate(homePath)
       }}
     >
       <span aria-hidden="true">←</span>
@@ -61,6 +64,7 @@ export function PublicInfoShell({
   const navigation = publicInfoNavigation(locale)
   const navLabel = locale === 'ko' ? 'LiqGuard 정보 페이지' : 'LiqGuard information pages'
   const spaceLabel = locale === 'ko' ? '문서 공간' : 'Information'
+  const homePath = localizedPublicPath('/', locale)
 
   useEffect(() => {
     document.documentElement.dataset.zone = 'public-info'
@@ -83,10 +87,10 @@ export function PublicInfoShell({
             <div className="public-info-header__top">
               <a
                 className="public-info-brand"
-                href="/"
+                href={homePath}
                 onClick={(event) => {
                   event.preventDefault()
-                  navigate('/')
+                  navigate(homePath)
                 }}
               >
                 <img
@@ -102,6 +106,7 @@ export function PublicInfoShell({
               </a>
 
               <div className="public-info-header__actions">
+                <LocaleRouteLink className="public-info-back" />
                 <BackToCalculatorLink />
                 <AuthButton variant="header" />
               </div>

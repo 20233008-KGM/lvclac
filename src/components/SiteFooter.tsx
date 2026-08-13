@@ -1,4 +1,5 @@
 import { PUBLIC_OPERATOR_INFO, publicFooterOperatorDetails } from '../config/operator'
+import { localizedPublicPath } from '../config/routes'
 import { useLanguage, type Locale } from '../i18n'
 import { useNavigate } from '../hooks/usePathname'
 import { DisclaimerShowAgainLink, footerLegalCopy } from './ServiceDisclaimer'
@@ -26,6 +27,7 @@ export function SiteFooter() {
     refund: footerLegalCopy[locale].refundPolicy,
   })
   const operatorDetails = publicFooterOperatorDetails(locale)
+  const homePath = localizedPublicPath('/', locale)
 
   return (
     <footer className="site-footer">
@@ -34,10 +36,10 @@ export function SiteFooter() {
           <div className="site-footer__brand">
             <a
               className="site-footer__wordmark"
-              href="/"
+              href={homePath}
               onClick={(event) => {
                 event.preventDefault()
-                navigate('/')
+                navigate(homePath)
               }}
             >
               <img
@@ -56,20 +58,24 @@ export function SiteFooter() {
               <div key={column.title} className="site-footer__col">
                 <h2 className="site-footer__col-title">{column.title}</h2>
                 <ul className="site-footer__col-list">
-                  {column.links.map((link) => (
+                  {column.links.map((link) => {
+                    const href = link.href && isInternalPath(link.href)
+                      ? localizedPublicPath(link.href, locale)
+                      : link.href
+                    return (
                     <li key={link.label}>
                       {link.soon ? (
                         <span className="site-footer__link site-footer__link--soon">
                           {link.label}
                           <span className="site-footer__soon">{t.footer.soon}</span>
                         </span>
-                      ) : link.href && isInternalPath(link.href) ? (
+                      ) : href && isInternalPath(href) ? (
                         <a
                           className="site-footer__link"
-                          href={link.href}
+                          href={href}
                           onClick={(event) => {
                             event.preventDefault()
-                            navigate(link.href!)
+                            navigate(href)
                           }}
                         >
                           {link.label}
@@ -77,8 +83,8 @@ export function SiteFooter() {
                       ) : (
                         <a
                           className="site-footer__link"
-                          href={link.href}
-                          {...(link.href && isExternalPath(link.href)
+                          href={href}
+                          {...(href && isExternalPath(href)
                             ? { target: '_blank', rel: 'noopener noreferrer' }
                             : {})}
                         >
@@ -86,7 +92,8 @@ export function SiteFooter() {
                         </a>
                       )}
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               </div>
             ))}

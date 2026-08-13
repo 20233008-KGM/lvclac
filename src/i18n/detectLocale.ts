@@ -25,12 +25,22 @@ export function localeFromUrlParam(): Locale | null {
   return lang === 'en' || lang === 'ko' ? lang : null
 }
 
+/** `/en` 공개 경로는 저장된 언어보다 우선한다. 그 외 경로는 기존 감지 순서를 유지한다. */
+export function localeFromPathname(pathname: string): Locale | null {
+  return pathname === '/en' || pathname === '/en/' || pathname.startsWith('/en/')
+    ? 'en'
+    : null
+}
+
 export function detectInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'ko'
 
   // ?lang이 있으면 최우선(동기) — geo/브라우저 자동감지보다 앞선다.
   const fromUrl = localeFromUrlParam()
   if (fromUrl) return fromUrl
+
+  const fromPath = localeFromPathname(window.location.pathname)
+  if (fromPath) return fromPath
 
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored === 'en' || stored === 'ko') return stored
@@ -51,6 +61,7 @@ export function detectInitialLocale(): Locale {
 export function shouldFetchGeo(): boolean {
   if (typeof window === 'undefined') return false
   if (localeFromUrlParam()) return false // ?lang 명시 시 geo 자동감지가 덮어쓰지 않도록
+  if (localeFromPathname(window.location.pathname)) return false
   if (localStorage.getItem(STORAGE_KEY)) return false
   if (getCookie(GEO_COOKIE)) return false
   if (sessionStorage.getItem(SESSION_DETECTED_KEY)) return false

@@ -15,9 +15,11 @@ const aboutSource = readFileSync(resolve('src/components/AboutPage.tsx'), 'utf8'
 const legalSource = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
 
 describe('dev public information shell navigation', () => {
-  it('keeps the same five routes and order in Korean and English', () => {
+  it('keeps the same five documents and localizes their English routes', () => {
     expect(publicInfoNavigation('ko').map((item) => item.path)).toEqual(PUBLIC_INFO_PATHS)
-    expect(publicInfoNavigation('en').map((item) => item.path)).toEqual(PUBLIC_INFO_PATHS)
+    expect(publicInfoNavigation('en').map((item) => item.path)).toEqual(
+      PUBLIC_INFO_PATHS.map((path) => `/en${path}`),
+    )
     expect(publicInfoNavigation('ko').map((item) => item.label)).toEqual([
       '서비스 소개',
       '사용 가이드',
@@ -36,6 +38,7 @@ describe('dev public information shell navigation', () => {
 
   it('marks only the active document as the current page', () => {
     expect(publicInfoAriaCurrent('/about', '/about')).toBe('page')
+    expect(publicInfoAriaCurrent('/en/about', '/about')).toBe('page')
     expect(publicInfoAriaCurrent('/guide', '/about')).toBeUndefined()
     expect(publicInfoAriaCurrent('/guide', null)).toBeUndefined()
   })

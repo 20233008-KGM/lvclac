@@ -38,6 +38,8 @@ import {
   isPricingPath,
   isProductPath,
   isRecordsPath,
+  isUpdatesPath,
+  updateIdFromPath,
 } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { LayoutProvider } from './context/LayoutContext'
@@ -67,6 +69,12 @@ const AboutPage = lazy(() =>
 )
 const CompanyPage = lazy(() =>
   import('./components/CompanyPage').then((mod) => ({ default: mod.CompanyPage })),
+)
+const UpdatesPage = lazy(() =>
+  import('./components/UpdatesPage').then((mod) => ({ default: mod.UpdatesPage })),
+)
+const UpdateDetailPage = lazy(() =>
+  import('./components/UpdateDetailPage').then((mod) => ({ default: mod.UpdateDetailPage })),
 )
 const MyPage = lazy(() =>
   loadMyPage().then((mod) => ({ default: mod.MyPage })),
@@ -268,6 +276,7 @@ function AppRouter() {
   const { t } = useLanguage()
   const boardId = parseBoardPath(pathname)
   const legalKind = isLegalPath(pathname)
+  const updateId = updateIdFromPath(pathname)
 
   // 컴포넌트 전시장(UI 키트) — Figma export용. 미링크·noindex라 일반 사용자에겐 노출되지 않지만,
   // 배포본 URL로 html.to.design가 가져올 수 있도록 프로덕션에서도 라우팅한다.
@@ -325,6 +334,24 @@ function AppRouter() {
       <Suspense fallback={null}>
         <div key={pathname} className="route-enter route-enter--contact">
           <CompanyPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isUpdatesPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <UpdatesPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (updateId) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <UpdateDetailPage updateId={updateId} />
         </div>
       </Suspense>
     )

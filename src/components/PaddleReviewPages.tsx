@@ -40,7 +40,11 @@ interface LegalDocCopy {
   lead: string
   effectiveDate: string
   intro: string
-  sections: { title: string; body: string }[]
+  sections: {
+    title: string
+    body: string
+    links?: { label: string; href: string }[]
+  }[]
   contactTitle: string
   contactBodyPrefix: string
   contactBodySuffix: string
@@ -215,32 +219,42 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         title: 'Refund Policy',
         lead:
           'How refunds and subscription cancellations are handled for purchases made through Paddle.',
-        effectiveDate: 'Effective: July 9, 2026',
+        effectiveDate: 'Effective: August 12, 2026',
         intro:
-          'Paid purchases for Futures Calculator Pro are processed by Paddle. Paddle may act as the merchant of record and handles buyer payment support, cancellation requests, and eligible refunds.',
+          'Paddle Sandbox checkout in this development environment is for testing only. This policy applies to cancellation and refund requests for Futures Calculator Pro Monthly and Pro Yearly subscriptions when Paddle live sales begin.',
         sections: [
           {
-            title: '1. How to request a refund',
-            body: `Use Paddle order support at paddle.net or the support link in your purchase confirmation email. You may also contact us at ${CONTACT_EMAIL} for product support, and we can help direct you to Paddle support.`,
-          },
-          {
-            title: '2. Eligibility',
+            title: '1. Seller and payment provider',
             body:
-              'Refund eligibility is reviewed according to Paddle buyer terms, applicable law, and the circumstances of the request. Technical issues should be reported so we can try to resolve them quickly.',
+              'When live sales begin, Futures Calculator Pro subscriptions are sold through Paddle. Paddle acts as the online reseller and merchant of record for purchase transactions, payments, applicable taxes, invoices and receipts, billing support, and refunds.',
+            links: [
+              { label: 'Paddle Buyer Terms', href: 'https://www.paddle.com/legal/buyer-terms' },
+              { label: 'Paddle Refund Policy', href: 'https://www.paddle.com/legal/refund-policy' },
+            ],
           },
           {
-            title: '3. Subscription cancellation',
+            title: '2. How to request a refund',
+            body: `Use the support link in your purchase email or Paddle order support at paddle.net. For product access or functionality issues, contact ${CONTACT_EMAIL}; we can direct you to the appropriate Paddle support route when needed.`,
+            links: [{ label: 'Paddle order support', href: 'https://paddle.net/' }],
+          },
+          {
+            title: '3. Refund eligibility',
             body:
-              'Canceling a subscription stops future renewals. Unless required by law or approved by Paddle, cancellation does not automatically refund the current billing period.',
+              'Payments are generally non-refundable unless applicable law requires a refund or Paddle approves one after reviewing the individual circumstances. Paddle may consider the law in the buyer location, purchase timing, usage, and the reason for the request. This policy does not limit mandatory withdrawal or refund rights that apply where the buyer lives.',
           },
           {
-            title: '4. Processing',
+            title: '4. Cancellation compared with a refund',
             body:
-              'If a refund is approved, Paddle processes it back to the original payment method where possible. Bank and card processing times may vary.',
+              'Canceling stops the next automatic renewal. Unless otherwise stated, Pro access continues until the end of the paid period. Cancellation does not automatically refund the current billing period. Submit a separate refund request through Paddle order support when a refund is needed.',
           },
           {
-            title: '5. Product support',
-            body: `For account access, calculator behavior, or Pro feature issues, contact ${CONTACT_EMAIL} before or alongside your Paddle support request.`,
+            title: '5. Approved refunds and access',
+            body:
+              'If approved, Paddle returns funds to the original payment method where possible. Bank and card timing varies. When Paddle confirms that a refund is complete, Pro access granted by that transaction ends. Partial refunds or treatment required by law follow Paddle’s decision and notice.',
+          },
+          {
+            title: '6. Product support',
+            body: `Report account access, calculator, or Pro feature issues to ${CONTACT_EMAIL}. Product troubleshooting is available separately from the refund process.`,
           },
         ],
         contactTitle: 'Contact',
@@ -404,32 +418,42 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         eyebrow: '환불',
         title: '환불 정책',
         lead: 'Paddle을 통해 결제한 구매 및 구독 취소 요청이 어떻게 처리되는지 설명합니다.',
-        effectiveDate: '시행일: 2026년 7월 9일',
+        effectiveDate: '시행일: 2026년 8월 12일',
         intro:
-          '선물 계산기 Pro 유료 구매는 Paddle을 통해 처리됩니다. Paddle은 Merchant of Record 역할을 하며 구매자 결제 지원, 취소 요청, 적격 환불을 처리할 수 있습니다.',
+          '현재 개발 환경의 Paddle Sandbox 결제는 테스트 전용입니다. 본 정책은 Paddle Live 판매가 시작된 뒤 선물 계산기 Pro 월간·연간 구독의 취소와 환불 요청에 적용됩니다.',
         sections: [
           {
-            title: '1. 환불 요청 방법',
-            body: `구매 확인 이메일의 지원 링크 또는 paddle.net의 Paddle 주문 지원을 이용하세요. 제품 지원이 필요하면 ${CONTACT_EMAIL} 로 문의할 수 있으며, 필요한 경우 Paddle 지원 경로를 안내해 드립니다.`,
-          },
-          {
-            title: '2. 환불 가능 여부',
+            title: '1. 판매 및 결제 주체',
             body:
-              '환불 가능 여부는 Paddle 구매자 약관, 관련 법률, 요청 사유에 따라 검토됩니다. 기술 문제가 있다면 빠르게 해결을 시도할 수 있도록 먼저 알려주세요.',
+              'Live 판매가 시작되면 선물 계산기 Pro 구독은 Paddle을 통해 판매됩니다. Paddle은 온라인 재판매자이자 Merchant of Record로서 구매자 거래, 결제, 관련 세금, 송장과 영수증, 결제 지원 및 환불을 처리합니다.',
+            links: [
+              { label: 'Paddle 구매자 약관', href: 'https://www.paddle.com/legal/buyer-terms' },
+              { label: 'Paddle 환불 정책', href: 'https://www.paddle.com/legal/refund-policy' },
+            ],
           },
           {
-            title: '3. 구독 취소',
+            title: '2. 환불 요청 방법',
+            body: `구매 확인 이메일의 지원 링크 또는 paddle.net의 Paddle 주문 지원을 이용하세요. 제품 접근이나 기능 문제는 ${CONTACT_EMAIL} 로 문의할 수 있으며, 필요한 경우 Paddle 지원 경로를 안내합니다.`,
+            links: [{ label: 'Paddle 주문 지원', href: 'https://paddle.net/' }],
+          },
+          {
+            title: '3. 환불 가능 여부',
             body:
-              '구독을 취소하면 이후 갱신이 중단됩니다. 법률상 요구되거나 Paddle이 승인한 경우를 제외하면, 취소가 현재 결제 기간의 자동 환불을 의미하지는 않습니다.',
+              '법령이 환불을 요구하거나 Paddle이 개별 사정을 검토해 승인하는 경우를 제외하면 결제는 원칙적으로 환불되지 않습니다. Paddle은 구매자의 지역에 적용되는 법률, 구매 시점, 이용 내역과 요청 사유를 바탕으로 요청을 심사합니다. 본 정책은 구매자 거주지의 강행 소비자보호법에 따른 철회·환불 권리를 제한하지 않습니다.',
           },
           {
-            title: '4. 처리 방식',
+            title: '4. 구독 취소와 환불의 차이',
             body:
-              '환불이 승인되면 Paddle은 가능한 경우 원래 결제 수단으로 환불을 처리합니다. 은행 및 카드사의 처리 시간은 다를 수 있습니다.',
+              '구독을 취소하면 다음 자동 갱신이 중단되며, 별도 안내가 없는 한 이미 결제한 기간이 끝날 때까지 Pro 기능을 이용할 수 있습니다. 구독 취소가 현재 결제 기간의 자동 환불을 의미하지는 않습니다. 환불이 필요하면 별도로 Paddle 주문 지원에 요청해야 합니다.',
           },
           {
-            title: '5. 제품 지원',
-            body: `계정 접근, 계산기 동작, Pro 기능 문제가 있다면 Paddle 지원 요청 전이나 요청과 함께 ${CONTACT_EMAIL} 로 문의해 주세요.`,
+            title: '5. 승인된 환불과 서비스 접근',
+            body:
+              '환불이 승인되면 Paddle은 가능한 경우 원래 결제 수단으로 처리합니다. 실제 입금 시점은 은행과 카드사에 따라 달라질 수 있습니다. Paddle이 환불 완료를 확인하면 해당 거래로 부여된 Pro 접근 권한은 종료됩니다. 부분 환불이나 법령상 별도 처리가 필요한 경우에는 Paddle의 결정과 안내를 따릅니다.',
+          },
+          {
+            title: '6. 제품 지원',
+            body: `계정 접근, 계산기 동작 또는 Pro 기능 문제는 ${CONTACT_EMAIL} 로 알려주세요. 환불 요청과 별개로 기술 문제 해결을 지원합니다.`,
           },
         ],
         contactTitle: '문의',
@@ -513,6 +537,29 @@ function BulletList({ items }: { items: string[] }) {
   )
 }
 
+function LegalSectionLinks({
+  links,
+  className,
+}: {
+  links?: { label: string; href: string }[]
+  className: string
+}) {
+  if (!links?.length) return null
+
+  return (
+    <p className={className}>
+      {links.map((link, index) => (
+        <span key={link.href}>
+          {index > 0 && ' · '}
+          <a href={link.href} target="_blank" rel="noreferrer">
+            {link.label}
+          </a>
+        </span>
+      ))}
+    </p>
+  )
+}
+
 export function ProductReviewPage() {
   const { locale } = useLanguage()
   const copy = publicReviewCopy[locale]
@@ -589,6 +636,7 @@ export function PublicLegalPage({ kind }: { kind: LegalPageKind }) {
               <section key={section.title}>
                 <h2>{section.title}</h2>
                 <p>{section.body}</p>
+                <LegalSectionLinks links={section.links} className="public-legal-section-links" />
               </section>
             ))}
           </div>
@@ -623,6 +671,7 @@ export function PublicLegalPage({ kind }: { kind: LegalPageKind }) {
             <section key={section.title} className="legal-article">
               <h2 className="legal-article__title">{section.title}</h2>
               <p className="legal-article__body">{section.body}</p>
+              <LegalSectionLinks links={section.links} className="legal-article__body" />
             </section>
           ))}
         </div>

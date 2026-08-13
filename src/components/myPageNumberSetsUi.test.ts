@@ -170,12 +170,29 @@ describe('my page number-set management UI', () => {
     expect(component).toContain('onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)')
     expect(component).toContain('my-page-number-set-row-rollover')
     expect(component).toContain('my-page-number-set-row-switch-label')
-    expect(component).toContain('disabled={busy || !numberSet.autoSnapshotEnabled}')
+    expect(component).toContain('(rolloverSetupOpen && !numberSet.rollover.enabled)')
     expect(component).toMatch(/value=\{titleDraft\}[\s\S]*my-page-number-set-row-auto[\s\S]*my-page-number-set-row-rollover[\s\S]*my-page-number-set-row-actions/)
     expect(css).toContain('.my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover')
     expect(css).toContain('grid-row: 2')
     expect(css).not.toContain('.my-page-number-set-row--auto-selected')
     expect(css).not.toContain('@media (max-width: 420px)')
+  })
+
+  it('opens inline setup before the first rollover activation and saves drafts explicitly', () => {
+    const component = source('src/components/MyPage.tsx')
+    const css = source('src/styles/pages.css')
+
+    expect(component).toContain('hasCompleteRolloverSchedule(numberSet.rollover)')
+    expect(component).toContain('setRolloverSetupOpen(true)')
+    expect(component).toContain('variant="setup"')
+    expect(component).toContain('copy.rolloverSetupBody')
+    expect(component).toContain('copy.rolloverSetupSave')
+    expect(component).toContain('onSubmit={(event) =>')
+    expect(component).toContain('min={today}')
+    expect(component).toContain('(rolloverSetupOpen && !numberSet.rollover.enabled)')
+    expect(component).not.toContain('nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor)')
+    expect(css).toContain('.my-page-rollover--setup')
+    expect(css).toContain('.my-page-rollover-actions')
   })
 
   it('renders a terminology preset selector in every local and cloud slot', () => {

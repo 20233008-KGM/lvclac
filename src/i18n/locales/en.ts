@@ -425,6 +425,12 @@ export const en: Messages = {
     autoSnapshotSlotCountNote: 'Recording daily: {count} cloud set(s)',
     autoSnapshotNoSlotsSelected: 'Turn on Record daily in a number set.',
     rolloverTitle: 'Rollover reminder',
+    rolloverSetupTitle: 'Set up rollover reminders',
+    rolloverSetupBody:
+      'The next date is calculated from the cycle and anchor day. Adjust it if the actual expiry differs.',
+    rolloverSetupCancel: 'Cancel',
+    rolloverSetupSave: 'Save and turn on',
+    rolloverEditSave: 'Save changes',
     rolloverColumnLabel: 'Rollover',
     rolloverToggleLabel: 'Rollover alert',
     rolloverIntervalLabel: 'Cycle',

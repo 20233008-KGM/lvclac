@@ -18,6 +18,7 @@ import {
   AccountRecordsSummaryPanel,
   AccountSnapshotAutomationPanel,
   NumberSetPreferencesPanel,
+  type RolloverSaveSettings,
 } from './MyPage'
 import { BillingPanel } from './billing/BillingPanel'
 import { AuthModal } from './auth/AuthModal'
@@ -113,6 +114,30 @@ export function KitGallery() {
     else setKitCloudSets(update)
   }
 
+  const setKitRollover = (
+    mode: 'local' | 'cloud',
+    setId: string,
+    settings: RolloverSaveSettings,
+  ) => {
+    if (mode === 'local') return
+    setKitCloudSets((sets) =>
+      sets.map((set) =>
+        set.id === setId
+          ? {
+              ...set,
+              rollover: {
+                enabled: settings.enabled,
+                intervalMonths: settings.intervalMonths,
+                anchor: settings.anchor,
+                nextDate: settings.nextDate,
+                pending: false,
+              },
+            }
+          : set,
+      ),
+    )
+  }
+
   // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 확정한다.
 
   // 밝은 배경 — Figma import 시 프레임이 캔버스색과 같아져 '검은 배경 패널'이 안 생긴다.
@@ -201,7 +226,7 @@ export function KitGallery() {
                 ),
               )
             }
-            onSetRollover={noop}
+            onSetRollover={setKitRollover}
             onClearRolloverPending={noop}
           />
         </KitItem>

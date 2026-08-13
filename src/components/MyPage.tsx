@@ -670,12 +670,16 @@ function PlusIcon() {
   )
 }
 
-/** 롤오버 설정 저장 페이로드(활성 시 나머지 값 필수, 비활성 시 전부 null). */
+/** 롤오버 설정 저장 페이로드. OFF에서도 기존 일정 값은 보존한다. */
 export interface RolloverSaveSettings {
   enabled: boolean
   intervalMonths: RolloverIntervalMonths | null
   anchor: RolloverAnchor | null
   nextDate: string | null
+}
+
+function hasCompleteRolloverSchedule(rollover: RolloverSettings): boolean {
+  return Boolean(rollover.intervalMonths && rollover.anchor && rollover.nextDate)
 }
 
 /** 유저 브라우저 로컬 달력 기준 오늘(YYYY-MM-DD). 롤오버 예정일 초기 계산의 기준. */
@@ -689,53 +693,60 @@ function todayLocalDateString(): string {
 
 /**
  * 슬롯별 롤오버(만기 이월) 알림의 세부 일정 설정.
- * 활성화 스위치는 슬롯 행에서 담당하고, 이 블록은 활성 슬롯의 상세 펼침에서만 노출한다.
- * 주기·기준일을 바꾸면 다음 예정일을 관행 위상으로 재계산하고, 날짜를 직접 고치면 그 날짜를 존중한다.
+ * 최초 ON 전 인라인 설정과 활성 슬롯의 상세 펼침에서 공용으로 사용한다.
+ * 주기·기준일 변경은 다음 예정일 초안만 재계산하며, 명시적 저장 전에는 서버 값을 바꾸지 않는다.
  */
 function RolloverScheduleFields({
   copy,
   rollover,
   busy,
+  variant,
+  onCancel,
   onSave,
 }: {
   copy: MyPageCopy
   rollover: RolloverSettings
   busy: boolean
+  variant: 'setup' | 'edit'
+  onCancel?: () => void
   onSave: (settings: RolloverSaveSettings) => void
 }) {
-  const interval: RolloverIntervalMonths = rollover.intervalMonths ?? 3
-  const anchor: RolloverAnchor = rollover.anchor ?? 'second_thursday'
-  const nextDate = rollover.nextDate ?? ''
+  const initialInterval: RolloverIntervalMonths = rollover.intervalMonths ?? 3
+  const initialAnchor: RolloverAnchor = rollover.anchor ?? 'second_thursday'
+  const [interval, setInterval] = useState<RolloverIntervalMonths>(initialInterval)
+  const [anchor, setAnchor] = useState<RolloverAnchor>(initialAnchor)
+  const [nextDate, setNextDate] = useState(
+    rollover.nextDate ??
+      computeNextRolloverDate(todayLocalDateString(), initialInterval, initialAnchor),
+  )
+  const today = todayLocalDateString()
+  const dateValid = Boolean(nextDate && nextDate >= today)
 
   const handleInterval = (value: string) => {
     const nextInterval = Number(value) as RolloverIntervalMonths
-    onSave({
-      enabled: true,
-      intervalMonths: nextInterval,
-      anchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), nextInterval, anchor),
-    })
+    setInterval(nextInterval)
+    setNextDate(computeNextRolloverDate(today, nextInterval, anchor))
   }
 
   const handleAnchor = (value: string) => {
     const nextAnchor = value as RolloverAnchor
-    onSave({
-      enabled: true,
-      intervalMonths: interval,
-      anchor: nextAnchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, nextAnchor),
-    })
-  }
-
-  const handleDate = (value: string) => {
-    onSave({ enabled: true, intervalMonths: interval, anchor, nextDate: value || null })
+    setAnchor(nextAnchor)
+    setNextDate(computeNextRolloverDate(today, interval, nextAnchor))
   }
 
   return (
-    <div className="my-page-rollover">
+    <form
+      className={`my-page-rollover${variant === 'setup' ? ' my-page-rollover--setup' : ''}`}
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (!dateValid || busy) return
+        onSave({ enabled: true, intervalMonths: interval, anchor, nextDate })
+      }}
+    >
       <div className="my-page-rollover-head">
-        <span>{copy.rolloverTitle}</span>
+        <span>{variant === 'setup' ? copy.rolloverSetupTitle : copy.rolloverTitle}</span>
       </div>
+      {variant === 'setup' && <p className="my-page-rollover-copy">{copy.rolloverSetupBody}</p>}
       <div className="my-page-rollover-fields">
         <label>
           <span>{copy.rolloverIntervalLabel}</span>
@@ -766,13 +777,25 @@ function RolloverScheduleFields({
           <input
             type="date"
             value={nextDate}
+            min={today}
+            required
             disabled={busy}
-            onChange={(event) => handleDate(event.currentTarget.value)}
+            onChange={(event) => setNextDate(event.currentTarget.value)}
           />
         </label>
         <p className="my-page-field-help">{copy.rolloverNextDateHint}</p>
       </div>
-    </div>
+      <div className="my-page-rollover-actions">
+        {variant === 'setup' && onCancel && (
+          <button type="button" className="btn btn-ghost" disabled={busy} onClick={onCancel}>
+            {copy.rolloverSetupCancel}
+          </button>
+        )}
+        <button type="submit" className="btn btn-primary" disabled={busy || !dateValid}>
+          {variant === 'setup' ? copy.rolloverSetupSave : copy.rolloverEditSave}
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -811,6 +834,7 @@ function NumberSetRow({
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [rolloverSetupOpen, setRolloverSetupOpen] = useState(false)
   const detailModalTriggerRef = useRef<HTMLButtonElement | null>(null)
   const showAutoSnapshotControl = Boolean(
     onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled),
@@ -822,19 +846,22 @@ function NumberSetRow({
     if (!enabled) {
       onSetRollover(numberSet.storageMode, numberSet.id, {
         enabled: false,
-        intervalMonths: null,
-        anchor: null,
-        nextDate: null,
+        intervalMonths: numberSet.rollover.intervalMonths,
+        anchor: numberSet.rollover.anchor,
+        nextDate: numberSet.rollover.nextDate,
       })
+      setRolloverSetupOpen(false)
       return
     }
-    const interval = numberSet.rollover.intervalMonths ?? 3
-    const anchor = numberSet.rollover.anchor ?? 'second_thursday'
+    if (!hasCompleteRolloverSchedule(numberSet.rollover)) {
+      setRolloverSetupOpen(true)
+      return
+    }
     onSetRollover(numberSet.storageMode, numberSet.id, {
       enabled: true,
-      intervalMonths: interval,
-      anchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor),
+      intervalMonths: numberSet.rollover.intervalMonths,
+      anchor: numberSet.rollover.anchor,
+      nextDate: numberSet.rollover.nextDate,
     })
   }
 
@@ -884,9 +911,10 @@ function NumberSetRow({
                 disabled={busy}
                 label={`${numberSet.title}: ${copy.autoSnapshotSlotToggleLabel}`}
                 labelHidden
-                onChange={(enabled) =>
+                onChange={(enabled) => {
+                  if (!enabled) setRolloverSetupOpen(false)
                   onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
-                }
+                }}
               />
             </div>
           ) : (
@@ -901,7 +929,11 @@ function NumberSetRow({
               </span>
               <ToggleSwitch
                 checked={numberSet.rollover.enabled}
-                disabled={busy || !numberSet.autoSnapshotEnabled}
+                disabled={
+                  busy ||
+                  !numberSet.autoSnapshotEnabled ||
+                  (rolloverSetupOpen && !numberSet.rollover.enabled)
+                }
                 label={`${numberSet.title}: ${copy.rolloverToggleLabel}`}
                 labelHidden
                 onChange={handleRolloverToggle}
@@ -958,6 +990,20 @@ function NumberSetRow({
           ))}
         </select>
       </label>
+      {rolloverSetupOpen &&
+        !numberSet.rollover.enabled &&
+        numberSet.autoSnapshotEnabled &&
+        onSetRollover && (
+          <RolloverScheduleFields
+            key={`${numberSet.id}-rollover-setup`}
+            copy={copy}
+            rollover={numberSet.rollover}
+            busy={busy}
+            variant="setup"
+            onCancel={() => setRolloverSetupOpen(false)}
+            onSave={(settings) => onSetRollover(numberSet.storageMode, numberSet.id, settings)}
+          />
+        )}
       {numberSet.rollover.pending && onClearRolloverPending && (
         <div className="my-page-rollover-banner" role="status">
           <span>{copy.rolloverPendingBanner}</span>
@@ -998,9 +1044,11 @@ function NumberSetRow({
         numberSet.autoSnapshotEnabled &&
         numberSet.rollover.enabled && (
           <RolloverScheduleFields
+            key={`${numberSet.id}-rollover-edit`}
             copy={copy}
             rollover={numberSet.rollover}
             busy={busy}
+            variant="edit"
             onSave={(settings) => onSetRollover(numberSet.storageMode, numberSet.id, settings)}
           />
         )}

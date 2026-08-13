@@ -292,6 +292,27 @@ export async function setNumberSetAutoSnapshot(
   return { data: rowToRecord(data), error: null }
 }
 
+/** OFF에서는 저장된 일정을 보존하고 활성 상태와 대기 표시만 내리는 DB 업데이트 값. */
+export function createNumberSetRolloverUpdate(settings: {
+  enabled: boolean
+  intervalMonths: RolloverIntervalMonths | null
+  anchor: RolloverAnchor | null
+  nextDate: string | null
+}) {
+  return settings.enabled
+    ? {
+        rollover_reminder_enabled: true,
+        rollover_interval_months: settings.intervalMonths,
+        rollover_anchor: settings.anchor,
+        rollover_next_date: settings.nextDate,
+        rollover_pending: false,
+      }
+    : {
+        rollover_reminder_enabled: false,
+        rollover_pending: false,
+      }
+}
+
 /** 슬롯의 롤오버 알림 설정을 저장한다. 재설정 시 대기(pending)는 초기화한다. */
 export async function setNumberSetRollover(
   userId: string,
@@ -305,15 +326,11 @@ export async function setNumberSetRollover(
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
 
+  const rolloverUpdate = createNumberSetRolloverUpdate(settings)
+
   const { data, error } = await supabase
     .from('number_sets')
-    .update({
-      rollover_reminder_enabled: settings.enabled,
-      rollover_interval_months: settings.enabled ? settings.intervalMonths : null,
-      rollover_anchor: settings.enabled ? settings.anchor : null,
-      rollover_next_date: settings.enabled ? settings.nextDate : null,
-      rollover_pending: false,
-    })
+    .update(rolloverUpdate)
     .eq('id', setId)
     .eq('user_id', userId)
     .select(NUMBER_SET_COLUMNS)

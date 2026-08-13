@@ -417,6 +417,12 @@ export const ko: Messages = {
     autoSnapshotSlotCountNote: '매일 기록 중: 클라우드 세트 {count}개',
     autoSnapshotNoSlotsSelected: '숫자세트에서 매일 기록을 켜세요.',
     rolloverTitle: '롤오버(만기 이월) 알림',
+    rolloverSetupTitle: '롤오버 알림 설정',
+    rolloverSetupBody:
+      '주기와 기준일로 다음 예정일을 계산합니다. 실제 만기일과 다르면 날짜를 직접 바꿔 주세요.',
+    rolloverSetupCancel: '취소',
+    rolloverSetupSave: '설정하고 켜기',
+    rolloverEditSave: '변경 저장',
     rolloverColumnLabel: '롤오버',
     rolloverToggleLabel: '롤오버 알림',
     rolloverIntervalLabel: '주기',

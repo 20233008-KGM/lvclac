@@ -4179,8 +4179,8 @@ html[data-zone='about'] body {
 /* 마이페이지의 짧은 조건 안내. 반복 호출은 하나의 풍선 표시 시간만 갱신한다. */
 .my-page-toast {
   position: fixed;
-  top: 76px;
-  right: var(--space-lg);
+  top: max(var(--space-md), env(safe-area-inset-top));
+  right: max(var(--space-md), env(safe-area-inset-right));
   z-index: 1800;
   max-width: min(360px, calc(100vw - 32px));
   margin: 0;
@@ -4909,8 +4909,8 @@ a.my-page-compare-card__action {
 
 @media (max-width: 620px) {
   .my-page-toast {
-    top: 64px;
-    right: var(--space-sm);
+    top: max(var(--space-sm), env(safe-area-inset-top));
+    right: max(var(--space-sm), env(safe-area-inset-right));
     max-width: calc(100vw - 2 * var(--space-sm));
   }
 

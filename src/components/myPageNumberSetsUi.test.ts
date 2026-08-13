@@ -196,7 +196,10 @@ describe('my page number-set management UI', () => {
     expect(css).toContain('.toggle-switch--aria-disabled')
     expect(css).toContain('.my-page-toast')
     expect(css).toContain('position: fixed')
-    expect(css).toContain('right: var(--space-lg)')
+    expect(css).toContain('top: max(var(--space-md), env(safe-area-inset-top))')
+    expect(css).toContain('right: max(var(--space-md), env(safe-area-inset-right))')
+    expect(css).toContain('top: max(var(--space-sm), env(safe-area-inset-top))')
+    expect(css).toContain('right: max(var(--space-sm), env(safe-area-inset-right))')
   })
 
   it('opens inline setup before the first rollover activation and saves drafts explicitly', () => {

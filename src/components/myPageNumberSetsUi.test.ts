@@ -205,12 +205,18 @@ describe('my page number-set management UI', () => {
   it('opens inline setup before the first rollover activation and saves drafts explicitly', () => {
     const component = source('src/components/MyPage.tsx')
     const css = source('src/styles/pages.css')
+    const koCopy = source('src/i18n/locales/ko.ts')
+    const enCopy = source('src/i18n/locales/en.ts')
 
     expect(component).toContain('hasCompleteRolloverSchedule(numberSet.rollover)')
     expect(component).toContain('setRolloverSetupOpen(true)')
     expect(component).toContain('variant="setup"')
     expect(component).toContain('copy.rolloverSetupBody')
     expect(component).toContain('copy.rolloverSetupSave')
+    expect(koCopy).toContain("rolloverSetupSave: '켜기'")
+    expect(koCopy).toContain("rolloverEditSave: '저장'")
+    expect(enCopy).toContain("rolloverSetupSave: 'Turn on'")
+    expect(enCopy).toContain("rolloverEditSave: 'Save'")
     expect(component).toContain('onSubmit={(event) =>')
     expect(component).toContain('min={today}')
     expect(component).toContain('(rolloverSetupOpen && !numberSet.rollover.enabled)')

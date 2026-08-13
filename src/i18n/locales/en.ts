@@ -429,8 +429,8 @@ export const en: Messages = {
     rolloverSetupBody:
       'The next date is calculated from the cycle and anchor day. Adjust it if the actual expiry differs.',
     rolloverSetupCancel: 'Cancel',
-    rolloverSetupSave: 'Save and turn on',
-    rolloverEditSave: 'Save changes',
+    rolloverSetupSave: 'Turn on',
+    rolloverEditSave: 'Save',
     rolloverNeedsAutoSnapshot: 'Turn on Auto record first.',
     rolloverColumnLabel: 'Rollover',
     rolloverToggleLabel: 'Rollover alert',

@@ -421,8 +421,8 @@ export const ko: Messages = {
     rolloverSetupBody:
       '주기와 기준일로 다음 예정일을 계산합니다. 실제 만기일과 다르면 날짜를 직접 바꿔 주세요.',
     rolloverSetupCancel: '취소',
-    rolloverSetupSave: '설정하고 켜기',
-    rolloverEditSave: '변경 저장',
+    rolloverSetupSave: '켜기',
+    rolloverEditSave: '저장',
     rolloverNeedsAutoSnapshot: '먼저 자동 기록을 활성화해 주세요.',
     rolloverColumnLabel: '롤오버',
     rolloverToggleLabel: '롤오버 알림',

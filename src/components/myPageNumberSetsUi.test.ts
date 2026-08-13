@@ -22,10 +22,19 @@ const rolloverOff = {
   pending: false,
 } as const
 
+const rolloverOn = {
+  enabled: true,
+  intervalMonths: 3,
+  anchor: 'second_thursday',
+  nextDate: '2026-09-10',
+  pending: false,
+} as const
+
 function numberSet(
   id: string,
   storageMode: 'local' | 'cloud',
   autoSnapshotEnabled = false,
+  rollover = rolloverOff,
 ): CalculatorNumberSet {
   return {
     id,
@@ -35,7 +44,7 @@ function numberSet(
     updatedAt: null,
     storageMode,
     autoSnapshotEnabled,
-    rollover: rolloverOff,
+    rollover,
   }
 }
 
@@ -48,7 +57,12 @@ function renderPanel(locale: 'ko' | 'en', isPro: boolean, hasEnabledCloudSet = t
       presetCopy: messages.glossaryPreset,
       localNumberSets: [numberSet('local-1', 'local')],
       cloudNumberSets: [
-        numberSet('cloud-1', 'cloud', hasEnabledCloudSet),
+        numberSet(
+          'cloud-1',
+          'cloud',
+          hasEnabledCloudSet,
+          hasEnabledCloudSet ? rolloverOn : rolloverOff,
+        ),
         numberSet('cloud-2', 'cloud'),
       ],
       numberSetLimits: { local: 10, cloud: 10 },
@@ -90,33 +104,39 @@ describe('my page number-set management UI', () => {
     const rowRule = css.match(/\.my-page-number-set-row\s*\{([^}]*)\}/)?.[1]
     expect(variables).toContain('--mypage-control-width: 176px')
     expect(variables).toContain('--mypage-instrument-width: 160px')
-    expect(rowRule).toContain('grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px var(--mypage-instrument-width) 70px')
-    expect(css).toContain('.my-page-number-set-list-head span:nth-child(2)')
-    expect(css).toContain('grid-column: 5')
+    expect(rowRule).toContain('grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px 72px var(--mypage-instrument-width) 70px')
+    expect(css).toContain('.my-page-number-set-list-head span:nth-child(3)')
+    expect(css).toContain('grid-column: 6')
     expect(css).toContain('justify-self: end')
     expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
     expect(css).toContain('grid-template-columns: repeat(3, var(--mypage-control-width))')
   })
 
-  it('renders one daily-record switch column after the name column in both locales', () => {
+  it('renders daily-record and rollover switch columns in each Pro cloud slot row', () => {
     const koHtml = renderPanel('ko', true)
     const enHtml = renderPanel('en', true)
 
     expect(koHtml).toContain(ko.myPage.autoSnapshotSlotHelp)
     expect(koHtml.match(/my-page-number-set-list-head/g)).toHaveLength(2)
     expect(koHtml).toContain('자동 기록')
+    expect(koHtml).toContain('롤오버')
     expect(koHtml.match(/거래종목/g)).toHaveLength(2)
-    expect(koHtml).toContain('type="checkbox"')
-    expect(koHtml).toContain('checked=""')
+    expect(koHtml.match(/type="checkbox"/g)).toHaveLength(4)
+    expect(koHtml.match(/checked=""/g)).toHaveLength(2)
+    expect(koHtml.match(/disabled=""/g)).toHaveLength(1)
     expect(koHtml).toContain('toggle-switch__track')
     expect(koHtml).not.toContain('my-page-number-set-row--auto-selected')
     expect(koHtml).toContain('cloud-cloud-1: 매일 기록')
+    expect(koHtml).toContain('cloud-cloud-1: 롤오버 알림')
+    expect(koHtml).toContain('cloud-cloud-2: 롤오버 알림')
     expect(koHtml).toContain('매일 기록 중: 클라우드 세트 1개')
     expect(enHtml).toContain(en.myPage.autoSnapshotSlotHelp)
     expect(enHtml.match(/my-page-number-set-list-head/g)).toHaveLength(2)
     expect(enHtml).toContain('Auto record')
+    expect(enHtml).toContain('Rollover')
     expect(enHtml).toContain('Instrument')
     expect(enHtml).toContain('cloud-cloud-1: Record daily')
+    expect(enHtml).toContain('cloud-cloud-1: Rollover alert')
     expect(enHtml).toContain('Recording daily: 1 cloud set(s)')
   })
 
@@ -142,14 +162,18 @@ describe('my page number-set management UI', () => {
     expect(html).toContain('my-page-number-set-row-auto--empty')
   })
 
-  it('uses a fixed middle switch column without selected-row styling or a phone-only second row', () => {
+  it('keeps both slot switches in the first row without selected-row styling', () => {
     const component = source('src/components/MyPage.tsx')
     const css = source('src/styles/pages.css')
 
     expect(component).toContain('<ToggleSwitch')
     expect(component).toContain('onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)')
-    expect(component).toMatch(/value=\{titleDraft\}[\s\S]*showAutoSnapshotColumn[\s\S]*my-page-number-set-row-actions/)
-    expect(css).toContain('grid-template-columns: minmax(0, 1fr) 48px auto')
+    expect(component).toContain('my-page-number-set-row-rollover')
+    expect(component).toContain('my-page-number-set-row-switch-label')
+    expect(component).toContain('disabled={busy || !numberSet.autoSnapshotEnabled}')
+    expect(component).toMatch(/value=\{titleDraft\}[\s\S]*my-page-number-set-row-auto[\s\S]*my-page-number-set-row-rollover[\s\S]*my-page-number-set-row-actions/)
+    expect(css).toContain('.my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover')
+    expect(css).toContain('grid-row: 2')
     expect(css).not.toContain('.my-page-number-set-row--auto-selected')
     expect(css).not.toContain('@media (max-width: 420px)')
   })
@@ -168,7 +192,7 @@ describe('my page number-set management UI', () => {
     const component = source('src/components/MyPage.tsx')
 
     expect(component).not.toContain('<PresetSelect variant="inline" />')
-    expect(component).toContain('onSetPreset(\n              numberSet.storageMode,\n              numberSet.id,')
+    expect(component).toMatch(/onSetPreset\(\r?\n\s+numberSet\.storageMode,\r?\n\s+numberSet\.id,/)
     expect(component).toContain('setNumberSetPreset(mode, setId, presetId)')
   })
 })

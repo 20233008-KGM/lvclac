@@ -420,6 +420,7 @@ export interface Messages {
     autoSnapshotSlotCountNote: string
     autoSnapshotNoSlotsSelected: string
     rolloverTitle: string
+    rolloverColumnLabel: string
     rolloverToggleLabel: string
     rolloverIntervalLabel: string
     rolloverIntervalMonthly: string

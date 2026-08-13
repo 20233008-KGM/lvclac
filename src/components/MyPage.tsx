@@ -688,10 +688,11 @@ function todayLocalDateString(): string {
 }
 
 /**
- * 슬롯별 롤오버(만기 이월) 알림 설정. 자동 스냅샷이 켜진 클라우드 슬롯에서만 노출한다.
+ * 슬롯별 롤오버(만기 이월) 알림의 세부 일정 설정.
+ * 활성화 스위치는 슬롯 행에서 담당하고, 이 블록은 활성 슬롯의 상세 펼침에서만 노출한다.
  * 주기·기준일을 바꾸면 다음 예정일을 관행 위상으로 재계산하고, 날짜를 직접 고치면 그 날짜를 존중한다.
  */
-function RolloverSettingControl({
+function RolloverScheduleFields({
   copy,
   rollover,
   busy,
@@ -702,24 +703,9 @@ function RolloverSettingControl({
   busy: boolean
   onSave: (settings: RolloverSaveSettings) => void
 }) {
-  const enabled = rollover.enabled
   const interval: RolloverIntervalMonths = rollover.intervalMonths ?? 3
   const anchor: RolloverAnchor = rollover.anchor ?? 'second_thursday'
   const nextDate = rollover.nextDate ?? ''
-
-  const handleToggle = (on: boolean) => {
-    if (busy) return
-    if (!on) {
-      onSave({ enabled: false, intervalMonths: null, anchor: null, nextDate: null })
-      return
-    }
-    onSave({
-      enabled: true,
-      intervalMonths: interval,
-      anchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor),
-    })
-  }
 
   const handleInterval = (value: string) => {
     const nextInterval = Number(value) as RolloverIntervalMonths
@@ -749,51 +735,43 @@ function RolloverSettingControl({
     <div className="my-page-rollover">
       <div className="my-page-rollover-head">
         <span>{copy.rolloverTitle}</span>
-        <ToggleSwitch
-          checked={enabled}
-          disabled={busy}
-          label={copy.rolloverToggleLabel}
-          onChange={handleToggle}
-        />
       </div>
-      {enabled && (
-        <div className="my-page-rollover-fields">
-          <label>
-            <span>{copy.rolloverIntervalLabel}</span>
-            <select
-              value={interval}
-              disabled={busy}
-              onChange={(event) => handleInterval(event.currentTarget.value)}
-            >
-              <option value={1}>{copy.rolloverIntervalMonthly}</option>
-              <option value={2}>{copy.rolloverIntervalBimonthly}</option>
-              <option value={3}>{copy.rolloverIntervalQuarterly}</option>
-              <option value={6}>{copy.rolloverIntervalSemiannual}</option>
-            </select>
-          </label>
-          <label>
-            <span>{copy.rolloverAnchorLabel}</span>
-            <select
-              value={anchor}
-              disabled={busy}
-              onChange={(event) => handleAnchor(event.currentTarget.value)}
-            >
-              <option value="second_thursday">{copy.rolloverAnchorSecondThursday}</option>
-              <option value="third_friday">{copy.rolloverAnchorThirdFriday}</option>
-            </select>
-          </label>
-          <label>
-            <span>{copy.rolloverNextDateLabel}</span>
-            <input
-              type="date"
-              value={nextDate}
-              disabled={busy}
-              onChange={(event) => handleDate(event.currentTarget.value)}
-            />
-          </label>
-          <p className="my-page-field-help">{copy.rolloverNextDateHint}</p>
-        </div>
-      )}
+      <div className="my-page-rollover-fields">
+        <label>
+          <span>{copy.rolloverIntervalLabel}</span>
+          <select
+            value={interval}
+            disabled={busy}
+            onChange={(event) => handleInterval(event.currentTarget.value)}
+          >
+            <option value={1}>{copy.rolloverIntervalMonthly}</option>
+            <option value={2}>{copy.rolloverIntervalBimonthly}</option>
+            <option value={3}>{copy.rolloverIntervalQuarterly}</option>
+            <option value={6}>{copy.rolloverIntervalSemiannual}</option>
+          </select>
+        </label>
+        <label>
+          <span>{copy.rolloverAnchorLabel}</span>
+          <select
+            value={anchor}
+            disabled={busy}
+            onChange={(event) => handleAnchor(event.currentTarget.value)}
+          >
+            <option value="second_thursday">{copy.rolloverAnchorSecondThursday}</option>
+            <option value="third_friday">{copy.rolloverAnchorThirdFriday}</option>
+          </select>
+        </label>
+        <label>
+          <span>{copy.rolloverNextDateLabel}</span>
+          <input
+            type="date"
+            value={nextDate}
+            disabled={busy}
+            onChange={(event) => handleDate(event.currentTarget.value)}
+          />
+        </label>
+        <p className="my-page-field-help">{copy.rolloverNextDateHint}</p>
+      </div>
     </div>
   )
 }
@@ -837,6 +815,28 @@ function NumberSetRow({
   const showAutoSnapshotControl = Boolean(
     onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled),
   )
+  const showRolloverControl = Boolean(onSetRollover && autoSnapshotAllowed)
+
+  const handleRolloverToggle = (enabled: boolean) => {
+    if (!onSetRollover || busy) return
+    if (!enabled) {
+      onSetRollover(numberSet.storageMode, numberSet.id, {
+        enabled: false,
+        intervalMonths: null,
+        anchor: null,
+        nextDate: null,
+      })
+      return
+    }
+    const interval = numberSet.rollover.intervalMonths ?? 3
+    const anchor = numberSet.rollover.anchor ?? 'second_thursday'
+    onSetRollover(numberSet.storageMode, numberSet.id, {
+      enabled: true,
+      intervalMonths: interval,
+      anchor,
+      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor),
+    })
+  }
 
   const commitRename = () => {
     const trimmed = titleDraft.trim()
@@ -876,6 +876,9 @@ function NumberSetRow({
         {showAutoSnapshotColumn && (
           showAutoSnapshotControl && onSetAutoSnapshot ? (
             <div className="my-page-number-set-row-auto">
+              <span className="my-page-number-set-row-switch-label" aria-hidden="true">
+                {copy.autoSnapshotColumnLabel}
+              </span>
               <ToggleSwitch
                 checked={numberSet.autoSnapshotEnabled}
                 disabled={busy}
@@ -888,6 +891,27 @@ function NumberSetRow({
             </div>
           ) : (
             <span className="my-page-number-set-row-auto my-page-number-set-row-auto--empty" aria-hidden="true" />
+          )
+        )}
+        {showAutoSnapshotColumn && (
+          showRolloverControl ? (
+            <div className="my-page-number-set-row-rollover">
+              <span className="my-page-number-set-row-switch-label" aria-hidden="true">
+                {copy.rolloverColumnLabel}
+              </span>
+              <ToggleSwitch
+                checked={numberSet.rollover.enabled}
+                disabled={busy || !numberSet.autoSnapshotEnabled}
+                label={`${numberSet.title}: ${copy.rolloverToggleLabel}`}
+                labelHidden
+                onChange={handleRolloverToggle}
+              />
+            </div>
+          ) : (
+            <span
+              className="my-page-number-set-row-rollover my-page-number-set-row-rollover--empty"
+              aria-hidden="true"
+            />
           )
         )}
         <div className="my-page-number-set-row-actions">
@@ -967,15 +991,19 @@ function NumberSetRow({
           </button>
         </div>
       )}
-      {/* 롤오버 설정: Pro + 자동 스냅샷이 켜진 슬롯에서만. 상세 펼침 안에 둔다. */}
-      {detailOpen && onSetRollover && autoSnapshotAllowed && numberSet.autoSnapshotEnabled && (
-        <RolloverSettingControl
-          copy={copy}
-          rollover={numberSet.rollover}
-          busy={busy}
-          onSave={(settings) => onSetRollover(numberSet.storageMode, numberSet.id, settings)}
-        />
-      )}
+      {/* 롤오버 세부 일정: 행 스위치가 켜진 슬롯에서 상세 펼침으로 편집한다. */}
+      {detailOpen &&
+        onSetRollover &&
+        autoSnapshotAllowed &&
+        numberSet.autoSnapshotEnabled &&
+        numberSet.rollover.enabled && (
+          <RolloverScheduleFields
+            copy={copy}
+            rollover={numberSet.rollover}
+            busy={busy}
+            onSave={(settings) => onSetRollover(numberSet.storageMode, numberSet.id, settings)}
+          />
+        )}
       {detailModalOpen && (
         <NumberSetDetailModal
           numberSet={numberSet}
@@ -1058,6 +1086,7 @@ function NumberSetGroup({
       <div className="my-page-number-set-list-head" aria-hidden="true">
         <span />
         <span>{showAutoSnapshotColumn ? copy.autoSnapshotColumnLabel : null}</span>
+        <span>{showAutoSnapshotColumn && autoSnapshotAllowed ? copy.rolloverColumnLabel : null}</span>
         <span>{copy.numberSetInstrumentColumnLabel}</span>
         <span />
       </div>

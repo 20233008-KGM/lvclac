@@ -425,6 +425,7 @@ export const en: Messages = {
     autoSnapshotSlotCountNote: 'Recording daily: {count} cloud set(s)',
     autoSnapshotNoSlotsSelected: 'Turn on Record daily in a number set.',
     rolloverTitle: 'Rollover reminder',
+    rolloverColumnLabel: 'Rollover',
     rolloverToggleLabel: 'Rollover alert',
     rolloverIntervalLabel: 'Cycle',
     rolloverIntervalMonthly: 'Monthly',

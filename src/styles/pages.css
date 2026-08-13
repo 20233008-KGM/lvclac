@@ -4269,7 +4269,7 @@ html[data-zone='about'] body {
 
 .my-page-number-set-list-head {
   display: grid;
-  grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px var(--mypage-instrument-width) 70px;
+  grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px 72px var(--mypage-instrument-width) 70px;
   gap: 6px;
   align-items: center;
   padding: 0 var(--space-sm);
@@ -4290,15 +4290,20 @@ html[data-zone='about'] body {
 
 .my-page-number-set-list-head span:nth-child(3) {
   grid-column: 4;
+  text-align: center;
 }
 
 .my-page-number-set-list-head span:nth-child(4) {
   grid-column: 5;
 }
 
+.my-page-number-set-list-head span:nth-child(5) {
+  grid-column: 6;
+}
+
 .my-page-number-set-row {
   display: grid;
-  grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px var(--mypage-instrument-width) 70px;
+  grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px 72px var(--mypage-instrument-width) 70px;
   gap: 6px;
   align-items: start;
   padding: var(--space-sm);
@@ -4333,7 +4338,7 @@ html[data-zone='about'] body {
 }
 
 .my-page-number-set-row-actions {
-  grid-column: 5;
+  grid-column: 6;
   grid-row: 1;
   justify-self: end;
   display: flex;
@@ -4353,8 +4358,25 @@ html[data-zone='about'] body {
   cursor: default;
 }
 
-.my-page-number-set-row-preset {
+.my-page-number-set-row-switch-label {
+  display: none;
+}
+
+.my-page-number-set-row-rollover {
   grid-column: 4;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 32px;
+}
+
+.my-page-number-set-row-rollover--empty {
+  cursor: default;
+}
+
+.my-page-number-set-row-preset {
+  grid-column: 5;
   grid-row: 1;
   display: block;
   min-width: 0;
@@ -4432,7 +4454,7 @@ html[data-zone='about'] body {
   margin-top: 2px;
 }
 
-/* 롤오버(만기 이월) 알림 설정: 상세 펼침 안에 두는 슬롯별 설정 블록. */
+/* 롤오버(만기 이월) 세부 일정: 활성화 스위치는 슬롯 첫 줄에 둔다. */
 .my-page-rollover {
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);
@@ -4833,15 +4855,47 @@ a.my-page-compare-card__action {
     align-items: center;
   }
 
-  .my-page-number-set-row-main--with-auto {
-    grid-template-columns: minmax(0, 1fr) 48px auto;
-  }
-
   .my-page-number-set-row-main > input,
   .my-page-number-set-row-auto,
+  .my-page-number-set-row-rollover,
   .my-page-number-set-row-actions {
     grid-column: auto;
     grid-row: auto;
+  }
+
+  .my-page-number-set-row-main--with-auto > input {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .my-page-number-set-row-main--with-auto .my-page-number-set-row-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .my-page-number-set-row-main--with-auto .my-page-number-set-row-auto,
+  .my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover {
+    grid-row: 2;
+    display: flex;
+    gap: 6px;
+  }
+
+  .my-page-number-set-row-main--with-auto .my-page-number-set-row-auto {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .my-page-number-set-row-switch-label {
+    display: inline;
+    color: var(--color-text-dim);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    white-space: nowrap;
   }
 
   .my-page-number-set-row-preset {

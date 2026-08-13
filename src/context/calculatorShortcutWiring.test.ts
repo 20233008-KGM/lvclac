@@ -77,6 +77,7 @@ describe('calculator undo/redo shortcut wiring', () => {
     const numberStepper = source('src/components/NumberStepper.tsx')
 
     expect(resultPanel.match(/orderInputHistoryOptions\(meta\)/g)).toHaveLength(3)
+    expect(resultPanel.match(/historyTransient: 'cancel'/g)).toHaveLength(2)
     expect(numberStepper).toContain('HISTORY_GESTURE_SETTLE_MS = 300')
     expect(numberStepper).toContain('scheduleGestureHistoryCommit()')
   })

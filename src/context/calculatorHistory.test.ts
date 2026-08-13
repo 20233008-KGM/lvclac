@@ -270,6 +270,34 @@ describe('calculator history', () => {
     expect(isOrderScenarioModeActive(history.present)).toBe(false)
   })
 
+  it('absorbs a late focus or stepper edit into the active preview', () => {
+    let history = createCalculatorHistory(orderInputs)
+    const baseline = captureOrderScenarioBaseline(calculateOrder(history.present))
+    const preview = applyInputPatch(history.present, { commitOrderScenario: baseline })
+    const cancelTarget = applyInputPatch(preview, { clearOrderScenario: true })
+
+    history = recordCalculatorHistory(history, preview, {
+      historyTransient: 'begin',
+      historyTransientTarget: cancelTarget,
+    })
+    history = recordCalculatorHistory(
+      history,
+      applyInputPatch(history.present, { orderContracts: 2 }),
+      { historyGroup: 'late-preview-gesture' },
+    )
+    expect(history.pendingEdit).toBeUndefined()
+    expect(history.transientEdit).toBeDefined()
+
+    history = recordCalculatorHistory(history, cancelTarget, {
+      historyTransient: 'cancel',
+    })
+    history = commitCalculatorHistoryGroup(history, 'late-preview-gesture')
+
+    expect(history.pendingEdit).toBeUndefined()
+    expect(history.transientEdit).toBeUndefined()
+    expect(history.past).toHaveLength(0)
+  })
+
   it('uses Ctrl+Z semantics to cancel an active preview before older history', () => {
     let history = createCalculatorHistory(orderInputs)
     history = recordCalculatorHistory(history, { ...orderInputs, orderPrice: 346 })

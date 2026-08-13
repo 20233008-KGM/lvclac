@@ -649,7 +649,12 @@ function OrderInputs({
               title={clearLabel}
               tabIndex={orderScenarioActive ? 0 : -1}
               aria-hidden={!orderScenarioActive}
-              onClick={() => onChange({ clearOrderScenario: true })}
+              onClick={() =>
+                onChange(
+                  { clearOrderScenario: true },
+                  { historyTransient: 'cancel' },
+                )
+              }
             >
               esc
             </button>

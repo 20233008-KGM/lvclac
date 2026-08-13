@@ -133,8 +133,9 @@ function recordTransientHistory(
 
   if (phase === 'cancel') {
     return withFlags({
-      ...withoutTransient(history),
+      past: history.past,
       present,
+      future: history.future,
     })
   }
 
@@ -158,6 +159,13 @@ export function recordCalculatorHistory(
 ): CalculatorHistory {
   if (options.historyTransient) {
     return recordTransientHistory(history, present, options)
+  }
+
+  if (history.transientEdit && !options.historyBefore) {
+    return recordTransientHistory(history, present, {
+      ...options,
+      historyTransient: 'update',
+    })
   }
 
   if (options.historyBefore) {
@@ -234,8 +242,9 @@ function cancelTransientHistory(history: CalculatorHistory): CalculatorHistory {
   const transient = history.transientEdit
   if (!transient) return history
   return withFlags({
-    ...withoutTransient(history),
+    past: history.past,
     present: transient.cancelTarget,
+    future: history.future,
   })
 }
 

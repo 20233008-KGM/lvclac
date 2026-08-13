@@ -547,21 +547,37 @@ input:focus:not(:focus-visible) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-height: 36px;
-  padding: 0 var(--space-md);
-  border: 1px solid var(--color-border-subtle);
+  padding: 0 var(--space-sm);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: var(--color-surface);
+  background: transparent;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   font-weight: 600;
   line-height: 1;
   text-decoration: none;
+  transition:
+    color 0.16s ease,
+    background-color 0.16s ease;
 }
 
-.header-locale-link:hover {
-  border-color: var(--color-border);
+.header-locale-link:hover,
+.header-locale-link:focus-visible {
+  background: var(--color-surface-2);
   color: var(--color-text);
+}
+
+.header-locale-link__icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: 0 0 auto;
 }
 
 .header-how-tooltip-anchor {

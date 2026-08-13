@@ -8,6 +8,7 @@ const guideSource = readFileSync(resolve('src/components/GuidePage.tsx'), 'utf8'
 const formulasSource = readFileSync(resolve('src/components/FormulasPage.tsx'), 'utf8')
 const footerSource = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 const localeLinkSource = readFileSync(resolve('src/components/LocaleRouteLink.tsx'), 'utf8')
+const appCss = readFileSync(resolve('src/App.css'), 'utf8')
 const css = readFileSync(resolve('src/styles/publicSeo.css'), 'utf8')
 
 describe('public SEO content', () => {
@@ -22,6 +23,10 @@ describe('public SEO content', () => {
     expect(appSource).toContain('<LocaleRouteLink className="header-locale-link" />')
     expect(localeLinkSource).toContain('hrefLang={targetLocale}')
     expect(localeLinkSource).toContain('lang={targetLocale}')
+    expect(localeLinkSource).toContain('className="header-locale-link__icon"')
+    expect(localeLinkSource).toContain("targetLocale === 'en' ? 'English' : '한국어'")
+    expect(appCss).toContain('.header-locale-link__icon')
+    expect(appCss).toContain('background: transparent')
   })
 
   it('links the calculator, guide, and formulas with descriptive text', () => {

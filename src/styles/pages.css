@@ -4054,14 +4054,14 @@ html[data-zone='about'] body {
   min-width: 0;
 }
 
-/* '사용' 토글 + 그 오른쪽에 붙는 짤막한 상태 힌트(예: 아직 저장된 세트 없음). */
-.my-page-automation-toggle {
+/* 슬롯별 매일 기록 상태. 환경설정에는 별도의 사용 토글을 두지 않는다. */
+.my-page-automation-slot-status {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
 }
 
-.my-page-automation-toggle-hint {
+.my-page-automation-slot-status-hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-dim);
 }

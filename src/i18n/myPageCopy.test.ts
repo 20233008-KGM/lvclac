@@ -45,10 +45,20 @@ describe('my page copy', () => {
   })
 
   it('provides the order-history auto-save toggle copy in both languages', () => {
-    expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 자동 저장')
-    expect(ko.myPage.autoSaveOrderHistoryHint).toContain('자동 저장')
-    expect(en.myPage.autoSaveOrderHistoryLabel).toBe('Auto-save order history')
-    expect(en.myPage.autoSaveOrderHistoryHint).toContain('order simulation history')
+    expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 저장')
+    expect(ko.myPage.autoSaveOrderHistoryHint).toContain('주문 적용 시')
+    expect(ko.myPage.autoSaveOrderHistoryHint).toContain('기존 기록은 유지')
+    expect(en.myPage.autoSaveOrderHistoryLabel).toBe('Save order history')
+    expect(en.myPage.autoSaveOrderHistoryHint).toContain('saves its simulation history')
+  })
+
+  it('describes account snapshots as a shared schedule controlled by per-slot switches', () => {
+    expect(ko.myPage.autoSnapshotTitle).toBe('계좌스냅샷 저장 시각')
+    expect(ko.myPage.autoSnapshotBody).toContain('매일 기록을 켠 클라우드 세트')
+    expect(ko.myPage.autoSnapshotNoSlotsSelected).toContain('숫자세트에서 매일 기록')
+    expect(en.myPage.autoSnapshotTitle).toBe('Account snapshot time')
+    expect(en.myPage.autoSnapshotBody).toContain('Record daily')
+    expect(en.myPage.autoSnapshotNoSlotsSelected).toContain('number set')
   })
 
   it('provides the account-setting-guard preferences toggle copy in both languages', () => {

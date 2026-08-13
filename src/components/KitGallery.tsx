@@ -205,16 +205,16 @@ export function KitGallery() {
             onClearRolloverPending={noop}
           />
         </KitItem>
-        <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·자동 스냅샷 행" width={560}>
+        <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·스냅샷 저장 시각" width={560}>
           <AccountSnapshotAutomationPanel
             copy={t.myPage}
             isPro
             hasCloudInput
+            enabledSlotCount={2}
             settings={null}
             timeZone="Asia/Seoul"
             onTimeZoneChange={noop}
             onSave={noop}
-            onDisable={noop}
           />
         </KitItem>
         <KitItem name="BillingPanel" note="구독 결제" width={540}>

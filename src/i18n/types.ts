@@ -418,6 +418,7 @@ export interface Messages {
     numberSetInstrumentColumnLabel: string
     autoSnapshotSlotHelp: string
     autoSnapshotSlotCountNote: string
+    autoSnapshotNoSlotsSelected: string
     rolloverTitle: string
     rolloverToggleLabel: string
     rolloverIntervalLabel: string

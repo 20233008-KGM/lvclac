@@ -64,6 +64,10 @@ import {
 } from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
 import type { NumberSetDeleteSummaryState } from './NumberSetDeleteConfirmModal'
+import {
+  isLastEnabledSnapshotSlot,
+  shouldStartSnapshotSchedule,
+} from './snapshotSlotActivation'
 import '../styles/pages.css'
 // 로그아웃 /my 뷰의 Google 로그인 버튼(.google-btn)은 auth-dialog.css에 정의돼 있다.
 // AuthModal이 열리기 전에도 스타일이 적용되도록 여기서 직접 로드한다(기존 스타일 재사용).
@@ -461,25 +465,26 @@ function suggestedBrowserTimeZone(): string {
 }
 
 /**
- * 계좌스냅샷 자동 저장 설정 행. 시간대 + 스냅샷 시각 + 사용 토글로 구성한다.
+ * 계좌스냅샷 저장 시각 설정 행. 시간대 + 스냅샷 시각 + 활성 슬롯 상태로 구성한다.
  * 시간대는 전체 IANA 목록에서 검색으로 직접 고른다(기본값은 브라우저 추정 시간대).
- * 토글 ON이 곧 규칙 저장, OFF가 규칙 해제다. 켜진 상태에서 시간대·시각을 바꾸면 즉시 재저장한다.
+ * 자동 저장 활성화는 숫자세트의 슬롯별 "매일 기록" 스위치가 전담한다.
  */
 export function AccountSnapshotAutomationPanel({
   copy,
   isPro,
   hasCloudInput,
+  enabledSlotCount,
   settings,
   busy = false,
   notice = null,
   timeZone,
   onTimeZoneChange,
   onSave,
-  onDisable,
 }: {
   copy: MyPageCopy
   isPro: boolean
   hasCloudInput: boolean
+  enabledSlotCount: number
   settings: AccountSnapshotAutomationSettings | null
   busy?: boolean
   notice?: string | null
@@ -487,34 +492,28 @@ export function AccountSnapshotAutomationPanel({
   timeZone: string
   onTimeZoneChange: (timeZone: string) => void
   onSave: (settings: AccountSnapshotAutomationSettingsInput) => void
-  onDisable: () => void
 }) {
   const [timeOfDay, setTimeOfDay] = useState(settings?.timeOfDay ?? '16:00')
-  const canEnable = isPro && hasCloudInput
-  const enabled = settings?.enabled ?? false
+  const canConfigure = isPro && hasCloudInput
+  const scheduleEnabled = enabledSlotCount > 0
   const ruleLabel = settings?.label?.trim() ? settings.label : copy.autoSnapshotDefaultLabel
-
-  const handleToggle = (next: boolean) => {
-    if (busy) return
-    if (next) {
-      if (!canEnable) return
-      onSave({ enabled: true, label: ruleLabel, timeZone, timeOfDay })
-    } else {
-      onDisable()
-    }
-  }
 
   const handleTimeChange = (next: string) => {
     setTimeOfDay(next)
-    if (enabled && canEnable && !busy && next) {
-      onSave({ enabled: true, label: ruleLabel, timeZone, timeOfDay: next })
+    if (canConfigure && !busy && next) {
+      onSave({ enabled: scheduleEnabled, label: ruleLabel, timeZone, timeOfDay: next })
     }
   }
 
   const handleTimeZoneChange = (nextTimeZone: string) => {
     onTimeZoneChange(nextTimeZone)
-    if (enabled && canEnable && !busy) {
-      onSave({ enabled: true, label: ruleLabel, timeZone: nextTimeZone, timeOfDay })
+    if (canConfigure && !busy) {
+      onSave({
+        enabled: scheduleEnabled,
+        label: ruleLabel,
+        timeZone: nextTimeZone,
+        timeOfDay,
+      })
     }
   }
 
@@ -538,7 +537,7 @@ export function AccountSnapshotAutomationPanel({
               <TimeZoneSelect
                 id="auto-snapshot-timezone"
                 value={timeZone}
-                disabled={!canEnable || busy}
+                disabled={!canConfigure || busy}
                 searchPlaceholder={copy.autoSnapshotTimeZoneSearchPlaceholder}
                 onChange={handleTimeZoneChange}
               />
@@ -548,14 +547,14 @@ export function AccountSnapshotAutomationPanel({
               <input
                 type="time"
                 value={timeOfDay}
-                disabled={!canEnable || busy}
+                disabled={!canConfigure || busy}
                 onChange={(event) => handleTimeChange(event.currentTarget.value)}
               />
             </label>
           </div>
           <div className="my-page-automation-status">
             <div className="my-page-automation-status-meta">
-              {settings?.nextRunAt && (
+              {scheduleEnabled && settings?.nextRunAt && (
                 <p>
                   {copy.autoSnapshotNextRun.replace(
                     '{date}',
@@ -572,19 +571,14 @@ export function AccountSnapshotAutomationPanel({
                 </p>
               )}
             </div>
-            <div className="my-page-automation-toggle">
-              {isPro && !hasCloudInput && (
-                <span className="my-page-automation-toggle-hint">
-                  {copy.autoSnapshotCloudRequired}
-                </span>
-              )}
-              <ToggleSwitch
-                checked={enabled}
-                disabled={(!canEnable && !enabled) || busy}
-                label={copy.toggleUseLabel}
-                labelHidden
-                onChange={handleToggle}
-              />
+            <div className="my-page-automation-slot-status">
+              <span className="my-page-automation-slot-status-hint">
+                {!hasCloudInput
+                  ? copy.autoSnapshotCloudRequired
+                  : scheduleEnabled
+                    ? copy.autoSnapshotSlotCountNote.replace('{count}', String(enabledSlotCount))
+                    : copy.autoSnapshotNoSlotsSelected}
+              </span>
             </div>
           </div>
         </div>
@@ -1717,6 +1711,7 @@ export function MyPage() {
     id: string
     title: string
     userId: string
+    autoSnapshotEnabled: boolean
   } | null>(null)
   const [numberSetDeleteSummary, setNumberSetDeleteSummary] =
     useState<NumberSetDeleteSummaryState>({ status: 'ready', summary: null })
@@ -1750,6 +1745,9 @@ export function MyPage() {
   const recentOrders = user && recordsState.userId === user.id ? recordsState.recentOrders : []
   const localNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'local')
   const cloudNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'cloud')
+  const enabledCloudSnapshotCount = cloudNumberSets.filter(
+    (numberSet) => numberSet.autoSnapshotEnabled,
+  ).length
 
   useEffect(() => {
     if (!user) {
@@ -1939,46 +1937,44 @@ export function MyPage() {
     user,
   ])
 
-  const handleAutomationSave = useCallback(
+  const persistAutomationSettings = useCallback(
     async (settings: AccountSnapshotAutomationSettingsInput) => {
-      if (!user || automationBusy) return
-      setAutomationBusy(true)
-      setAutomationNotice(null)
+      if (!user) return 'not_logged_in'
       const result = await recordsRepository.saveAccountSnapshotSettings(user.id, settings)
-      setAutomationBusy(false)
       if (result.error) {
         setAutomationNotice(t.myPage.autoSnapshotError)
-        return
+        return result.error
       }
       setAutomationSettings(result.data)
-      setAutomationNotice(t.myPage.autoSnapshotSaved)
+      return null
     },
-    [
-      automationBusy,
-      recordsRepository,
-      t.myPage.autoSnapshotError,
-      t.myPage.autoSnapshotSaved,
-      user,
-    ],
+    [recordsRepository, t.myPage.autoSnapshotError, user],
   )
 
-  const handleAutomationDisable = useCallback(async () => {
+  const persistAutomationDisabled = useCallback(async (): Promise<string | null> => {
+    if (!user) return 'not_logged_in'
+    const result = await recordsRepository.disableAccountSnapshotSettings(user.id)
+    if (result.error) {
+      setAutomationNotice(t.myPage.autoSnapshotError)
+      return result.error
+    }
+    setAutomationSettings(result.data)
+    return null
+  }, [recordsRepository, t.myPage.autoSnapshotError, user])
+
+  const handleAutomationSave = useCallback(async (
+    settings: AccountSnapshotAutomationSettingsInput,
+  ) => {
     if (!user || automationBusy) return
     setAutomationBusy(true)
     setAutomationNotice(null)
-    const result = await recordsRepository.disableAccountSnapshotSettings(user.id)
+    const error = await persistAutomationSettings(settings)
     setAutomationBusy(false)
-    if (result.error) {
-      setAutomationNotice(t.myPage.autoSnapshotError)
-      return
-    }
-    setAutomationSettings(result.data)
-    setAutomationNotice(t.myPage.autoSnapshotDisabled)
+    if (!error) setAutomationNotice(t.myPage.autoSnapshotSaved)
   }, [
     automationBusy,
-    recordsRepository,
-    t.myPage.autoSnapshotDisabled,
-    t.myPage.autoSnapshotError,
+    persistAutomationSettings,
+    t.myPage.autoSnapshotSaved,
     user,
   ])
 
@@ -2088,7 +2084,13 @@ export function MyPage() {
       )
       if (!target) return
       if (!user) return
-      const nextTarget = { mode, id: setId, title: target.title, userId: user.id }
+      const nextTarget = {
+        mode,
+        id: setId,
+        title: target.title,
+        userId: user.id,
+        autoSnapshotEnabled: target.autoSnapshotEnabled,
+      }
       setNumberSetNotice(null)
       setNumberSetDeleteTarget(nextTarget)
       void loadNumberSetDeleteSummary(nextTarget)
@@ -2117,23 +2119,86 @@ export function MyPage() {
 
     const deleted = await runNumberSetAction(() => deleteNumberSetById(target.mode, target.id))
     if (!deleted) return
+    if (
+      target.mode === 'cloud' &&
+      isLastEnabledSnapshotSlot(enabledCloudSnapshotCount, target.autoSnapshotEnabled) &&
+      automationSettings
+    ) {
+      setAutomationBusy(true)
+      await persistAutomationDisabled()
+      setAutomationBusy(false)
+    }
     deleteSummaryRequestRef.current += 1
     setNumberSetDeleteTarget(null)
     setNumberSetNotice(t.myPage.numberSetDeleteSuccess)
   }, [
     deleteNumberSetById,
+    automationSettings,
+    enabledCloudSnapshotCount,
     numberSetDeleteSummary.status,
     numberSetDeleteSummary.summary,
     numberSetDeleteTarget,
+    persistAutomationDisabled,
     runNumberSetAction,
     t.myPage.numberSetDeleteSuccess,
   ])
 
   const handleSetNumberSetAutoSnapshot = useCallback(
     (mode: SaveStorageMode, setId: string, enabled: boolean) => {
-      void runNumberSetAction(() => setNumberSetAutoSnapshot(mode, setId, enabled))
+      void runNumberSetAction(async () => {
+        if (mode === 'local') return setNumberSetAutoSnapshot(mode, setId, enabled)
+        if (automationBusy) return 'automation_busy'
+        setAutomationBusy(true)
+        setAutomationNotice(null)
+
+        try {
+          const shouldStartSchedule = shouldStartSnapshotSchedule(
+            automationSettings?.enabled ?? false,
+            enabled,
+          )
+          if (shouldStartSchedule) {
+            const scheduleError = await persistAutomationSettings({
+              enabled: true,
+              label: automationSettings?.label ?? t.myPage.autoSnapshotDefaultLabel,
+              timeZone: snapshotTimeZone,
+              timeOfDay: automationSettings?.timeOfDay ?? '16:00',
+            })
+            if (scheduleError) return scheduleError
+          }
+
+          const numberSetError = await setNumberSetAutoSnapshot(mode, setId, enabled)
+          if (numberSetError) {
+            if (shouldStartSchedule && enabledCloudSnapshotCount === 0) {
+              await persistAutomationDisabled()
+            }
+            return numberSetError
+          }
+
+          if (
+            isLastEnabledSnapshotSlot(enabledCloudSnapshotCount, !enabled) &&
+            automationSettings
+          ) {
+            const disableError = await persistAutomationDisabled()
+            if (disableError) return disableError
+          }
+
+          return null
+        } finally {
+          setAutomationBusy(false)
+        }
+      })
     },
-    [setNumberSetAutoSnapshot, runNumberSetAction],
+    [
+      automationBusy,
+      automationSettings,
+      enabledCloudSnapshotCount,
+      persistAutomationDisabled,
+      persistAutomationSettings,
+      runNumberSetAction,
+      setNumberSetAutoSnapshot,
+      snapshotTimeZone,
+      t.myPage.autoSnapshotDefaultLabel,
+    ],
   )
 
   const handleSetNumberSetPreset = useCallback(
@@ -2205,7 +2270,7 @@ export function MyPage() {
                 >
                   <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
                   <div className="my-page-setting-lines">
-                  {/* 계좌 스냅샷 자동 저장·주문 기록 자동 저장은 Pro 전용 —
+                  {/* 계좌스냅샷 저장 시각·주문 기록 저장은 Pro 전용 —
                       무료 유저에겐 "노출 후 차단" 대신 아예 렌더하지 않는다(업그레이드 패널로 일원화). */}
                   {isPro && (
                     <>
@@ -2214,13 +2279,13 @@ export function MyPage() {
                         copy={t.myPage}
                         isPro={isPro}
                         hasCloudInput={hasCloudInput}
+                        enabledSlotCount={enabledCloudSnapshotCount}
                         settings={automationSettings}
                         busy={automationBusy}
                         notice={automationNotice}
                         timeZone={snapshotTimeZone}
                         onTimeZoneChange={handleTimeZoneChange}
                         onSave={(settings) => void handleAutomationSave(settings)}
-                        onDisable={() => void handleAutomationDisable()}
                       />
                       <div className="my-page-setting-line">
                         <div className="my-page-setting-line__copy">
@@ -2253,7 +2318,7 @@ export function MyPage() {
                 localNumberSets={localNumberSets}
                 cloudNumberSets={cloudNumberSets}
                 numberSetLimits={numberSetLimits}
-                busy={numberSetBusy}
+                busy={numberSetBusy || automationBusy}
                 notice={numberSetNotice}
                 isPro={isPro}
                 onCreateNumberSet={handleCreateNumberSet}

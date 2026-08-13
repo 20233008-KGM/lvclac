@@ -423,6 +423,7 @@ export const ko: Messages = {
     rolloverSetupCancel: '취소',
     rolloverSetupSave: '설정하고 켜기',
     rolloverEditSave: '변경 저장',
+    rolloverNeedsAutoSnapshot: '먼저 자동 기록을 활성화해 주세요.',
     rolloverColumnLabel: '롤오버',
     rolloverToggleLabel: '롤오버 알림',
     rolloverIntervalLabel: '주기',

@@ -425,6 +425,7 @@ export interface Messages {
     rolloverSetupCancel: string
     rolloverSetupSave: string
     rolloverEditSave: string
+    rolloverNeedsAutoSnapshot: string
     rolloverColumnLabel: string
     rolloverToggleLabel: string
     rolloverIntervalLabel: string

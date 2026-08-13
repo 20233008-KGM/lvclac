@@ -123,7 +123,8 @@ describe('my page number-set management UI', () => {
     expect(koHtml.match(/거래종목/g)).toHaveLength(2)
     expect(koHtml.match(/type="checkbox"/g)).toHaveLength(4)
     expect(koHtml.match(/checked=""/g)).toHaveLength(2)
-    expect(koHtml.match(/disabled=""/g)).toHaveLength(1)
+    expect(koHtml).not.toContain('disabled=""')
+    expect(koHtml).toContain('aria-disabled="true"')
     expect(koHtml).toContain('toggle-switch__track')
     expect(koHtml).not.toContain('my-page-number-set-row--auto-selected')
     expect(koHtml).toContain('cloud-cloud-1: 매일 기록')
@@ -176,6 +177,26 @@ describe('my page number-set management UI', () => {
     expect(css).toContain('grid-row: 2')
     expect(css).not.toContain('.my-page-number-set-row--auto-selected')
     expect(css).not.toContain('@media (max-width: 420px)')
+  })
+
+  it('explains the rollover dependency instead of leaving a native disabled switch', () => {
+    const component = source('src/components/MyPage.tsx')
+    const toggle = source('src/components/ToggleSwitch.tsx')
+    const css = source('src/styles/pages.css')
+
+    expect(component).toContain('ariaDisabled={!numberSet.autoSnapshotEnabled}')
+    expect(component).toContain('onBlocked={onRolloverBlocked}')
+    expect(component).toContain('copy.rolloverNeedsAutoSnapshot')
+    expect(component).toContain('setTimeout(() => {')
+    expect(component).toContain('}, 3000)')
+    expect(toggle).toContain("event.preventDefault()")
+    expect(toggle).toContain('onBlocked?.()')
+    expect(toggle).toContain('if (ariaDisabled) return')
+    expect(toggle).toContain('aria-disabled={ariaDisabled || undefined}')
+    expect(css).toContain('.toggle-switch--aria-disabled')
+    expect(css).toContain('.my-page-toast')
+    expect(css).toContain('position: fixed')
+    expect(css).toContain('right: var(--space-lg)')
   })
 
   it('opens inline setup before the first rollover activation and saves drafts explicitly', () => {

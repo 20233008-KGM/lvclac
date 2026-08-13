@@ -431,6 +431,7 @@ export const en: Messages = {
     rolloverSetupCancel: 'Cancel',
     rolloverSetupSave: 'Save and turn on',
     rolloverEditSave: 'Save changes',
+    rolloverNeedsAutoSnapshot: 'Turn on Auto record first.',
     rolloverColumnLabel: 'Rollover',
     rolloverToggleLabel: 'Rollover alert',
     rolloverIntervalLabel: 'Cycle',

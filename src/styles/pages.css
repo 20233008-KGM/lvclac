@@ -4166,6 +4166,53 @@ html[data-zone='about'] body {
   opacity: 0.55;
 }
 
+/* 조건부 잠금: 실제 disabled와 달리 포커스·클릭을 받아 잠긴 이유를 안내한다. */
+.toggle-switch--aria-disabled {
+  cursor: help;
+}
+
+.toggle-switch--aria-disabled .toggle-switch__label,
+.toggle-switch--aria-disabled .toggle-switch__track {
+  opacity: 0.55;
+}
+
+/* 마이페이지의 짧은 조건 안내. 반복 호출은 하나의 풍선 표시 시간만 갱신한다. */
+.my-page-toast {
+  position: fixed;
+  top: 76px;
+  right: var(--space-lg);
+  z-index: 1800;
+  max-width: min(360px, calc(100vw - 32px));
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  animation: my-page-toast-in 140ms ease-out;
+}
+
+@keyframes my-page-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-page-toast {
+    animation: none;
+  }
+}
+
 /* 아이콘 전용 사각 버튼(상세보기·삭제·추가). */
 .my-page-icon-btn {
   display: inline-grid;
@@ -4861,6 +4908,12 @@ a.my-page-compare-card__action {
 }
 
 @media (max-width: 620px) {
+  .my-page-toast {
+    top: 64px;
+    right: var(--space-sm);
+    max-width: calc(100vw - 2 * var(--space-sm));
+  }
+
   .my-page-automation-control {
     width: 100%;
   }

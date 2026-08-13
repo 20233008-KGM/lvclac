@@ -815,6 +815,7 @@ function NumberSetRow({
   onDeleteNumberSet,
   onSetAutoSnapshot,
   onSetRollover,
+  onRolloverBlocked,
   onClearRolloverPending,
 }: {
   copy: MyPageCopy
@@ -829,6 +830,7 @@ function NumberSetRow({
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
   onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
+  onRolloverBlocked?: () => void
   onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
@@ -929,13 +931,11 @@ function NumberSetRow({
               </span>
               <ToggleSwitch
                 checked={numberSet.rollover.enabled}
-                disabled={
-                  busy ||
-                  !numberSet.autoSnapshotEnabled ||
-                  (rolloverSetupOpen && !numberSet.rollover.enabled)
-                }
+                disabled={busy || (rolloverSetupOpen && !numberSet.rollover.enabled)}
+                ariaDisabled={!numberSet.autoSnapshotEnabled}
                 label={`${numberSet.title}: ${copy.rolloverToggleLabel}`}
                 labelHidden
+                onBlocked={onRolloverBlocked}
                 onChange={handleRolloverToggle}
               />
             </div>
@@ -1081,6 +1081,7 @@ function NumberSetGroup({
   onDeleteNumberSet,
   onSetAutoSnapshot,
   onSetRollover,
+  onRolloverBlocked,
   onClearRolloverPending,
 }: {
   copy: MyPageCopy
@@ -1100,6 +1101,7 @@ function NumberSetGroup({
   // 넘기면 이 그룹의 각 행에 자동 스냅샷 토글이 붙는다(클라우드 그룹 전용).
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
   onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
+  onRolloverBlocked?: () => void
   onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
   const showAutoSnapshotColumn = Boolean(
@@ -1153,6 +1155,7 @@ function NumberSetGroup({
             onDeleteNumberSet={onDeleteNumberSet}
             onSetAutoSnapshot={onSetAutoSnapshot}
             onSetRollover={onSetRollover}
+            onRolloverBlocked={onRolloverBlocked}
             onClearRolloverPending={onClearRolloverPending}
           />
         ))}
@@ -1196,6 +1199,25 @@ export function NumberSetPreferencesPanel({
   onClearRolloverPending: (mode: SaveStorageMode, setId: string) => void
 }) {
   const autoSnapshotCount = cloudNumberSets.filter((set) => set.autoSnapshotEnabled).length
+  const [rolloverNoticeRevision, setRolloverNoticeRevision] = useState(0)
+  const rolloverNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showRolloverDependencyNotice = useCallback(() => {
+    if (rolloverNoticeTimerRef.current) clearTimeout(rolloverNoticeTimerRef.current)
+    setRolloverNoticeRevision((revision) => revision + 1)
+    rolloverNoticeTimerRef.current = setTimeout(() => {
+      setRolloverNoticeRevision(0)
+      rolloverNoticeTimerRef.current = null
+    }, 3000)
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (rolloverNoticeTimerRef.current) clearTimeout(rolloverNoticeTimerRef.current)
+    },
+    [],
+  )
+
   return (
     <section
       id="my-page-number-sets"
@@ -1238,6 +1260,7 @@ export function NumberSetPreferencesPanel({
           onDeleteNumberSet={onDeleteNumberSet}
           onSetAutoSnapshot={onSetAutoSnapshot}
           onSetRollover={onSetRollover}
+          onRolloverBlocked={showRolloverDependencyNotice}
           onClearRolloverPending={onClearRolloverPending}
         />
       </div>
@@ -1251,6 +1274,16 @@ export function NumberSetPreferencesPanel({
       )}
       <p className="my-page-field-help">{copy.numberSetsLimitNote}</p>
       {notice && <p className="my-page-form-message" role="status">{notice}</p>}
+      {rolloverNoticeRevision > 0 && (
+        <div
+          key={rolloverNoticeRevision}
+          className="my-page-toast"
+          role="status"
+          aria-live="polite"
+        >
+          {copy.rolloverNeedsAutoSnapshot}
+        </div>
+      )}
     </section>
   )
 }

@@ -543,6 +543,11 @@ input:focus:not(:focus-visible) {
   gap: var(--space-sm);
 }
 
+.header-locale-menu {
+  position: relative;
+  display: inline-flex;
+}
+
 .header-locale-link {
   display: inline-flex;
   align-items: center;
@@ -554,10 +559,12 @@ input:focus:not(:focus-visible) {
   border-radius: var(--radius);
   background: transparent;
   color: var(--color-text-muted);
+  font-family: inherit;
   font-size: var(--font-size-sm);
   font-weight: 600;
   line-height: 1;
   text-decoration: none;
+  cursor: pointer;
   transition:
     color 0.16s ease,
     background-color 0.16s ease;
@@ -578,6 +585,90 @@ input:focus:not(:focus-visible) {
   stroke-linecap: round;
   stroke-linejoin: round;
   flex: 0 0 auto;
+}
+
+.header-locale-link__chevron {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.16s ease;
+}
+
+.header-locale-link[aria-expanded='true'] .header-locale-link__chevron {
+  transform: rotate(180deg);
+}
+
+.header-locale-menu__popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 120;
+  display: grid;
+  min-width: 144px;
+  padding: 4px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.header-locale-menu__popover[hidden] {
+  display: none;
+}
+
+.header-locale-menu__item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.header-locale-menu__item:hover,
+.header-locale-menu__item:focus-visible {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.header-locale-menu__item--current {
+  color: var(--color-text);
+}
+
+.header-locale-menu__check {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.header-locale-menu__check svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 640px) {
+  .header-locale-menu__popover {
+    right: auto;
+    left: 0;
+  }
 }
 
 .header-how-tooltip-anchor {

@@ -89,7 +89,10 @@ describe('my page number-set management UI', () => {
     expect(groupsRule).not.toContain('repeat(2')
     const rowRule = css.match(/\.my-page-number-set-row\s*\{([^}]*)\}/)?.[1]
     expect(variables).toContain('--mypage-control-width: 176px')
-    expect(rowRule).toContain('grid-template-columns: var(--mypage-control-width) 72px var(--mypage-control-width) minmax(70px, 1fr)')
+    expect(variables).toContain('--mypage-instrument-width: 160px')
+    expect(rowRule).toContain('grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) 72px var(--mypage-instrument-width) 70px')
+    expect(css).toContain('.my-page-number-set-list-head span:nth-child(2)')
+    expect(css).toContain('grid-column: 5')
     expect(css).toContain('justify-self: end')
     expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
     expect(css).toContain('grid-template-columns: repeat(3, var(--mypage-control-width))')

@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { PUBLIC_PAGE_METADATA } from '../config/publicPageMetadata'
+import { en } from '../i18n/locales/en'
+import { ko } from '../i18n/locales/ko'
 
 const source = readFileSync(resolve('src/components/PublicSeoContent.tsx'), 'utf8')
 const appSource = readFileSync(resolve('src/App.tsx'), 'utf8')
@@ -14,16 +17,30 @@ const css = readFileSync(resolve('src/styles/publicSeo.css'), 'utf8')
 describe('public SEO content', () => {
   it('keeps the calculator scope and limitations visible on the home page', () => {
     expect(source).toContain('선물 청산가 계산기로 확인할 수 있는 것')
-    expect(source).toContain('지수·주식·원자재 선물의 단일 종목 포지션')
+    expect(source).toContain('종목선물(주식선물)·지수선물·상품선물(원자재선물)')
+    expect(source).toContain('single-stock, index, or commodity futures')
     expect(source).toContain('거래소·증권사·브로커 규정')
     expect(appSource).toContain('<PublicHomeSeoSummary />')
+  })
+
+  it('keeps the approved calculator titles unchanged', () => {
+    expect(ko.siteTitle).toBe('선물 계산기')
+    expect(en.siteTitle).toBe('Futures Calculator')
+    expect(PUBLIC_PAGE_METADATA.ko['/'].title).toBe(
+      '선물 청산가 계산기 | 증거금·레버리지 | LiqGuard',
+    )
+    expect(PUBLIC_PAGE_METADATA.en['/'].title).toBe(
+      'Futures Liquidation Calculator | Margin & Leverage | LiqGuard',
+    )
   })
 
   it('links the calculator, guide, and formulas with descriptive text', () => {
     expect(source).toContain('href={localizedPublicPath(GUIDE_PATH, locale)}')
     expect(source).toContain('href={localizedPublicPath(FORMULAS_PATH, locale)}')
     expect(source).toContain('청산가·증거금 계산 공식 보기')
-    expect(source).toContain('선물 청산가 계산기 사용법 보기')
+    expect(source).toContain('LiqGuard 사용 가이드 보기')
+    expect(source).toContain('선물 청산가 계산기 열기')
+    expect(source).toContain('Open the futures liquidation calculator')
     expect(guideSource).toContain('<PublicDocumentNext current="guide" />')
     expect(formulasSource).toContain('<PublicDocumentNext current="formulas" />')
   })

@@ -11,12 +11,12 @@ export const PUBLIC_PAGE_METADATA = {
     '/': {
       title: '선물 청산가 계산기 | 증거금·레버리지 | LiqGuard',
       description:
-        '계좌 평가금액과 증거금 정보를 바탕으로 선물 포지션의 예상 청산가, 증거금 여유와 레버리지를 계산합니다.',
+        '계좌 평가금액과 증거금 정보를 바탕으로 종목선물(주식선물), 지수선물, 상품선물(원자재선물)의 예상 청산가, 증거금 여유와 레버리지를 계산합니다.',
     },
     '/guide': {
-      title: '선물 청산가 계산기 사용법 | LiqGuard',
+      title: 'LiqGuard 사용 가이드 | 선물 증거금·청산가 계산 방법',
       description:
-        'LiqGuard 선물 계산기의 필수 세팅값, 증거금 모드, 주문 시뮬레이션과 기기 내 저장 사용법을 안내합니다.',
+        'LiqGuard의 필수 세팅값, 증거금 모드, 청산가 계산 입력, 주문 시뮬레이션과 기기 내 저장 사용법을 안내합니다.',
     },
     '/formulas': {
       title: '선물 청산가·증거금 계산 공식 | LiqGuard',
@@ -65,12 +65,12 @@ export const PUBLIC_PAGE_METADATA = {
     '/': {
       title: 'Futures Liquidation Calculator | Margin & Leverage | LiqGuard',
       description:
-        'Estimate futures liquidation price, margin headroom, and leverage from account equity and margin inputs.',
+        'Estimate liquidation price, margin headroom, and leverage for single-stock, index, and commodity futures from account equity and margin inputs.',
     },
     '/guide': {
-      title: 'Futures Liquidation Calculator Guide | LiqGuard',
+      title: 'How to Use LiqGuard | Futures Margin and Liquidation Guide',
       description:
-        'Learn the minimum setup values, margin modes, order simulation, and on-device saving in LiqGuard.',
+        'Learn LiqGuard setup values, margin modes, liquidation inputs, order simulation, and on-device saving.',
     },
     '/formulas': {
       title: 'Liquidation Price & Margin Formulas | LiqGuard',

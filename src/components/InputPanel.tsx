@@ -538,7 +538,7 @@ function MarginSection({
   }
 
   return (
-    <div className="field-section">
+    <div className={`field-section field-section--margin field-section--margin-${mode}`}>
       <div className="field-section-head">
         <SectionTitle>{t.sections.margin}</SectionTitle>
         <div className="margin-mode-toggle" role="group" aria-label={m.label}>

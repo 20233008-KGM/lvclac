@@ -1813,8 +1813,23 @@ input:focus:not(:focus-visible) {
 
 .input-panel .field-section {
   display: grid;
-  grid-template-columns: repeat(2, minmax(min-content, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-md);
+}
+
+.input-panel .field-section--margin > .field {
+  min-width: 0;
+}
+
+.input-panel .field-section--margin > .field .field-label-row,
+.input-panel .field-section--margin > .field .field-label-text {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+
+:root[lang='en'] .input-panel .field-section--margin-perContract > .field .field-label-row {
+  min-height: 2.7em;
 }
 
 .input-panel .field.field--setup-screen {

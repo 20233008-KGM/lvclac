@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 const app = readFileSync(resolve('src/App.tsx'), 'utf8')
 const input = readFileSync(resolve('src/components/InputPanel.tsx'), 'utf8')
 const result = readFileSync(resolve('src/components/ResultPanel.tsx'), 'utf8')
+const howToUse = readFileSync(resolve('src/components/HowToUseButton.tsx'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
 
 const FIELD_CLASSES = ['fh-equity', 'fh-entry', 'fh-contracts', 'fh-mark', 'fh-mult', 'fh-margin']
@@ -28,6 +29,11 @@ describe('field hint 배선 (클래스 계약)', () => {
   it('ResultPanel: 주문 섹션에 fh-order를 한 번만 둔다', () => {
     expect(result).toContain('result-panel--order fh-order')
     expect(result.match(/fh-order/g)).toHaveLength(1)
+  })
+
+  it('HowToUseButton: 상세 안내와 필드 안내 문구를 동시에 표시하지 않는다', () => {
+    expect(howToUse).toContain('open: tooltipOpen')
+    expect(howToUse).toContain('fieldGuideActive && !tooltipOpen')
   })
 
   it('App.css: 모든 fh-* 클래스와 3단계 셀렉터 존재', () => {

@@ -24,7 +24,13 @@ export function HowToUseButton({
   const tabListId = `${id}-tabs`
   const panelId = `${id}-panel`
   const [tab, setTab] = useState<HowToTab>('beginner')
-  const { anchorRef, anchorHandlers, focusWithinHandlers, renderTooltip } = useFloatingTooltip({
+  const {
+    anchorRef,
+    open: tooltipOpen,
+    anchorHandlers,
+    focusWithinHandlers,
+    renderTooltip,
+  } = useFloatingTooltip({
     placement: 'bottom',
     focusWithin: true,
   })
@@ -59,7 +65,7 @@ export function HowToUseButton({
       >
         {fieldGuideActive ? t.fieldHint.activeButton : h.button}
       </button>
-      {fieldGuideActive && (
+      {fieldGuideActive && !tooltipOpen && (
         <span className="header-field-guide-callout" role="status">
           <span className="header-field-guide-callout__dot" aria-hidden="true" />
           {t.fieldHint.callout}

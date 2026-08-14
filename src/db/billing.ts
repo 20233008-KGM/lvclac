@@ -22,10 +22,21 @@ interface SubscriptionRow {
   scheduled_change_effective_at: string | null
 }
 
+function clientPaddleEnvironment(): PaddleEnvironment | null {
+  const environment = import.meta.env.VITE_PADDLE_ENV
+  return environment === 'sandbox' || environment === 'live' ? environment : null
+}
+
+function clientSubscriptionProviders(environment: PaddleEnvironment): string[] {
+  return environment === 'live' ? ['paddle_live'] : ['paddle_sandbox', 'paddle']
+}
+
 export async function fetchSubscription(
   userId: string,
 ): Promise<BillingResult<SubscriptionRecord | null>> {
   if (!supabase) return { data: null, error: 'supabase_not_configured' }
+  const environment = clientPaddleEnvironment()
+  if (!environment) return { data: null, error: 'paddle_not_configured' }
 
   const { data, error } = await supabase
     .from('subscriptions')
@@ -33,6 +44,9 @@ export async function fetchSubscription(
       'status,current_period_end,scheduled_change_action,scheduled_change_effective_at',
     )
     .eq('user_id', userId)
+    .in('provider', clientSubscriptionProviders(environment))
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle<SubscriptionRow>()
 
   if (error) return { data: null, error: error.message }

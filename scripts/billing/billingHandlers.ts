@@ -1,6 +1,12 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { BillingConfig, BillingDeps, BillingPlan } from './billingConfig.js'
-import { isBillingPlan, paddleApiBaseUrl, resolveBaseUrl } from './billingConfig.js'
+import {
+  isBillingPlan,
+  paddleApiBaseUrl,
+  paddleProvider,
+  paddleProviderAliases,
+  resolveBaseUrl,
+} from './billingConfig.js'
 import {
   customerIdOf,
   syncSubscription,
@@ -71,7 +77,7 @@ export async function handleCheckout(
     body: {
       ok: true,
       priceId,
-      customData: { user_id: auth.user.id, plan, provider: 'paddle' },
+      customData: { user_id: auth.user.id, plan, provider: paddleProvider(config.paddleEnv) },
       customerEmail: auth.user.email,
       successUrl: `${baseUrl}/my?checkout=success`,
     },
@@ -97,6 +103,9 @@ export async function handlePortal(
     .from('subscriptions')
     .select('provider_customer_id,provider_subscription_id')
     .eq('user_id', auth.user.id)
+    .in('provider', paddleProviderAliases(config.paddleEnv))
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle<{
       provider_customer_id: string | null
       provider_subscription_id: string | null
@@ -158,6 +167,9 @@ export async function handleSandboxSubscription(
     .from('subscriptions')
     .select('provider_subscription_id')
     .eq('user_id', auth.user.id)
+    .in('provider', paddleProviderAliases(config.paddleEnv))
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle<{ provider_subscription_id: string | null }>()
   if (subscriptionRow.error) return fail(500, subscriptionRow.error.message)
 
@@ -188,7 +200,7 @@ export async function handleSandboxSubscription(
   const subscription = asRecord(asRecord(payload)?.data) as PaddleSubscription | null
   if (!subscription) return fail(502, 'subscription_payload_missing')
 
-  const syncResult = await syncSubscription(deps, subscription, auth.user.id)
+  const syncResult = await syncSubscription(deps, subscription, auth.user.id, config.paddleEnv)
   if (!syncResult.ok) return fail(500, syncResult.error ?? 'sync_failed')
   return { status: 200, body: { ok: true, action: request.action } }
 }
@@ -268,7 +280,7 @@ export async function handleWebhook(
     const eventType = event.event_type ?? event.type ?? ''
     if (eventType.startsWith('subscription.') && event.data) {
       const hint = stringValue(asRecord(event.data.custom_data)?.user_id)
-      const result = await syncSubscription(deps, event.data, hint)
+      const result = await syncSubscription(deps, event.data, hint, config.paddleEnv)
       if (!result.ok) return fail(500, result.error ?? 'sync_failed')
     }
   } catch (error) {

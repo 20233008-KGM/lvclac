@@ -73,7 +73,7 @@ describe('handleCheckout validation', () => {
       priceId: 'pri_y',
       customerEmail: 'u@example.com',
       successUrl: 'https://a.com/my?checkout=success',
-      customData: { user_id: 'user-1', plan: 'yearly', provider: 'paddle' },
+      customData: { user_id: 'user-1', plan: 'yearly', provider: 'paddle_sandbox' },
     })
   })
 })
@@ -106,6 +106,16 @@ function makeSandboxDeps(state: SandboxState): BillingDeps {
         },
         eq(column: string, value: unknown) {
           state.filters.push({ table, column, value })
+          return chain
+        },
+        in(column: string, value: unknown) {
+          state.filters.push({ table, column, value })
+          return chain
+        },
+        order() {
+          return chain
+        },
+        limit() {
           return chain
         },
         async maybeSingle() {
@@ -184,6 +194,11 @@ describe('handleSandboxSubscription', () => {
       column: 'user_id',
       value: 'user-1',
     })
+    expect(state.filters).toContainEqual({
+      table: 'subscriptions',
+      column: 'provider',
+      value: ['paddle_sandbox', 'paddle'],
+    })
     expect(state.fetches).toHaveLength(1)
     expect(state.fetches[0]).toMatchObject({
       input: 'https://sandbox-api.paddle.com/subscriptions/sub_1/cancel',
@@ -224,6 +239,15 @@ function makeWebhookDeps(state: WebhookState): BillingDeps {
           return this
         },
         eq() {
+          return this
+        },
+        in() {
+          return this
+        },
+        order() {
+          return this
+        },
+        limit() {
           return this
         },
         async maybeSingle() {
@@ -287,7 +311,7 @@ describe('handleWebhook', () => {
     expect(state.inserts).toHaveLength(1)
     expect(state.inserts[0]).toMatchObject({
       user_id: 'user-1',
-      provider: 'paddle',
+      provider: 'paddle_sandbox',
       status: 'active',
       scheduled_change_action: 'cancel',
       scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',

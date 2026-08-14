@@ -1,4 +1,9 @@
-import type { BillingDeps } from './billingConfig.js'
+import {
+  paddleProvider,
+  paddleProviderAliases,
+  type BillingDeps,
+  type PaddleEnvironment,
+} from './billingConfig.js'
 
 export type SubscriptionStatus =
   | 'inactive'
@@ -81,12 +86,17 @@ export interface SubscriptionPatch {
 export async function upsertSubscriptionByUser(
   deps: BillingDeps,
   userId: string,
+  environment: PaddleEnvironment,
   patch: SubscriptionPatch,
 ): Promise<{ ok: boolean; error?: string }> {
+  const provider = paddleProvider(environment)
   const existing = await deps.admin
     .from('subscriptions')
     .select('id')
     .eq('user_id', userId)
+    .in('provider', paddleProviderAliases(environment))
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle<{ id: string }>()
 
   if (existing.error) return { ok: false, error: existing.error.message }
@@ -94,19 +104,20 @@ export async function upsertSubscriptionByUser(
   if (existing.data) {
     const { error } = await deps.admin
       .from('subscriptions')
-      .update({ provider: 'paddle', ...patch })
+      .update({ provider, ...patch })
       .eq('id', existing.data.id)
     return error ? { ok: false, error: error.message } : { ok: true }
   }
 
   const { error } = await deps.admin
     .from('subscriptions')
-    .insert({ user_id: userId, provider: 'paddle', ...patch })
+    .insert({ user_id: userId, provider, ...patch })
   return error ? { ok: false, error: error.message } : { ok: true }
 }
 
 export async function resolveUserId(
   deps: BillingDeps,
+  environment: PaddleEnvironment,
   hint: string | null | undefined,
   customerId: string | null,
 ): Promise<string | null> {
@@ -117,6 +128,9 @@ export async function resolveUserId(
       .from('subscriptions')
       .select('user_id')
       .eq('provider_customer_id', customerId)
+      .in('provider', paddleProviderAliases(environment))
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .maybeSingle<{ user_id: string }>()
     if (byCustomer.data?.user_id) return byCustomer.data.user_id
   }
@@ -128,14 +142,15 @@ export async function syncSubscription(
   deps: BillingDeps,
   sub: PaddleSubscription,
   userIdHint: string | null,
+  environment: PaddleEnvironment,
 ): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
   const customerId = customerIdOf(sub)
   const customUserId = sub.custom_data?.user_id
   const metaUserId = typeof customUserId === 'string' ? customUserId : null
-  const userId = await resolveUserId(deps, userIdHint || metaUserId, customerId)
+  const userId = await resolveUserId(deps, environment, userIdHint || metaUserId, customerId)
   if (!userId) return { ok: true, skipped: true }
 
-  return upsertSubscriptionByUser(deps, userId, {
+  return upsertSubscriptionByUser(deps, userId, environment, {
     provider_customer_id: customerId,
     provider_subscription_id: sub.id ?? null,
     status: mapPaddleStatus(sub.status),

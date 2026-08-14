@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { BillingDeps } from './billingConfig'
+import { paddleProviderAliases } from './billingConfig'
 import {
   customerIdOf,
   getPeriodEndIso,
@@ -37,6 +38,13 @@ describe('getPeriodEndIso', () => {
 
   it('returns null when unavailable', () => {
     expect(getPeriodEndIso({})).toBeNull()
+  })
+})
+
+describe('Paddle environment isolation', () => {
+  it('never treats a legacy sandbox row as a live subscription', () => {
+    expect(paddleProviderAliases('live')).toEqual(['paddle_live'])
+    expect(paddleProviderAliases('sandbox')).toEqual(['paddle_sandbox', 'paddle'])
   })
 })
 
@@ -85,6 +93,15 @@ function makeDeps(existingRow: { id: string } | null, state: FakeState): Billing
         eq() {
           return this
         },
+        in() {
+          return this
+        },
+        order() {
+          return this
+        },
+        limit() {
+          return this
+        },
         async maybeSingle() {
           return { data: existingRow, error: null }
         },
@@ -118,13 +135,13 @@ describe('syncSubscription', () => {
   it('inserts a new row when none exists', async () => {
     const state: FakeState = { updates: [], inserts: [] }
     const deps = makeDeps(null, state)
-    const result = await syncSubscription(deps, baseSub, 'user-1')
+    const result = await syncSubscription(deps, baseSub, 'user-1', 'live')
 
     expect(result.ok).toBe(true)
     expect(state.inserts).toHaveLength(1)
     expect(state.inserts[0]).toMatchObject({
       user_id: 'user-1',
-      provider: 'paddle',
+      provider: 'paddle_live',
       provider_customer_id: 'ctm_1',
       provider_subscription_id: 'sub_1',
       status: 'active',
@@ -136,12 +153,12 @@ describe('syncSubscription', () => {
   it('updates an existing row', async () => {
     const state: FakeState = { updates: [], inserts: [] }
     const deps = makeDeps({ id: 'row-9' }, state)
-    const result = await syncSubscription(deps, baseSub, 'user-1')
+    const result = await syncSubscription(deps, baseSub, 'user-1', 'sandbox')
 
     expect(result.ok).toBe(true)
     expect(state.updates).toHaveLength(1)
     expect(state.updates[0]).toMatchObject({
-      provider: 'paddle',
+      provider: 'paddle_sandbox',
       status: 'active',
       provider_subscription_id: 'sub_1',
       scheduled_change_action: 'cancel',
@@ -154,7 +171,7 @@ describe('syncSubscription', () => {
     const state: FakeState = { updates: [], inserts: [] }
     const orphan: PaddleSubscription = { ...baseSub, customer_id: null, custom_data: {} }
     const deps = makeDeps(null, state)
-    const result = await syncSubscription(deps, orphan, null)
+    const result = await syncSubscription(deps, orphan, null, 'live')
 
     expect(result).toEqual({ ok: true, skipped: true })
     expect(state.inserts).toHaveLength(0)

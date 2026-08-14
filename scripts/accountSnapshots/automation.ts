@@ -1,4 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import {
+  isPaddleEnvironment,
+  paddleProviderAliases,
+  type PaddleEnvironment,
+} from '../billing/billingConfig.js'
 import { calculateEvaluate } from '../../src/calc/leverage.js'
 import {
   computeNextSnapshotRunAt,
@@ -28,6 +33,7 @@ export interface AccountSnapshotCronConfig {
   cronSecret: string
   supabaseUrl: string
   serviceRoleKey: string
+  paddleEnv: PaddleEnvironment
 }
 
 export interface DueSnapshotSetting {
@@ -124,8 +130,11 @@ export function readAccountSnapshotCronConfig(
   const cronSecret = env.CRON_SECRET
   const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY
-  if (!cronSecret || !supabaseUrl || !serviceRoleKey) return null
-  return { cronSecret, supabaseUrl, serviceRoleKey }
+  const paddleEnv = env.PADDLE_ENV
+  if (!cronSecret || !supabaseUrl || !serviceRoleKey || !isPaddleEnvironment(paddleEnv)) {
+    return null
+  }
+  return { cronSecret, supabaseUrl, serviceRoleKey, paddleEnv }
 }
 
 function mapDueSetting(row: DueSettingRow): DueSnapshotSetting {
@@ -162,11 +171,12 @@ export function createAccountSnapshotCronDeps(
   const admin = createClient(config.supabaseUrl, config.serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
-  return createAccountSnapshotCronDepsFromClient(admin)
+  return createAccountSnapshotCronDepsFromClient(admin, config.paddleEnv)
 }
 
 export function createAccountSnapshotCronDepsFromClient(
   admin: SupabaseClient,
+  paddleEnv: PaddleEnvironment,
 ): AccountSnapshotCronDeps {
   return {
     async fetchDueSettings(nowIso: string): Promise<DueSnapshotSetting[]> {
@@ -187,6 +197,9 @@ export function createAccountSnapshotCronDepsFromClient(
         .from('subscriptions')
         .select('status')
         .eq('user_id', userId)
+        .in('provider', paddleProviderAliases(paddleEnv))
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle<SubscriptionRow>()
 
       if (error) throw new Error(error.message)

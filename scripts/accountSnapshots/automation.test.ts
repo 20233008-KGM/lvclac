@@ -10,6 +10,7 @@ const CONFIG: AccountSnapshotCronConfig = {
   cronSecret: 'secret',
   supabaseUrl: 'https://x.supabase.co',
   serviceRoleKey: 'svc',
+  paddleEnv: 'live',
 }
 
 function baseDeps(

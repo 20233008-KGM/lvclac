@@ -894,7 +894,10 @@ export const ko: Messages = {
     doneBody: '선택하신 내용에 맞춰 계산기 화면과 안내를 준비했어요. 이제 청산가를 계산해 보세요.',
   },
   fieldHint: {
-    dismiss: '안내 닫기',
+    activeButton: '안내 중',
+    enable: '필드 안내 켜기',
+    disable: '필드 안내 끄기',
+    callout: '선택에 맞춰 필요한 칸에 순서를 표시했어요.',
     firstTrade:
       '계좌 평가금 · 계약승수 · 증거금률만 채운 뒤, 아래 “주문” 칸에 주문을 넣으면 청산가가 나와요. 현재가·보유 계약수는 지금 안 채워도 됩니다.',
     noPosition:

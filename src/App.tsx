@@ -12,11 +12,12 @@ import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
 import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
-import { FieldHintBanner } from './components/FieldHintBanner'
 import {
+  fieldHintCalculationComplete,
   fieldHintActive,
   readFieldHintDismissed,
   readTraderStage,
+  TRADER_STAGE_CHANGE_EVENT,
   writeFieldHintDismissed,
 } from './components/fieldHint'
 import { AuthButton } from './components/auth/AuthButton'
@@ -43,6 +44,7 @@ import {
   updateIdFromPath,
 } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
+import { calculateEvaluate, calculateOrder } from './calc/leverage'
 import { LayoutProvider } from './context/LayoutContext'
 import { useCalculator } from './context/CalculatorContext'
 import { usePathname } from './hooks/usePathname'
@@ -184,10 +186,42 @@ function CalculatorApp() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [canRedo, canUndo, redoInputs, undoInputs])
 
-  // 온보딩에서 고른 거래 상태 기반 필드 인디케이터(첫 세션, X로 닫으면 영구 해제).
-  const traderStage = useMemo(() => readTraderStage(), [])
+  // 온보딩에서 고른 거래 상태 기반 필드 안내. 상단 사용법 버튼으로 언제든 다시 켤 수 있다.
+  const [traderStage, setTraderStage] = useState(readTraderStage)
   const [fieldHintDismissed, setFieldHintDismissed] = useState(readFieldHintDismissed)
   const fieldHintOn = fieldHintActive(traderStage, fieldHintDismissed)
+  const fieldHintComplete = useMemo(() => {
+    if (!traderStage) return false
+    return fieldHintCalculationComplete(
+      traderStage,
+      calculateEvaluate(inputs).liquidationPrice,
+      calculateOrder(inputs).afterLiquidation,
+    )
+  }, [inputs, traderStage])
+  const previousFieldHintComplete = useRef(fieldHintComplete)
+
+  useEffect(() => {
+    function syncTraderStage() {
+      setTraderStage(readTraderStage())
+    }
+
+    window.addEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)
+    return () => window.removeEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)
+  }, [])
+
+  useEffect(() => {
+    if (fieldHintOn && fieldHintComplete && !previousFieldHintComplete.current) {
+      writeFieldHintDismissed(true)
+      setFieldHintDismissed(true)
+    }
+    previousFieldHintComplete.current = fieldHintComplete
+  }, [fieldHintComplete, fieldHintOn])
+
+  function toggleFieldHint() {
+    const nextDismissed = fieldHintOn
+    writeFieldHintDismissed(nextDismissed)
+    setFieldHintDismissed(nextDismissed)
+  }
 
   return (
     <LayoutProvider layoutMode={layoutMode} fitScale={fitScale}>
@@ -229,19 +263,14 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
-                  <HowToUseButton />
+                  <HowToUseButton
+                    fieldGuideStage={traderStage}
+                    fieldGuideActive={fieldHintOn}
+                    onFieldGuideToggle={traderStage ? toggleFieldHint : undefined}
+                  />
                   <AuthButton variant="header" />
                 </div>
               </header>
-              {fieldHintOn && traderStage && (
-                <FieldHintBanner
-                  stage={traderStage}
-                  onDismiss={() => {
-                    writeFieldHintDismissed()
-                    setFieldHintDismissed(true)
-                  }}
-                />
-              )}
               <main
                 className={`calc-grid${gridScanning ? ' calc-grid--scan' : ''}`}
                 data-scan-gen={gridScanning ? scanGeneration : undefined}

@@ -4,10 +4,19 @@ import { useNavigate } from '../hooks/usePathname'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
 import { useLanguage } from '../i18n'
 import { TooltipBody } from './TooltipBody'
+import type { TraderStage } from './welcomeFlowState'
 
 type HowToTab = 'beginner' | 'experienced'
 
-export function HowToUseButton() {
+export function HowToUseButton({
+  fieldGuideStage = null,
+  fieldGuideActive = false,
+  onFieldGuideToggle,
+}: {
+  fieldGuideStage?: TraderStage | null
+  fieldGuideActive?: boolean
+  onFieldGuideToggle?: () => void
+} = {}) {
   const { t } = useLanguage()
   const navigate = useNavigate()
   const h = t.howToUse
@@ -15,12 +24,23 @@ export function HowToUseButton() {
   const tabListId = `${id}-tabs`
   const panelId = `${id}-panel`
   const [tab, setTab] = useState<HowToTab>('beginner')
-  const { anchorRef, anchorHandlers, focusWithinHandlers, renderTooltip } = useFloatingTooltip({
+  const {
+    anchorRef,
+    open: tooltipOpen,
+    anchorHandlers,
+    focusWithinHandlers,
+    renderTooltip,
+  } = useFloatingTooltip({
     placement: 'bottom',
     focusWithin: true,
   })
 
-  const panelBody = tab === 'beginner' ? h.beginnerBody : h.experiencedBody
+  const fieldGuideAvailable = fieldGuideStage !== null && onFieldGuideToggle !== undefined
+  const panelBody = tab === 'beginner'
+    ? fieldGuideActive && fieldGuideStage
+      ? t.fieldHint[fieldGuideStage]
+      : h.beginnerBody
+    : h.experiencedBody
 
   return (
     <span
@@ -31,12 +51,26 @@ export function HowToUseButton() {
     >
       <button
         type="button"
-        className="header-how-btn"
-        aria-label={h.ariaLabel}
+        className={`header-how-btn${fieldGuideActive ? ' header-how-btn--guide-active' : ''}`}
+        aria-label={
+          fieldGuideAvailable
+            ? fieldGuideActive
+              ? t.fieldHint.disable
+              : t.fieldHint.enable
+            : h.ariaLabel
+        }
         aria-describedby={id}
+        aria-pressed={fieldGuideAvailable ? fieldGuideActive : undefined}
+        onClick={fieldGuideAvailable ? onFieldGuideToggle : undefined}
       >
-        {h.button}
+        {fieldGuideActive ? t.fieldHint.activeButton : h.button}
       </button>
+      {fieldGuideActive && !tooltipOpen && (
+        <span className="header-field-guide-callout" role="status">
+          <span className="header-field-guide-callout__dot" aria-hidden="true" />
+          {t.fieldHint.callout}
+        </span>
+      )}
       {renderTooltip(
         'header-how-tooltip',
         <>

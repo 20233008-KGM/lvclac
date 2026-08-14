@@ -800,9 +800,12 @@ export interface Messages {
     /** 완료 화면 본문 */
     doneBody: string
   }
-  /** 계산기 필드 인디케이터(거래 상태별 '이 칸부터') 코치 배너 카피 */
+  /** 계산기 필드 인디케이터(거래 상태별 '이 칸부터') 상단 안내 모드 카피 */
   fieldHint: {
-    dismiss: string
+    activeButton: string
+    enable: string
+    disable: string
+    callout: string
     firstTrade: string
     noPosition: string
     hasPosition: string

@@ -7,14 +7,17 @@ import { describe, expect, it } from 'vitest'
 const app = readFileSync(resolve('src/App.tsx'), 'utf8')
 const input = readFileSync(resolve('src/components/InputPanel.tsx'), 'utf8')
 const result = readFileSync(resolve('src/components/ResultPanel.tsx'), 'utf8')
+const howToUse = readFileSync(resolve('src/components/HowToUseButton.tsx'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
 
 const FIELD_CLASSES = ['fh-equity', 'fh-entry', 'fh-contracts', 'fh-mark', 'fh-mult', 'fh-margin']
 
 describe('field hint 배선 (클래스 계약)', () => {
-  it('App: data-field-hint 속성 + 배너 렌더', () => {
+  it('App: data-field-hint 속성 + 상단 사용법 토글 배선', () => {
     expect(app).toContain('data-field-hint=')
-    expect(app).toContain('<FieldHintBanner')
+    expect(app).toContain('fieldGuideActive={fieldHintOn}')
+    expect(app).toContain("window.addEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)")
+    expect(app).not.toContain('<FieldHintBanner')
   })
 
   it('InputPanel: 핵심 입력 필드에 fh-* 클래스', () => {
@@ -23,8 +26,14 @@ describe('field hint 배선 (클래스 계약)', () => {
     }
   })
 
-  it('ResultPanel: 주문 필드 래퍼에 fh-order', () => {
-    expect(result).toContain('fh-order')
+  it('ResultPanel: 주문 섹션에 fh-order를 한 번만 둔다', () => {
+    expect(result).toContain('result-panel--order fh-order')
+    expect(result.match(/fh-order/g)).toHaveLength(1)
+  })
+
+  it('HowToUseButton: 상세 안내와 필드 안내 문구를 동시에 표시하지 않는다', () => {
+    expect(howToUse).toContain('open: tooltipOpen')
+    expect(howToUse).toContain('fieldGuideActive && !tooltipOpen')
   })
 
   it('App.css: 모든 fh-* 클래스와 3단계 셀렉터 존재', () => {
@@ -34,5 +43,13 @@ describe('field hint 배선 (클래스 계약)', () => {
     for (const s of ['firstTrade', 'noPosition', 'hasPosition']) {
       expect(css, `CSS missing selector ${s}`).toContain(`[data-field-hint='${s}']`)
     }
+    expect(css).toContain('.header-how-btn--guide-active')
+    expect(css).toContain('.header-field-guide-callout')
+    expect(css).toContain('order: 1')
+    expect(css).not.toContain('order: -1')
+    expect(css).not.toContain('right: calc(2.5rem + var(--space-sm))')
+    expect(css).not.toContain('padding-right: 25px')
+    expect(css).not.toContain('left: calc(100% + 6px)')
+    expect(css).not.toContain('.field-hint-banner')
   })
 })

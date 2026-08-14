@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { BillingDeps } from './billingConfig'
-import { paddleProviderAliases } from './billingConfig'
+import { paddleProviderAliases, subscriptionEntitlementProviders } from './billingConfig'
 import {
   customerIdOf,
   getPeriodEndIso,
@@ -45,6 +45,15 @@ describe('Paddle environment isolation', () => {
   it('never treats a legacy sandbox row as a live subscription', () => {
     expect(paddleProviderAliases('live')).toEqual(['paddle_live'])
     expect(paddleProviderAliases('sandbox')).toEqual(['paddle_sandbox', 'paddle'])
+  })
+
+  it('accepts manual grants for entitlement checks without adding them to Paddle operations', () => {
+    expect(subscriptionEntitlementProviders('live')).toEqual(['paddle_live', 'manual'])
+    expect(subscriptionEntitlementProviders('sandbox')).toEqual([
+      'paddle_sandbox',
+      'paddle',
+      'manual',
+    ])
   })
 })
 

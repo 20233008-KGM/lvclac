@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import {
   isPaddleEnvironment,
-  paddleProviderAliases,
+  subscriptionEntitlementProviders,
   type PaddleEnvironment,
 } from '../billing/billingConfig.js'
 import { calculateEvaluate } from '../../src/calc/leverage.js'
@@ -197,7 +197,7 @@ export function createAccountSnapshotCronDepsFromClient(
         .from('subscriptions')
         .select('status')
         .eq('user_id', userId)
-        .in('provider', paddleProviderAliases(paddleEnv))
+        .in('provider', subscriptionEntitlementProviders(paddleEnv))
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle<SubscriptionRow>()

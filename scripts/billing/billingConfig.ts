@@ -22,6 +22,10 @@ export function paddleProviderAliases(env: PaddleEnvironment): string[] {
   return env === 'live' ? ['paddle_live'] : ['paddle_sandbox', 'paddle']
 }
 
+export function subscriptionEntitlementProviders(env: PaddleEnvironment): string[] {
+  return [...paddleProviderAliases(env), 'manual']
+}
+
 export interface FetchResponseLike {
   ok: boolean
   status: number

@@ -27,8 +27,10 @@ function clientPaddleEnvironment(): PaddleEnvironment | null {
   return environment === 'sandbox' || environment === 'live' ? environment : null
 }
 
-function clientSubscriptionProviders(environment: PaddleEnvironment): string[] {
-  return environment === 'live' ? ['paddle_live'] : ['paddle_sandbox', 'paddle']
+export function clientSubscriptionProviders(environment: PaddleEnvironment): string[] {
+  return environment === 'live'
+    ? ['paddle_live', 'manual']
+    : ['paddle_sandbox', 'paddle', 'manual']
 }
 
 export async function fetchSubscription(

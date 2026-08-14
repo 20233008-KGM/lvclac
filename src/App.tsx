@@ -24,7 +24,6 @@ import { useAuth } from './context/AuthContext'
 import { HowToUseButton } from './components/HowToUseButton'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
-import { LocaleRouteLink } from './components/LocaleRouteLink'
 import { PublicHomeSeoSummary } from './components/PublicSeoContent'
 import { parseBoardPath } from './config/boards'
 import {
@@ -210,7 +209,6 @@ function CalculatorApp() {
                   <p className="app-intro">{t.appIntro}</p>
                 </div>
                 <div className="header-right">
-                  <LocaleRouteLink className="header-locale-link" />
                   {isCustom && (
                     <button
                       type="button"

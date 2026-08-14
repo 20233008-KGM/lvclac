@@ -4,7 +4,6 @@ import { localizedPublicPath } from '../config/routes'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
 import { AuthButton } from './auth/AuthButton'
-import { LocaleRouteLink } from './LocaleRouteLink'
 import {
   publicInfoAriaCurrent,
   publicInfoNavigation,
@@ -106,7 +105,6 @@ export function PublicInfoShell({
               </a>
 
               <div className="public-info-header__actions">
-                <LocaleRouteLink className="public-info-back" />
                 <BackToCalculatorLink />
                 <AuthButton variant="header" />
               </div>

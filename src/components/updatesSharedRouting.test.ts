@@ -24,7 +24,8 @@ describe('shared localized updates routing', () => {
 
     expect(toggle).toContain('isLocalizablePublicPath(pathname)')
     expect(toggle).toContain('navigate(localizedPublicPath(pathname, code))')
-    expect(shell).toContain('<LocaleRouteLink className="public-info-back" />')
+    expect(shell).not.toContain('<LocaleRouteLink')
+    expect(footer).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
     expect(footer).toContain("localizedPublicPath(link.href, locale)")
   })
 

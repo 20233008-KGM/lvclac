@@ -3,7 +3,7 @@ import { PRIVACY_PATH, TERMS_PATH, type LegalPageKind } from '../config/routes'
 import { CONTACT_EMAIL } from '../config/site'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage, type Locale } from '../i18n'
-import { LanguageToggle } from './LanguageToggle'
+import { LocaleRouteLink } from './LocaleRouteLink'
 import { BackToCalculatorLink, PublicInfoShell } from './PublicInfoShell'
 import { LegalLinks } from './ServiceDisclaimer'
 import { AuthButton } from './auth/AuthButton'
@@ -489,7 +489,6 @@ function PublicPageShell({
             {backLabel}
           </button>
           <div className="about-header__actions">
-            <LanguageToggle variant="header" />
             <AuthButton variant="header" />
           </div>
         </div>
@@ -508,7 +507,10 @@ function PublicPageShell({
 
       <footer className="about-footer">
         <p className="about-footer__copy">{copyright}</p>
-        <LegalLinks variant="footer" />
+        <div className="site-footer__bottom-actions">
+          <LegalLinks variant="footer" />
+          <LocaleRouteLink className="site-footer__locale-link" />
+        </div>
       </footer>
     </div>
   )

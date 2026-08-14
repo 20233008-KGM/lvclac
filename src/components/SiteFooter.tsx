@@ -2,6 +2,7 @@ import { PUBLIC_OPERATOR_INFO, publicFooterOperatorDetails } from '../config/ope
 import { localizedPublicPath } from '../config/routes'
 import { useLanguage, type Locale } from '../i18n'
 import { useNavigate } from '../hooks/usePathname'
+import { LocaleRouteLink } from './LocaleRouteLink'
 import { DisclaimerShowAgainLink, footerLegalCopy } from './ServiceDisclaimer'
 import { buildFooterColumns } from './footerNavigation'
 
@@ -115,6 +116,7 @@ export function SiteFooter() {
           <p className="site-footer__copy">{t.footer.copyright}</p>
           <div className="site-footer__bottom-actions">
             <DisclaimerShowAgainLink variant="footer" />
+            <LocaleRouteLink className="site-footer__locale-link" />
           </div>
         </div>
       </div>

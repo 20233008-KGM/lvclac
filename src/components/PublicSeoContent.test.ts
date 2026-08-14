@@ -19,19 +19,16 @@ describe('public SEO content', () => {
     expect(appSource).toContain('<PublicHomeSeoSummary />')
   })
 
-  it('exposes crawlable locale links in an accessible calculator-header menu', () => {
-    expect(appSource).toContain('<LocaleRouteLink className="header-locale-link" />')
-    expect(localeLinkSource).toContain('aria-haspopup="menu"')
-    expect(localeLinkSource).toContain('aria-expanded={isOpen}')
-    expect(localeLinkSource).toContain('hrefLang={code}')
-    expect(localeLinkSource).toContain('lang={code}')
-    expect(localeLinkSource).toContain('href={localizedPublicPath(pathname, code)}')
-    expect(localeLinkSource).toContain("aria-current={isCurrent ? 'page' : undefined}")
-    expect(localeLinkSource).toContain('className="header-locale-link__icon"')
-    expect(localeLinkSource).toContain('className="header-locale-link__chevron"')
-    expect(appCss).toContain('.header-locale-link__icon')
-    expect(appCss).toContain('.header-locale-menu__popover')
-    expect(appCss).toContain('background: transparent')
+  it('keeps a crawlable direct locale link in the quiet footer area', () => {
+    expect(appSource).not.toContain('<LocaleRouteLink className="header-locale-link" />')
+    expect(footerSource).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
+    expect(localeLinkSource).toContain('hrefLang={targetLocale}')
+    expect(localeLinkSource).toContain('lang={targetLocale}')
+    expect(localeLinkSource).toContain('href={href}')
+    expect(localeLinkSource).toContain("targetLocale === 'en' ? 'English' : '한국어'")
+    expect(localeLinkSource).not.toContain('aria-haspopup="menu"')
+    expect(appCss).toContain('.site-footer__locale-link')
+    expect(appCss).not.toContain('.header-locale-menu__popover')
   })
 
   it('links the calculator, guide, and formulas with descriptive text', () => {

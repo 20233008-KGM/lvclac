@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { publicReviewCopy } from './PaddleReviewPages'
+
+const source = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
 
 describe('public Paddle review page copy', () => {
   it('provides Korean copy for product, pricing, and refund policy pages', () => {
@@ -34,5 +38,10 @@ describe('public Paddle review page copy', () => {
       expect(refund).toContain('https://www.paddle.com/legal/refund-policy')
       expect(refund).toContain('https://paddle.net/')
     }
+  })
+
+  it('moves locale switching from the review header into the footer', () => {
+    expect(source).not.toContain('<LanguageToggle variant="header" />')
+    expect(source).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
   })
 })

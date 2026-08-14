@@ -113,6 +113,7 @@ describe('public review footer labels', () => {
     expect(source).toContain('src="/footer-brand-mark.svg"')
     expect(source).toContain('alt=""')
     expect(source).toContain('<DisclaimerShowAgainLink variant="footer" />')
+    expect(source).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
     expect(source).toContain('buildFooterColumns(t.footer.columns')
   })
 

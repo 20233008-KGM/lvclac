@@ -1832,6 +1832,12 @@ input:focus:not(:focus-visible) {
   min-height: 2.7em;
 }
 
+@media (max-width: 520px) {
+  :root[lang='en'] .input-panel .field-section--margin-perContract > .field .field-label-row {
+    min-height: 4.05em;
+  }
+}
+
 .input-panel .field.field--setup-screen {
   position: relative;
 }

@@ -19,5 +19,8 @@ describe('input panel margin layout', () => {
     expect(css).toMatch(
       /:root\[lang='en'\] \.input-panel \.field-section--margin-perContract > \.field \.field-label-row \{[\s\S]*?min-height: 2\.7em;/,
     )
+    expect(css).toMatch(
+      /@media \(max-width: 520px\) \{[\s\S]*?\.field-section--margin-perContract[\s\S]*?min-height: 4\.05em;/,
+    )
   })
 })

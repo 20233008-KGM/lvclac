@@ -31,7 +31,6 @@ import { PricingReviewPage } from './components/PaddleReviewPages'
 import { PublicHomeSeoSummary } from './components/PublicSeoContent'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
 import { UpdatesPage } from './components/UpdatesPage'
-import { LocaleRouteLink } from './components/LocaleRouteLink'
 import {
   isCalculatorHomePath,
   isAboutPath,
@@ -192,7 +191,6 @@ function CalculatorApp() {
                   <p className="app-intro">{t.appIntro}</p>
                 </div>
                 <div className="header-right">
-                  <LocaleRouteLink className="header-locale-link" />
                   {isCustom && (
                     <button
                       type="button"

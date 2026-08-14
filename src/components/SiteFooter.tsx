@@ -17,6 +17,7 @@ import {
 import { useGoogleConsent } from '../context/googleConsentState'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
+import { LocaleRouteLink } from './LocaleRouteLink'
 import { DisclaimerShowAgainLink } from './ServiceDisclaimer'
 
 const footerCopy = {
@@ -186,6 +187,7 @@ export function SiteFooter() {
           <p className="site-footer__copy">{t.footer.copyright}</p>
           <div className="site-footer__bottom-actions">
             <DisclaimerShowAgainLink variant="footer" />
+            <LocaleRouteLink className="site-footer__bottom-link" />
           </div>
         </div>
       </div>

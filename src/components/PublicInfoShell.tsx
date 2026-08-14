@@ -8,7 +8,6 @@ import {
   type PublicInfoPath,
 } from './publicInfoNavigation'
 import { SiteFooter } from './SiteFooter'
-import { LocaleRouteLink } from './LocaleRouteLink'
 import { localizedPublicPath } from '../config/routes'
 import '../styles/pages.css'
 
@@ -103,7 +102,6 @@ export function PublicInfoShell({
               <span className="public-info-brand__space">{spaceLabel}</span>
             </a>
             <div className="public-info-header__actions">
-              <LocaleRouteLink className="public-info-back" />
               <BackToCalculatorLink />
             </div>
           </div>

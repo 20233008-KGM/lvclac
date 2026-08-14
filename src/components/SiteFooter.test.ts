@@ -33,6 +33,7 @@ describe('public-lite footer links', () => {
     expect(source).toContain('openPrivacySettings')
     expect(source).not.toContain('<DisclaimerShowAgainLink variant="footer-nav" />')
     expect(source).toContain('<DisclaimerShowAgainLink variant="footer" />')
+    expect(source).toContain('<LocaleRouteLink className="site-footer__bottom-link" />')
     expect(source).not.toContain('<ContentRiskNotice />')
     expect(source).toContain('site-footer__operator-row')
     expect(source).toContain('publicFooterOperatorDetails(locale)')
@@ -81,7 +82,7 @@ describe('public-lite footer links', () => {
     expect(footerMark).toContain('#f5f7fa')
   })
 
-  it('publishes Paddle review destinations and keeps only the disclaimer replay in the bottom row', () => {
+  it('publishes Paddle review destinations and keeps quiet utility links in the bottom row', () => {
     expect(source).toContain('PRICING_PATH')
     expect(source).toContain('REFUND_POLICY_PATH')
     expect(source).toContain('site-footer__bottom-actions')

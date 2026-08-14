@@ -7,6 +7,8 @@ const appSource = readFileSync(resolve('src/App.tsx'), 'utf8')
 const guideSource = readFileSync(resolve('src/components/GuidePage.tsx'), 'utf8')
 const formulasSource = readFileSync(resolve('src/components/FormulasPage.tsx'), 'utf8')
 const footerSource = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
+const localeLinkSource = readFileSync(resolve('src/components/LocaleRouteLink.tsx'), 'utf8')
+const appCss = readFileSync(resolve('src/App.css'), 'utf8')
 const css = readFileSync(resolve('src/styles/publicSeo.css'), 'utf8')
 
 describe('public SEO content', () => {
@@ -24,6 +26,15 @@ describe('public SEO content', () => {
     expect(source).toContain('선물 청산가 계산기 사용법 보기')
     expect(guideSource).toContain('<PublicDocumentNext current="guide" />')
     expect(formulasSource).toContain('<PublicDocumentNext current="formulas" />')
+  })
+
+  it('keeps a crawlable direct locale link in the quiet footer area', () => {
+    expect(appSource).not.toContain('<LocaleRouteLink className="header-locale-link" />')
+    expect(footerSource).toContain('<LocaleRouteLink className="site-footer__bottom-link" />')
+    expect(localeLinkSource).toContain('hrefLang={targetLocale}')
+    expect(localeLinkSource).toContain('lang={targetLocale}')
+    expect(localeLinkSource).toContain('href={href}')
+    expect(appCss).not.toContain('.header-locale-link')
   })
 
   it('uses a restrained responsive layout', () => {

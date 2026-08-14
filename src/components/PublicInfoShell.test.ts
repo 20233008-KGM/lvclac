@@ -68,7 +68,7 @@ describe('public information shell navigation', () => {
   it('reuses the header back-link component at the end of legal documents', () => {
     expect(shellSource).toContain('export function BackToCalculatorLink')
     expect(shellSource).toContain('<BackToCalculatorLink />')
-    expect(shellSource).toContain('<LocaleRouteLink className="public-info-back" />')
+    expect(shellSource).not.toContain('<LocaleRouteLink')
     expect(legalSource).toContain('<BackToCalculatorLink className="public-legal-home" />')
     expect(legalSource).not.toContain('className="btn btn-primary public-legal-home"')
     expect(pagesCss).toMatch(/\.public-info-zone \.public-legal-home\s*{[^}]*align-self:\s*flex-end;/s)

@@ -7,9 +7,11 @@ describe('neutral market copy', () => {
     const copy = JSON.stringify(ko)
 
     expect(copy).not.toMatch(/국내\s*선물|해외\s*선물/)
-    expect(copy).not.toMatch(/\bHTS\b|\bMTS\b/)
+    expect(copy).toMatch(/\bHTS\b|\bMTS\b/)
     expect(ko.marginMode.rateHint).toContain('약정가치 대비 비율')
+    expect(ko.marginMode.rateHint).toContain('KRX KOSPI 200')
     expect(ko.marginMode.perContractHint).toContain('1계약당 고정 금액')
+    expect(ko.marginMode.perContractHint).toContain('CME E-mini Nasdaq-100')
   })
 
   it('uses structure-based margin terms in English', () => {

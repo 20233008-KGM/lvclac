@@ -32,8 +32,10 @@ describe('guide setup and margin mode copy', () => {
   it('describes margin modes by structure instead of national categories in Korean', () => {
     const marginModes = sectionText(ko, '증거금 입력 모드')
     expect(marginModes).toContain('약정가치 대비 비율')
+    expect(marginModes).toContain('KRX KOSPI 200')
     expect(marginModes).toContain('1계약당 고정 금액')
-    expect(marginModes).toContain('보유 계약 전체의 증거금 총액')
+    expect(marginModes).toContain('CME E-mini Nasdaq-100')
+    expect(marginModes).toContain('보유 포지션 전체의 증거금 합계')
     expect(marginModes).not.toContain('국내 선물')
     expect(marginModes).not.toContain('해외 선물')
   })
@@ -47,7 +49,9 @@ describe('guide setup and margin mode copy', () => {
 
     const marginModes = sectionText(en, 'Margin input modes')
     expect(marginModes).toContain('percentage of notional value')
+    expect(marginModes).toContain('KRX KOSPI 200')
     expect(marginModes).toContain('fixed amount per contract')
+    expect(marginModes).toContain('CME E-mini Nasdaq-100')
     expect(marginModes).toContain('aggregate margin')
     expect(marginModes).not.toContain('Domestic futures')
     expect(marginModes).not.toContain('international contracts')

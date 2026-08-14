@@ -1557,6 +1557,8 @@ export const ko: Messages = {
     },
   },
   ads: {
+    placeholderTitle: '광고 준비 중',
+    placeholderBody: 'LiqGuard의 지속적인 무료 운영을 위한 공간입니다.',
     leftTop: '좌측 상단 광고',
     leftBottom: '좌측 하단 광고',
     top: '상단 배너 광고',

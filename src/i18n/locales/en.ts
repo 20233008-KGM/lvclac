@@ -1536,6 +1536,8 @@ export const en: Messages = {
     },
   },
   ads: {
+    placeholderTitle: 'Ads are being prepared',
+    placeholderBody: 'This space helps keep LiqGuard free.',
     leftTop: 'Left sidebar ad',
     leftBottom: 'Left sidebar ad',
     top: 'Top banner ad',

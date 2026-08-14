@@ -14,9 +14,21 @@ export function PageShell({ children }: PageShellProps) {
   return (
     <div className="page-shell">
       <aside className="ad-column ad-column-left" aria-label={t.ads.generic}>
-        <AdSlot slotId="left-sidebar-top" variant="sidebar" label={t.ads.leftTop} />
+        <AdSlot
+          slotId="left-sidebar-top"
+          variant="sidebar"
+          label={t.ads.leftTop}
+          placeholderTitle={t.ads.placeholderTitle}
+          placeholderDescription={t.ads.placeholderBody}
+        />
         {isAdSlotEnabled('left-sidebar-bottom', 'sidebar-tall') && (
-          <AdSlot slotId="left-sidebar-bottom" variant="sidebar-tall" label={t.ads.leftBottom} />
+          <AdSlot
+            slotId="left-sidebar-bottom"
+            variant="sidebar-tall"
+            label={t.ads.leftBottom}
+            placeholderTitle={t.ads.placeholderTitle}
+            placeholderDescription={t.ads.placeholderBody}
+          />
         )}
       </aside>
 
@@ -25,16 +37,40 @@ export function PageShell({ children }: PageShellProps) {
           <ServiceDisclaimer />
           {children}
           <div className="page-ads">
-            <AdSlot slotId="top-banner" variant="banner" label={t.ads.top} />
-            <AdSlot slotId="bottom-banner" variant="banner" label={t.ads.bottom} />
+            <AdSlot
+              slotId="top-banner"
+              variant="banner"
+              label={t.ads.top}
+              placeholderTitle={t.ads.placeholderTitle}
+              placeholderDescription={t.ads.placeholderBody}
+            />
+            <AdSlot
+              slotId="bottom-banner"
+              variant="banner"
+              label={t.ads.bottom}
+              placeholderTitle={t.ads.placeholderTitle}
+              placeholderDescription={t.ads.placeholderBody}
+            />
           </div>
         </div>
       </div>
 
       <aside className="ad-column ad-column-right" aria-label={t.ads.generic}>
-        <AdSlot slotId="right-sidebar-top" variant="sidebar" label={t.ads.rightTop} />
+        <AdSlot
+          slotId="right-sidebar-top"
+          variant="sidebar"
+          label={t.ads.rightTop}
+          placeholderTitle={t.ads.placeholderTitle}
+          placeholderDescription={t.ads.placeholderBody}
+        />
         {isAdSlotEnabled('right-sidebar-bottom', 'sidebar-tall') && (
-          <AdSlot slotId="right-sidebar-bottom" variant="sidebar-tall" label={t.ads.rightBottom} />
+          <AdSlot
+            slotId="right-sidebar-bottom"
+            variant="sidebar-tall"
+            label={t.ads.rightBottom}
+            placeholderTitle={t.ads.placeholderTitle}
+            placeholderDescription={t.ads.placeholderBody}
+          />
         )}
       </aside>
     </div>

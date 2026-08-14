@@ -12,12 +12,8 @@ interface AdSlotProps {
   slotId: string
   variant?: AdVariant
   label?: string
-}
-
-const PLACEHOLDER_SIZES: Record<AdVariant, string> = {
-  banner: '반응형',
-  sidebar: '160 × 600',
-  'sidebar-tall': '160 × 250',
+  placeholderTitle?: string
+  placeholderDescription?: string
 }
 
 function getSidebarStyle(variant: AdVariant): CSSProperties {
@@ -27,7 +23,13 @@ function getSidebarStyle(variant: AdVariant): CSSProperties {
   return { display: 'inline-block', width: '160px', height: '250px' }
 }
 
-export function AdSlot({ slotId, variant = 'banner', label }: AdSlotProps) {
+export function AdSlot({
+  slotId,
+  variant = 'banner',
+  label,
+  placeholderTitle = '광고 준비 중',
+  placeholderDescription = 'LiqGuard의 지속적인 무료 운영을 위한 공간입니다.',
+}: AdSlotProps) {
   const { adRequestsAllowed } = useGoogleConsent()
   const insRef = useRef<HTMLModElement>(null)
   const pushedRef = useRef(false)
@@ -63,10 +65,10 @@ export function AdSlot({ slotId, variant = 'banner', label }: AdSlotProps) {
       <div
         className={`ad-slot ad-slot--${variant}`}
         data-ad-slot={slotId}
-        aria-label={label ?? '광고 영역'}
+        aria-label={placeholderTitle}
       >
-        <span className="ad-slot-label">{label ?? '광고'}</span>
-        <span className="ad-slot-size">{PLACEHOLDER_SIZES[variant]}</span>
+        <span className="ad-slot-label">{placeholderTitle}</span>
+        <span className="ad-slot-size">{placeholderDescription}</span>
       </div>
     )
   }

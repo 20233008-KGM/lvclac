@@ -775,12 +775,12 @@ export const en: Messages = {
     rate: 'Rate',
     perContract: 'Per',
     total: 'Total',
-    rateHint: 'Enter margin as a ratio of notional value. Examples: KRX KOSPI 200 index and single-stock futures.',
+    rateHint: 'Enter margin as a ratio of notional value. Examples: KRX KOSPI 200 index and selected single-stock futures.',
     perContractHint:
       'Enter a fixed margin amount per contract. Examples: CME E-mini Nasdaq-100, WTI crude oil, and COMEX gold futures.',
     totalHint: 'Use this when your broker platform shows only aggregate margin for the full open position.',
     tooltip:
-      '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nEnter margin as a ratio of notional value.\nExamples: KRX KOSPI 200 index and single-stock futures.\n\n────────\n\n[Per contract]\n\nEnter a fixed margin amount per contract. Total = per-contract × contracts.\nExamples: CME E-mini Nasdaq-100, WTI crude oil, and COMEX gold futures.\n\n────────\n\n[Total]\n\nUse this when your broker platform shows only aggregate margin for the full open position, regardless of market.',
+      '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nEnter margin as a ratio of notional value.\nExamples: KRX KOSPI 200 index and selected single-stock futures.\n\n────────\n\n[Per contract]\n\nEnter a fixed margin amount per contract. Total = per-contract × contracts.\nExamples: CME E-mini Nasdaq-100, WTI crude oil, and COMEX gold futures.\n\n────────\n\n[Total]\n\nUse this when your broker platform shows only aggregate margin for the full open position, regardless of market.',
   },
   marginKindAsk: {
     title: 'Margin recalculated after the order',
@@ -1262,7 +1262,7 @@ export const en: Messages = {
       {
         title: 'Margin input modes',
         paragraphs: [
-          'Rate mode — when margin is shown as a ratio of notional value. Examples: KRX KOSPI 200 index and single-stock futures.',
+          'Rate mode — when margin is shown as a ratio of notional value. Examples: KRX KOSPI 200 index and selected single-stock futures.',
           'Per-contract mode — when margin is shown as a fixed amount per contract. Examples: CME E-mini Nasdaq-100, WTI crude oil, and COMEX gold futures.',
           'Total mode — when your broker platform shows aggregate margin for the full open position, regardless of market.',
           'If you enter both a rate and a direct amount, the direct amount takes precedence.',

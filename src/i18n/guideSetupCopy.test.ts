@@ -29,17 +29,16 @@ describe('guide setup and margin mode copy', () => {
     expect(setup).toContain('선택값')
   })
 
-  it('uses market examples instead of national categories in Korean', () => {
+  it('describes margin modes by structure instead of national categories in Korean', () => {
     const marginModes = sectionText(ko, '증거금 입력 모드')
-    expect(marginModes).toContain('KOSPI 200 지수선물')
-    expect(marginModes).toContain('KOSPI 종목선물')
-    expect(marginModes).toContain('CME 주가지수선물')
-    expect(marginModes).toContain('원자재 선물')
+    expect(marginModes).toContain('약정가치 대비 비율')
+    expect(marginModes).toContain('1계약당 고정 금액')
+    expect(marginModes).toContain('보유 계약 전체의 증거금 총액')
     expect(marginModes).not.toContain('국내 선물')
     expect(marginModes).not.toContain('해외 선물')
   })
 
-  it('mirrors the setup and market-based examples in English', () => {
+  it('mirrors the setup and structure-based margin descriptions in English', () => {
     const setup = sectionText(en, 'Minimum setup values')
     expect(setup).toContain('long or short')
     expect(setup).toContain('account equity')
@@ -47,10 +46,9 @@ describe('guide setup and margin mode copy', () => {
     expect(setup).toContain('Tick size is optional')
 
     const marginModes = sectionText(en, 'Margin input modes')
-    expect(marginModes).toContain('KOSPI 200 index futures')
-    expect(marginModes).toContain('KOSPI single-stock futures')
-    expect(marginModes).toContain('CME equity-index futures')
-    expect(marginModes).toContain('commodity futures')
+    expect(marginModes).toContain('percentage of notional value')
+    expect(marginModes).toContain('fixed amount per contract')
+    expect(marginModes).toContain('aggregate margin')
     expect(marginModes).not.toContain('Domestic futures')
     expect(marginModes).not.toContain('international contracts')
   })

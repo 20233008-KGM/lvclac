@@ -20,7 +20,7 @@ export const en: Messages = {
       '[Note]\n\nDoes not account for multiple open positions or cross-margin accounts.',
   },
   appIntro:
-    'Instantly estimate liquidation price and margin headroom for a single-instrument position. Each day, enter the new mark in Scenario price and press Enter twice to roll unrealized P&L into equity. For first-time setup, a single HTS screen snapshot is most accurate.',
+    'Instantly estimate liquidation price and margin headroom for a single-instrument position. Each day, enter the new mark in Scenario price and press Enter twice to roll unrealized P&L into equity. For first-time setup, a single broker-platform snapshot is most accurate.',
   loading: 'Loading...',
   login: 'Log in',
   logout: 'Log out',
@@ -699,21 +699,21 @@ export const en: Messages = {
     rate: 'Rate',
     perContract: 'Per',
     total: 'Total',
-    rateHint: 'Margin as a ratio of notional (domestic futures).',
+    rateHint: 'Enter margin as a ratio of notional value.',
     perContractHint:
-      'Fixed margin per contract (overseas futures). Total = per-contract × contracts.',
+      'Enter a fixed margin amount per contract. Total = per-contract × contracts.',
     totalHint: 'Enter the total margin shown in your broker app as-is.',
     tooltip:
-      '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nMargin as a ratio of notional (domestic futures).\n\n────────\n\n[Per contract]\n\nFixed margin per contract. Total = per-contract × contracts (overseas).\n\n────────\n\n[Total]\n\nEnter the total margin shown in your broker app as-is.',
+      '# Margin input method\nChoose rate, per-contract, or total to match your instrument.\n\n────────\n\n[Rate]\n\nEnter margin as a ratio of notional value.\n\n────────\n\n[Per contract]\n\nEnter a fixed margin amount per contract. Total = per-contract × contracts.\n\n────────\n\n[Total]\n\nEnter the aggregate margin shown in your broker platform as-is.',
   },
   marginKindAsk: {
     title: 'Margin recalculated after the order',
-    body: 'Since you entered a total amount, the app back-calculated total initial/maintenance margin for the increased contracts. By default it assumes a price-proportional method (domestic futures).',
+    body: 'Since you entered a total amount, the app back-calculated total initial/maintenance margin for the increased contracts. By default it assumes margin proportional to notional value.',
     question: 'Is this margin a fixed per-contract amount?',
     proportional: 'It scales with price',
-    proportionalHint: 'Like domestic futures — margin grows with notional value.',
+    proportionalHint: 'Margin changes with notional value.',
     fixed: 'Fixed per contract',
-    fixedHint: 'Like overseas futures — a set amount per contract.',
+    fixedHint: 'The amount per contract stays fixed regardless of price.',
     skipLabel: "Don't ask again",
   },
   glossaryPreset: {
@@ -854,7 +854,7 @@ export const en: Messages = {
     },
     maintenanceMarginPerContract: {
       label: 'Maintenance margin (per contract)',
-      hint: '# Maintenance margin (per contract)\nFixed maintenance margin per contract; constant across price (overseas).',
+      hint: '# Maintenance margin (per contract)\nFixed maintenance margin per contract; constant across price.',
       placeholder: '1,000',
     },
     entrustedMarginRate: {
@@ -869,7 +869,7 @@ export const en: Messages = {
     },
     entrustedMarginPerContract: {
       label: 'Initial margin (per contract)',
-      hint: '# Initial margin (per contract)\nFixed initial margin per contract (overseas).',
+      hint: '# Initial margin (per contract)\nFixed initial margin per contract.',
       placeholder: '6,000',
     },
     contracts: {
@@ -1207,8 +1207,8 @@ export const en: Messages = {
       {
         title: 'Margin input modes',
         paragraphs: [
-          'Rate mode — when margin is quoted as a percentage of notional. Examples: KOSPI 200 index futures and KOSPI single-stock futures.',
-          'Per-contract mode — when margin is quoted as an amount per contract. Examples: CME equity-index futures and commodity futures such as crude oil or gold.',
+          'Rate mode — when margin is quoted as a percentage of notional value.',
+          'Per-contract mode — when margin is quoted as a fixed amount per contract.',
           'Total mode — when your broker shows only the aggregate margin for the current open position.',
           'Choose the mode that matches the exchange or broker display, then enter maintenance and initial margin as a pair.',
         ],
@@ -1257,7 +1257,7 @@ export const en: Messages = {
       },
     ],
     footnote:
-      'Assumes one instrument and one position. Multiple symbols, cross margin, and fees are not modeled; figures may differ from your broker HTS.',
+      'Assumes one instrument and one position. Multiple symbols, cross margin, and fees are not modeled; figures may differ from your broker platform.',
   },
   about: {
     company: 'Farfield Software',
@@ -1324,7 +1324,7 @@ export const en: Messages = {
           {
             name: 'Maintenance margin (rate)',
             expression: 'Maintenance = notional × R',
-            description: 'Direct HTS amount takes precedence when provided.',
+            description: 'A direct broker-platform amount takes precedence when provided.',
           },
           {
             name: 'Entrusted margin (rate)',
@@ -1352,17 +1352,17 @@ export const en: Messages = {
           {
             name: 'Maintenance at current price',
             expression: 'M(C₀) = C₀ × Q × R',
-            description: 'Or direct HTS maintenance (scaled by contracts).',
+            description: 'Or direct maintenance from your broker platform (scaled by contracts).',
           },
           {
             name: 'Maintenance at price P (rate / total)',
             expression: 'M(P) = M(C₀) × P / C₀',
           },
           {
-            name: 'Fixed margin per contract (overseas)',
+            name: 'Fixed margin per contract',
             expression: 'Maintenance = per-contract amount × N (constant, price-independent)',
             description:
-              'Overseas fixed per-contract margin does not move with price, so M(P) is a constant rather than proportional to P.',
+              'Fixed per-contract margin does not move with price, so M(P) is a constant rather than proportional to P.',
           },
         ],
       },

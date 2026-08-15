@@ -4,4 +4,3 @@
 
 이 repo의 프로젝트 메모리 [`C:/Users/rlarb/Documents/lvclac-project-memory.md`](C:/Users/rlarb/Documents/lvclac-project-memory.md)를 추가로 읽는다.
 
-프로젝트 맥락, active 문서, Notion Project OS, 작업 종료 기록 규칙은 `C:/Users/rlarb/Documents/lvclac-project-memory.md`의 `Agent Operating Rules`를 따른다.

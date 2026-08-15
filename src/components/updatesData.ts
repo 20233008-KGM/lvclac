@@ -1,16 +1,16 @@
-import type { Locale } from '../i18n'
+import { buildUpdateEntries } from './updateMarkdown'
+import type { UpdateEntry } from './updateMarkdown'
 
-export interface UpdateEntryContent {
-  type: string
-  title: string
-  summary: string
-}
+export { buildUpdateEntries }
+export type { UpdateEntry, UpdateEntryContent } from './updateMarkdown'
 
-export interface UpdateEntry {
-  id: string
-  publishedAt: string
-  content: Record<Locale, UpdateEntryContent>
-}
+// Only published, user-facing updates belong in content/updates.
+const updateMarkdownModules = import.meta.glob('../../content/updates/*.md', {
+  eager: true,
+  import: 'default',
+  query: '?raw',
+}) as Record<string, string>
 
-// Add only published, user-facing updates here. Preview and test entries belong in tests.
-export const UPDATE_ENTRIES: readonly UpdateEntry[] = []
+export const UPDATE_ENTRIES: readonly UpdateEntry[] = buildUpdateEntries(
+  updateMarkdownModules,
+)

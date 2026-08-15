@@ -12,7 +12,7 @@ export function AboutPage() {
     <PublicInfoShell
       activePath={ABOUT_PATH}
       tone="company"
-      eyebrow={`${publicOperatorDisplayName()} · ${about.title}`}
+      eyebrow={`${publicOperatorDisplayName(t.lang)} · ${about.title}`}
       title={about.tagline}
       lead={about.lead}
     >

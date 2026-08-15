@@ -66,6 +66,15 @@ describe('public-lite footer links', () => {
     )
   })
 
+  it('switches the main footer columns based on the width actually allocated to the footer', () => {
+    expect(css).toMatch(
+      /\.site-footer \{[\s\S]*?container-name: site-footer;[\s\S]*?container-type: inline-size;/,
+    )
+    expect(css).toMatch(
+      /@container site-footer \(min-width: 800px\) \{[\s\S]*?\.site-footer__main \{[\s\S]*?grid-template-columns: minmax\(220px, 1\.1fr\) minmax\(0, 1\.9fr\);/,
+    )
+  })
+
   it('keeps the footer brand mark optically balanced with the wordmark', () => {
     expect(css).toMatch(/\.site-footer__wordmark \{[\s\S]*?gap: 9px;/)
     expect(css).toMatch(/\.site-footer__mark \{[^}]*width: 20px;[^}]*height: 20px;/)

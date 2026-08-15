@@ -7425,6 +7425,8 @@ body.scrub-drag-active * {
   position: relative;
   width: 100%;
   margin-top: var(--space-md);
+  container-name: site-footer;
+  container-type: inline-size;
   overflow: hidden;
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius) var(--radius) 0 0;
@@ -7740,13 +7742,15 @@ a.site-footer__link:hover {
   text-underline-offset: 2px;
 }
 
-@media (min-width: 768px) {
+@container site-footer (min-width: 800px) {
   .site-footer__main {
-    grid-template-columns: minmax(270px, 1.1fr) minmax(440px, 1.9fr);
-    gap: clamp(52px, 7vw, 104px);
+    grid-template-columns: minmax(220px, 1.1fr) minmax(0, 1.9fr);
+    gap: clamp(40px, 6cqw, 56px);
     align-items: start;
   }
+}
 
+@media (min-width: 768px) {
   .site-footer__bottom {
     flex-direction: row;
     align-items: center;

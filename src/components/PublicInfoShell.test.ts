@@ -73,4 +73,8 @@ describe('public information shell navigation', () => {
     expect(legalSource).not.toContain('className="btn btn-primary public-legal-home"')
     expect(pagesCss).toMatch(/\.public-info-zone \.public-legal-home\s*{[^}]*align-self:\s*flex-end;/s)
   })
+
+  it('hides the information navigation only on the refund policy', () => {
+    expect(legalSource).toContain("showNavigation={kind !== 'refund'}")
+  })
 })

@@ -31,6 +31,7 @@ import { PricingReviewPage } from './components/PaddleReviewPages'
 import { PublicHomeSeoSummary } from './components/PublicSeoContent'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
 import { UpdatesPage } from './components/UpdatesPage'
+import { UpdateDetailPage } from './components/UpdateDetailPage'
 import {
   isCalculatorHomePath,
   isAboutPath,
@@ -41,6 +42,7 @@ import {
   isLegalPath,
   isPricingPath,
   isUpdatesPath,
+  updateIdFromPath,
 } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
 import { calculateEvaluate, calculateOrder } from './calc/leverage'
@@ -272,6 +274,7 @@ function AppRouter() {
   const companyPath = isCompanyPath(pathname)
   const contactPath = isContactPath(pathname)
   const updatesPath = isUpdatesPath(pathname)
+  const updateId = updateIdFromPath(pathname)
   const pricingPath = isPricingPath(pathname)
 
   useEffect(() => {
@@ -283,12 +286,13 @@ function AppRouter() {
       !companyPath &&
       !contactPath &&
       !updatesPath &&
+      !updateId &&
       !pricingPath &&
       !legalKind
     ) {
       window.history.replaceState(null, '', pathname.startsWith('/en/') ? '/en' : '/')
     }
-  }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, pricingPath, updatesPath])
+  }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, pricingPath, updateId, updatesPath])
 
   const metadata = <PublicPageMetadata pathname={pathname} />
 
@@ -342,6 +346,15 @@ function AppRouter() {
       <>
         {metadata}
         <UpdatesPage />
+      </>
+    )
+  }
+
+  if (updateId) {
+    return (
+      <>
+        {metadata}
+        <UpdateDetailPage updateId={updateId} />
       </>
     )
   }

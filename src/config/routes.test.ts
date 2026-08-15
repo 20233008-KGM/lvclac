@@ -14,6 +14,8 @@ import {
   isGuidePath,
   localizedPublicPath,
   publicPathWithoutLocale,
+  updateDetailPath,
+  updateIdFromPath,
   ADMIN_FEEDBACK_PATH,
   MY_PAGE_PATH,
   RECORDS_PATH,
@@ -43,6 +45,8 @@ describe('routes', () => {
     expect(isAdFreePublicInfoPath('/refund-policy/')).toBe(true)
     expect(isAdFreePublicInfoPath('/en/guide')).toBe(true)
     expect(isAdFreePublicInfoPath('/en/privacy/')).toBe(true)
+    expect(isAdFreePublicInfoPath('/updates/2026-08-12-beta-experience')).toBe(true)
+    expect(isAdFreePublicInfoPath('/en/updates/2026-08-12-beta-experience')).toBe(true)
 
     expect(isAdFreePublicInfoPath('/')).toBe(false)
   })
@@ -74,6 +78,16 @@ describe('routes', () => {
     expect(isUpdatesPath('/updates')).toBe(true)
     expect(isUpdatesPath('/updates/')).toBe(true)
     expect(isUpdatesPath('/updates/archive')).toBe(false)
+    expect(updateIdFromPath('/updates/2026-08-12-beta-experience')).toBe(
+      '2026-08-12-beta-experience',
+    )
+    expect(updateIdFromPath('/en/updates/2026-08-12-beta-experience/')).toBe(
+      '2026-08-12-beta-experience',
+    )
+    expect(updateIdFromPath('/updates/nested/post')).toBe(null)
+    expect(updateDetailPath('2026-08-12-beta-experience', 'en')).toBe(
+      '/en/updates/2026-08-12-beta-experience',
+    )
   })
 
   it('recognizes the my page route with optional trailing slash', () => {

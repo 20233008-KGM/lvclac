@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLanguage, type Locale } from '../i18n'
+import { updateDetailPath } from '../config/routes'
+import { useNavigate } from '../hooks/usePathname'
 import { PublicInfoShell } from './PublicInfoShell'
 import { UPDATE_ENTRIES } from './updatesData'
 import {
@@ -71,6 +73,7 @@ function formatUpdateDate(publishedAt: string, locale: Locale): string {
 
 export function UpdatesPage() {
   const { locale } = useLanguage()
+  const navigate = useNavigate()
   const copy = updatesCopy[locale]
   const listRef = useRef<HTMLDivElement>(null)
   const leaveTimerRef = useRef<number | null>(null)
@@ -209,8 +212,15 @@ export function UpdatesPage() {
                         <span>{content.type}</span>
                       </td>
                       <td className="updates-table__details">
-                        <strong>{content.title}</strong>
-                        <p>{content.summary}</p>
+                        <a
+                          href={updateDetailPath(entry.id, locale)}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            navigate(updateDetailPath(entry.id, locale))
+                          }}
+                        >
+                          {content.title}
+                        </a>
                       </td>
                     </tr>
                   )

@@ -3,8 +3,11 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { PUBLIC_PAGE_METADATA } from '../src/config/publicPageMetadata'
 import {
+  appendUpdateRoutesToSitemap,
+  publishedUpdateEntries,
   publicRouteAssetName,
   publicRouteRewrites,
+  publicRouteVariants,
   transformPublicRouteHtml,
 } from './publicSeoAssets'
 
@@ -65,6 +68,46 @@ describe('public SEO assets', () => {
       source: '/en/formulas',
       destination: '/en-formulas.html',
     })
+    expect(publicRouteRewrites()).toContainEqual({
+      source: '/updates/:updateId',
+      destination: '/updates-:updateId.html',
+    })
+  })
+
+  it('generates localized detail metadata, route assets, and sitemap entries from Markdown', () => {
+    const entries = publishedUpdateEntries()
+    const detailPath = '/en/updates/2026-08-12-beta-experience'
+    const html = transformPublicRouteHtml(baseHtml, {
+      path: detailPath,
+      siteUrl: 'https://liqguard.com',
+      updateEntries: entries,
+    })
+
+    expect(publicRouteVariants(entries)).toContainEqual({ path: detailPath })
+    expect(publicRouteAssetName(detailPath)).toBe(
+      'en-updates-2026-08-12-beta-experience.html',
+    )
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain('<title>Improved the LiqGuard beta experience</title>')
+    expect(html).toContain(
+      '<link rel="canonical" href="https://liqguard.com/en/updates/2026-08-12-beta-experience" />',
+    )
+    expect(html).toContain(
+      '<link rel="alternate" hreflang="ko" href="https://liqguard.com/updates/2026-08-12-beta-experience" />',
+    )
+
+    const sitemap = appendUpdateRoutesToSitemap(
+      '<urlset>\n</urlset>',
+      'https://liqguard.com/',
+      entries,
+    )
+    expect(sitemap).toContain(
+      '<loc>https://liqguard.com/updates/2026-08-12-beta-experience</loc>',
+    )
+    expect(sitemap).toContain(
+      '<loc>https://liqguard.com/en/updates/2026-08-12-beta-experience</loc>',
+    )
+    expect(sitemap.match(/<lastmod>2026-08-12<\/lastmod>/g)).toHaveLength(2)
   })
 
   it('keeps Vercel public-route rewrites aligned with generated assets', () => {

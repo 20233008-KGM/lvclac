@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  publicAddressDisplayName,
   publicFooterOperatorDetails,
+  publicOperatorDetails,
+  publicOperatorDisplayName,
+  publicPrivacyOfficerDisplayName,
   publicRepresentativeDisplayName,
   type PublicOperatorInfo,
 } from './operator'
@@ -80,6 +84,26 @@ describe('publicFooterOperatorDetails', () => {
       value: '김규민',
     })
     expect(publicFooterOperatorDetails('en', pendingOperator)[1]).toEqual({
+      label: 'Representative',
+      value: 'Gyumin Kim',
+    })
+  })
+
+  it('uses localized legal details on the English public pages', () => {
+    const localizedOperator: PublicOperatorInfo = {
+      ...operator,
+      legalNameDisplayName: { ko: '주식회사 파필드소프트웨어', en: 'Farfield Software Inc.' },
+      representativeDisplayName: { ko: '김규민', en: 'Gyumin Kim' },
+      addressDisplayName: {
+        en: 'Unit 201-154, Gallery House Commercial Building, Paju-si, Republic of Korea',
+      },
+      privacyOfficerDisplayName: { ko: '김규민', en: 'Gyumin Kim' },
+    }
+
+    expect(publicOperatorDisplayName('en', localizedOperator)).toBe('Farfield Software Inc.')
+    expect(publicAddressDisplayName('en', localizedOperator)).toContain('Republic of Korea')
+    expect(publicPrivacyOfficerDisplayName('en', localizedOperator)).toBe('Gyumin Kim')
+    expect(publicOperatorDetails('en', localizedOperator)).toContainEqual({
       label: 'Representative',
       value: 'Gyumin Kim',
     })

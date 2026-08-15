@@ -76,6 +76,19 @@ export function isUpdatesPath(pathname: string): boolean {
   return matchesLocalizedPublicPath(pathname, UPDATES_PATH)
 }
 
+export function updateIdFromPath(pathname: string): string | null {
+  const basePath = publicPathWithoutLocale(pathname).replace(/\/$/, '')
+  const prefix = `${UPDATES_PATH}/`
+  if (!basePath.startsWith(prefix)) return null
+
+  const updateId = basePath.slice(prefix.length)
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(updateId) ? updateId : null
+}
+
+export function updateDetailPath(updateId: string, locale: 'ko' | 'en'): string {
+  return localizedPublicPath(`${UPDATES_PATH}/${updateId}`, locale)
+}
+
 export function isAdFreePublicInfoPath(pathname: string): boolean {
   return (
     isGuidePath(pathname) ||
@@ -84,6 +97,7 @@ export function isAdFreePublicInfoPath(pathname: string): boolean {
     isCompanyPath(pathname) ||
     isContactPath(pathname) ||
     isUpdatesPath(pathname) ||
+    updateIdFromPath(pathname) !== null ||
     isPricingPath(pathname) ||
     matchesLocalizedPublicPath(pathname, TERMS_PATH) ||
     matchesLocalizedPublicPath(pathname, PRIVACY_PATH) ||

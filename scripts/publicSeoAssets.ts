@@ -1,15 +1,41 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   PUBLIC_PAGE_VARIANTS,
   publicPageMetadata,
   publicPageVariant,
 } from '../src/config/publicPageMetadata'
-import { localizedPublicPath } from '../src/config/routes'
+import { localizedPublicPath, updateDetailPath } from '../src/config/routes'
+import { buildUpdateEntries, type UpdateEntry } from '../src/components/updateMarkdown'
+import { resolveUpdateRouteMetadata } from '../src/components/updateRouteMetadata'
 
 export interface PublicRouteSeoOptions {
   path: string
   siteUrl: string
+  updateEntries?: readonly UpdateEntry[]
+}
+
+export function publishedUpdateEntries(): readonly UpdateEntry[] {
+  const contentDirectory = resolve('content/updates')
+  const documents = Object.fromEntries(
+    readdirSync(contentDirectory)
+      .filter((filename) => filename.endsWith('.md'))
+      .map((filename) => [
+        resolve(contentDirectory, filename),
+        readFileSync(resolve(contentDirectory, filename), 'utf8'),
+      ]),
+  )
+  return buildUpdateEntries(documents)
+}
+
+export function publicRouteVariants(
+  updateEntries: readonly UpdateEntry[] = publishedUpdateEntries(),
+): Array<{ path: string }> {
+  const updatePaths = updateEntries.flatMap(({ id }) => [
+    { path: updateDetailPath(id, 'ko') },
+    { path: updateDetailPath(id, 'en') },
+  ])
+  return [...PUBLIC_PAGE_VARIANTS, ...updatePaths]
 }
 
 function escapeHtml(value: string): string {
@@ -34,24 +60,40 @@ export function publicRouteAssetName(path: string): string {
 }
 
 export function publicRouteRewrites(): Array<{ source: string; destination: string }> {
-  return PUBLIC_PAGE_VARIANTS.filter(({ path }) => path !== '/').map(({ path }) => ({
-    source: path,
-    destination: `/${publicRouteAssetName(path)}`,
-  }))
+  return [
+    ...PUBLIC_PAGE_VARIANTS.filter(({ path }) => path !== '/').map(({ path }) => ({
+      source: path,
+      destination: `/${publicRouteAssetName(path)}`,
+    })),
+    {
+      source: '/updates/:updateId',
+      destination: '/updates-:updateId.html',
+    },
+    {
+      source: '/en/updates/:updateId',
+      destination: '/en-updates-:updateId.html',
+    },
+  ]
 }
 
 export function transformPublicRouteHtml(
   html: string,
-  { path, siteUrl }: PublicRouteSeoOptions,
+  { path, siteUrl, updateEntries }: PublicRouteSeoOptions,
 ): string {
+  const updateRoute = resolveUpdateRouteMetadata(
+    path,
+    updateEntries ?? publishedUpdateEntries(),
+  )
   const variant = publicPageVariant(path)
-  const metadata = publicPageMetadata(variant.locale, variant.basePath)
+  const metadata = updateRoute ?? publicPageMetadata(variant.locale, variant.basePath)
+  const locale = updateRoute?.locale ?? variant.locale
+  const canonicalPath = updateRoute?.path ?? variant.path
   const normalizedSiteUrl = siteUrl.replace(/\/$/, '')
-  const canonicalUrl = variant.path === '/'
+  const canonicalUrl = canonicalPath === '/'
     ? normalizedSiteUrl
-    : `${normalizedSiteUrl}${variant.path}`
-  const koreanPath = localizedPublicPath(variant.basePath, 'ko')
-  const englishPath = localizedPublicPath(variant.basePath, 'en')
+    : `${normalizedSiteUrl}${canonicalPath}`
+  const koreanPath = updateRoute?.koreanPath ?? localizedPublicPath(variant.basePath, 'ko')
+  const englishPath = updateRoute?.englishPath ?? localizedPublicPath(variant.basePath, 'en')
   const koreanUrl = koreanPath === '/' ? normalizedSiteUrl : `${normalizedSiteUrl}${koreanPath}`
   const englishUrl = `${normalizedSiteUrl}${englishPath}`
   const title = escapeHtml(metadata.title)
@@ -59,7 +101,7 @@ export function transformPublicRouteHtml(
   const canonical = escapeHtml(canonicalUrl)
 
   let next = html
-    .replace(/<html\s+lang=["'][^"']*["']/i, `<html lang="${variant.locale}"`)
+    .replace(/<html\s+lang=["'][^"']*["']/i, `<html lang="${locale}"`)
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
   next = upsertMeta(
     next,
@@ -104,12 +146,12 @@ export function transformPublicRouteHtml(
   next = upsertMeta(
     next,
     /<meta\s+property=["']og:locale["'][^>]*>/i,
-    `<meta property="og:locale" content="${variant.locale === 'ko' ? 'ko_KR' : 'en_US'}" />`,
+    `<meta property="og:locale" content="${locale === 'ko' ? 'ko_KR' : 'en_US'}" />`,
   )
   next = upsertMeta(
     next,
     /<meta\s+property=["']og:locale:alternate["'][^>]*>/i,
-    `<meta property="og:locale:alternate" content="${variant.locale === 'ko' ? 'en_US' : 'ko_KR'}" />`,
+    `<meta property="og:locale:alternate" content="${locale === 'ko' ? 'en_US' : 'ko_KR'}" />`,
   )
 
   return next
@@ -118,11 +160,52 @@ export function transformPublicRouteHtml(
 export function writePublicRouteHtmlAssets(outputDir: string, siteUrl: string): void {
   const indexPath = resolve(outputDir, 'index.html')
   const baseHtml = readFileSync(indexPath, 'utf8')
+  const updateEntries = publishedUpdateEntries()
 
-  for (const { path } of PUBLIC_PAGE_VARIANTS) {
-    const routeHtml = transformPublicRouteHtml(baseHtml, { path, siteUrl })
+  for (const { path } of publicRouteVariants(updateEntries)) {
+    const routeHtml = transformPublicRouteHtml(baseHtml, {
+      path,
+      siteUrl,
+      updateEntries,
+    })
     writeFileSync(resolve(outputDir, publicRouteAssetName(path)), routeHtml, 'utf8')
   }
+
+  const sitemapPath = resolve(outputDir, 'sitemap.xml')
+  if (existsSync(sitemapPath)) {
+    const sitemap = readFileSync(sitemapPath, 'utf8')
+    writeFileSync(
+      sitemapPath,
+      appendUpdateRoutesToSitemap(sitemap, siteUrl, updateEntries),
+      'utf8',
+    )
+  }
+}
+
+export function appendUpdateRoutesToSitemap(
+  sitemap: string,
+  siteUrl: string,
+  updateEntries: readonly UpdateEntry[],
+): string {
+  const normalizedSiteUrl = siteUrl.replace(/\/$/, '')
+  const updateUrls = updateEntries.flatMap(({ id, publishedAt }) =>
+    (['ko', 'en'] as const).map((locale) => {
+      const path = updateDetailPath(id, locale)
+      const url = `${normalizedSiteUrl}${path}`
+      if (sitemap.includes(`<loc>${url}</loc>`)) return ''
+      return [
+        '  <url>',
+        `    <loc>${escapeHtml(url)}</loc>`,
+        `    <lastmod>${publishedAt}</lastmod>`,
+        '    <changefreq>monthly</changefreq>',
+        '    <priority>0.6</priority>',
+        '  </url>',
+      ].join('\n')
+    }),
+  ).filter(Boolean)
+
+  if (updateUrls.length === 0) return sitemap
+  return sitemap.replace('</urlset>', `${updateUrls.join('\n')}\n</urlset>`)
 }
 
 export { PUBLIC_PAGE_VARIANTS }

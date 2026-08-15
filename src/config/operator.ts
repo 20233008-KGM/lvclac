@@ -10,12 +10,15 @@ export interface PublicOperatorInfo {
   companyName: string
   productName: string
   legalName?: string
+  legalNameDisplayName?: Partial<Record<'ko' | 'en', string>>
   representative?: string
   representativeDisplayName?: Partial<Record<'ko' | 'en', string>>
   address?: string
+  addressDisplayName?: Partial<Record<'ko' | 'en', string>>
   businessRegistrationNumber?: string
   commerceRegistrationNumber?: string
   privacyOfficer?: string
+  privacyOfficerDisplayName?: Partial<Record<'ko' | 'en', string>>
   contactEmail: string
 }
 
@@ -24,12 +27,19 @@ export const PUBLIC_OPERATOR_INFO: PublicOperatorInfo = {
   companyName: 'Farfield Software Inc.',
   productName: 'LiqGuard',
   legalName: optional(import.meta.env.VITE_PUBLIC_OPERATOR_LEGAL_NAME),
+  legalNameDisplayName: {
+    ko: '주식회사 파필드소프트웨어',
+    en: 'Farfield Software Inc.',
+  },
   representative: optional(import.meta.env.VITE_PUBLIC_OPERATOR_REPRESENTATIVE),
   representativeDisplayName: {
     ko: '김규민',
     en: 'Gyumin Kim',
   },
   address: optional(import.meta.env.VITE_PUBLIC_OPERATOR_ADDRESS),
+  addressDisplayName: {
+    en: 'Unit 201-154, Gallery House Commercial Building, 755-27, Gobong-ro, Paju-si, Gyeonggi-do 10911, Republic of Korea',
+  },
   businessRegistrationNumber: optional(
     import.meta.env.VITE_PUBLIC_OPERATOR_BUSINESS_REGISTRATION_NUMBER,
   ),
@@ -37,20 +47,43 @@ export const PUBLIC_OPERATOR_INFO: PublicOperatorInfo = {
     import.meta.env.VITE_PUBLIC_OPERATOR_COMMERCE_REGISTRATION_NUMBER,
   ),
   privacyOfficer: optional(import.meta.env.VITE_PUBLIC_OPERATOR_PRIVACY_OFFICER),
+  privacyOfficerDisplayName: {
+    ko: '김규민',
+    en: 'Gyumin Kim',
+  },
   contactEmail: CONTACT_EMAIL,
 }
 
 export function publicOperatorDisplayName(
+  locale?: 'ko' | 'en',
   operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
 ): string {
-  return operator.legalName ?? operator.brandName
+  return (
+    (locale ? operator.legalNameDisplayName?.[locale] : undefined) ??
+    operator.legalName ??
+    operator.brandName
+  )
 }
 
 export function publicRepresentativeDisplayName(
   locale: 'ko' | 'en',
   operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
 ): string | undefined {
-  return operator.representative ?? operator.representativeDisplayName?.[locale]
+  return operator.representativeDisplayName?.[locale] ?? operator.representative
+}
+
+export function publicAddressDisplayName(
+  locale: 'ko' | 'en',
+  operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
+): string | undefined {
+  return operator.addressDisplayName?.[locale] ?? operator.address
+}
+
+export function publicPrivacyOfficerDisplayName(
+  locale: 'ko' | 'en',
+  operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
+): string | undefined {
+  return operator.privacyOfficerDisplayName?.[locale] ?? operator.privacyOfficer
 }
 
 export function publicOperatorDetails(
@@ -78,14 +111,19 @@ export function publicOperatorDetails(
           contactEmail: 'Contact',
         }
 
+  const legalName = publicOperatorDisplayName(locale, operator)
+  const representative = publicRepresentativeDisplayName(locale, operator)
+  const address = publicAddressDisplayName(locale, operator)
+  const privacyOfficer = publicPrivacyOfficerDisplayName(locale, operator)
+
   return [
-    operator.legalName
-      ? { label: labels.legalName, value: operator.legalName }
+    legalName
+      ? { label: labels.legalName, value: legalName }
       : null,
-    operator.representative
-      ? { label: labels.representative, value: operator.representative }
+    representative
+      ? { label: labels.representative, value: representative }
       : null,
-    operator.address ? { label: labels.address, value: operator.address } : null,
+    address ? { label: labels.address, value: address } : null,
     operator.businessRegistrationNumber
       ? {
           label: labels.businessRegistrationNumber,
@@ -98,8 +136,8 @@ export function publicOperatorDetails(
           value: operator.commerceRegistrationNumber,
         }
       : null,
-    operator.privacyOfficer
-      ? { label: labels.privacyOfficer, value: operator.privacyOfficer }
+    privacyOfficer
+      ? { label: labels.privacyOfficer, value: privacyOfficer }
       : null,
     { label: labels.contactEmail, value: operator.contactEmail },
   ].filter((item): item is { label: string; value: string } => item !== null)
@@ -110,6 +148,7 @@ export function publicFooterOperatorDetails(
   operator: PublicOperatorInfo = PUBLIC_OPERATOR_INFO,
 ): { label: string; value: string }[] {
   const representative = publicRepresentativeDisplayName(locale, operator)
+  const address = publicAddressDisplayName(locale, operator)
   const copy =
     locale === 'ko'
       ? {
@@ -142,8 +181,8 @@ export function publicFooterOperatorDetails(
         }
       : null,
     { label: copy.labels.contactEmail, value: operator.contactEmail },
-    operator.address
-      ? { label: copy.labels.address, value: operator.address }
+    address
+      ? { label: copy.labels.address, value: address }
       : null,
     operator.businessRegistrationNumber
       ? {

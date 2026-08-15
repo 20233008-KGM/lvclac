@@ -711,6 +711,9 @@ export const ko: Messages = {
     },
   },
   welcome: {
+    headerCta: '처음이신가요?',
+    headerCtaMeta: '1분 안내',
+    headerCtaAriaLabel: '처음이신가요? 1분 안내 열기',
     stepLabel: '{current} / {total}',
     next: '다음',
     back: '이전',

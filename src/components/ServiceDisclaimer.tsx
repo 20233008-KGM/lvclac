@@ -147,9 +147,10 @@ export function LegalLinks({ variant = 'default' }: { variant?: 'default' | 'foo
 
 export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const [welcomeOpen, setWelcomeOpen] = useState(() =>
+  const [welcomePending, setWelcomePending] = useState(() =>
     shouldShowWelcome(pathname, localStorage, sessionStorage),
   )
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
   const [open, setOpen] = useState(
     () =>
       !shouldShowWelcome(pathname, localStorage, sessionStorage) &&
@@ -159,12 +160,19 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
   const saveConsentOpen =
+    !welcomePending &&
     !welcomeOpen &&
     !open &&
     !saveConsentResolved &&
     shouldShowPublicSaveConsent(pathname, localStorage)
   const firstVisitGateActive =
-    mode === 'required' && (welcomeOpen || open || saveConsentOpen)
+    mode === 'required' && (welcomePending || welcomeOpen || open || saveConsentOpen)
+
+  const showWelcome = () => {
+    if (!welcomePending) return
+    setMode('required')
+    setWelcomeOpen(true)
+  }
 
   const showAgain = () => {
     setMode('info')
@@ -176,11 +184,20 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
     writeDisclaimerSkip(localStorage, true)
     writeWelcomeCompleted(localStorage)
     setSkipActive(true)
+    setWelcomePending(false)
     setWelcomeOpen(false)
   }
 
   return (
-    <FirstVisitFlowContext.Provider value={{ skipActive, showAgain, firstVisitGateActive }}>
+    <FirstVisitFlowContext.Provider
+      value={{
+        skipActive,
+        showAgain,
+        firstVisitGateActive,
+        welcomePending,
+        showWelcome,
+      }}
+    >
       {children}
       {welcomeOpen ? (
         <WelcomeFlow onComplete={handleWelcomeComplete} />

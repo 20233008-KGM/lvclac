@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-08-12 — Paddle 심사용 공개 요금제·법률 문구 실기능 정합화**
+- `maintenance/public`에서 현재 공개 기능을 무료 브라우저 계산기·로컬 숫자세트 1개로 명확히 하고 로그인·클라우드·결제·Pro는 향후 공개 기능으로 분리했다. Pro 월 $5·연 $48과 USD, 자동 갱신, Paddle 승인 후 판매 개시를 표시하고 Paddle의 온라인 재판매자·Merchant of Record 지위, Buyer Terms·Refund Policy·paddle.net 직접 링크, 원칙적 비환불과 취소/환불 차이를 한영 약관·환불 정책에 반영했다. 개인정보처리방침은 현재 Vercel·Google 처리만 본문에 두고 국외 이전의 근거·항목·국가·방법·보유기간·연락처, 파기 절차, 향후 Supabase·Paddle 기능 공개 전 재고지 의무를 보강했다. 영어 페이지의 법인명·대표자·주소·개인정보 보호책임자도 영문 표시값으로 통일했다.
+- 검증: 변경 파일 ESLint, TypeScript 포함 production build, 전체 Vitest **787/787**, diff check 통과. 로컬 1440×1000 요금제와 390×844 개인정보 페이지에서 2개 카드·결제 준비 중·한영 법인정보·가로 넘침 0을 확인했다. 로컬 Vercel Analytics 스크립트 404 외 앱 오류는 없었다. Production 배포·Paddle 재심사 결과·환불 완료 adjustment 웹훅에 따른 Pro 권한 회수는 미검증이며, 동시 작업 중인 요금제 UI/CSS 변경을 보존해 커밋은 하지 않았다. Notion [Work Log](https://app.notion.com/p/3ba26e6d586f816489e7f6c4e0bed5e5) 기록 완료.
+
 **2026-08-12 — 공개 문의 페이지와 이메일 UX 정리**
 - `maintenance/public`의 푸터 `문의하기`를 즉시 `mailto:` 실행하던 방식에서 `/contact` 내부 페이지로 바꿨다. 문의 카드는 공통 메인 콘텐츠 그리드 폭 100%를 유지하며, 그라데이션·광선·중첩 카드와 과한 그림자를 제거해 단색 표면과 얇은 구분선 중심으로 정돈했다. `contact@farfield.software` 주소 복사는 중립적인 겹친 사각형 아이콘 버튼으로 제공하고 성공 시 체크 아이콘과 `복사됨` 상태를 표시한다. 외부 앱 실행은 밑줄형 `이메일 앱 열기` 보조 링크로 명시하고, 영업 관련 제안·버그 제보·기타 문의는 데스크톱 01~03 편집형 열과 모바일 구분선 목록으로 구성한다. 공개판 DB·로그인·이미지/파일 첨부는 추가하지 않았다.
 - 검증: 전체 Vitest **782/782**, TypeScript 포함 production build, 변경 파일 ESLint, diff check 통과. 저장소 전체 ESLint는 기존 31개 오류와 4개 경고로 미통과다. 로컬 브라우저 1280px에서 카드/안내/메인 폭 **822px**, 390×844에서 **321px**로 일치하고 이메일 한 줄 표시, 가로 넘침 0, 복사 완료 상태, 콘솔 오류 0을 확인했다. 커밋 **`62fa872`**, **`2bdd2aa`**, **`f8b4b4f`**, 시각 체계 단순화 **`0c72b5a`** 완료. push·Vercel 배포·실제 `liqguard.com/contact`·신규 메일 실수신은 미수행이다. Notion [Task](https://app.notion.com/p/39a26e6d586f818a94cddf5a039feec3)·[초기 Work Log](https://app.notion.com/p/3ba26e6d586f81d7a95bdcbaf9bff557)·[디자인 개선 Work Log](https://app.notion.com/p/3ba26e6d586f81788902ec6fb8d02167) 기록 완료.

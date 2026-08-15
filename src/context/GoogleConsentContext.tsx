@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { ADSENSE_CLIENT } from '../config/ads'
+import { ADS_ENABLED, ADSENSE_CLIENT } from '../config/ads'
 import { isAdFreePublicInfoPath } from '../config/routes'
 import { TrustModalFrame } from '../components/TrustModalFrame'
 import { useFirstVisitGateActive } from './FirstVisitFlowContext'
@@ -74,18 +74,18 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [draftPreferences, setDraftPreferences] =
     useState<PrivacyPreferences>(DENIED_PREFERENCES)
-  const configured = Boolean(ADSENSE_CLIENT)
+  const configured = Boolean(ADS_ENABLED && ADSENSE_CLIENT)
 
   const applyDecision = useCallback((next: GoogleConsentDecision) => {
     setDecision(next)
     applyGoogleConsentMode(next)
     setPersonalizedAdRequestsAllowed(next.personalizedAdsAllowed)
-    setAdRequestsPaused(adFreePath || !next.adRequestsAllowed)
+    setAdRequestsPaused(!ADS_ENABLED || adFreePath || !next.adRequestsAllowed)
     if (next.analyticsAllowed) initAnalytics()
   }, [adFreePath])
 
   useEffect(() => {
-    setAdRequestsPaused(adFreePath || !decision.adRequestsAllowed)
+    setAdRequestsPaused(!ADS_ENABLED || adFreePath || !decision.adRequestsAllowed)
   }, [adFreePath, decision.adRequestsAllowed])
 
   const syncGoogleDecision = useCallback(() => {
@@ -104,7 +104,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initializeGoogleConsentDefaults()
-    if (!ADSENSE_CLIENT) return
+    if (!ADS_ENABLED || !ADSENSE_CLIENT) return
 
     queueGoogleCallback('CONSENT_MODE_DATA_READY', syncGoogleDecision)
     const syncWhenVisible = () => {
@@ -169,7 +169,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       ...decision,
-      adRequestsAllowed: decision.adRequestsAllowed && !adFreePath,
+      adRequestsAllowed: ADS_ENABLED && decision.adRequestsAllowed && !adFreePath,
       configured,
       openPrivacySettings,
     }),

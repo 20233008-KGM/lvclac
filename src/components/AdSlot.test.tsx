@@ -15,8 +15,8 @@ const consent = {
   openPrivacySettings: () => undefined,
 }
 
-describe('AdSlot placeholder', () => {
-  it('shows the public-facing preparation message without internal dimensions', () => {
+describe('AdSlot', () => {
+  it('renders no placeholder or ad surface while advertising is paused', () => {
     const html = renderToStaticMarkup(
       <GoogleConsentContext.Provider value={consent}>
         <AdSlot
@@ -29,9 +29,6 @@ describe('AdSlot placeholder', () => {
       </GoogleConsentContext.Provider>,
     )
 
-    expect(html).toContain('광고 준비 중')
-    expect(html).toContain('LiqGuard의 지속적인 무료 운영을 위한 공간입니다.')
-    expect(html).not.toContain('좌측 상단 광고')
-    expect(html).not.toContain('160 × 600')
+    expect(html).toBe('')
   })
 })

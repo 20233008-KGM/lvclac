@@ -1,5 +1,9 @@
 export type AdVariant = 'banner' | 'sidebar' | 'sidebar-tall'
 
+// AdSense review is paused. Keep every public ad surface and request disabled
+// until advertising is intentionally restored after a future review.
+export const ADS_ENABLED = false
+
 export const ADSENSE_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT?.trim() || undefined
 
 const SLOT_ENV_MAP: Record<string, string | undefined> = {
@@ -25,10 +29,11 @@ export function getAdSlotUnitId(slotId: string): string | undefined {
 }
 
 export function isAdSlotEnabled(_slotId: string, variant: AdVariant): boolean {
+  if (!ADS_ENABLED) return false
   if (variant === 'sidebar-tall' && !SIDEBAR_TALL_ENABLED) return false
   return true
 }
 
 export function isAdSenseConfigured(slotId: string): boolean {
-  return Boolean(ADSENSE_CLIENT && getAdSlotUnitId(slotId))
+  return Boolean(ADS_ENABLED && ADSENSE_CLIENT && getAdSlotUnitId(slotId))
 }

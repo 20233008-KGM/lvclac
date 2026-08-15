@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { isAdSlotEnabled } from '../config/ads'
+import { ADS_ENABLED, isAdSlotEnabled } from '../config/ads'
 import { useLanguage } from '../i18n'
 import { AdSlot } from './AdSlot'
 import { ServiceDisclaimer } from './ServiceDisclaimer'
@@ -13,7 +13,11 @@ export function PageShell({ children }: PageShellProps) {
 
   return (
     <div className="page-shell">
-      <aside className="ad-column ad-column-left" aria-label={t.ads.generic}>
+      <aside
+        className="ad-column ad-column-left"
+        aria-label={ADS_ENABLED ? t.ads.generic : undefined}
+        aria-hidden={ADS_ENABLED ? undefined : 'true'}
+      >
         <AdSlot
           slotId="left-sidebar-top"
           variant="sidebar"
@@ -36,26 +40,32 @@ export function PageShell({ children }: PageShellProps) {
         <div className="page-content">
           <ServiceDisclaimer />
           {children}
-          <div className="page-ads">
-            <AdSlot
-              slotId="top-banner"
-              variant="banner"
-              label={t.ads.top}
-              placeholderTitle={t.ads.placeholderTitle}
-              placeholderDescription={t.ads.placeholderBody}
-            />
-            <AdSlot
-              slotId="bottom-banner"
-              variant="banner"
-              label={t.ads.bottom}
-              placeholderTitle={t.ads.placeholderTitle}
-              placeholderDescription={t.ads.placeholderBody}
-            />
-          </div>
+          {ADS_ENABLED && (
+            <div className="page-ads">
+              <AdSlot
+                slotId="top-banner"
+                variant="banner"
+                label={t.ads.top}
+                placeholderTitle={t.ads.placeholderTitle}
+                placeholderDescription={t.ads.placeholderBody}
+              />
+              <AdSlot
+                slotId="bottom-banner"
+                variant="banner"
+                label={t.ads.bottom}
+                placeholderTitle={t.ads.placeholderTitle}
+                placeholderDescription={t.ads.placeholderBody}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      <aside className="ad-column ad-column-right" aria-label={t.ads.generic}>
+      <aside
+        className="ad-column ad-column-right"
+        aria-label={ADS_ENABLED ? t.ads.generic : undefined}
+        aria-hidden={ADS_ENABLED ? undefined : 'true'}
+      >
         <AdSlot
           slotId="right-sidebar-top"
           variant="sidebar"

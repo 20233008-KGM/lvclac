@@ -1,5 +1,6 @@
 import { useEffect, useRef, type CSSProperties } from 'react'
 import {
+  ADS_ENABLED,
   ADSENSE_CLIENT,
   getAdSlotUnitId,
   isAdSenseConfigured,
@@ -59,6 +60,8 @@ export function AdSlot({
       cancelled = true
     }
   }, [isLive, slotId])
+
+  if (!ADS_ENABLED) return null
 
   if (!isLive) {
     return (

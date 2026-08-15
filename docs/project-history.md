@@ -9,6 +9,10 @@
 
 <!-- 밀려난 근황 로그를 이 아래에 최신순으로 쌓는다. -->
 
+**2026-08-12 — 업데이트 제목 목록·Markdown 상세 글 구조 구현**
+- `maintenance/public`의 공개 업데이트를 `content/updates/*.md` 한영 파일 쌍으로 관리한다. frontmatter는 `id`·`publishedAt`·`locale`·`type`·`title`·검색용 `description`을 검증하고 본문 Markdown 줄바꿈을 보존한다. 목록은 날짜·구분·제목만 표시하며 제목 클릭 시 `/updates/:id` 또는 `/en/updates/:id`의 상세 글로 이동한다. React Markdown으로 본문을 렌더링하고, 빌드가 각 글의 한영 상세 HTML·canonical·hreflang·사이트맵 URL을 자동 생성한다. 첫 글 `2026-08-12-beta-experience`는 필드 안내·리사이저·공식 문의 개선을 여러 섹션과 목록이 있는 상세 글로 확장했다.
+- 검증: 집중 **34/34**·전체 Vitest **800/800**, 변경 파일 ESLint, TypeScript 포함 production build 통과. 빌드 산출물의 한영 상세 HTML·canonical·hreflang·사이트맵을 확인했고 로컬 브라우저에서 목록→상세 클릭, 한영 본문·메타데이터·가로 넘침 0·콘솔 경고/오류 0을 확인했다. 전체 ESLint는 기존 오류 31건/경고 4건으로 실패한다. 커밋·push·Production 배포·운영 화면·390px 모바일 실기기 검증은 미수행이며 다른 미커밋 변경을 보존했다. Notion [Task](https://app.notion.com/p/3ba26e6d586f8105b463c643634377fb)·[Work Log](https://app.notion.com/p/3ba26e6d586f814a959ecd6674538248) 갱신 완료.
+
 **2026-08-12 — Paddle 심사용 공개 요금제·법률 문구 실기능 정합화**
 - `maintenance/public`에서 현재 공개 기능을 무료 브라우저 계산기·로컬 숫자세트 1개로 명확히 하고 로그인·클라우드·결제·Pro는 향후 공개 기능으로 분리했다. Pro 월 $5·연 $48과 USD, 자동 갱신, Paddle 승인 후 판매 개시를 표시하고 Paddle의 온라인 재판매자·Merchant of Record 지위, Buyer Terms·Refund Policy·paddle.net 직접 링크, 원칙적 비환불과 취소/환불 차이를 한영 약관·환불 정책에 반영했다. 개인정보처리방침은 현재 Vercel·Google 처리만 본문에 두고 국외 이전의 근거·항목·국가·방법·보유기간·연락처, 파기 절차, 향후 Supabase·Paddle 기능 공개 전 재고지 의무를 보강했다. 영어 페이지의 법인명·대표자·주소·개인정보 보호책임자도 영문 표시값으로 통일했다.
 - 검증: 변경 파일 ESLint, TypeScript 포함 production build, 전체 Vitest **787/787**, diff check 통과. 로컬 1440×1000 요금제와 390×844 개인정보 페이지에서 2개 카드·결제 준비 중·한영 법인정보·가로 넘침 0을 확인했다. 로컬 Vercel Analytics 스크립트 404 외 앱 오류는 없었다. Production 배포·Paddle 재심사 결과·환불 완료 adjustment 웹훅에 따른 Pro 권한 회수는 미검증이며, 동시 작업 중인 요금제 UI/CSS 변경을 보존해 커밋은 하지 않았다. Notion [Work Log](https://app.notion.com/p/3ba26e6d586f816489e7f6c4e0bed5e5) 기록 완료.

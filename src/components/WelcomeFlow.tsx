@@ -40,6 +40,13 @@ function IconChevronRight() {
     </svg>
   )
 }
+function IconClose() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  )
+}
 function IconArrowUpRight() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -135,7 +142,13 @@ function CheckBadge() {
  * 면책 ack/skip + 온보딩 완료 플래그 커밋은 부모(DisclaimerProvider)가 onComplete에서 수행한다.
  * 표현 계층만 교체 — welcomeReducer 상태 머신과 부수효과는 그대로 유지.
  */
-export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
+export function WelcomeFlow({
+  onComplete,
+  onClose,
+}: {
+  onComplete: () => void
+  onClose: () => void
+}) {
   const { t, locale, preset } = useLanguage()
   const { setSaveEnabled, pauseSaving, updateInputs } = usePublicCalculator()
   useModalFocusRestore()
@@ -173,6 +186,15 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
     },
     [],
   )
+
+  // 온보딩은 선택 안내일 뿐, 사용자를 계산기에서 가두지 않는다.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
 
   const c = t.welcome
   const stepIndex = draft.step
@@ -335,6 +357,14 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
             </div>
           ) : (
             <div className="welcome-panel__branch">
+              <button
+                type="button"
+                className="trust-modal__close"
+                aria-label={t.close}
+                onClick={onClose}
+              >
+                <IconClose />
+              </button>
               <div className="welcome-panel__header">
                 <div className="welcome-eyebrow">
                   <span className="welcome-eyebrow__step">{eyebrow}</span>
@@ -586,6 +616,9 @@ export function WelcomeFlow({ onComplete }: { onComplete: () => void }) {
                     )}
                   </div>
                 </div>
+                <button type="button" className="welcome-skip" onClick={onClose}>
+                  {c.skip}
+                </button>
               </div>
             </div>
           )}

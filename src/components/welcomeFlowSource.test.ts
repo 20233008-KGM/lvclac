@@ -21,9 +21,15 @@ describe('WelcomeFlow 접근성/구조', () => {
     expect(welcome).toContain("document.body.style.overflow = 'hidden'")
   })
 
-  it('필수 관문: backdrop 클릭 닫기 없음', () => {
+  it('백드롭은 닫지 않되, X·건너뛰기·Esc로 언제든 안내를 닫을 수 있다', () => {
     // 닫히는 오버레이(LegalOverlay)는 e.target === e.currentTarget 패턴을 쓴다 — 없어야 함
     expect(welcome).not.toContain('e.target === e.currentTarget')
+    expect(welcome).toContain('className="trust-modal__close"')
+    expect(welcome).toContain('aria-label={t.close}')
+    expect(welcome).toContain('className="welcome-skip"')
+    expect(welcome).toContain('{c.skip}')
+    expect(welcome).toContain("event.key === 'Escape'")
+    expect(welcome).toContain('if (event.key === \'Escape\') onClose()')
   })
 
   it('공개 저장 성공 확인 + ack 체크 전 시작 불가', () => {
@@ -74,7 +80,9 @@ describe('DisclaimerProvider 게이트 배선', () => {
     expect(provider).toContain('welcomePending,')
     expect(provider).toContain('showWelcome,')
     expect(provider).toContain('welcomeOpen ?')
-    expect(provider).toContain('<WelcomeFlow onComplete={handleWelcomeComplete} />')
+    expect(provider).toContain('<WelcomeFlow')
+    expect(provider).toContain('onComplete={handleWelcomeComplete}')
+    expect(provider).toContain('onClose={() => setWelcomeOpen(false)}')
     expect(provider).toContain('<DisclaimerModalContent')
     expect(provider).toContain('{saveConsentOpen && (')
     expect(provider).toContain('<PublicSaveConsentModal')

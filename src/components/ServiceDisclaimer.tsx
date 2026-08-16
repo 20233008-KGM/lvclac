@@ -200,7 +200,10 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
     >
       {children}
       {welcomeOpen ? (
-        <WelcomeFlow onComplete={handleWelcomeComplete} />
+        <WelcomeFlow
+          onComplete={handleWelcomeComplete}
+          onClose={() => setWelcomeOpen(false)}
+        />
       ) : open && (
         <DisclaimerModalContent
           mode={mode}

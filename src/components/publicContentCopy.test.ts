@@ -32,9 +32,12 @@ describe('public v1 content copy', () => {
     expect(koFormulas).toContain('총 민감도 = 보유 계약수 × 계약승수')
     expect(koFormulas).toContain('계약당 고정금액 × 보유 계약수')
     expect(koFormulas).toContain('레버리지 = 약정가치 ÷ 계좌평가금액')
-    expect(enFormulas).toContain('Q = N × M')
+    expect(enFormulas).toContain(
+      'Total sensitivity = open contracts × contract multiplier / contract size',
+    )
     expect(enFormulas).toContain('constant, price-independent')
-    expect(enFormulas).toContain('Leverage = notional ÷ E₀')
+    expect(enFormulas).toContain('Leverage = notional ÷ account equity')
+    expect(enFormulas).not.toContain('Q = N × M')
   })
 
   it('presents the about page as a benefit-led SaaS introduction in both languages', () => {

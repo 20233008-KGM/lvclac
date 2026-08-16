@@ -1304,42 +1304,52 @@ export const en: Messages = {
       'Formulas used by the futures liquidation calculator. Broker and exchange rules may differ — for reference only.',
     disclaimer:
       'Direct maintenance or entrusted margin inputs override rate-based values. Liquidation timing and rounding vary by broker.',
-    symbolTitle: 'Symbols',
+    symbolTitle: 'Formula terms',
     symbols: [
-      { symbol: 'E₀', meaning: 'Account equity (current assets)' },
-      { symbol: 'C₀', meaning: 'Current price' },
-      { symbol: 'P', meaning: 'Price after move (unknown when solving for liquidation)' },
-      { symbol: 'N', meaning: 'Open contracts' },
-      { symbol: 'M', meaning: 'Contract multiplier / contract size (default 1)' },
-      { symbol: 'Q', meaning: 'Total sensitivity = N × M (P&L per one price unit)' },
-      { symbol: 'R', meaning: 'Maintenance margin rate (decimal, e.g. 0.247)' },
-      { symbol: 'Rₑ', meaning: 'Initial / entrusted margin rate' },
+      { symbol: 'Account equity', meaning: 'The current value of assets in the account' },
+      { symbol: 'Current price', meaning: 'The current market price you entered' },
+      {
+        symbol: 'Price after move',
+        meaning: 'The price after a market move; this is the unknown when solving for liquidation',
+      },
+      { symbol: 'Open contracts', meaning: 'The number of contracts currently held' },
+      {
+        symbol: 'Contract multiplier / contract size',
+        meaning: 'The value used to calculate one contract’s profit or loss for a one-unit price move (default 1)',
+      },
+      {
+        symbol: 'Total sensitivity',
+        meaning: 'Open contracts × contract multiplier / contract size (profit or loss for a one-unit price move)',
+      },
+      { symbol: 'Maintenance margin rate', meaning: 'The maintenance margin as a decimal of notional, e.g. 0.247' },
+      { symbol: 'Entrusted margin rate', meaning: 'The initial / entrusted margin as a decimal of notional' },
     ],
     sections: [
       {
         title: 'Notional & margin',
-        intro: 'Entry price and contract multiplier / contract size determine notional. Q for liquidation is separate.',
+        intro:
+          'Entry price and contract multiplier / contract size determine notional. Total sensitivity is calculated separately for liquidation.',
         entries: [
           {
             name: 'Position notional',
-            expression: 'Notional = N × entry price × M',
+            expression: 'Notional = open contracts × entry price × contract multiplier / contract size',
           },
           {
             name: 'Maintenance margin (rate)',
-            expression: 'Maintenance = notional × R',
+            expression: 'Maintenance margin = notional × maintenance margin rate',
             description: 'A direct broker-platform amount takes precedence when provided.',
           },
           {
             name: 'Entrusted margin (rate)',
-            expression: 'Entrusted = notional × Rₑ',
+            expression: 'Entrusted margin = notional × entrusted margin rate',
           },
           {
             name: 'Available margin',
-            expression: 'Available = E₀ − entrusted margin',
+            expression: 'Available margin = account equity − entrusted margin',
           },
           {
             name: 'Per-contract margin',
-            expression: 'Per contract = position margin ÷ N',
+            expression: 'Per contract = position margin ÷ open contracts',
           },
         ],
       },
@@ -1348,41 +1358,56 @@ export const en: Messages = {
         intro: 'Liquidation occurs when equity at price P equals maintenance at P.',
         entries: [
           {
-            name: 'Q (total sensitivity)',
-            expression: 'Q = N × M',
-            description: 'e.g. N=58, M=10 → Q=580. If M=1, Q=N.',
+            name: 'Total sensitivity',
+            expression: 'Total sensitivity = open contracts × contract multiplier / contract size',
+            description:
+              'For example: 58 open contracts × multiplier 10 = total sensitivity 580. With a multiplier of 1, it equals the number of open contracts.',
           },
           {
             name: 'Maintenance at current price',
-            expression: 'M(C₀) = C₀ × Q × R',
+            expression: 'Maintenance margin at current price = current price × total sensitivity × maintenance margin rate',
             description: 'Or direct maintenance from your broker platform (scaled by contracts).',
           },
           {
             name: 'Maintenance at price P (rate / total)',
-            expression: 'M(P) = M(C₀) × P / C₀',
+            expression:
+              'Maintenance margin at price after move = maintenance margin at current price × price after move / current price',
           },
           {
             name: 'Fixed margin per contract',
-            expression: 'Maintenance = per-contract amount × N (constant, price-independent)',
+            expression: 'Maintenance margin = per-contract amount × open contracts (constant, price-independent)',
             description:
-              'Fixed per-contract margin does not move with price, so M(P) is a constant rather than proportional to P.',
+              'Fixed per-contract margin does not move with price, so maintenance margin after a move is constant rather than proportional to price.',
           },
         ],
       },
       {
         title: 'Liquidation — long',
         entries: [
-          { name: 'Equity at P', expression: 'Equity(P) = E₀ + (P − C₀) × Q' },
-          { name: 'Liquidation condition', expression: 'Equity(P) = M(P)' },
-          { name: 'Liquidation price', expression: 'P = (C₀×Q − E₀) / (Q − M(C₀)/C₀)' },
+          {
+            name: 'Account equity after a price move',
+            expression: 'Account equity after a price move = account equity + (price after move − current price) × total sensitivity',
+          },
+          {
+            name: 'Liquidation condition',
+            expression: 'Account equity after a price move = maintenance margin at price after move',
+          },
+          {
+            name: 'Liquidation price',
+            expression:
+              'Liquidation price = (current price × total sensitivity − account equity) / (total sensitivity − maintenance margin at current price / current price)',
+          },
           {
             name: 'Summary (rate form)',
-            expression: 'P = (C₀×Q − E₀) / (Q×(1 − R))',
-            description: 'Equivalent when M(C₀)=C₀×Q×R.',
+            expression:
+              'Liquidation price = (current price × total sensitivity − account equity) / (total sensitivity × (1 − maintenance margin rate))',
+            description:
+              'Equivalent when maintenance margin at current price = current price × total sensitivity × maintenance margin rate.',
           },
           {
             name: 'Fixed per-contract margin (long)',
-            expression: 'P = C₀ + (Mfix − E₀) / Q',
+            expression:
+              'Liquidation price = current price + (fixed maintenance margin − account equity) / total sensitivity',
             description: 'With fixed maintenance the price-proportional term drops out.',
           },
         ],
@@ -1390,20 +1415,32 @@ export const en: Messages = {
       {
         title: 'Liquidation — short',
         entries: [
-          { name: 'Equity at P', expression: 'Equity(P) = E₀ − (P − C₀) × Q' },
-          { name: 'Liquidation condition', expression: 'Equity(P) = M(P)' },
-          { name: 'Liquidation price', expression: 'P = (E₀ + C₀×Q) / (Q + M(C₀)/C₀)' },
+          {
+            name: 'Account equity after a price move',
+            expression: 'Account equity after a price move = account equity − (price after move − current price) × total sensitivity',
+          },
+          {
+            name: 'Liquidation condition',
+            expression: 'Account equity after a price move = maintenance margin at price after move',
+          },
+          {
+            name: 'Liquidation price',
+            expression:
+              'Liquidation price = (account equity + current price × total sensitivity) / (total sensitivity + maintenance margin at current price / current price)',
+          },
           {
             name: 'Summary (rate form)',
-            expression: 'P = (E₀ + C₀×Q) / (Q×(1 + R))',
+            expression:
+              'Liquidation price = (account equity + current price × total sensitivity) / (total sensitivity × (1 + maintenance margin rate))',
           },
           {
             name: 'Fixed per-contract margin (short)',
-            expression: 'P = C₀ + (E₀ − Mfix) / Q',
+            expression:
+              'Liquidation price = current price + (account equity − fixed maintenance margin) / total sensitivity',
           },
         ],
         notes: [
-          'For the same E₀ and Q, short upside buffer (%) < long downside buffer (%) — not symmetric.',
+          'With the same account equity and total sensitivity, short upside buffer (%) < long downside buffer (%) — the two are not symmetric.',
         ],
       },
       {
@@ -1411,27 +1448,28 @@ export const en: Messages = {
         entries: [
           {
             name: 'Long — buffer to liquidation (%)',
-            expression: '((C₀ − P) / C₀) × 100',
+            expression: '((current price − liquidation price) / current price) × 100',
           },
           {
             name: 'Short — buffer to liquidation (%)',
-            expression: '((P − C₀) / C₀) × 100',
+            expression: '((liquidation price − current price) / current price) × 100',
           },
           {
             name: 'Price move to liquidation',
-            expression: 'Long: C₀ − P  /  Short: P − C₀',
+            expression: 'Long: current price − liquidation price  /  Short: liquidation price − current price',
           },
-          { name: 'Leverage', expression: 'Leverage = notional ÷ E₀' },
+          { name: 'Leverage', expression: 'Leverage = notional ÷ account equity' },
           {
             name: 'Add-on buy / sell limit',
-            expression: 'floor((E₀ − entrusted) / per-contract entrusted)',
+            expression: 'floor((account equity − entrusted margin) / entrusted margin per contract)',
             description: 'Same margin math for long adds and short adds.',
           },
           {
             name: 'Order fill P&L (at mark)',
-            expression: 'Long: (C₀ − order price) × Q  /  Short: (order price − C₀) × Q',
+            expression:
+              'Long: (current price − order price) × order total sensitivity  /  Short: (order price − current price) × order total sensitivity',
             description:
-              'Q = order size × contract multiplier / contract size. Applied to post-order equity, entry price, liquidation, and leverage. Blank order price = mark.',
+              'Order total sensitivity = order size × contract multiplier / contract size. Applied to post-order equity, entry price, liquidation, and leverage. Blank order price = current price.',
           },
         ],
       },

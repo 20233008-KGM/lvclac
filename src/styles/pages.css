@@ -4549,7 +4549,7 @@ html[data-zone='about'] body {
 
 .my-page-rollover-fields {
   display: grid;
-  grid-template-columns: repeat(3, var(--mypage-control-width));
+  grid-template-columns: repeat(2, var(--mypage-control-width));
   gap: var(--space-sm);
   align-items: end;
 }
@@ -4584,7 +4584,7 @@ html[data-zone='about'] body {
   outline-offset: 2px;
 }
 
-/* 자동 계산 안내는 세 설정 열 전체 폭을 사용한다. */
+/* 일정 안내는 두 설정 열 전체 폭을 사용한다. */
 .my-page-rollover-fields .my-page-field-help {
   grid-column: 1 / -1;
 }
@@ -4917,6 +4917,11 @@ a.my-page-compare-card__action {
 }
 
 @media (max-width: 620px) {
+  .my-page-nav {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .my-page-toast {
     top: max(var(--space-sm), env(safe-area-inset-top));
     right: max(var(--space-sm), env(safe-area-inset-right));
@@ -5166,10 +5171,10 @@ a.my-page-compare-card__action {
 
   .my-page-nav {
     position: static;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .my-page-nav a {
+    justify-content: center;
     text-align: center;
   }
 
@@ -5325,6 +5330,19 @@ a.my-page-compare-card__action {
   .records-timeline-card {
     grid-template-columns: auto minmax(0, 1fr) var(--records-memo-column);
     align-items: center;
+  }
+}
+
+@media (min-width: 621px) and (max-width: 1023px) {
+  .my-page:has(.my-page-body) .my-page-header,
+  .my-page-body {
+    width: min(100%, 720px);
+    margin-inline: auto;
+  }
+
+  .my-page-nav {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -6206,25 +6224,8 @@ a.my-page-compare-card__action {
   border: 1px solid var(--color-border-subtle);
 }
 
-.billing-up__toggle-indicator {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
-  border-radius: 8px;
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.billing-up__toggle-indicator[data-yearly='true'] {
-  transform: translateX(100%);
-}
-
 .billing-up__toggle-btn {
   position: relative;
-  z-index: 1;
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -6234,7 +6235,10 @@ a.my-page-compare-card__action {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-muted);
-  transition: color 0.28s;
+  transition:
+    color 0.28s,
+    background-color 0.28s,
+    box-shadow 0.28s;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -6242,6 +6246,8 @@ a.my-page-compare-card__action {
 
 .billing-up__toggle-btn[data-active='true'] {
   color: var(--color-text);
+  background: var(--color-surface-2);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .billing-up__toggle-save {

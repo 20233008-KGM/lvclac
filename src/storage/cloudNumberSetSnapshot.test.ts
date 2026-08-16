@@ -26,7 +26,6 @@ function numberSet(id: string, updatedAt: string): NumberSetRecord {
     rollover: {
       enabled: false,
       intervalMonths: null,
-      anchor: null,
       nextDate: null,
       pending: false,
     },

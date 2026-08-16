@@ -438,6 +438,21 @@ describe('draft save slot UI', () => {
     expect(text).not.toContain('draft-number-set-active-chip')
   })
 
+  it('renames a number set inline without adding another menu column', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
+    const css = source('src/App.css')
+
+    expect(text).toContain('className="draft-number-set-menu__rename-trigger"')
+    expect(text).toContain('className="draft-number-set-menu__rename-input"')
+    expect(text).toContain('renameNumberSet(identity.mode, identity.setId, trimmed)')
+    expect(text).toContain('numberSetRenameInFlightRef.current')
+    expect(text).toContain('draggable={!editing && !busy')
+    expect(text).toContain("if (event.key === 'Escape')")
+    expect(css).toContain('.draft-number-set-menu__rename-trigger {')
+    expect(css).toContain('.draft-number-set-menu__rename-input {')
+    expect(css).not.toContain('grid-template-columns: auto minmax(0, 1fr) auto auto 28px')
+  })
+
   it('exposes number-set list actions from the calculator context', () => {
     const text = source('src/context/CalculatorContext.tsx')
 

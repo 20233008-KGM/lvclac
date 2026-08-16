@@ -41,7 +41,7 @@ import {
   type RolloverSettings,
   saveNumberSet,
 } from '../db/numberSets'
-import type { RolloverAnchor, RolloverIntervalMonths } from '../db/rolloverSchedule'
+import type { RolloverIntervalMonths } from '../db/rolloverSchedule'
 import {
   appendLocalNumberSet,
   deleteLocalNumberSet,
@@ -103,7 +103,6 @@ export interface CalculatorNumberSet {
 const DISABLED_ROLLOVER: RolloverSettings = {
   enabled: false,
   intervalMonths: null,
-  anchor: null,
   nextDate: null,
   pending: false,
 }
@@ -156,7 +155,6 @@ interface CalculatorContextValue {
     settings: {
       enabled: boolean
       intervalMonths: RolloverIntervalMonths | null
-      anchor: RolloverAnchor | null
       nextDate: string | null
     },
   ) => Promise<string | null>
@@ -1350,7 +1348,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       settings: {
         enabled: boolean
         intervalMonths: RolloverIntervalMonths | null
-        anchor: RolloverAnchor | null
         nextDate: string | null
       },
     ): Promise<string | null> => {

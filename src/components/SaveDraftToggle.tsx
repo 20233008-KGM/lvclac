@@ -259,6 +259,7 @@ export function SaveDraftToggle() {
     setStorageMode,
     selectNumberSet,
     createNumberSet,
+    renameNumberSet,
     setNumberSetMemo,
     copyDraftBetweenStorageModes,
     copyNumberSetValues,
@@ -276,6 +277,8 @@ export function SaveDraftToggle() {
   const [draggingNumberSet, setDraggingNumberSet] = useState<NumberSetDragIdentity | null>(null)
   const [dropTargetNumberSet, setDropTargetNumberSet] =
     useState<NumberSetDragIdentity | null>(null)
+  const [editingNumberSet, setEditingNumberSet] = useState<NumberSetDragIdentity | null>(null)
+  const [numberSetTitleDraft, setNumberSetTitleDraft] = useState('')
   const [numberSetMenuOpen, setNumberSetMenuOpen] = useState(false)
   const [numberSetMenuStyle, setNumberSetMenuStyle] = useState<CSSProperties | null>(null)
   const [gateMode, setGateMode] = useState<SnapshotProGateMode | null>(null)
@@ -283,6 +286,7 @@ export function SaveDraftToggle() {
   const [memoSetId, setMemoSetId] = useState<string | null>(null)
   const numberSetPickerRef = useRef<HTMLButtonElement>(null)
   const numberSetMenuRef = useRef<HTMLDivElement>(null)
+  const numberSetRenameInFlightRef = useRef(false)
   const isCloud = storageMode === 'cloud'
   const modalMode = pendingMode ?? storageMode
   const modalIsCloud = modalMode === 'cloud'
@@ -503,6 +507,13 @@ export function SaveDraftToggle() {
   }
 
   useEffect(() => {
+    if (!numberSetMenuOpen) {
+      setEditingNumberSet(null)
+      setNumberSetTitleDraft('')
+    }
+  }, [numberSetMenuOpen])
+
+  useEffect(() => {
     if (!numberSetMenuOpen) return
     positionNumberSetMenu()
 
@@ -609,6 +620,47 @@ export function SaveDraftToggle() {
   const handleSlotDragEnd = () => {
     setDraggingMode(null)
     setDropTargetMode(null)
+  }
+
+  const startNumberSetRename = (
+    identity: NumberSetDragIdentity,
+    currentTitle: string,
+  ) => {
+    if (busy || syncStatus === 'loading') return
+    setEditingNumberSet(identity)
+    setNumberSetTitleDraft(currentTitle)
+    setNotice(null)
+  }
+
+  const cancelNumberSetRename = () => {
+    numberSetRenameInFlightRef.current = false
+    setEditingNumberSet(null)
+    setNumberSetTitleDraft('')
+  }
+
+  const commitNumberSetRename = (
+    identity: NumberSetDragIdentity,
+    currentTitle: string,
+  ) => {
+    if (numberSetRenameInFlightRef.current) return
+    const trimmed = numberSetTitleDraft.trim()
+    if (!trimmed || trimmed === currentTitle) {
+      cancelNumberSetRename()
+      return
+    }
+
+    numberSetRenameInFlightRef.current = true
+    setBusy(true)
+    setNotice(null)
+    void renameNumberSet(identity.mode, identity.setId, trimmed).then((error) => {
+      setBusy(false)
+      if (error) {
+        numberSetRenameInFlightRef.current = false
+        setNotice(t.myPage.numberSetError)
+        return
+      }
+      cancelNumberSetRename()
+    })
   }
 
   const isSameNumberSet = (
@@ -771,6 +823,7 @@ export function SaveDraftToggle() {
           const identity = { mode, setId: numberSet.id }
           const dragging = isSameNumberSet(draggingNumberSet, identity)
           const dropTarget = isSameNumberSet(dropTargetNumberSet, identity)
+          const editing = isSameNumberSet(editingNumberSet, identity)
           const { side, sideLabel, equityText, leverageText } = describeNumberSet(numberSet)
           return (
             <div
@@ -783,7 +836,7 @@ export function SaveDraftToggle() {
               role="menuitemradio"
               tabIndex={0}
               aria-checked={active}
-              draggable={!busy && syncStatus !== 'loading'}
+              draggable={!editing && !busy && syncStatus !== 'loading'}
               title={t.draftSave.numberSetCopyHint}
               onDragStart={(event) => handleNumberSetDragStart(event, identity)}
               onDragOver={(event) => handleNumberSetDragOver(event, identity)}
@@ -803,7 +856,55 @@ export function SaveDraftToggle() {
                 aria-hidden="true"
               />
               <span className="draft-number-set-menu__copy">
-                <strong>{numberSet.title}</strong>
+                {editing ? (
+                  <input
+                    className="draft-number-set-menu__rename-input"
+                    value={numberSetTitleDraft}
+                    aria-label={t.myPage.numberSetNamePlaceholder}
+                    autoFocus
+                    disabled={busy}
+                    onFocus={(event) => event.currentTarget.select()}
+                    onChange={(event) => setNumberSetTitleDraft(event.currentTarget.value)}
+                    onClick={(event) => event.stopPropagation()}
+                    onDragStart={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                    }}
+                    onBlur={() => commitNumberSetRename(identity, numberSet.title)}
+                    onKeyDown={(event) => {
+                      event.stopPropagation()
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        commitNumberSetRename(identity, numberSet.title)
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault()
+                        cancelNumberSetRename()
+                      }
+                    }}
+                  />
+                ) : (
+                  <strong>
+                    <button
+                      type="button"
+                      className="draft-number-set-menu__rename-trigger"
+                      title={t.myPage.renameNumberSet}
+                      aria-label={`${numberSet.title}: ${t.myPage.renameNumberSet}`}
+                      disabled={busy || syncStatus === 'loading'}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        startNumberSetRename(identity, numberSet.title)
+                      }}
+                      onDragStart={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                      }}
+                      onKeyDown={(event) => event.stopPropagation()}
+                    >
+                      {numberSet.title}
+                    </button>
+                  </strong>
+                )}
                 <span className="draft-number-set-menu__sr-side">{sideLabel}</span>
               </span>
               <span className="draft-number-set-menu__stats">

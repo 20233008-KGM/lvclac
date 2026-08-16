@@ -145,7 +145,6 @@ describe('number-set rollover settings', () => {
       createNumberSetRolloverUpdate({
         enabled: false,
         intervalMonths: 3,
-        anchor: 'second_thursday',
         nextDate: '2026-09-10',
       }),
     ).toEqual({
@@ -159,13 +158,12 @@ describe('number-set rollover settings', () => {
       createNumberSetRolloverUpdate({
         enabled: true,
         intervalMonths: 3,
-        anchor: 'second_thursday',
         nextDate: '2026-09-10',
       }),
     ).toEqual({
       rollover_reminder_enabled: true,
       rollover_interval_months: 3,
-      rollover_anchor: 'second_thursday',
+      rollover_anchor: null,
       rollover_next_date: '2026-09-10',
       rollover_pending: false,
     })

@@ -2,7 +2,6 @@ import { isPresetId } from '../i18n'
 import type { NumberSetRecord } from '../db/numberSets'
 import {
   isLocalDateString,
-  isRolloverAnchor,
   isRolloverInterval,
 } from '../db/rolloverSchedule'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
@@ -46,7 +45,6 @@ function parseNumberSetRecord(value: unknown): NumberSetRecord | null {
 
   const rolloverValue = isRecord(value.rollover) ? value.rollover : {}
   const interval = rolloverValue.intervalMonths
-  const anchor = rolloverValue.anchor
   const nextDate = rolloverValue.nextDate
 
   return {
@@ -60,7 +58,6 @@ function parseNumberSetRecord(value: unknown): NumberSetRecord | null {
     rollover: {
       enabled: rolloverValue.enabled === true,
       intervalMonths: isRolloverInterval(interval) ? interval : null,
-      anchor: isRolloverAnchor(anchor) ? anchor : null,
       nextDate: isLocalDateString(nextDate) ? nextDate : null,
       pending: rolloverValue.pending === true,
     },

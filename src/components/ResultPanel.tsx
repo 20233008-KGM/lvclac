@@ -815,7 +815,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const [snapshotGateMode, setSnapshotGateMode] = useState<'guest' | 'free' | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [orderSaveNotice, setOrderSaveNotice] = useState<string | null>(null)
-  const [savedOrderId, setSavedOrderId] = useState<string | null>(null)
   const [memoTarget, setMemoTarget] = useState<{ type: 'snapshot' | 'order'; id: string } | null>(null)
   const [marginKindModalOpen, setMarginKindModalOpen] = useState(false)
   const [dontShowAgainMarginKind, setDontShowAgainMarginKind] = useState(false)
@@ -894,12 +893,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           return
         }
         if (!created.data) return
-        setSavedOrderId(created.data.id)
-        setOrderSaveNotice(t.accountRecords.orderSaved)
-        window.setTimeout(() => {
-          setSavedOrderId((id) => (id === created.data.id ? null : id))
-          setOrderSaveNotice((notice) => (notice === t.accountRecords.orderSaved ? null : notice))
-        }, 6000)
 
         const race = completeOrderHistorySave(saveGeneration, created.data.id)
         if (race.deleteImmediately) {
@@ -911,7 +904,6 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       activeCloudNumberSetId,
       recordsRepository,
       t.accountRecords.orderSaveError,
-      t.accountRecords.orderSaved,
       user?.autoSaveOrderHistory,
       userId,
     ],
@@ -1076,18 +1068,9 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           orderBlocked={orderBlocked}
         />
         {orderSaveNotice && (
-          <div className="account-record-order-notice" role="status">
-            <span>{orderSaveNotice}</span>
-            {savedOrderId && (
-              <button
-                type="button"
-                className="link-btn"
-                onClick={() => setMemoTarget({ type: 'order', id: savedOrderId })}
-              >
-                {t.accountRecords.memoAdd}
-              </button>
-            )}
-          </div>
+          <p className="account-records-error" role="alert">
+            {orderSaveNotice}
+          </p>
         )}
       </section>
 

@@ -32,8 +32,6 @@ import {
   type RolloverSettings,
 } from '../db/numberSets'
 import {
-  computeNextRolloverDate,
-  type RolloverAnchor,
   type RolloverIntervalMonths,
 } from '../db/rolloverSchedule'
 import type { AuthUser } from '../db/profile'
@@ -674,15 +672,14 @@ function PlusIcon() {
 export interface RolloverSaveSettings {
   enabled: boolean
   intervalMonths: RolloverIntervalMonths | null
-  anchor: RolloverAnchor | null
   nextDate: string | null
 }
 
 function hasCompleteRolloverSchedule(rollover: RolloverSettings): boolean {
-  return Boolean(rollover.intervalMonths && rollover.anchor && rollover.nextDate)
+  return Boolean(rollover.intervalMonths && rollover.nextDate)
 }
 
-/** 유저 브라우저 로컬 달력 기준 오늘(YYYY-MM-DD). 롤오버 예정일 초기 계산의 기준. */
+/** 유저 브라우저 로컬 달력 기준 오늘(YYYY-MM-DD). 과거 알림일 저장을 막는 기준. */
 function todayLocalDateString(): string {
   const now = new Date()
   const year = now.getFullYear()
@@ -694,7 +691,7 @@ function todayLocalDateString(): string {
 /**
  * 슬롯별 롤오버(만기 이월) 알림의 세부 일정 설정.
  * 최초 ON 전 인라인 설정과 활성 슬롯의 상세 펼침에서 공용으로 사용한다.
- * 주기·기준일 변경은 다음 예정일 초안만 재계산하며, 명시적 저장 전에는 서버 값을 바꾸지 않는다.
+ * 다음 알림일은 유저가 직접 정하며, 명시적 저장 전에는 서버 값을 바꾸지 않는다.
  */
 function RolloverScheduleFields({
   copy,
@@ -712,26 +709,14 @@ function RolloverScheduleFields({
   onSave: (settings: RolloverSaveSettings) => void
 }) {
   const initialInterval: RolloverIntervalMonths = rollover.intervalMonths ?? 3
-  const initialAnchor: RolloverAnchor = rollover.anchor ?? 'second_thursday'
   const [interval, setInterval] = useState<RolloverIntervalMonths>(initialInterval)
-  const [anchor, setAnchor] = useState<RolloverAnchor>(initialAnchor)
-  const [nextDate, setNextDate] = useState(
-    rollover.nextDate ??
-      computeNextRolloverDate(todayLocalDateString(), initialInterval, initialAnchor),
-  )
+  const [nextDate, setNextDate] = useState(rollover.nextDate ?? '')
   const today = todayLocalDateString()
   const dateValid = Boolean(nextDate && nextDate >= today)
 
   const handleInterval = (value: string) => {
     const nextInterval = Number(value) as RolloverIntervalMonths
     setInterval(nextInterval)
-    setNextDate(computeNextRolloverDate(today, nextInterval, anchor))
-  }
-
-  const handleAnchor = (value: string) => {
-    const nextAnchor = value as RolloverAnchor
-    setAnchor(nextAnchor)
-    setNextDate(computeNextRolloverDate(today, interval, nextAnchor))
   }
 
   return (
@@ -740,7 +725,7 @@ function RolloverScheduleFields({
       onSubmit={(event) => {
         event.preventDefault()
         if (!dateValid || busy) return
-        onSave({ enabled: true, intervalMonths: interval, anchor, nextDate })
+        onSave({ enabled: true, intervalMonths: interval, nextDate })
       }}
     >
       <div className="my-page-rollover-head">
@@ -759,17 +744,6 @@ function RolloverScheduleFields({
             <option value={2}>{copy.rolloverIntervalBimonthly}</option>
             <option value={3}>{copy.rolloverIntervalQuarterly}</option>
             <option value={6}>{copy.rolloverIntervalSemiannual}</option>
-          </select>
-        </label>
-        <label>
-          <span>{copy.rolloverAnchorLabel}</span>
-          <select
-            value={anchor}
-            disabled={busy}
-            onChange={(event) => handleAnchor(event.currentTarget.value)}
-          >
-            <option value="second_thursday">{copy.rolloverAnchorSecondThursday}</option>
-            <option value="third_friday">{copy.rolloverAnchorThirdFriday}</option>
           </select>
         </label>
         <label>
@@ -849,7 +823,6 @@ function NumberSetRow({
       onSetRollover(numberSet.storageMode, numberSet.id, {
         enabled: false,
         intervalMonths: numberSet.rollover.intervalMonths,
-        anchor: numberSet.rollover.anchor,
         nextDate: numberSet.rollover.nextDate,
       })
       setRolloverSetupOpen(false)
@@ -862,7 +835,6 @@ function NumberSetRow({
     onSetRollover(numberSet.storageMode, numberSet.id, {
       enabled: true,
       intervalMonths: numberSet.rollover.intervalMonths,
-      anchor: numberSet.rollover.anchor,
       nextDate: numberSet.rollover.nextDate,
     })
   }

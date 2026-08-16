@@ -2,10 +2,8 @@ import type { CalculatorInputs } from '../types'
 import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 import {
-  isRolloverAnchor,
   isRolloverInterval,
   isLocalDateString,
-  type RolloverAnchor,
   type RolloverIntervalMonths,
 } from './rolloverSchedule'
 import { supabase } from './supabaseClient'
@@ -31,7 +29,6 @@ interface NumberSetRow {
 export interface RolloverSettings {
   enabled: boolean
   intervalMonths: RolloverIntervalMonths | null
-  anchor: RolloverAnchor | null
   nextDate: string | null
   pending: boolean
 }
@@ -80,11 +77,9 @@ function normalizeTitle(title: string | null | undefined): string {
 
 function rowToRollover(row: NumberSetRow): RolloverSettings {
   const interval = row.rollover_interval_months
-  const anchor = row.rollover_anchor
   return {
     enabled: row.rollover_reminder_enabled ?? false,
     intervalMonths: isRolloverInterval(interval) ? interval : null,
-    anchor: isRolloverAnchor(anchor) ? anchor : null,
     nextDate: isLocalDateString(row.rollover_next_date) ? row.rollover_next_date : null,
     pending: row.rollover_pending ?? false,
   }
@@ -296,14 +291,14 @@ export async function setNumberSetAutoSnapshot(
 export function createNumberSetRolloverUpdate(settings: {
   enabled: boolean
   intervalMonths: RolloverIntervalMonths | null
-  anchor: RolloverAnchor | null
   nextDate: string | null
 }) {
   return settings.enabled
     ? {
         rollover_reminder_enabled: true,
         rollover_interval_months: settings.intervalMonths,
-        rollover_anchor: settings.anchor,
+        // 레거시 요일 규칙은 더 이상 사용하지 않는다.
+        rollover_anchor: null,
         rollover_next_date: settings.nextDate,
         rollover_pending: false,
       }
@@ -320,7 +315,6 @@ export async function setNumberSetRollover(
   settings: {
     enabled: boolean
     intervalMonths: RolloverIntervalMonths | null
-    anchor: RolloverAnchor | null
     nextDate: string | null
   },
 ): Promise<NumberSetResult<NumberSetRecord>> {

@@ -3062,6 +3062,51 @@ input:focus:not(:focus-visible) {
   line-height: 20px;
 }
 
+.draft-number-set-menu__rename-trigger {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.draft-number-set-menu__rename-trigger:hover,
+.draft-number-set-menu__rename-trigger:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 3px;
+  outline: none;
+}
+
+.draft-number-set-menu__rename-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 20px;
+  padding: 0 3px;
+  border: 0;
+  border-bottom: 1px solid var(--color-primary);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-bg-elevated) 86%, black);
+  color: #f0f2f5;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  outline: none;
+}
+
 /* 방향 라벨 — 시각은 색점이 담당하므로 스크린리더에만 노출 */
 .draft-number-set-menu__sr-side {
   position: absolute;
@@ -7808,5 +7853,3 @@ a.site-footer__link:hover {
 @media (max-width:720px){.memo-editor-window{inset:12px;width:auto;height:auto;padding:16px}.memo-editor-window__head,.memo-editor-window__head:active{cursor:default;touch-action:auto}.memo-editor-window__status{max-width:132px;overflow:hidden;text-overflow:ellipsis}.memo-editor-window__autosave-hint{display:none}.memo-editor-window__opacity{width:100%}.memo-editor-window__opacity input{min-width:0;flex:1}}
 .snapshot-saved-modal__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
 .snapshot-saved-modal__actions .btn{width:100%}
-.account-record-order-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--color-success) 36%,transparent);border-radius:8px;background:color-mix(in srgb,var(--color-success) 9%,transparent);color:var(--color-text-muted);font-size:12px}
-.account-record-order-notice .link-btn{color:var(--color-success);white-space:nowrap}

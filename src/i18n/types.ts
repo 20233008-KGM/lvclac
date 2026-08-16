@@ -433,9 +433,6 @@ export interface Messages {
     rolloverIntervalBimonthly: string
     rolloverIntervalQuarterly: string
     rolloverIntervalSemiannual: string
-    rolloverAnchorLabel: string
-    rolloverAnchorSecondThursday: string
-    rolloverAnchorThirdFriday: string
     rolloverNextDateLabel: string
     rolloverNextDateHint: string
     rolloverPendingBanner: string

@@ -11,11 +11,9 @@ import {
 } from '../../src/db/accountSnapshotAutomation.js'
 import {
   advanceRolloverDate,
-  isRolloverAnchor,
   isRolloverDue,
   isRolloverInterval,
   isLocalDateString,
-  type RolloverAnchor,
   type RolloverIntervalMonths,
 } from '../../src/db/rolloverSchedule.js'
 import {
@@ -51,7 +49,6 @@ export interface AutoSnapshotSlot {
   /** 롤오버 알림 설정(꺼져 있거나 미지정이면 스냅샷을 정상 진행). */
   rolloverEnabled?: boolean
   rolloverIntervalMonths?: RolloverIntervalMonths | null
-  rolloverAnchor?: RolloverAnchor | null
   rolloverNextDate?: string | null
 }
 
@@ -109,7 +106,6 @@ interface AutoSnapshotSlotRow {
   inputs: unknown
   rollover_reminder_enabled: boolean | null
   rollover_interval_months: number | null
-  rollover_anchor: string | null
   rollover_next_date: string | null
 }
 
@@ -148,14 +144,12 @@ function mapDueSetting(row: DueSettingRow): DueSnapshotSetting {
 
 function mapAutoSnapshotSlot(row: AutoSnapshotSlotRow): AutoSnapshotSlot {
   const interval = row.rollover_interval_months
-  const anchor = row.rollover_anchor
   return {
     numberSetId: row.id,
     title: row.title?.trim() || DEFAULT_SLOT_TITLE,
     inputs: row.inputs,
     rolloverEnabled: row.rollover_reminder_enabled ?? false,
     rolloverIntervalMonths: isRolloverInterval(interval) ? interval : null,
-    rolloverAnchor: isRolloverAnchor(anchor) ? anchor : null,
     rolloverNextDate: isLocalDateString(row.rollover_next_date) ? row.rollover_next_date : null,
   }
 }
@@ -210,7 +204,7 @@ export function createAccountSnapshotCronDepsFromClient(
       const { data, error } = await admin
         .from('number_sets')
         .select(
-          'id,title,inputs,rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date',
+          'id,title,inputs,rollover_reminder_enabled,rollover_interval_months,rollover_next_date',
         )
         .eq('user_id', userId)
         .eq('auto_snapshot_enabled', true)
@@ -349,13 +343,11 @@ async function processDueSetting(
     if (
       slot.rolloverEnabled &&
       slot.rolloverIntervalMonths &&
-      slot.rolloverAnchor &&
       isRolloverDue(slot.rolloverNextDate, sourceLocalDate)
     ) {
       const nextDate = advanceRolloverDate(
         slot.rolloverNextDate as string,
         slot.rolloverIntervalMonths,
-        slot.rolloverAnchor,
         sourceLocalDate,
       )
       const marked = await deps.markSlotRolledOver(slot.numberSetId, nextDate)

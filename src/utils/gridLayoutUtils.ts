@@ -73,6 +73,20 @@ export function isLayoutCustom(layout: GridLayout): boolean {
   return layout.manual || hasCustomGaps(layout) || layout.split !== 0.5
 }
 
+/**
+ * ⤢ 초기화 직후의 기준 레이아웃.
+ * 이 상태는 의도적으로 자동 폭 보정을 끈다. 긴 번역 라벨 때문에
+ * 초기화가 즉시 좌우 여백·분할 비율을 다시 바꾸지 않도록 구분한다.
+ */
+export function isResetDefaultLayout(layout: GridLayout): boolean {
+  return (
+    layout.manual &&
+    layout.leftX === null &&
+    layout.rightX === null &&
+    layout.split === 0.5
+  )
+}
+
 export interface ExpandStepResult {
   layout: GridLayout
   changed: boolean

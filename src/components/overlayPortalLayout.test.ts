@@ -34,11 +34,12 @@ describe('number set detail modal', () => {
     expect(text).toContain('return createPortal(modal, document.body)')
     expect(text).toContain('role="dialog"')
     expect(text).toContain('aria-modal="true"')
-    // Closes on Escape and shows both input and result sections.
+    // Closes on Escape and reuses the same read-only calculator body as ledger detail.
     expect(text).toContain("e.key === 'Escape'")
-    expect(text).toContain('numberSetDetailInputsHeading')
-    expect(text).toContain('numberSetDetailResultsHeading')
-    expect(text).toContain('calculateEvaluate')
+    expect(text).toContain('disclaimer-modal records-detail-modal')
+    expect(text).toContain('<InputPanel inputs={numberSet.inputs} onChange={noopChange} />')
+    expect(text).toContain('<ResultPanel inputs={numberSet.inputs} onChange={noopChange} />')
+    expect(text).toContain('records-detail-calc')
   })
 
   it('wires the number-set row to open the detail modal from the expanded peek', () => {

@@ -162,7 +162,6 @@ describe('handleAccountSnapshotCron', () => {
             inputs: sampleInputs,
             rolloverEnabled: true,
             rolloverIntervalMonths: 3,
-            rolloverAnchor: 'second_thursday',
             rolloverNextDate: '2026-09-10', // 오늘(로컬)과 같은 날 → 도래.
           },
           {

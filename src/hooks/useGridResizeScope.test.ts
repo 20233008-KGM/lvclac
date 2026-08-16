@@ -8,6 +8,11 @@ const app = readFileSync(resolve('src/App.tsx'), 'utf8')
 const footer = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 
 describe('calculator resize scope', () => {
+  it('keeps the reset layout fixed instead of re-expanding it for a long label', () => {
+    expect(hook).toContain('isResetDefaultLayout(layoutRef.current)')
+    expect(hook).toContain('if (isResetDefaultLayout(layoutRef.current)) return')
+  })
+
   it('keeps the public summary, risk notice, and footer at their pre-resize widths', () => {
     expect(hook).toContain("'--calc-static-content-offset'")
     expect(hook).toContain("'--calc-static-content-width'")

@@ -39,15 +39,13 @@ const noop = () => {}
 const mockRolloverOff = {
   enabled: false,
   intervalMonths: null,
-  anchor: null,
   nextDate: null,
   pending: false,
 } as const
-// 롤오버 설정 켜짐(분기·둘째 목요일) 예시.
+// 롤오버 설정 켜짐(분기·직접 지정일) 예시.
 const mockRolloverOn = {
   enabled: true,
   intervalMonths: 3,
-  anchor: 'second_thursday',
   nextDate: '2026-09-10',
   pending: false,
 } as const
@@ -55,7 +53,6 @@ const mockRolloverOn = {
 const mockRolloverPending = {
   enabled: true,
   intervalMonths: 3,
-  anchor: 'second_thursday',
   nextDate: '2026-12-10',
   pending: true,
 } as const
@@ -128,7 +125,6 @@ export function KitGallery() {
               rollover: {
                 enabled: settings.enabled,
                 intervalMonths: settings.intervalMonths,
-                anchor: settings.anchor,
                 nextDate: settings.nextDate,
                 pending: false,
               },

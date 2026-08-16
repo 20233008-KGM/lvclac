@@ -17,7 +17,6 @@ const noop = () => {}
 const rolloverOff = {
   enabled: false,
   intervalMonths: null,
-  anchor: null,
   nextDate: null,
   pending: false,
 } as const
@@ -25,7 +24,6 @@ const rolloverOff = {
 const rolloverOn = {
   enabled: true,
   intervalMonths: 3,
-  anchor: 'second_thursday',
   nextDate: '2026-09-10',
   pending: false,
 } as const
@@ -112,7 +110,7 @@ describe('my page number-set management UI', () => {
     expect(css).toMatch(/\.my-page-number-set-row-rollover\s*\{[\s\S]*?grid-column: 3;[\s\S]*?justify-self: end;/)
     expect(css).toContain('justify-self: end')
     expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
-    expect(css).toContain('grid-template-columns: repeat(3, var(--mypage-control-width))')
+    expect(css).toContain('grid-template-columns: repeat(2, var(--mypage-control-width))')
   })
 
   it('renders daily-record and rollover switch columns in each Pro cloud slot row', () => {
@@ -223,7 +221,10 @@ describe('my page number-set management UI', () => {
     expect(component).toContain('onSubmit={(event) =>')
     expect(component).toContain('min={today}')
     expect(component).toContain('(rolloverSetupOpen && !numberSet.rollover.enabled)')
-    expect(component).not.toContain('nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor)')
+    expect(component).not.toContain('rolloverAnchorLabel')
+    expect(component).not.toContain('computeNextRolloverDate')
+    expect(koCopy).not.toContain("rolloverAnchorLabel: '기준일'")
+    expect(koCopy).toContain("rolloverNextDateLabel: '다음 알림일'")
     expect(css).toContain('.my-page-rollover--setup')
     expect(css).toContain('.my-page-rollover-actions')
   })

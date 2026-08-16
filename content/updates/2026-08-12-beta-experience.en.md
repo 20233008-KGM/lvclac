@@ -3,7 +3,7 @@ id: 2026-08-12-beta-experience
 publishedAt: 2026-08-12
 locale: en
 author: LiqGuard Team
-release: 2026.08.12
+release: v0.1.0-beta
 type: Improvement
 title: Improved the LiqGuard beta experience
 description: Improved first-use guidance, calculator resizing stability, and the official contact path.

@@ -3,7 +3,7 @@ id: 2026-08-12-beta-experience
 publishedAt: 2026-08-12
 locale: ko
 author: LiqGuard 팀
-release: 2026.08.12
+release: v0.1.0-beta
 type: 개선
 title: LiqGuard 베타 사용 경험을 개선했습니다
 description: 첫 사용 안내, 계산기 크기 조절 안정성, 공식 문의 경로를 개선했습니다.

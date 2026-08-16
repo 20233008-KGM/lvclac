@@ -3,7 +3,7 @@ id: 2026-08-16-calculator-flow-polish
 publishedAt: 2026-08-16
 locale: en
 author: LiqGuard Team
-release: 2026.08.16
+release: v0.2.0-beta
 type: Improvement
 title: Polished the calculation flow and input guidance
 description: Reduced small points of friction across the first-visit flow, narrow-screen inputs, and order-preview history.

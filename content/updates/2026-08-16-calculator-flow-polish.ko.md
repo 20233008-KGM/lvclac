@@ -3,7 +3,7 @@ id: 2026-08-16-calculator-flow-polish
 publishedAt: 2026-08-16
 locale: ko
 author: LiqGuard 팀
-release: 2026.08.16
+release: v0.2.0-beta
 type: 개선
 title: 계산 흐름과 입력 안내를 더 안정적으로 다듬었습니다
 description: 첫 방문 흐름부터 좁은 화면 입력, 주문 미리보기 기록까지 계산 과정의 작은 마찰을 줄였습니다.

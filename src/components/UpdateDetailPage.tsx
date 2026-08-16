@@ -72,7 +72,7 @@ export function UpdateDetailPage({ updateId }: { updateId: string }) {
       activePath={null}
       tone="product-doc"
       eyebrow={copy.eyebrow}
-      title={`Release ${content.release} · ${content.title}`}
+      title={`${content.release} · ${content.title}`}
       lead={content.description}
       showNavigation={false}
     >

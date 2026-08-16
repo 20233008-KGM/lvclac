@@ -222,7 +222,7 @@ export function UpdatesPage() {
                             navigate(updateDetailPath(entry.id, locale))
                           }}
                         >
-                          <span className="updates-table__release">Release {content.release}</span>
+                          <span className="updates-table__release">{content.release}</span>
                           <span>{content.title}</span>
                         </a>
                       </td>

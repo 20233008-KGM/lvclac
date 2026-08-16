@@ -24,6 +24,7 @@ import {
   GRID_HANDLE_WIDTH,
   hasCustomGaps,
   isLayoutCustom,
+  isResetDefaultLayout,
   measureMinCalculatorMid,
   measureMinColumnWidths,
   MIN_CALC_MID_FALLBACK,
@@ -170,6 +171,10 @@ export function useGridResize(persist: boolean, contentVersion?: unknown) {
   }, [])
 
   const reconcileColumnMins = useCallback(() => {
+    // ⤢ 초기화는 기본 50:50 레이아웃을 명시적으로 고정한다.
+    // 영어 Per 라벨처럼 긴 번역 문구가 이어서 이 값을 다시 넓히면 안 된다.
+    if (isResetDefaultLayout(layoutRef.current)) return
+
     refreshColumnMins()
     const cols = columnMinsRef.current
     if (!cols) return

@@ -2,26 +2,32 @@
 id: 2026-08-16-calculator-flow-polish
 publishedAt: 2026-08-16
 locale: en
+author: LiqGuard Team
+release: 2026.08.16
 type: Improvement
 title: Polished the calculation flow and input guidance
-description: Improved the first-visit flow, narrow-screen inputs, order previews, and supported-futures guidance.
+description: Reduced small points of friction across the first-visit flow, narrow-screen inputs, and order-preview history.
 ---
-This update focuses on making it smoother to start a calculation and enter values across different screen sizes.
+This release focuses on the small points of friction that can appear while entering and reviewing a calculation, rather than changing the result or formula. We reviewed the flow for first-time visitors, narrower screens, and users comparing several order scenarios.
 
-## See the calculator first on a new visit
+## What changed in this release
 
-The calculator is now visible immediately on a first visit. Guidance remains available when needed, so you can start entering values right away.
+### See the calculator first on a new visit
 
-## More reliable margin inputs on narrow screens
+The calculator is visible immediately on a first visit instead of being covered by guidance. You can start with the values you have, then reopen the step-by-step guidance whenever it is useful.
 
-We fixed margin inputs that could shift or overflow on narrow screens. Fixed-margin inputs now follow the same stable layout.
+### More reliable margin inputs on narrow screens
 
-## Clearer guidance and order-preview behavior
+We adjusted the layout so margin inputs do not shift sideways or overflow on narrower screens. Fixed-margin inputs now follow the same stable layout.
 
-Guidance around input fields no longer overlaps. Canceling an order preview also no longer leaves an activity entry behind, so history contains only confirmed orders.
+### Clearer guidance and order-preview behavior
 
-## Clearer supported-futures scope and examples
+Guidance around input fields no longer appears on top of other guidance. Order previews remain temporary calculations: canceling one leaves no activity entry behind, so history shows confirmed orders only.
 
-We refined the supported-futures scope and the wording of margin and contract examples. Always check the latest conditions from the relevant exchange, broker, or securities firm for a specific product.
+### Clearer supported-futures scope and examples
 
-This release does not change calculation logic or formulas. It improves the steps for starting a calculation, entering values, and reading supporting guidance.
+We refined the supported-futures scope and the wording of margin and contract examples to match the current public calculator. Actual margin, contract multiplier, and trading-unit conditions can vary by instrument and provider, so check the latest terms from the relevant exchange, broker, or securities firm before placing an order.
+
+## No impact on calculation results
+
+Liquidation, margin, and leverage formulas are unchanged, as is existing saved data. This release improves only the experience of starting a calculation, entering values, and reviewing order scenarios.

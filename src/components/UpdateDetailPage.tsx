@@ -72,7 +72,7 @@ export function UpdateDetailPage({ updateId }: { updateId: string }) {
       activePath={null}
       tone="product-doc"
       eyebrow={copy.eyebrow}
-      title={content.title}
+      title={`Release ${content.release} · ${content.title}`}
       lead={content.description}
       showNavigation={false}
     >
@@ -84,6 +84,8 @@ export function UpdateDetailPage({ updateId }: { updateId: string }) {
           </time>
           <span aria-hidden="true">·</span>
           <span>{content.type}</span>
+          <span aria-hidden="true">·</span>
+          <span>{content.author}</span>
         </p>
       </div>
       <article className="updates-article">

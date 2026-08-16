@@ -1,6 +1,8 @@
 export type UpdateLocale = 'ko' | 'en'
 
 export interface UpdateEntryContent {
+  author: string
+  release: string
   type: string
   title: string
   description: string
@@ -24,6 +26,8 @@ const UPDATE_FRONTMATTER_KEYS = new Set([
   'id',
   'publishedAt',
   'locale',
+  'author',
+  'release',
   'type',
   'title',
   'description',
@@ -81,6 +85,8 @@ function parseUpdateMarkdown(path: string, source: string): ParsedUpdateMarkdown
   const id = fields.get('id') as string
   const publishedAt = fields.get('publishedAt') as string
   const locale = fields.get('locale') as string
+  const author = fields.get('author') as string
+  const release = fields.get('release') as string
   const type = fields.get('type') as string
   const title = fields.get('title') as string
   const description = fields.get('description') as string
@@ -107,7 +113,7 @@ function parseUpdateMarkdown(path: string, source: string): ParsedUpdateMarkdown
     id,
     publishedAt,
     locale,
-    content: { type, title, description, body },
+    content: { author, release, type, title, description, body },
   }
 }
 
@@ -135,6 +141,9 @@ export function buildUpdateEntries(
     }
     if (ko.publishedAt !== en.publishedAt) {
       throw new Error(`Invalid update Markdown (${id}): publishedAt must match across locales`)
+    }
+    if (ko.content.release !== en.content.release) {
+      throw new Error(`Invalid update Markdown (${id}): release must match across locales`)
     }
 
     return {

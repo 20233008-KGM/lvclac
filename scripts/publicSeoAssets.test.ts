@@ -88,7 +88,9 @@ describe('public SEO assets', () => {
       'en-updates-2026-08-12-beta-experience.html',
     )
     expect(html).toContain('<html lang="en">')
-    expect(html).toContain('<title>Improved the LiqGuard beta experience</title>')
+    expect(html).toContain(
+      '<title>Release 2026.08.12 · Improved the LiqGuard beta experience</title>',
+    )
     expect(html).toContain(
       '<link rel="canonical" href="https://liqguard.com/en/updates/2026-08-12-beta-experience" />',
     )

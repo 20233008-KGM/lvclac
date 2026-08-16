@@ -832,7 +832,7 @@ html[lang='en'] .public-info-hero {
 .updates-table thead tr,
 .updates-table tbody tr {
   display: grid;
-  grid-template-columns: 124px 92px minmax(0, 1fr);
+  grid-template-columns: 124px 92px minmax(0, 1fr) 120px;
 }
 
 .updates-table thead tr {
@@ -881,7 +881,9 @@ html[lang='en'] .public-info-hero {
 }
 
 .updates-table__details a {
-  display: inline;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
   color: var(--color-text);
   font-size: var(--font-size-md);
   font-weight: 700;
@@ -890,6 +892,19 @@ html[lang='en'] .public-info-hero {
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
   transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+.updates-table__release {
+  color: var(--public-info-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.updates-table__author {
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
 }
 
 .updates-table__details a:hover {
@@ -1096,6 +1111,12 @@ html[lang='en'] .public-info-hero {
 
   .updates-table__details {
     grid-column: 1 / -1;
+  }
+
+  .updates-table__author {
+    grid-column: 1 / -1;
+    color: var(--color-text-dim);
+    font-size: var(--font-size-xs);
   }
 
   .updates-pagination {

@@ -19,9 +19,16 @@ ${locale === 'ko' ? '첫 문단입니다.\n\n## 자세한 내용\n\n본문입니
 }
 
 describe('update Markdown content', () => {
-  it('loads the published bilingual update from Markdown files', () => {
-    expect(UPDATE_ENTRIES).toHaveLength(1)
-    expect(UPDATE_ENTRIES[0]).toMatchObject({
+  it('loads the published bilingual updates from Markdown files', () => {
+    expect(UPDATE_ENTRIES).toHaveLength(2)
+    const betaExperience = UPDATE_ENTRIES.find(
+      (entry) => entry.id === '2026-08-12-beta-experience',
+    )
+    const calculatorFlowPolish = UPDATE_ENTRIES.find(
+      (entry) => entry.id === '2026-08-16-calculator-flow-polish',
+    )
+
+    expect(betaExperience).toMatchObject({
       id: '2026-08-12-beta-experience',
       publishedAt: '2026-08-12',
       content: {
@@ -37,8 +44,16 @@ describe('update Markdown content', () => {
         },
       },
     })
-    expect(UPDATE_ENTRIES[0].content.ko.body).toContain('## 첫 사용 안내를 더 자연스럽게')
-    expect(UPDATE_ENTRIES[0].content.en.body).toContain('## More natural first-use guidance')
+    expect(betaExperience?.content.ko.body).toContain('## 첫 사용 안내를 더 자연스럽게')
+    expect(betaExperience?.content.en.body).toContain('## More natural first-use guidance')
+    expect(calculatorFlowPolish).toMatchObject({
+      id: '2026-08-16-calculator-flow-polish',
+      publishedAt: '2026-08-16',
+      content: {
+        ko: { title: '계산 흐름과 입력 안내를 더 안정적으로 다듬었습니다' },
+        en: { title: 'Polished the calculation flow and input guidance' },
+      },
+    })
   })
 
   it('builds one localized entry from a matching Markdown pair', () => {

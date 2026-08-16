@@ -832,7 +832,7 @@ html[lang='en'] .public-info-hero {
 .updates-table thead tr,
 .updates-table tbody tr {
   display: grid;
-  grid-template-columns: 124px 92px minmax(0, 1fr) 120px;
+  grid-template-columns: 124px 112px minmax(0, 1fr) 120px;
 }
 
 .updates-table tbody tr {

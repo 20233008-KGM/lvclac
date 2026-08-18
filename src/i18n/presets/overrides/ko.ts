@@ -14,11 +14,10 @@ const futuresBase: PresetOverride = {
     entrustedMarginPerContract: { label: '개시증거금 (계약당)' },
   },
   results: {
-    contractNotional: '포지션 크기',
-    entryNotional: '약정가치',
+    contractNotional: '약정가치',
     entrustedMargin: '총 위탁증거금',
-    // 종속 서브라벨: 부모 용어(포지션 크기/위탁증거금)를 문자열로 품고 있어 함께 갈아야 일관됨
-    leverageSub: '포지션 크기 ÷ 계좌 평가금액',
+    // 종속 서브라벨: 현재가 기준 가치/위탁증거금을 함께 설명한다.
+    leverageSub: '현재가 기준 가치 ÷ 계좌 평가금액',
     availableMarginSub: '계좌 평가금액 − 위탁증거금',
     perContractEntrusted: '개시금/계약',
     perContractEntrustedTitle: '1계약당 개시·위탁증거금',

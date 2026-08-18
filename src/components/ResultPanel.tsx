@@ -279,13 +279,13 @@ function ResultSheet({
 function EvaluateResults({
   result,
   currentPrice,
-  entryNotional,
+  contractNotional,
   entryReturnRate,
   entryPnl,
 }: {
   result: EvaluateResult
   currentPrice?: number
-  entryNotional: number | null
+  contractNotional: number | null
   entryReturnRate: number | null
   entryPnl: number | null
 }) {
@@ -368,11 +368,11 @@ function EvaluateResults({
         <ResultRowPair
           left={{
             label: r.contractNotional,
-            value: formatNumber(result.margins?.contractNotional ?? null),
+            value: formatNumber(contractNotional),
           }}
           right={{
-            label: r.entryNotional,
-            value: formatNumber(entryNotional),
+            label: r.leverageRatio,
+            value: formatLeverageValue(result.leverageRatio),
           }}
         />
         <ResultRowPair
@@ -384,10 +384,6 @@ function EvaluateResults({
             label: r.entrustedMargin,
             value: formatNumber(result.margins?.entrustedMargin ?? null),
           }}
-        />
-        <ResultRow
-          label={r.leverageRatio}
-          value={formatLeverageValue(result.leverageRatio)}
         />
       </div>
       </FitTextGroup>
@@ -786,7 +782,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
   const entryReturnRate = calcEntryPriceReturnRate(evalInputs)
   const entryPnl = calcPositionUnrealizedPnl(evalInputs)
-  const entryNotional = useMemo(() => {
+  const contractNotional = useMemo(() => {
     const { contractAmount, contractMultiplier, contracts } = inputs
     if (contractAmount == null || contractAmount <= 0 || contracts == null || contracts <= 0) {
       return null
@@ -877,7 +873,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           key={positionSide}
           result={evaluateResult}
           currentPrice={evalInputs.currentPrice}
-          entryNotional={entryNotional}
+          contractNotional={contractNotional}
           entryReturnRate={entryReturnRate}
           entryPnl={entryPnl}
         />

@@ -32,13 +32,12 @@ describe('public v1 content copy', () => {
     expect(koFormulas).toContain('총 민감도 = 보유 계약수 × 계약승수')
     expect(koFormulas).toContain('계약당 고정금액 × 보유 계약수')
     expect(koFormulas).toContain('약정가치 = 보유 계약수 × 약정가격 × 계약승수(계약크기)')
-    expect(koFormulas).toContain('포지션 크기 = 보유 계약수 × 현재가 × 계약승수(계약크기)')
-    expect(koFormulas).toContain('레버리지 = 포지션 크기 ÷ 계좌평가금액')
+    expect(koFormulas).toContain('레버리지 = (현재가 × 총 민감도) ÷ 계좌평가금액')
     expect(enFormulas).toContain(
       'Total sensitivity = open contracts × contract multiplier / contract size',
     )
     expect(enFormulas).toContain('constant, price-independent')
-    expect(enFormulas).toContain('Leverage = position size ÷ account equity')
+    expect(enFormulas).toContain('Leverage = (current price × total sensitivity) ÷ account equity')
     expect(enFormulas).not.toContain('Q = N × M')
   })
 

@@ -1,19 +1,5 @@
 import type { CalculatorInputs, PositionSide } from '../types.js'
-import { isWonAccountIndexFieldMismatch } from './indexNotional.js'
 import { resolvePointValue } from './pointValue.js'
-
-/**
- * 약정금액·현재가가 같은 지수 스케일(예: 303500 vs 320500)로 보일 때
- * 약정금액을 기준 지수 수준으로 해석해 MTM 보정에 사용한다.
- */
-export function isIndexScaleReferencePair(
-  contractAmount: number,
-  currentPrice: number,
-): boolean {
-  if (contractAmount <= 0 || currentPrice <= 0) return false
-  const ratio = contractAmount / currentPrice
-  return ratio >= 0.2 && ratio <= 5
-}
 
 /**
  * 계좌 평가금액에 포함된 미결제손익을 포지션 방향 전환에 맞게 보정.
@@ -37,10 +23,9 @@ export function resolveEffectiveAccountEval(
   ) {
     return accountEval
   }
-  if (!isIndexScaleReferencePair(contractAmount, currentPrice)) return accountEval
-  // 지수×1000 + 원화 계좌 혼용 시 MTM 추정 신뢰 불가 — 명목 환산(indexNotional)만 적용
-  if (isWonAccountIndexFieldMismatch(inputs)) return accountEval
-
+  // 숫자 크기만으로 약정가격의 역할을 추정하지 않는다. 명시적으로 진입가로
+  // 저장된 값일 때만 방향 전환에 따른 미결제손익 보정을 적용한다.
+  if (inputs.contractAmountRole !== 'entryPrice') return accountEval
   const pointValue = resolvePointValue(inputs)
   if (pointValue == null || pointValue <= 0) return accountEval
 

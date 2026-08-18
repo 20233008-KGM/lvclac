@@ -1,11 +1,6 @@
 import type { CalculatorInputs } from '../types'
 import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
-import {
-  isRolloverInterval,
-  isLocalDateString,
-  type RolloverIntervalMonths,
-} from './rolloverSchedule'
 import { supabase } from './supabaseClient'
 
 export const DEFAULT_SET_TITLE = '기본 세트'
@@ -18,19 +13,6 @@ interface NumberSetRow {
   preset_id?: string | null
   updated_at: string
   auto_snapshot_enabled?: boolean | null
-  rollover_reminder_enabled?: boolean | null
-  rollover_interval_months?: number | null
-  rollover_anchor?: string | null
-  rollover_next_date?: string | null
-  rollover_pending?: boolean | null
-}
-
-/** 슬롯별 롤오버 알림 설정. enabled=false면 나머지는 무시된다. */
-export interface RolloverSettings {
-  enabled: boolean
-  intervalMonths: RolloverIntervalMonths | null
-  nextDate: string | null
-  pending: boolean
 }
 
 export interface NumberSetRecord {
@@ -41,7 +23,6 @@ export interface NumberSetRecord {
   presetId: PresetId | null
   updatedAt: string
   autoSnapshotEnabled: boolean
-  rollover: RolloverSettings
 }
 
 export interface NumberSetRevision {
@@ -56,8 +37,7 @@ export interface NumberSetDeletionSummary {
 }
 
 const NUMBER_SET_COLUMNS =
-  'id,title,inputs,memo,preset_id,updated_at,auto_snapshot_enabled,' +
-  'rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date,rollover_pending'
+  'id,title,inputs,memo,preset_id,updated_at,auto_snapshot_enabled'
 
 type NumberSetResult<T> =
   | { data: T; error: null }
@@ -75,16 +55,6 @@ function normalizeTitle(title: string | null | undefined): string {
   return title?.trim() || DEFAULT_SET_TITLE
 }
 
-function rowToRollover(row: NumberSetRow): RolloverSettings {
-  const interval = row.rollover_interval_months
-  return {
-    enabled: row.rollover_reminder_enabled ?? false,
-    intervalMonths: isRolloverInterval(interval) ? interval : null,
-    nextDate: isLocalDateString(row.rollover_next_date) ? row.rollover_next_date : null,
-    pending: row.rollover_pending ?? false,
-  }
-}
-
 function rowToRecord(row: NumberSetRow): NumberSetRecord {
   return {
     id: row.id,
@@ -94,7 +64,6 @@ function rowToRecord(row: NumberSetRow): NumberSetRecord {
     presetId: isPresetId(row.preset_id) ? row.preset_id : null,
     updatedAt: row.updated_at,
     autoSnapshotEnabled: row.auto_snapshot_enabled ?? false,
-    rollover: rowToRollover(row),
   }
 }
 
@@ -277,74 +246,6 @@ export async function setNumberSetAutoSnapshot(
   const { data, error } = await supabase
     .from('number_sets')
     .update({ auto_snapshot_enabled: enabled })
-    .eq('id', setId)
-    .eq('user_id', userId)
-    .select(NUMBER_SET_COLUMNS)
-    .maybeSingle<NumberSetRow>()
-
-  if (error) return { data: null, error: mapError(error) }
-  if (!data) return { data: null, error: 'number_set_not_found' }
-  return { data: rowToRecord(data), error: null }
-}
-
-/** OFF에서는 저장된 일정을 보존하고 활성 상태와 대기 표시만 내리는 DB 업데이트 값. */
-export function createNumberSetRolloverUpdate(settings: {
-  enabled: boolean
-  intervalMonths: RolloverIntervalMonths | null
-  nextDate: string | null
-}) {
-  return settings.enabled
-    ? {
-        rollover_reminder_enabled: true,
-        rollover_interval_months: settings.intervalMonths,
-        // 레거시 요일 규칙은 더 이상 사용하지 않는다.
-        rollover_anchor: null,
-        rollover_next_date: settings.nextDate,
-        rollover_pending: false,
-      }
-    : {
-        rollover_reminder_enabled: false,
-        rollover_pending: false,
-      }
-}
-
-/** 슬롯의 롤오버 알림 설정을 저장한다. 재설정 시 대기(pending)는 초기화한다. */
-export async function setNumberSetRollover(
-  userId: string,
-  setId: string,
-  settings: {
-    enabled: boolean
-    intervalMonths: RolloverIntervalMonths | null
-    nextDate: string | null
-  },
-): Promise<NumberSetResult<NumberSetRecord>> {
-  if (!supabase) return unavailable()
-
-  const rolloverUpdate = createNumberSetRolloverUpdate(settings)
-
-  const { data, error } = await supabase
-    .from('number_sets')
-    .update(rolloverUpdate)
-    .eq('id', setId)
-    .eq('user_id', userId)
-    .select(NUMBER_SET_COLUMNS)
-    .maybeSingle<NumberSetRow>()
-
-  if (error) return { data: null, error: mapError(error) }
-  if (!data) return { data: null, error: 'number_set_not_found' }
-  return { data: rowToRecord(data), error: null }
-}
-
-/** 유저가 새 약정가로 값을 갱신했을 때 롤오버 대기 상태를 해제한다. */
-export async function clearNumberSetRolloverPending(
-  userId: string,
-  setId: string,
-): Promise<NumberSetResult<NumberSetRecord>> {
-  if (!supabase) return unavailable()
-
-  const { data, error } = await supabase
-    .from('number_sets')
-    .update({ rollover_pending: false })
     .eq('id', setId)
     .eq('user_id', userId)
     .select(NUMBER_SET_COLUMNS)

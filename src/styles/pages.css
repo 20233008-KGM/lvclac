@@ -4339,19 +4339,11 @@ html[data-zone='about'] body {
 }
 
 .my-page-number-set-list-head span:nth-child(3) {
-  grid-column: 3;
-  width: 40px;
-  justify-self: end;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.my-page-number-set-list-head span:nth-child(4) {
   grid-column: 4;
   padding-left: var(--space-sm);
 }
 
-.my-page-number-set-list-head span:nth-child(5) {
+.my-page-number-set-list-head span:nth-child(4) {
   grid-column: 5;
 }
 
@@ -4417,20 +4409,6 @@ html[data-zone='about'] body {
   display: none;
 }
 
-.my-page-number-set-row-rollover {
-  grid-column: 3;
-  grid-row: 1;
-  display: grid;
-  place-items: center;
-  justify-self: end;
-  min-width: 0;
-  min-height: 32px;
-}
-
-.my-page-number-set-row-rollover--empty {
-  cursor: default;
-}
-
 .my-page-number-set-row-preset {
   grid-column: 4;
   grid-row: 1;
@@ -4469,9 +4447,7 @@ html[data-zone='about'] body {
 }
 
 /* 상태 배너와 펼침 영역은 슬롯의 관리 열 아래에서 전체 폭을 사용한다. */
-.my-page-number-set-row > .my-page-rollover-banner,
-.my-page-number-set-row > .my-page-number-set-detail,
-.my-page-number-set-row > .my-page-rollover {
+.my-page-number-set-row > .my-page-number-set-detail {
   grid-column: 1 / -1;
 }
 
@@ -4508,113 +4484,6 @@ html[data-zone='about'] body {
   grid-column: 1 / -1;
   justify-self: end;
   margin-top: 2px;
-}
-
-/* 롤오버(만기 이월) 세부 일정: 활성화 스위치는 슬롯 첫 줄에 둔다. */
-.my-page-rollover {
-  margin-top: var(--space-sm);
-  padding-top: var(--space-sm);
-  border-top: 1px dashed var(--color-border);
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.my-page-rollover--setup {
-  margin-top: 0;
-  padding: var(--space-md);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-primary) 7%, var(--color-bg));
-}
-
-.my-page-rollover-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-}
-
-.my-page-rollover-head span {
-  font-weight: 700;
-}
-
-.my-page-rollover-copy {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  line-height: 1.55;
-}
-
-.my-page-rollover-fields {
-  display: grid;
-  grid-template-columns: repeat(2, var(--mypage-control-width));
-  gap: var(--space-sm);
-  align-items: end;
-}
-
-.my-page-rollover-fields label {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.my-page-rollover-fields label > span {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
-.my-page-rollover-fields select,
-.my-page-rollover-fields input {
-  width: 100%;
-  min-height: 34px;
-  height: 34px;
-  padding: 0 var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-}
-
-.my-page-rollover-fields select:focus-visible,
-.my-page-rollover-fields input:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* 일정 안내는 두 설정 열 전체 폭을 사용한다. */
-.my-page-rollover-fields .my-page-field-help {
-  grid-column: 1 / -1;
-}
-
-.my-page-rollover-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-}
-
-.my-page-rollover-actions .btn {
-  width: auto;
-  min-height: 34px;
-  padding: 0 var(--space-md);
-}
-
-/* 롤오버 대기 배너: 유저에게 새 약정가로 값 갱신을 요청. 주의색 톤. */
-.my-page-rollover-banner {
-  margin-top: var(--space-xs);
-  padding: var(--space-sm);
-  border: 1px solid var(--color-warning);
-  border-radius: var(--radius-sm);
-  background: var(--color-warning-muted);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
 }
 
 /* 숫자세트 전체 상세 읽기전용 모달: 좌측 정렬 + 섹션별 정의 목록. */
@@ -4955,7 +4824,6 @@ a.my-page-compare-card__action {
 
   .my-page-number-set-row-main > input,
   .my-page-number-set-row-auto,
-  .my-page-number-set-row-rollover,
   .my-page-number-set-row-actions {
     grid-column: auto;
     grid-row: auto;
@@ -4971,8 +4839,7 @@ a.my-page-compare-card__action {
     grid-row: 1;
   }
 
-  .my-page-number-set-row-main--with-auto .my-page-number-set-row-auto,
-  .my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover {
+  .my-page-number-set-row-main--with-auto .my-page-number-set-row-auto {
     grid-row: 2;
     display: flex;
     gap: 6px;
@@ -4981,11 +4848,6 @@ a.my-page-compare-card__action {
   .my-page-number-set-row-main--with-auto .my-page-number-set-row-auto {
     grid-column: 1;
     justify-self: start;
-  }
-
-  .my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover {
-    grid-column: 2;
-    justify-self: end;
   }
 
   .my-page-number-set-row-switch-label {
@@ -5019,23 +4881,6 @@ a.my-page-compare-card__action {
 
   .my-page-number-set-detail {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .my-page-rollover-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .my-page-rollover-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .my-page-rollover-actions .btn:only-child {
-    grid-column: 1 / -1;
-  }
-
-  .my-page-rollover-actions .btn {
-    width: 100%;
   }
 
   .my-page-plans {

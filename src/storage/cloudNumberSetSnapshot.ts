@@ -1,9 +1,5 @@
 import { isPresetId } from '../i18n'
 import type { NumberSetRecord } from '../db/numberSets'
-import {
-  isLocalDateString,
-  isRolloverInterval,
-} from '../db/rolloverSchedule'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 
 export const CLOUD_NUMBER_SET_SNAPSHOT_KEY_PREFIX =
@@ -43,10 +39,6 @@ function parseNumberSetRecord(value: unknown): NumberSetRecord | null {
   const inputs = parseStoredCalculatorInputs(value.inputs)
   if (!inputs) return null
 
-  const rolloverValue = isRecord(value.rollover) ? value.rollover : {}
-  const interval = rolloverValue.intervalMonths
-  const nextDate = rolloverValue.nextDate
-
   return {
     id: value.id,
     title: value.title,
@@ -55,12 +47,6 @@ function parseNumberSetRecord(value: unknown): NumberSetRecord | null {
     presetId: isPresetId(value.presetId) ? value.presetId : null,
     updatedAt: value.updatedAt,
     autoSnapshotEnabled: value.autoSnapshotEnabled === true,
-    rollover: {
-      enabled: rolloverValue.enabled === true,
-      intervalMonths: isRolloverInterval(interval) ? interval : null,
-      nextDate: isLocalDateString(nextDate) ? nextDate : null,
-      pending: rolloverValue.pending === true,
-    },
   }
 }
 

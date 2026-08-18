@@ -14,25 +14,10 @@ function source(path: string) {
 }
 
 const noop = () => {}
-const rolloverOff = {
-  enabled: false,
-  intervalMonths: null,
-  nextDate: null,
-  pending: false,
-} as const
-
-const rolloverOn = {
-  enabled: true,
-  intervalMonths: 3,
-  nextDate: '2026-09-10',
-  pending: false,
-} as const
-
 function numberSet(
   id: string,
   storageMode: 'local' | 'cloud',
   autoSnapshotEnabled = false,
-  rollover = rolloverOff,
 ): CalculatorNumberSet {
   return {
     id,
@@ -42,7 +27,6 @@ function numberSet(
     updatedAt: null,
     storageMode,
     autoSnapshotEnabled,
-    rollover,
   }
 }
 
@@ -55,12 +39,7 @@ function renderPanel(locale: 'ko' | 'en', isPro: boolean, hasEnabledCloudSet = t
       presetCopy: messages.glossaryPreset,
       localNumberSets: [numberSet('local-1', 'local')],
       cloudNumberSets: [
-        numberSet(
-          'cloud-1',
-          'cloud',
-          hasEnabledCloudSet,
-          hasEnabledCloudSet ? rolloverOn : rolloverOff,
-        ),
+        numberSet('cloud-1', 'cloud', hasEnabledCloudSet),
         numberSet('cloud-2', 'cloud'),
       ],
       numberSetLimits: { local: 10, cloud: 10 },
@@ -72,8 +51,6 @@ function renderPanel(locale: 'ko' | 'en', isPro: boolean, hasEnabledCloudSet = t
       onSetPreset: noop,
       onDeleteNumberSet: noop,
       onSetAutoSnapshot: noop,
-      onSetRollover: noop,
-      onClearRolloverPending: noop,
     }),
   )
 }
@@ -102,43 +79,34 @@ describe('my page number-set management UI', () => {
     const rowRule = css.match(/\.my-page-number-set-row\s*\{([^}]*)\}/)?.[1]
     expect(variables).toContain('--mypage-control-width: 176px')
     expect(variables).toContain('--mypage-instrument-width: 160px')
-    expect(variables).toContain('--mypage-automation-width: 96px')
+    expect(variables).toContain('--mypage-automation-width: 40px')
     expect(rowRule).toContain('grid-template-columns: var(--mypage-control-width) minmax(0, 1fr) var(--mypage-automation-width) var(--mypage-instrument-width) 70px')
-    expect(css).toContain('.my-page-number-set-list-head span:nth-child(3)')
+    expect(css).toContain('.my-page-number-set-list-head span:nth-child(2)')
     expect(css).toContain('grid-column: 5')
     expect(css).toMatch(/\.my-page-number-set-row-auto\s*\{[\s\S]*?grid-column: 3;[\s\S]*?justify-self: start;/)
-    expect(css).toMatch(/\.my-page-number-set-row-rollover\s*\{[\s\S]*?grid-column: 3;[\s\S]*?justify-self: end;/)
-    expect(css).toContain('justify-self: end')
     expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
-    expect(css).toContain('grid-template-columns: repeat(2, var(--mypage-control-width))')
   })
 
-  it('renders daily-record and rollover switch columns in each Pro cloud slot row', () => {
+  it('renders the daily-record switch column in each Pro cloud slot row', () => {
     const koHtml = renderPanel('ko', true)
     const enHtml = renderPanel('en', true)
 
     expect(koHtml).toContain(ko.myPage.autoSnapshotSlotHelp)
     expect(koHtml.match(/my-page-number-set-list-head/g)).toHaveLength(2)
     expect(koHtml).toContain('자동 기록')
-    expect(koHtml).toContain('롤오버')
     expect(koHtml.match(/거래종목/g)).toHaveLength(2)
-    expect(koHtml.match(/type="checkbox"/g)).toHaveLength(4)
-    expect(koHtml.match(/checked=""/g)).toHaveLength(2)
+    expect(koHtml.match(/type="checkbox"/g)).toHaveLength(2)
+    expect(koHtml.match(/checked=""/g)).toHaveLength(1)
     expect(koHtml).not.toContain('disabled=""')
-    expect(koHtml).toContain('aria-disabled="true"')
     expect(koHtml).toContain('toggle-switch__track')
     expect(koHtml).not.toContain('my-page-number-set-row--auto-selected')
     expect(koHtml).toContain('cloud-cloud-1: 매일 기록')
-    expect(koHtml).toContain('cloud-cloud-1: 롤오버 알림')
-    expect(koHtml).toContain('cloud-cloud-2: 롤오버 알림')
     expect(koHtml).toContain('매일 기록 중: 클라우드 세트 1개')
     expect(enHtml).toContain(en.myPage.autoSnapshotSlotHelp)
     expect(enHtml.match(/my-page-number-set-list-head/g)).toHaveLength(2)
     expect(enHtml).toContain('Auto record')
-    expect(enHtml).toContain('Rollover')
     expect(enHtml).toContain('Instrument')
     expect(enHtml).toContain('cloud-cloud-1: Record daily')
-    expect(enHtml).toContain('cloud-cloud-1: Rollover alert')
     expect(enHtml).toContain('Recording daily: 1 cloud set(s)')
   })
 
@@ -164,69 +132,17 @@ describe('my page number-set management UI', () => {
     expect(html).toContain('my-page-number-set-row-auto--empty')
   })
 
-  it('keeps both slot switches in the first row without selected-row styling', () => {
+  it('keeps the daily-record switch in the first row without selected-row styling', () => {
     const component = source('src/components/MyPage.tsx')
     const css = source('src/styles/pages.css')
 
     expect(component).toContain('<ToggleSwitch')
     expect(component).toContain('onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)')
-    expect(component).toContain('my-page-number-set-row-rollover')
     expect(component).toContain('my-page-number-set-row-switch-label')
-    expect(component).toContain('(rolloverSetupOpen && !numberSet.rollover.enabled)')
-    expect(component).toMatch(/value=\{titleDraft\}[\s\S]*my-page-number-set-row-auto[\s\S]*my-page-number-set-row-rollover[\s\S]*my-page-number-set-row-actions/)
-    expect(css).toContain('.my-page-number-set-row-main--with-auto .my-page-number-set-row-rollover')
+    expect(component).toMatch(/value=\{titleDraft\}[\s\S]*my-page-number-set-row-auto[\s\S]*my-page-number-set-row-actions/)
     expect(css).toContain('grid-row: 2')
     expect(css).not.toContain('.my-page-number-set-row--auto-selected')
     expect(css).not.toContain('@media (max-width: 420px)')
-  })
-
-  it('explains the rollover dependency instead of leaving a native disabled switch', () => {
-    const component = source('src/components/MyPage.tsx')
-    const toggle = source('src/components/ToggleSwitch.tsx')
-    const css = source('src/styles/pages.css')
-
-    expect(component).toContain('ariaDisabled={!numberSet.autoSnapshotEnabled}')
-    expect(component).toContain('onBlocked={onRolloverBlocked}')
-    expect(component).toContain('copy.rolloverNeedsAutoSnapshot')
-    expect(component).toContain('setTimeout(() => {')
-    expect(component).toContain('}, 3000)')
-    expect(toggle).toContain("event.preventDefault()")
-    expect(toggle).toContain('onBlocked?.()')
-    expect(toggle).toContain('if (ariaDisabled) return')
-    expect(toggle).toContain('aria-disabled={ariaDisabled || undefined}')
-    expect(css).toContain('.toggle-switch--aria-disabled')
-    expect(css).toContain('.my-page-toast')
-    expect(css).toContain('position: fixed')
-    expect(css).toContain('top: max(var(--space-md), env(safe-area-inset-top))')
-    expect(css).toContain('right: max(var(--space-md), env(safe-area-inset-right))')
-    expect(css).toContain('top: max(var(--space-sm), env(safe-area-inset-top))')
-    expect(css).toContain('right: max(var(--space-sm), env(safe-area-inset-right))')
-  })
-
-  it('opens inline setup before the first rollover activation and saves drafts explicitly', () => {
-    const component = source('src/components/MyPage.tsx')
-    const css = source('src/styles/pages.css')
-    const koCopy = source('src/i18n/locales/ko.ts')
-    const enCopy = source('src/i18n/locales/en.ts')
-
-    expect(component).toContain('hasCompleteRolloverSchedule(numberSet.rollover)')
-    expect(component).toContain('setRolloverSetupOpen(true)')
-    expect(component).toContain('variant="setup"')
-    expect(component).toContain('copy.rolloverSetupBody')
-    expect(component).toContain('copy.rolloverSetupSave')
-    expect(koCopy).toContain("rolloverSetupSave: '켜기'")
-    expect(koCopy).toContain("rolloverEditSave: '저장'")
-    expect(enCopy).toContain("rolloverSetupSave: 'Turn on'")
-    expect(enCopy).toContain("rolloverEditSave: 'Save'")
-    expect(component).toContain('onSubmit={(event) =>')
-    expect(component).toContain('min={today}')
-    expect(component).toContain('(rolloverSetupOpen && !numberSet.rollover.enabled)')
-    expect(component).not.toContain('rolloverAnchorLabel')
-    expect(component).not.toContain('computeNextRolloverDate')
-    expect(koCopy).not.toContain("rolloverAnchorLabel: '기준일'")
-    expect(koCopy).toContain("rolloverNextDateLabel: '다음 알림일'")
-    expect(css).toContain('.my-page-rollover--setup')
-    expect(css).toContain('.my-page-rollover-actions')
   })
 
   it('renders a terminology preset selector in every local and cloud slot', () => {

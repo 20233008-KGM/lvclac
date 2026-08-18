@@ -23,12 +23,6 @@ function numberSet(id: string, updatedAt: string): NumberSetRecord {
     presetId: 'default',
     updatedAt,
     autoSnapshotEnabled: false,
-    rollover: {
-      enabled: false,
-      intervalMonths: null,
-      nextDate: null,
-      pending: false,
-    },
   }
 }
 

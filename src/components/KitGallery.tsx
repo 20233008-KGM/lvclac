@@ -18,7 +18,6 @@ import {
   AccountRecordsSummaryPanel,
   AccountSnapshotAutomationPanel,
   NumberSetPreferencesPanel,
-  type RolloverSaveSettings,
 } from './MyPage'
 import { BillingPanel } from './billing/BillingPanel'
 import { AuthModal } from './auth/AuthModal'
@@ -35,34 +34,13 @@ import { MarginKindAskModal } from './MarginKindAskModal'
 
 const noop = () => {}
 
-/** 숫자세트 전시용 목 클라우드 세트(캡처처럼 3개). */
-const mockRolloverOff = {
-  enabled: false,
-  intervalMonths: null,
-  nextDate: null,
-  pending: false,
-} as const
-// 롤오버 설정 켜짐(분기·직접 지정일) 예시.
-const mockRolloverOn = {
-  enabled: true,
-  intervalMonths: 3,
-  nextDate: '2026-09-10',
-  pending: false,
-} as const
-// 롤오버 대기(갱신 요청 배너) 예시.
-const mockRolloverPending = {
-  enabled: true,
-  intervalMonths: 3,
-  nextDate: '2026-12-10',
-  pending: true,
-} as const
 const mockLocalSets: CalculatorNumberSet[] = [
-  { id: 'local-1', title: '이 기기 기본 세트', inputs: sampleInputs, presetId: 'index', updatedAt: null, storageMode: 'local', autoSnapshotEnabled: false, rollover: mockRolloverOff },
+  { id: 'local-1', title: '이 기기 기본 세트', inputs: sampleInputs, presetId: 'index', updatedAt: null, storageMode: 'local', autoSnapshotEnabled: false },
 ]
 const mockCloudSets: CalculatorNumberSet[] = [
-  { id: 'set-2', title: '클라우드 숫자세트 - 변동성 돌파 전략', inputs: sampleInputs, presetId: 'stock', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
-  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, presetId: 'cfd', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverPending },
-  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, presetId: 'default', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false, rollover: mockRolloverOff },
+  { id: 'set-2', title: '클라우드 숫자세트 - 변동성 돌파 전략', inputs: sampleInputs, presetId: 'stock', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true },
+  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, presetId: 'cfd', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true },
+  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, presetId: 'default', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false },
 ]
 const numberSetLimits: Record<'local' | 'cloud', number> = { local: 10, cloud: 10 }
 
@@ -109,29 +87,6 @@ export function KitGallery() {
       sets.map((set) => (set.id === setId ? { ...set, presetId } : set))
     if (mode === 'local') setKitLocalSets(update)
     else setKitCloudSets(update)
-  }
-
-  const setKitRollover = (
-    mode: 'local' | 'cloud',
-    setId: string,
-    settings: RolloverSaveSettings,
-  ) => {
-    if (mode === 'local') return
-    setKitCloudSets((sets) =>
-      sets.map((set) =>
-        set.id === setId
-          ? {
-              ...set,
-              rollover: {
-                enabled: settings.enabled,
-                intervalMonths: settings.intervalMonths,
-                nextDate: settings.nextDate,
-                pending: false,
-              },
-            }
-          : set,
-      ),
-    )
   }
 
   // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 확정한다.
@@ -222,8 +177,6 @@ export function KitGallery() {
                 ),
               )
             }
-            onSetRollover={setKitRollover}
-            onClearRolloverPending={noop}
           />
         </KitItem>
         <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·스냅샷 저장 시각" width={560}>

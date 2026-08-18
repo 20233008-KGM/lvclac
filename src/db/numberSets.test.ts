@@ -3,7 +3,6 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   createNumberSetDeletionRepository,
-  createNumberSetRolloverUpdate,
 } from './numberSets'
 
 function source(path: string) {
@@ -136,36 +135,5 @@ describe('number-set terminology preset storage', () => {
     expect(saveBlock).not.toContain('memo:')
     expect(saveBlock).not.toContain('auto_snapshot_enabled:')
     expect(saveBlock).not.toContain('rollover_')
-  })
-})
-
-describe('number-set rollover settings', () => {
-  it('keeps the saved schedule untouched when a reminder is turned off', () => {
-    expect(
-      createNumberSetRolloverUpdate({
-        enabled: false,
-        intervalMonths: 3,
-        nextDate: '2026-09-10',
-      }),
-    ).toEqual({
-      rollover_reminder_enabled: false,
-      rollover_pending: false,
-    })
-  })
-
-  it('writes a complete schedule when a reminder is turned on', () => {
-    expect(
-      createNumberSetRolloverUpdate({
-        enabled: true,
-        intervalMonths: 3,
-        nextDate: '2026-09-10',
-      }),
-    ).toEqual({
-      rollover_reminder_enabled: true,
-      rollover_interval_months: 3,
-      rollover_anchor: null,
-      rollover_next_date: '2026-09-10',
-      rollover_pending: false,
-    })
   })
 })

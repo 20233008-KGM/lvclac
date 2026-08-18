@@ -58,7 +58,7 @@ describe('local number sets', () => {
     })
     const second = appendLocalNumberSet(first.sets, sampleInputs, {
       id: 'local-b',
-      title: '롤오버 기준',
+      title: '기준 세트',
       updatedAt: '2026-07-10T02:00:00.000Z',
     })
     writeLocalNumberSets(storage, second.sets)

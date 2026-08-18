@@ -87,7 +87,7 @@ export const ko: Messages = {
   orderScenarioFieldContracts: '주문 계약수',
   orderScenarioFieldPrice: '주문 가격',
   orderScenarioHint:
-    '# 주문 시뮬레이션\n계약수·주문 가격으로 체결 직후 상태를 미리 봅니다.\n\n────────\n\n[롤오버]\n\n롤오버 시 주문가·실제 체결가·시세 스냅샷 시점 차이로 소폭 오차가 생길 수 있습니다.\n롤오버·전량청산 후 재진입 시 새 약정가격·보유계약수를 입력하고, 계좌평가금액·현재가는 같은 시점에 스냅샷해 다시 맞춰 주세요.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 계좌에 확정\nEsc → 취소\nCtrl+Z → 확정 취소(자동 저장된 주문 기록도 함께 삭제)\nCtrl+Shift+Z → 다시 실행',
+    '# 주문 시뮬레이션\n계약수·주문 가격으로 체결 직후 상태를 미리 봅니다.\n\n────────\n\n[단축키]\n\nEnter (1회) → 미리보기\nEnter (2회) → 계좌에 확정\nEsc → 취소\nCtrl+Z → 확정 취소(자동 저장된 주문 기록도 함께 삭제)\nCtrl+Shift+Z → 다시 실행',
   clearAllInputs: '비우기',
   clearOrderInputs: '비우기',
   clearAllInputsHint:
@@ -416,25 +416,6 @@ export const ko: Messages = {
       '켜 둔 세트는 위 환경설정에서 정한 시각에 계좌 기록으로 저장해요. 값이 바뀐 날만 저장됩니다.',
     autoSnapshotSlotCountNote: '매일 기록 중: 클라우드 세트 {count}개',
     autoSnapshotNoSlotsSelected: '숫자세트에서 매일 기록을 켜세요.',
-    rolloverTitle: '롤오버(만기 이월) 알림',
-    rolloverSetupTitle: '롤오버 알림 설정',
-    rolloverSetupBody:
-      '상품의 실제 롤오버 시점에 맞춰 다음 알림일을 직접 선택해 주세요.',
-    rolloverSetupCancel: '취소',
-    rolloverSetupSave: '켜기',
-    rolloverEditSave: '저장',
-    rolloverNeedsAutoSnapshot: '먼저 자동 기록을 활성화해 주세요.',
-    rolloverColumnLabel: '롤오버',
-    rolloverToggleLabel: '롤오버 알림',
-    rolloverIntervalLabel: '주기',
-    rolloverIntervalMonthly: '매월',
-    rolloverIntervalBimonthly: '격월',
-    rolloverIntervalQuarterly: '분기',
-    rolloverIntervalSemiannual: '반기',
-    rolloverNextDateLabel: '다음 알림일',
-    rolloverNextDateHint: '거래소·상품별 만기와 실제 롤오버 시점은 다릅니다. 알림 후에는 현재 알림일에서 선택한 주기만큼 뒤의 날짜를 다음 알림일로 제안합니다.',
-    rolloverPendingBanner: '롤오버 예정일이 지났어요. 새 약정가·보유계약수로 값을 갱신하고 이 세트를 다시 저장해 주세요.',
-    rolloverPendingAction: '값 갱신함 · 알림 끄기',
     toggleUseLabel: '사용',
     navLabel: '마이페이지 섹션 바로가기',
     navAccount: '계정',
@@ -1253,7 +1234,7 @@ export const ko: Messages = {
         title: '주문 시뮬레이션',
         paragraphs: [
           '결과 패널 하단 「주문」에서 계약수·주문 가격을 조정하면, 체결 직후 청산가·증거금·레버리지 변화를 미리 볼 수 있습니다.',
-          '롤오버 시 주문가·실제 체결가·체결 직후 현재가가 조금씩 달라질 수 있어, 체결가와 현재가의 스냅샷 시점 차이로 소폭 오차가 생길 수 있습니다. 롤오버·전량청산 후 재진입했다면 새 포지션 기준의 약정가격·보유계약수를 입력하고, 계좌평가금액·현재가는 같은 시점에 스냅샷하여 다시 맞춰 주세요.',
+          '전량청산 후 재진입했다면 새 포지션 기준의 약정가격·보유계약수를 입력하고, 계좌평가금액·현재가는 같은 시점에 스냅샷하여 다시 맞춰 주세요.',
         ],
         items: [
           'Enter(↵) — 주문 미리보기 진입',
@@ -1267,7 +1248,7 @@ export const ko: Messages = {
           '계약수·증거금·종목 스펙은 한 번만 맞춰 두고, 「이 기기에 입력값 저장」을 켜세요.',
           '매일 아침에는 HTS·MTS 현재가만 현재가 입력창에 넣으면, 기존 현재가 대비 손익이 계좌 평가금액에 자동 반영됩니다.',
           '세팅이 잠긴 뒤에는 계좌 기준값을 다시 만지지 말고 현재가만 움직이는 흐름을 권장합니다. 마지막 반영은 Ctrl+Z로 되돌릴 수 있습니다.',
-          '※ 이 루틴은 최초에 계좌평가금액·현재가를 같은 시점으로 맞춰 둔 뒤가 전제입니다. 롤오버·전량청산 후 재진입 때는 주문 시뮬레이션 안내처럼 새 포지션 기준으로 다시 스냅샷하세요.',
+          '※ 이 루틴은 최초에 계좌평가금액·현재가를 같은 시점으로 맞춰 둔 뒤가 전제입니다. 전량청산 후 재진입 때는 새 포지션 기준으로 다시 스냅샷하세요.',
         ],
         items: [
           '포지션 수·종목이 바뀌지 않았을 때',

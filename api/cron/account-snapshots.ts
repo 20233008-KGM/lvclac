@@ -15,7 +15,6 @@ const NOOP_DEPS: AccountSnapshotCronDeps = {
   fetchAutoSnapshotSlots: async () => [],
   fetchLatestSlotSnapshotInputs: async () => null,
   insertAutoSnapshot: async () => ({ ok: true }),
-  markSlotRolledOver: async () => ({ ok: true }),
   updateSettingAfterRun: async () => ({ ok: true }),
 }
 

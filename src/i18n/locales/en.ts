@@ -90,7 +90,7 @@ export const en: Messages = {
   orderScenarioFieldContracts: 'Order size',
   orderScenarioFieldPrice: 'Order price',
   orderScenarioHint:
-    '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Rollover]\n\nDuring rollover, small differences can come from order price vs actual fill and moving market snapshots.\nAfter rollover or re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity/mark at the same timestamp and align them again.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply (also deletes auto-saved order record)\nCtrl+Shift+Z → Redo',
+    '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply (also deletes auto-saved order record)\nCtrl+Shift+Z → Redo',
   clearAllInputs: 'Clear all',
   clearOrderInputs: 'Clear',
   clearAllInputsHint:
@@ -424,25 +424,6 @@ export const en: Messages = {
       'Enabled sets are saved to your account records at the time chosen in Preferences above. Days with no changes are skipped.',
     autoSnapshotSlotCountNote: 'Recording daily: {count} cloud set(s)',
     autoSnapshotNoSlotsSelected: 'Turn on Record daily in a number set.',
-    rolloverTitle: 'Rollover reminder',
-    rolloverSetupTitle: 'Set up rollover reminders',
-    rolloverSetupBody:
-      'Choose the next reminder date for the actual rollover timing of this instrument.',
-    rolloverSetupCancel: 'Cancel',
-    rolloverSetupSave: 'Turn on',
-    rolloverEditSave: 'Save',
-    rolloverNeedsAutoSnapshot: 'Turn on Auto record first.',
-    rolloverColumnLabel: 'Rollover',
-    rolloverToggleLabel: 'Rollover alert',
-    rolloverIntervalLabel: 'Cycle',
-    rolloverIntervalMonthly: 'Monthly',
-    rolloverIntervalBimonthly: 'Bimonthly',
-    rolloverIntervalQuarterly: 'Quarterly',
-    rolloverIntervalSemiannual: 'Semiannual',
-    rolloverNextDateLabel: 'Next reminder date',
-    rolloverNextDateHint: 'Expiry and rollover timing vary by exchange and instrument. After an alert, the selected cycle is used to suggest the next reminder date.',
-    rolloverPendingBanner: 'The rollover date has passed. Update this set with the new entry price / open contracts and save it again.',
-    rolloverPendingAction: 'Updated · dismiss',
     toggleUseLabel: 'On',
     navLabel: 'Jump to my page section',
     navAccount: 'Account',
@@ -1269,7 +1250,7 @@ export const en: Messages = {
         title: 'Order simulation',
         paragraphs: [
           'In the Order section at the bottom of the results panel, adjust order size and price to preview liquidation, margin, and leverage right after a fill.',
-          'During rollover, small differences can come from order price vs actual fill, and from the mark moving between account and quote snapshots. After rollover or re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity/mark at the same timestamp and align them again.',
+          'After re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity and mark at the same timestamp.',
         ],
         items: [
           'Enter — enter order preview',
@@ -1283,7 +1264,7 @@ export const en: Messages = {
           'Set contracts, margin, and instrument specs once, and turn on “Save inputs on this device.”',
           'Each morning, enter today’s broker mark in the mark price field. The calculator automatically rolls P&L from the previous mark into account equity.',
           'After setup is locked, avoid changing account baseline fields. Move only the mark price for the normal daily routine. Use Ctrl+Z to undo the last mark update.',
-          'This routine assumes your initial account equity and mark are aligned. After rollover or re-entering from flat, resnapshot the new position as described in Order simulation.',
+          'This routine assumes your initial account equity and mark are aligned. After re-entering from flat, resnapshot the new position.',
         ],
         items: [
           'Position size and instrument unchanged',

@@ -419,24 +419,6 @@ export interface Messages {
     autoSnapshotSlotHelp: string
     autoSnapshotSlotCountNote: string
     autoSnapshotNoSlotsSelected: string
-    rolloverTitle: string
-    rolloverSetupTitle: string
-    rolloverSetupBody: string
-    rolloverSetupCancel: string
-    rolloverSetupSave: string
-    rolloverEditSave: string
-    rolloverNeedsAutoSnapshot: string
-    rolloverColumnLabel: string
-    rolloverToggleLabel: string
-    rolloverIntervalLabel: string
-    rolloverIntervalMonthly: string
-    rolloverIntervalBimonthly: string
-    rolloverIntervalQuarterly: string
-    rolloverIntervalSemiannual: string
-    rolloverNextDateLabel: string
-    rolloverNextDateHint: string
-    rolloverPendingBanner: string
-    rolloverPendingAction: string
     toggleUseLabel: string
     navLabel: string
     navAccount: string

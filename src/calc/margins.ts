@@ -6,10 +6,6 @@ import type {
   MarginAmounts,
   MarginInputMode,
 } from '../types.js'
-import {
-  calcIndexNotionalWon,
-  isWonAccountIndexFieldMismatch,
-} from './indexNotional.js'
 import { resolveMarginEquity } from './mtmLink.js'
 import { hasContractSpec, resolvePointValue } from './pointValue.js'
 
@@ -112,14 +108,6 @@ export function withReferencePrice(inputs: CalculatorInputs): CalculatorInputs {
 export function calcPositionNotional(inputs: NotionalInputs, contracts: number): number {
   const multiplier = inputs.contractMultiplier ?? 1
   const contractAmount = inputs.contractAmount
-  if (
-    contractAmount != null &&
-    contractAmount > 0 &&
-    inputs.currentPrice != null &&
-    isWonAccountIndexFieldMismatch(inputs as CalculatorInputs)
-  ) {
-    return calcIndexNotionalWon(inputs.currentPrice, contracts, inputs.contractMultiplier)
-  }
   // 약정금액 경로: price×pointValue와 동치이나 부동소수 취소 오차 방지
   if (contractAmount != null && contractAmount > 0) {
     return contracts * contractAmount * multiplier
@@ -145,31 +133,17 @@ export function calcPositionNotional(inputs: NotionalInputs, contracts: number):
 /**
  * 현재 계좌 상태의 명목가치.
  *
- * 진입가와 현재가가 같은 가격 축이면 현재가를 사용한다. 명시적인 entryPrice는
- * 물론, contractAmountRole 도입 전 저장값도 두 가격의 스케일이 비슷하면 진입가로
- * 간주한다. fixedSpec 또는 가격 스케일이 다른 해외선물식 명목값은 기존 계산을 유지한다.
+ * `entryPrice`로 명시된 값만 현재가 기준으로 환산한다. 고정 명목값 또는 역할이
+ * 없는 구버전 값은 입력한 약정가격 기준을 유지해 숫자 크기로 상품을 추정하지 않는다.
  */
 export function calcCurrentPositionNotional(
   inputs: NotionalInputs,
   contracts: number,
 ): number {
   const currentPrice = inputs.currentPrice
-  const contractAmount = inputs.contractAmount
-  const hasComparablePriceScale =
-    contractAmount != null &&
-    contractAmount > 0 &&
-    currentPrice != null &&
-    currentPrice > 0 &&
-    contractAmount / currentPrice >= 0.5 &&
-    contractAmount / currentPrice <= 2
-  const usesEntryPrice =
-    inputs.contractAmountRole === 'entryPrice' ||
-    (inputs.contractAmountRole == null && hasComparablePriceScale)
+  const usesEntryPrice = inputs.contractAmountRole === 'entryPrice'
 
   if (usesEntryPrice && currentPrice != null && currentPrice > 0) {
-    if (isWonAccountIndexFieldMismatch(inputs as CalculatorInputs)) {
-      return calcIndexNotionalWon(currentPrice, contracts, inputs.contractMultiplier)
-    }
     return calcRateBasedNotional(currentPrice, contracts, inputs.contractMultiplier)
   }
 

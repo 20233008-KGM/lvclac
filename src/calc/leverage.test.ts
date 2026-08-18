@@ -84,12 +84,31 @@ describe('calcPositionNotional', () => {
 })
 
 describe('calcCurrentPositionNotional', () => {
+  it('가격 크기나 평가금으로 상품을 추정하지 않고 입력 산식을 사용한다', () => {
+    const result = calculateEvaluate({
+      mode: 'evaluate',
+      positionSide: 'long',
+      accountEval: 2_900,
+      contracts: 10,
+      contractAmount: 1_000,
+      contractMultiplier: 10,
+      currentPrice: 999,
+      marginInputMode: 'perContract',
+      maintenanceMarginPerContract: 200,
+      entrustedMarginPerContract: 300,
+    })
+
+    expect(result.margins?.contractNotional).toBe(100_000)
+    expect(result.leverageRatio).toBeCloseTo(100_000 / 2_900, 8)
+  })
+
   it('진입가와 현재가가 같은 가격 축이면 현재가 기준 명목가치', () => {
     expect(
       calcCurrentPositionNotional(
         {
           accountEval: 28_229_439,
           contractAmount: 279_500,
+          contractAmountRole: 'entryPrice',
           contractMultiplier: 10,
           currentPrice: 243_500,
         },

@@ -1,20 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { resolveEffectiveAccountEval, isIndexScaleReferencePair } from './accountEval'
+import { resolveEffectiveAccountEval } from './accountEval'
 import { calculateEvaluate } from './leverage'
 import { formatTolerancePercent } from '../utils/format'
 
-describe('isIndexScaleReferencePair', () => {
-  it('303500 vs 320500 — 지수 스케일 쌍', () => {
-    expect(isIndexScaleReferencePair(303_500, 320_500)).toBe(true)
-  })
-
-  it('원 단위 명목 vs 지수 — 보정 제외', () => {
-    expect(isIndexScaleReferencePair(16_025_000, 320_500)).toBe(false)
-  })
-})
-
 describe('resolveEffectiveAccountEval — 탭만 전환', () => {
-  it('지수×1000 + 원화 계좌 혼용 시 MTM 보정 생략', () => {
+  it('가격 크기가 비슷해도 진입가 역할이 명시되지 않으면 MTM을 추정하지 않는다', () => {
     const inputs = {
       mode: 'evaluate' as const,
       accountEval: 66_769,
@@ -34,6 +24,7 @@ describe('resolveEffectiveAccountEval — 탭만 전환', () => {
       accountEval: 50_000,
       contracts: 1,
       contractAmount: 4_900,
+      contractAmountRole: 'entryPrice' as const,
       contractMultiplier: 1,
       currentPrice: 5_000,
     }
@@ -58,6 +49,7 @@ describe('추가 매수/매도 한도 — 롱·숏 탭 전환', () => {
     entrustedMarginRate: 0.1,
     contracts: 1,
     contractAmount: 303_500,
+    contractAmountRole: 'entryPrice' as const,
     contractMultiplier: 1,
     currentPrice: 320_500,
     evalSnapshotSide: 'long' as const,
@@ -68,7 +60,7 @@ describe('추가 매수/매도 한도 — 롱·숏 탭 전환', () => {
     const short = calculateEvaluate({ ...base, positionSide: 'short' })
 
     expect(long.margins?.availableMargin).toBe(short.margins?.availableMargin)
-    expect(long.margins?.availableMargin).toBe(66_769 - 1_602_500)
+    expect(long.margins?.availableMargin).toBe(66_769 - 32_050)
   })
 
   it('숏 탭 전환 시 청산가는 현재가 위에 위치', () => {

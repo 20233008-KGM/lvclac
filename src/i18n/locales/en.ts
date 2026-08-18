@@ -934,9 +934,10 @@ export const en: Messages = {
     maxBuyableShort: 'Addl. sell limit',
     leverage: 'Leverage',
     leverageRatio: 'Leverage',
-    leverageSub: 'Notional ÷ equity',
+    leverageSub: 'Position size ÷ equity',
     maintenanceMargin: 'Maint. margin',
-    contractNotional: 'Notional',
+    contractNotional: 'Position size',
+    entryNotional: 'Entry notional',
     entrustedMargin: 'Init. margin',
     availableMargin: 'Avail. margin',
     availableMarginSub: 'Equity − init. margin',
@@ -1321,27 +1322,31 @@ export const en: Messages = {
         symbol: 'Total sensitivity',
         meaning: 'Open contracts × contract multiplier / contract size (profit or loss for a one-unit price move)',
       },
-      { symbol: 'Maintenance margin rate', meaning: 'The maintenance margin as a decimal of notional, e.g. 0.247' },
-      { symbol: 'Entrusted margin rate', meaning: 'The initial / entrusted margin as a decimal of notional' },
+      { symbol: 'Maintenance margin rate', meaning: 'The maintenance margin as a decimal of position size, e.g. 0.247' },
+      { symbol: 'Entrusted margin rate', meaning: 'The initial / entrusted margin as a decimal of position size' },
     ],
     sections: [
       {
-        title: 'Notional & margin',
+        title: 'Entry notional, position size & margin',
         intro:
-          'Entry price and contract multiplier / contract size determine notional. Total sensitivity is calculated separately for liquidation.',
+          'Entry notional uses entry price; position size uses current price. Position size is the basis for current margin and leverage. Total sensitivity is calculated separately for liquidation.',
         entries: [
           {
-            name: 'Position notional',
-            expression: 'Notional = open contracts × entry price × contract multiplier / contract size',
+            name: 'Entry notional',
+            expression: 'Entry notional = open contracts × entry price × contract multiplier / contract size',
+          },
+          {
+            name: 'Position size (current)',
+            expression: 'Position size = open contracts × current price × contract multiplier / contract size',
           },
           {
             name: 'Maintenance margin (rate)',
-            expression: 'Maintenance margin = notional × maintenance margin rate',
+            expression: 'Maintenance margin = position size × maintenance margin rate',
             description: 'A direct broker-platform amount takes precedence when provided.',
           },
           {
             name: 'Entrusted margin (rate)',
-            expression: 'Entrusted margin = notional × entrusted margin rate',
+            expression: 'Entrusted margin = position size × entrusted margin rate',
           },
           {
             name: 'Available margin',
@@ -1458,7 +1463,7 @@ export const en: Messages = {
             name: 'Price move to liquidation',
             expression: 'Long: current price − liquidation price  /  Short: liquidation price − current price',
           },
-          { name: 'Leverage', expression: 'Leverage = notional ÷ account equity' },
+          { name: 'Leverage', expression: 'Leverage = position size ÷ account equity' },
           {
             name: 'Add-on buy / sell limit',
             expression: 'floor((account equity − entrusted margin) / entrusted margin per contract)',

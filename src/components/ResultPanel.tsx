@@ -279,11 +279,13 @@ function ResultSheet({
 function EvaluateResults({
   result,
   currentPrice,
+  entryNotional,
   entryReturnRate,
   entryPnl,
 }: {
   result: EvaluateResult
   currentPrice?: number
+  entryNotional: number | null
   entryReturnRate: number | null
   entryPnl: number | null
 }) {
@@ -369,8 +371,8 @@ function EvaluateResults({
             value: formatNumber(result.margins?.contractNotional ?? null),
           }}
           right={{
-            label: r.leverageRatio,
-            value: formatLeverageValue(result.leverageRatio),
+            label: r.entryNotional,
+            value: formatNumber(entryNotional),
           }}
         />
         <ResultRowPair
@@ -382,6 +384,10 @@ function EvaluateResults({
             label: r.entrustedMargin,
             value: formatNumber(result.margins?.entrustedMargin ?? null),
           }}
+        />
+        <ResultRow
+          label={r.leverageRatio}
+          value={formatLeverageValue(result.leverageRatio)}
         />
       </div>
       </FitTextGroup>
@@ -780,6 +786,13 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
   const entryReturnRate = calcEntryPriceReturnRate(evalInputs)
   const entryPnl = calcPositionUnrealizedPnl(evalInputs)
+  const entryNotional = useMemo(() => {
+    const { contractAmount, contractMultiplier, contracts } = inputs
+    if (contractAmount == null || contractAmount <= 0 || contracts == null || contracts <= 0) {
+      return null
+    }
+    return contractAmount * contracts * (contractMultiplier ?? 1)
+  }, [inputs])
   const evaluateResult = useMemo(
     () => calculateEvaluate(inputs),
     [inputs],
@@ -864,6 +877,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           key={positionSide}
           result={evaluateResult}
           currentPrice={evalInputs.currentPrice}
+          entryNotional={entryNotional}
           entryReturnRate={entryReturnRate}
           entryPnl={entryPnl}
         />

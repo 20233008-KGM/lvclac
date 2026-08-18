@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useLanguage } from '../i18n'
+import { MEMO_COUNTER_VISIBLE_FROM, MEMO_MAX_LENGTH } from '../utils/memo'
 
 export type MemoSaveState = 'saved' | 'saving' | 'error'
 
@@ -184,7 +185,7 @@ export const MemoWorkspaceEditor = forwardRef<
       </span>
       <textarea
         className="records-memo-editor__textarea"
-        maxLength={500}
+        maxLength={MEMO_MAX_LENGTH}
         rows={12}
         value={value}
         placeholder={t.accountRecords.memoPlaceholder}
@@ -197,7 +198,7 @@ export const MemoWorkspaceEditor = forwardRef<
         }}
       />
       <footer className="records-memo-editor__foot">
-        <span>{value.length} / 500</span>
+        {value.length >= MEMO_COUNTER_VISIBLE_FROM && <span>{value.length} / {MEMO_MAX_LENGTH}</span>}
         <span>{t.accountRecords.memoAutoSaveHint}</span>
       </footer>
     </section>
@@ -328,7 +329,7 @@ export function MemoEditorWindow({
       <textarea
         autoFocus
         className="memo-editor-window__textarea"
-        maxLength={500}
+        maxLength={MEMO_MAX_LENGTH}
         rows={3}
         value={value}
         placeholder={t.accountRecords.memoPlaceholder}
@@ -336,7 +337,7 @@ export function MemoEditorWindow({
       />
       <footer className="memo-editor-window__foot">
         <div className="memo-editor-window__meta">
-          <span>{value.length} / 500</span>
+          {value.length >= MEMO_COUNTER_VISIBLE_FROM && <span>{value.length} / {MEMO_MAX_LENGTH}</span>}
           <span className="memo-editor-window__autosave-hint">
             {t.accountRecords.memoAutoSaveHint}
           </span>

@@ -5,6 +5,7 @@ import type {
 } from '../types'
 import { defaultInputs } from '../types'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
+import { normalizeMemo } from '../utils/memo'
 import {
   computeNextSnapshotRunAt,
   normalizeSnapshotAutomationSettings,
@@ -213,7 +214,7 @@ export function rowToOrderHistoryRecord(row: OrderHistoryRow): OrderHistoryRecor
     beforeResult: summaryFromUnknown(row.before_result),
     afterResult: summaryFromUnknown(row.after_result),
     numberSetId: row.number_set_id ?? null,
-    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    memo: normalizeMemo(row.memo),
     createdAt: row.created_at,
   }
 }
@@ -228,7 +229,7 @@ export function rowToAccountSnapshotRecord(row: AccountSnapshotRow): AccountSnap
     source,
     sourceLocalDate: row.source_local_date ?? null,
     numberSetId: row.number_set_id ?? null,
-    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    memo: normalizeMemo(row.memo),
     createdAt: row.created_at,
   }
 }
@@ -614,7 +615,7 @@ export function createAccountRecordsRepository(
       memo: string,
     ): Promise<AccountRecordResult<string | null>> {
       if (!client) return unavailable()
-      const normalized = memo.trim() ? memo.slice(0, 500) : null
+      const normalized = normalizeMemo(memo)
       const { data, error } = await client
         .from('order_history')
         .update({ memo: normalized })
@@ -633,7 +634,7 @@ export function createAccountRecordsRepository(
       memo: string,
     ): Promise<AccountRecordResult<string | null>> {
       if (!client) return unavailable()
-      const normalized = memo.trim() ? memo.slice(0, 500) : null
+      const normalized = normalizeMemo(memo)
       const { data, error } = await client
         .from('account_snapshots')
         .update({ memo: normalized })

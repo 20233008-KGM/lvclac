@@ -1,4 +1,5 @@
 import { isPresetId } from '../i18n'
+import { normalizeMemo } from '../utils/memo'
 import type { NumberSetRecord } from '../db/numberSets'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 
@@ -43,7 +44,7 @@ function parseNumberSetRecord(value: unknown): NumberSetRecord | null {
     id: value.id,
     title: value.title,
     inputs,
-    memo: typeof value.memo === 'string' ? value.memo.slice(0, 500) : null,
+    memo: normalizeMemo(typeof value.memo === 'string' ? value.memo : null),
     presetId: isPresetId(value.presetId) ? value.presetId : null,
     updatedAt: value.updatedAt,
     autoSnapshotEnabled: value.autoSnapshotEnabled === true,

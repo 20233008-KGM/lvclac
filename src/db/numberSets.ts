@@ -1,6 +1,7 @@
 import type { CalculatorInputs } from '../types'
 import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
+import { normalizeMemo } from '../utils/memo'
 import { supabase } from './supabaseClient'
 
 export const DEFAULT_SET_TITLE = '기본 세트'
@@ -60,7 +61,7 @@ function rowToRecord(row: NumberSetRow): NumberSetRecord {
     id: row.id,
     title: row.title || DEFAULT_SET_TITLE,
     inputs: parseStoredCalculatorInputs(row.inputs) ?? { mode: 'evaluate', positionSide: 'long' },
-    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    memo: normalizeMemo(row.memo),
     presetId: isPresetId(row.preset_id) ? row.preset_id : null,
     updatedAt: row.updated_at,
     autoSnapshotEnabled: row.auto_snapshot_enabled ?? false,
@@ -202,7 +203,7 @@ export async function updateNumberSetMemo(
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
 
-  const normalized = memo.trim() ? memo.slice(0, 500) : null
+  const normalized = normalizeMemo(memo)
   const { data, error } = await supabase
     .from('number_sets')
     .update({ memo: normalized })

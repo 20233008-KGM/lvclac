@@ -9,6 +9,7 @@ import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 import { MY_PAGE_PATH } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import { useCalculator } from '../context/CalculatorContext'
+import { normalizeMemo } from '../utils/memo'
 import {
   createAccountRecordsRepository,
   type AccountSnapshotRecord,
@@ -1513,7 +1514,7 @@ export function RecordsArchivePage() {
       if (memoTarget.kind === 'slot') {
         const error = await setNumberSetMemo('cloud', memoTarget.id, memo)
         if (error) return error
-        const savedMemo = memo.trim() ? memo.slice(0, 500) : null
+        const savedMemo = normalizeMemo(memo)
         setSlots((current) =>
           current.map((slot) => (slot.id === memoTarget.id ? { ...slot, memo: savedMemo } : slot)),
         )

@@ -989,7 +989,7 @@ export const en: Messages = {
     maxBuyableShort: 'Addl. sell limit',
     leverage: 'Leverage',
     leverageRatio: 'Leverage',
-    leverageSub: 'Notional ÷ equity',
+    leverageSub: 'Mark-based value ÷ equity',
     maintenanceMargin: 'Maint. margin',
     contractNotional: 'Notional',
     entrustedMargin: 'Init. margin',
@@ -1361,21 +1361,21 @@ export const en: Messages = {
     ],
     sections: [
       {
-        title: 'Notional & margin',
-        intro: 'Entry price and contract multiplier / contract size determine notional. Q for liquidation is separate.',
+        title: 'Entry notional & margin',
+        intro: 'Entry notional uses entry price. Current margin and leverage use mark-based value. Q for liquidation is separate.',
         entries: [
           {
-            name: 'Position notional',
+            name: 'Entry notional',
             expression: 'Notional = N × entry price × M',
           },
           {
             name: 'Maintenance margin (rate)',
-            expression: 'Maintenance = notional × R',
+            expression: 'Maintenance = C₀ × Q × R',
             description: 'A direct broker-platform amount takes precedence when provided.',
           },
           {
             name: 'Entrusted margin (rate)',
-            expression: 'Entrusted = notional × Rₑ',
+            expression: 'Entrusted = C₀ × Q × Rₑ',
           },
           {
             name: 'Available margin',
@@ -1465,7 +1465,7 @@ export const en: Messages = {
             name: 'Price move to liquidation',
             expression: 'Long: C₀ − P  /  Short: P − C₀',
           },
-          { name: 'Leverage', expression: 'Leverage = notional ÷ E₀' },
+          { name: 'Leverage', expression: 'Leverage = (C₀ × Q) ÷ E₀' },
           {
             name: 'Add-on buy / sell limit',
             expression: 'floor((E₀ − entrusted) / per-contract entrusted)',

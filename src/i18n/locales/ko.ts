@@ -977,7 +977,7 @@ export const ko: Messages = {
     maxBuyableShort: '추가 매도 한도',
     leverage: '레버리지',
     leverageRatio: '레버리지',
-    leverageSub: '약정가치 ÷ 계좌 평가금액',
+    leverageSub: '현재가 기준 가치 ÷ 계좌 평가금액',
     maintenanceMargin: '총 유지증거금',
     contractNotional: '약정가치',
     entrustedMargin: '총 위탁증거금',
@@ -1343,27 +1343,27 @@ export const ko: Messages = {
         symbol: '총 민감도',
         meaning: '보유 계약수 × 계약승수(계약크기) (가격 1단위 움직일 때 손익 크기)',
       },
-      { symbol: '유지증거금률', meaning: '약정가치 대비 유지증거금 비율 (소수, 예: 0.247)' },
-      { symbol: '위탁증거금률', meaning: '약정가치 대비 개시·위탁증거금 비율' },
+      { symbol: '유지증거금률', meaning: '현재가 기준 가치 대비 유지증거금 비율 (소수, 예: 0.247)' },
+      { symbol: '위탁증거금률', meaning: '현재가 기준 가치 대비 개시·위탁증거금 비율' },
     ],
     sections: [
       {
         title: '약정가치·증거금',
         intro:
-          '약정가격·계약승수(계약크기)는 명목가치 산출에 씁니다. 아래 「총 민감도」와는 별개입니다.',
+          '약정가치는 진입 시 약정가격으로 계산합니다. 현재 증거금과 레버리지는 현재가 기준 가치로 계산하며, 아래 「총 민감도」와는 별개입니다.',
         entries: [
           {
-            name: '약정가치 (포지션 명목)',
+            name: '약정가치',
             expression: '약정가치 = 보유 계약수 × 약정가격 × 계약승수(계약크기)',
           },
           {
             name: '유지증거금 (비율 입력)',
-            expression: '유지증거금 = 약정가치 × 유지증거금률',
+            expression: '유지증거금 = 현재가 × 총 민감도 × 유지증거금률',
             description: '증권사 화면에서 직접 입력한 금액이 있으면 그 값을 우선합니다.',
           },
           {
             name: '위탁증거금 (비율 입력)',
-            expression: '위탁증거금 = 약정가치 × 위탁증거금률',
+            expression: '위탁증거금 = 현재가 × 총 민감도 × 위탁증거금률',
           },
           {
             name: '가용증거금',
@@ -1482,7 +1482,7 @@ export const ko: Messages = {
           },
           {
             name: '레버리지',
-            expression: '레버리지 = 약정가치 ÷ 계좌평가금액',
+            expression: '레버리지 = (현재가 × 총 민감도) ÷ 계좌평가금액',
           },
           {
             name: '추가 매수·매도 한도',

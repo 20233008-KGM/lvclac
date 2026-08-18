@@ -303,11 +303,13 @@ function ResultSheet({
 function EvaluateResults({
   result,
   currentPrice,
+  contractNotional,
   entryReturnRate,
   entryPnl,
 }: {
   result: EvaluateResult
   currentPrice?: number
+  contractNotional: number | null
   entryReturnRate: number | null
   entryPnl: number | null
 }) {
@@ -390,7 +392,7 @@ function EvaluateResults({
         <ResultRowPair
           left={{
             label: r.contractNotional,
-            value: formatNumber(result.margins?.contractNotional ?? null),
+            value: formatNumber(contractNotional),
           }}
           right={{
             label: r.leverageRatio,
@@ -824,6 +826,13 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
   const evalInputs = useMemo(() => resolveEvaluationInputs(inputs), [inputs])
   const entryReturnRate = calcEntryPriceReturnRate(evalInputs)
   const entryPnl = calcPositionUnrealizedPnl(evalInputs)
+  const contractNotional = useMemo(() => {
+    const { contractAmount, contractMultiplier, contracts } = inputs
+    if (contractAmount == null || contractAmount <= 0 || contracts == null || contracts <= 0) {
+      return null
+    }
+    return contractAmount * contracts * (contractMultiplier ?? 1)
+  }, [inputs])
   const evaluateResult = useMemo(
     () => calculateEvaluate(inputs),
     [inputs],
@@ -997,6 +1006,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           key={positionSide}
           result={evaluateResult}
           currentPrice={evalInputs.currentPrice}
+          contractNotional={contractNotional}
           entryReturnRate={entryReturnRate}
           entryPnl={entryPnl}
         />

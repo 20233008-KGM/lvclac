@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useState,
   type ReactNode,
@@ -21,6 +19,10 @@ import {
 import { shouldShowWelcome, writeWelcomeCompleted } from './welcomeFlowLogic'
 import { WelcomeFlow } from './WelcomeFlow'
 import { isKitPath } from '../config/routes'
+import {
+  FirstVisitFlowContext,
+  useFirstVisitDisclaimer,
+} from '../context/FirstVisitFlowContext'
 
 type LegalView = 'terms' | 'privacy' | null
 type DisclaimerMode = 'required' | 'info'
@@ -29,13 +31,6 @@ export const footerLegalCopy: Record<Locale, { refundPolicy: string }> = {
   ko: { refundPolicy: '환불 정책' },
   en: { refundPolicy: 'Refund Policy' },
 }
-
-type DisclaimerContextValue = {
-  skipActive: boolean
-  showAgain: () => void
-}
-
-const DisclaimerContext = createContext<DisclaimerContextValue | null>(null)
 
 export function LegalEmphasis({ children }: { children: ReactNode }) {
   return <span className="legal-emphasis">{children}</span>
@@ -66,7 +61,7 @@ export function ContentRiskNotice() {
 
 export function DisclaimerShowAgainLink({ variant = 'default' }: { variant?: 'default' | 'footer' }) {
   const { t } = useLanguage()
-  const ctx = useContext(DisclaimerContext)
+  const ctx = useFirstVisitDisclaimer()
 
   if (!ctx?.skipActive) return null
 
@@ -128,10 +123,11 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   // 컴포넌트 전시장(/kit, 개발·export 전용)에선 온보딩·면책 오버레이를 띄우지 않는다.
   const suppressOverlays = isKitPath(pathname)
-  // 신규 방문자는 환영 플로우가 유일한 첫 관문. 환영이 뜨는 동안 면책 모달은 배타적으로 숨긴다.
-  const [welcomeOpen, setWelcomeOpen] = useState(() =>
+  // 신규 방문자는 계산기를 먼저 보고 헤더 CTA로 환영 플로우를 직접 연다.
+  const [welcomePending, setWelcomePending] = useState(() =>
     !suppressOverlays && shouldShowWelcome(pathname, localStorage, sessionStorage),
   )
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
   const [open, setOpen] = useState(
     () =>
       !suppressOverlays &&
@@ -140,6 +136,12 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   )
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
+
+  const showWelcome = () => {
+    if (!welcomePending) return
+    setMode('required')
+    setWelcomeOpen(true)
+  }
 
   const showAgain = () => {
     setMode('info')
@@ -155,11 +157,14 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
       writeWelcomeCompleted(localStorage)
       setSkipActive(true)
     }
+    setWelcomePending(false)
     setWelcomeOpen(false)
   }
 
   return (
-    <DisclaimerContext.Provider value={{ skipActive, showAgain }}>
+    <FirstVisitFlowContext.Provider
+      value={{ skipActive, showAgain, welcomePending, showWelcome }}
+    >
       {children}
       {welcomeOpen ? (
         <WelcomeFlow onComplete={handleWelcomeComplete} />
@@ -179,7 +184,7 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
           />
         )
       )}
-    </DisclaimerContext.Provider>
+    </FirstVisitFlowContext.Provider>
   )
 }
 

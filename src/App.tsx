@@ -11,7 +11,10 @@ import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
 import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
-import { ContentRiskNotice, DisclaimerProvider } from './components/ServiceDisclaimer'
+import {
+  ContentRiskNotice,
+  DisclaimerProvider,
+} from './components/ServiceDisclaimer'
 import {
   fieldHintCalculationComplete,
   fieldHintActive,
@@ -46,6 +49,7 @@ import {
 import { isPreviewModeActive } from './calc/mtmLink'
 import { calculateEvaluate, calculateOrder } from './calc/leverage'
 import { LayoutProvider } from './context/LayoutContext'
+import { useFirstVisitWelcome } from './context/FirstVisitFlowContext'
 import { useCalculator } from './context/CalculatorContext'
 import { usePathname } from './hooks/usePathname'
 import { useGridResize } from './hooks/useGridResize'
@@ -114,6 +118,7 @@ function isTextEditingTarget(target: EventTarget | null): boolean {
 
 function CalculatorApp() {
   const { t, preset } = useLanguage()
+  const firstVisitWelcome = useFirstVisitWelcome()
   const isDevDeployment = import.meta.env.VITE_DEPLOYMENT_CHANNEL === 'dev'
   const {
     inputs,
@@ -263,11 +268,23 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
-                  <HowToUseButton
-                    fieldGuideStage={traderStage}
-                    fieldGuideActive={fieldHintOn}
-                    onFieldGuideToggle={traderStage ? toggleFieldHint : undefined}
-                  />
+                  {firstVisitWelcome?.welcomePending ? (
+                    <button
+                      type="button"
+                      className="header-welcome-btn"
+                      aria-label={t.welcome.headerCtaAriaLabel}
+                      onClick={firstVisitWelcome.showWelcome}
+                    >
+                      <span>{t.welcome.headerCta}</span>
+                      <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
+                    </button>
+                  ) : (
+                    <HowToUseButton
+                      fieldGuideStage={traderStage}
+                      fieldGuideActive={fieldHintOn}
+                      onFieldGuideToggle={traderStage ? toggleFieldHint : undefined}
+                    />
+                  )}
                   <AuthButton variant="header" />
                 </div>
               </header>

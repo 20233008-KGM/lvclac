@@ -726,6 +726,9 @@ export interface Messages {
   }
   /** 첫 진입 환영 온보딩 플로우 카피 */
   welcome: {
+    headerCta: string
+    headerCtaMeta: string
+    headerCtaAriaLabel: string
     stepLabel: string
     next: string
     back: string

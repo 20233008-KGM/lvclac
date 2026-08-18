@@ -549,6 +549,49 @@ input:focus:not(:focus-visible) {
   align-items: center;
 }
 
+.header-welcome-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--space-md);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 66%, var(--color-border-subtle));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.header-welcome-btn__meta {
+  margin-left: var(--space-sm);
+  padding-left: var(--space-sm);
+  border-left: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.header-welcome-btn:hover,
+.header-welcome-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary) 88%, white 12%);
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 13%, transparent);
+  outline: none;
+}
+
+.header-welcome-btn:active {
+  transform: translateY(1px);
+}
+
 .header-how-btn {
   position: relative;
   display: inline-flex;

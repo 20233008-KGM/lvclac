@@ -7,6 +7,7 @@ import { ko } from '../i18n/locales/ko'
 // 모달의 접근성/게이트 배선은 소스 텍스트 검증으로 보장한다.
 const welcome = readFileSync(resolve('src/components/WelcomeFlow.tsx'), 'utf8')
 const provider = readFileSync(resolve('src/components/ServiceDisclaimer.tsx'), 'utf8')
+const app = readFileSync(resolve('src/App.tsx'), 'utf8')
 
 describe('WelcomeFlow 접근성/구조', () => {
   it('dialog 접근성 속성', () => {
@@ -58,7 +59,11 @@ describe('WelcomeFlow 접근성/구조', () => {
 })
 
 describe('DisclaimerProvider 게이트 배선', () => {
-  it('welcome XOR disclaimer 배타 렌더', () => {
+  it('신규 방문자는 CTA를 먼저 보고 직접 WelcomeFlow를 열며, 면책 모달과 배타 렌더', () => {
+    expect(provider).toContain('const [welcomeOpen, setWelcomeOpen] = useState(false)')
+    expect(provider).toContain('const [welcomePending, setWelcomePending] = useState')
+    expect(provider).toContain('const showWelcome = () =>')
+    expect(provider).toContain('welcomePending, showWelcome')
     expect(provider).toContain('welcomeOpen ?')
     expect(provider).toContain('<WelcomeFlow onComplete={handleWelcomeComplete} />')
   })
@@ -67,5 +72,18 @@ describe('DisclaimerProvider 게이트 배선', () => {
     expect(provider).toContain('writeDisclaimerAck(sessionStorage)')
     expect(provider).toContain('writeDisclaimerSkip(localStorage, true)')
     expect(provider).toContain('writeWelcomeCompleted(localStorage)')
+    expect(provider).toContain('setWelcomePending(false)')
+  })
+
+  it('헤더에서 신규 방문 CTA를 기존 사용법 자리에 교체하고 로그인 버튼은 유지', () => {
+    expect(app).toContain('firstVisitWelcome?.welcomePending ?')
+    expect(app).toContain('className="header-welcome-btn"')
+    expect(app).toContain('onClick={firstVisitWelcome.showWelcome}')
+    expect(app.indexOf('className="header-welcome-btn"')).toBeLessThan(
+      app.indexOf('<HowToUseButton'),
+    )
+    expect(app.indexOf('<HowToUseButton')).toBeLessThan(
+      app.indexOf('<AuthButton variant="header" />'),
+    )
   })
 })

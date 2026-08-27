@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
@@ -14,6 +14,10 @@ import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPr
 import '../../styles/pages.css'
 
 type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | null
+
+const AuthModal = lazy(() =>
+  import('../auth/AuthModal').then((mod) => ({ default: mod.AuthModal })),
+)
 
 /** ISO 날짜 문자열을 현재 언어의 긴 날짜 형식으로. 파싱 실패 시 원문 반환. */
 function formatDate(iso: string, lang: string): string {
@@ -149,6 +153,7 @@ export function BillingPage() {
   const mapError = useCheckoutError()
 
   const [busy, setBusy] = useState<BusyState>(null)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [message, setMessage] = useState<string | null>(() =>
     readCheckoutParam() === 'cancel' ? copy.checkoutCanceled : null,
   )
@@ -182,6 +187,10 @@ export function BillingPage() {
 
   const handleCheckout = useCallback(
     async (plan: BillingPlan) => {
+      if (!user) {
+        setAuthModalOpen(true)
+        return
+      }
       setBusy(plan)
       setMessage(null)
       const error = await startCheckout(plan)
@@ -192,7 +201,7 @@ export function BillingPage() {
       }
       setBusy(null)
     },
-    [mapError],
+    [mapError, user],
   )
 
   const handleManage = useCallback(async () => {
@@ -469,12 +478,19 @@ export function BillingPage() {
   if (view === 'free') {
     const checkoutBusy = busy === 'monthly' || busy === 'yearly' || busy === 'portal' ? busy : null
     return (
-      <BillingUpgrade
-        copy={copy}
-        busy={checkoutBusy}
-        message={message}
-        onCheckout={(plan) => void handleCheckout(plan)}
-      />
+      <>
+        <BillingUpgrade
+          copy={copy}
+          busy={checkoutBusy}
+          message={message}
+          onCheckout={(plan) => void handleCheckout(plan)}
+        />
+        {authModalOpen && (
+          <Suspense fallback={null}>
+            <AuthModal onClose={() => setAuthModalOpen(false)} />
+          </Suspense>
+        )}
+      </>
     )
   }
 

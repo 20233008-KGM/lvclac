@@ -1,7 +1,18 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { resolveBillingView } from './billingView'
 
+const source = readFileSync(resolve('src/components/billing/BillingPage.tsx'), 'utf8')
+
 describe('resolveBillingView', () => {
+  it('opens authentication before attempting checkout for a signed-out visitor', () => {
+    expect(source).toMatch(
+      /if \(!user\) \{\s+setAuthModalOpen\(true\)\s+return\s+\}/,
+    )
+    expect(source).toContain('<AuthModal onClose={() => setAuthModalOpen(false)} />')
+  })
+
   it('keeps the billing page neutral while subscription state is loading', () => {
     expect(
       resolveBillingView({

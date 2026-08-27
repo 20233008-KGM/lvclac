@@ -16,8 +16,8 @@ export type MarginMode = 'rate' | 'perContract' | 'total'
 
 export const MARGIN_MODE_IDS: readonly MarginMode[] = ['rate', 'perContract', 'total']
 
-/** 공개판 단계(6): 0 환영 · 1 증거금방식 · 2 거래상태 · 3 사용법 · 4 저장 · 5 면책동의 */
-export const WELCOME_STEP_COUNT = 6
+/** 단계(7): 0 환영 · 1 지역 · 2 거래종목+증거금방식 · 3 거래상태 · 4 사용법 · 5 저장 · 6 면책동의 */
+export const WELCOME_STEP_COUNT = 7
 export const WELCOME_LAST_STEP = WELCOME_STEP_COUNT - 1
 
 export interface WelcomeDraft {

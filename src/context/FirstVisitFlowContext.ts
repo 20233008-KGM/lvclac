@@ -3,15 +3,22 @@ import { createContext, useContext } from 'react'
 export type FirstVisitFlowContextValue = {
   skipActive: boolean
   showAgain: () => void
-  firstVisitGateActive: boolean
   welcomePending: boolean
   showWelcome: () => void
 }
 
 export const FirstVisitFlowContext = createContext<FirstVisitFlowContextValue | null>(null)
 
-export function useFirstVisitGateActive(): boolean {
-  return useContext(FirstVisitFlowContext)?.firstVisitGateActive ?? false
+export function useFirstVisitDisclaimer(): Pick<
+  FirstVisitFlowContextValue,
+  'skipActive' | 'showAgain'
+> | null {
+  const context = useContext(FirstVisitFlowContext)
+  if (!context) return null
+  return {
+    skipActive: context.skipActive,
+    showAgain: context.showAgain,
+  }
 }
 
 export function useFirstVisitWelcome(): Pick<
@@ -24,4 +31,9 @@ export function useFirstVisitWelcome(): Pick<
     welcomePending: context.welcomePending,
     showWelcome: context.showWelcome,
   }
+}
+
+export function useFirstVisitGateActive(): boolean {
+  const context = useContext(FirstVisitFlowContext)
+  return Boolean(context?.welcomePending)
 }

@@ -35,7 +35,7 @@ export async function ensureProfile(
 
   const existing = await supabase
     .from('profiles')
-    .select('nickname, auto_save_order_history')
+    .select('nickname, auto_save_order_history, email')
     .eq('id', userId)
     .maybeSingle()
 
@@ -45,7 +45,9 @@ export async function ensureProfile(
 
   const currentNickname = existing.data?.nickname?.trim()
   if (currentNickname) {
-    await supabase.from('profiles').update({ email }).eq('id', userId)
+    if (email && existing.data?.email !== email) {
+      await supabase.from('profiles').update({ email }).eq('id', userId)
+    }
     return {
       nickname: currentNickname,
       autoSaveOrderHistory: existing.data?.auto_save_order_history ?? true,

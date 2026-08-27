@@ -39,6 +39,22 @@ describe('my page side/pill nav layout', () => {
     expect(navBlock).not.toContain('line-height: var(--touch-min)')
     expect(blockFor(pagesCss, '.my-page-nav')).toContain('background: var(--color-bg-elevated)')
   })
+
+  it('centers the 720px content column and aligns medium-width navigation to it', () => {
+    expect(pagesCss).toMatch(
+      /@media \(min-width: 621px\) and \(max-width: 1023px\)\s*\{[\s\S]*\.my-page:has\(\.my-page-body\) \.my-page-header,[\s\S]*\.my-page-body\s*\{[^}]*width: min\(100%, 720px\);[^}]*margin-inline: auto;/,
+    )
+    expect(pagesCss).toMatch(
+      /@media \(min-width: 621px\) and \(max-width: 1023px\)[\s\S]*\.my-page-nav\s*\{[^}]*width: 100%;[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/,
+    )
+  })
+
+  it('keeps the three navigation targets full-width on mobile', () => {
+    expect(pagesCss).toMatch(
+      /@media \(max-width: 620px\)\s*\{[\s\S]*\.my-page-nav\s*\{[^}]*width: 100%;[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/,
+    )
+  })
+
 })
 
 describe('account record tab pill restyle', () => {

@@ -5,6 +5,7 @@ export { LanguageProvider, useLanguage } from './LanguageContext'
 export {
   PRESET_STORAGE_KEY,
   detectInitialPreset,
+  isPresetId,
   normalizePresetId,
   persistPreset,
 } from './presets'

@@ -24,7 +24,10 @@ describe('guide current price routine copy', () => {
     expect(daily).not.toContain('시나리오 가격')
     expect(daily).not.toContain('Enter → Enter')
 
-    expect(ko.guide.sections.some((section) => section.title === '시나리오 가격')).toBe(false)
+    const scenario = sectionText(guideSection(ko, '시나리오 가격'))
+    expect(scenario).toContain('보조 도구')
+    expect(scenario).not.toContain('핵심 도구')
+    expect(scenario).not.toContain('손익을 현재가·평가금액에 반영')
 
     const saving = sectionText(guideSection(ko, '입력값 저장'))
     expect(saving).toContain('현재가만')
@@ -42,7 +45,10 @@ describe('guide current price routine copy', () => {
     expect(daily).not.toContain('Scenario price')
     expect(daily).not.toContain('Enter → Enter')
 
-    expect(en.guide.sections.some((section) => section.title === 'Scenario price')).toBe(false)
+    const scenario = sectionText(guideSection(en, 'Scenario price'))
+    expect(scenario).toContain('secondary tool')
+    expect(scenario).not.toContain('core tool')
+    expect(scenario).not.toContain('roll P&L into mark and equity')
 
     const saving = sectionText(guideSection(en, 'Saving inputs'))
     expect(saving).toContain('only the mark')

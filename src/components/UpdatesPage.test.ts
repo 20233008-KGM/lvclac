@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve('src/components/UpdatesPage.tsx'), 'utf8')
 const appSource = readFileSync(resolve('src/App.tsx'), 'utf8')
-const pagesCss = readFileSync(resolve('src/styles/pages.css'), 'utf8')
+const pagesCss = readFileSync(resolve('src/components/updates.css'), 'utf8')
+const shellCss = readFileSync(resolve('src/styles/pages.css'), 'utf8')
 const sitemap = readFileSync(resolve('public/sitemap.xml'), 'utf8')
 
 describe('public updates page', () => {
@@ -25,7 +26,7 @@ describe('public updates page', () => {
 
   it('renders accessible URL-backed pagination only when more than ten updates exist', () => {
     expect(source).toContain('sortedUpdates.length > UPDATES_PAGE_SIZE')
-    expect(source).toContain('updatesHrefForPage(page, window.location.search)')
+    expect(source).toContain('updatesHrefForPage(page, window.location.search, window.location.pathname)')
     expect(source).toContain('aria-current={page === resolvedPage.page')
     expect(source).toContain('aria-label={copy.firstPage}')
     expect(source).toContain('aria-label={copy.lastPage}')
@@ -59,10 +60,10 @@ describe('public updates page', () => {
     expect(pagesCss).toMatch(
       /@media \(max-width: 520px\)[\s\S]*\.updates-pagination__mobile-hidden\s*{[^}]*display:\s*none;/s,
     )
-    expect(pagesCss).toMatch(
+    expect(shellCss).toMatch(
       /\.public-info-document\[data-info-navigation='hidden'\] \.public-info-hero\s*{[^}]*min-height:\s*0;/s,
     )
-    expect(pagesCss).toMatch(
+    expect(shellCss).toMatch(
       /\.public-info-document\[data-info-navigation='hidden'\] \.public-info-content\s*{[^}]*padding-top:\s*0;/s,
     )
     expect(sitemap).toContain('<loc>https://liqguard.com/updates</loc>')

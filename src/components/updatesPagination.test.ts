@@ -16,12 +16,14 @@ function createEntries(count: number): UpdateEntry[] {
       ko: {
         type: '개선',
         title: `업데이트 ${index + 1}`,
-        summary: `업데이트 ${index + 1} 설명`,
+        description: `업데이트 ${index + 1} 설명`,
+        body: `업데이트 ${index + 1} 본문`,
       },
       en: {
         type: 'Improved',
         title: `Update ${index + 1}`,
-        summary: `Update ${index + 1} summary`,
+        description: `Update ${index + 1} summary`,
+        body: `Update ${index + 1} body`,
       },
     },
   }))
@@ -54,6 +56,16 @@ describe('updates pagination', () => {
   it('uses a clean first-page URL and preserves unrelated query parameters', () => {
     expect(updatesHrefForPage(1, '?lang=en&page=2')).toBe('/updates?lang=en')
     expect(updatesHrefForPage(2, '?lang=en')).toBe('/updates?lang=en&page=2')
+  })
+
+  it('keeps the English route while changing pages', () => {
+    expect(updatesHrefForPage(2, '', '/en/updates')).toBe('/en/updates?page=2')
+    expect(resolveUpdatesPage('?page=1', 23, '/en/updates')).toEqual({
+      page: 1,
+      pageCount: 3,
+      normalizedHref: '/en/updates',
+      needsNormalization: true,
+    })
   })
 
   it('resolves valid page queries without normalization', () => {

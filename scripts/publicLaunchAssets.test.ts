@@ -51,11 +51,10 @@ describe('public launch assets', () => {
     ).not.toContain('google-adsense-account')
   })
 
-  it('allows AdSense verification crawlers while prelaunch search indexing stays blocked', () => {
-    const robots = readFileSync(resolve('public/robots.txt'), 'utf8')
+  it('blocks all crawlers while Preview indexing and advertising are disabled', () => {
+    const robots = readFileSync(resolve('public/robots.txt'), 'utf8').replace(/\r\n/g, '\n')
 
-    expect(robots).toContain('User-agent: Mediapartners-Google\nAllow: /')
-    expect(robots).toContain('User-agent: Google-Display-Ads-Bot\nAllow: /')
     expect(robots).toContain('User-agent: *\nDisallow: /')
+    expect(robots).not.toContain('Mediapartners-Google')
   })
 })

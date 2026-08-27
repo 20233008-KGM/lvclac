@@ -19,6 +19,7 @@ import {
   createFeedbackPostsRepository,
   type FeedbackPostRecord,
 } from '../db/feedbackPosts'
+import { notifyNewFeedbackPost } from '../db/feedbackNotifications'
 import { useAuth } from '../context/AuthContext'
 import type { AuthUser } from '../db/profile'
 import { useLanguage } from '../i18n'
@@ -277,6 +278,21 @@ export function FeedbackBoardView({
                     </div>
                     <h4 className="contact-post__title">{post.title}</h4>
                     <p className="contact-post__body">{post.body}</p>
+                    <div className="contact-post__status">
+                      <span>{copy.status}</span>
+                      <strong>{copy.statusLabels[post.status]}</strong>
+                    </div>
+                    {post.staffReply && (
+                      <div className="contact-post__staff-reply">
+                        <strong>{copy.staffReply}</strong>
+                        <p>{post.staffReply}</p>
+                        {post.staffRepliedAt && (
+                          <time dateTime={post.staffRepliedAt}>
+                            {copy.staffRepliedAt}: {formatPostDate(post.staffRepliedAt)}
+                          </time>
+                        )}
+                      </div>
+                    )}
                     {post.attachments.length > 0 && (
                       <ul className="contact-post__attachments" aria-label={copy.postAttachments}>
                         {post.attachments.map((attachment, index) => (
@@ -371,7 +387,10 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
   }, [boardId, repository, t.boards.loadError, user])
 
   useEffect(() => {
-    void loadPosts()
+    const timeoutId = window.setTimeout(() => {
+      void loadPosts()
+    }, 0)
+    return () => window.clearTimeout(timeoutId)
   }, [loadPosts])
 
   function handleAttachmentChange(fileList: FileList | null) {
@@ -440,6 +459,7 @@ export function FeedbackBoardPage({ boardId }: FeedbackBoardPageProps) {
     setFiles([])
     setAttachmentError(null)
     setSubmitSuccess(true)
+    void notifyNewFeedbackPost(createResult.data.id)
     await loadPosts()
   }
 

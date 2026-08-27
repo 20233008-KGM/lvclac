@@ -6,7 +6,6 @@ import {
   writeWelcomeCompleted,
 } from './welcomeFlowLogic'
 import { DISCLAIMER_ACK_KEY, DISCLAIMER_SKIP_KEY } from './serviceDisclaimerLogic'
-import { PUBLIC_SAVE_CONSENT_KEY } from './publicSaveConsent'
 
 function store(initial: Record<string, string> = {}) {
   const m = new Map(Object.entries(initial))
@@ -24,11 +23,10 @@ function store(initial: Record<string, string> = {}) {
 describe('shouldShowWelcome', () => {
   it('신규 방문자(마커 없음, 계산기 경로)에게 노출', () => {
     expect(shouldShowWelcome('/', store(), store())).toBe(true)
-    expect(shouldShowWelcome('/en', store(), store())).toBe(true)
   })
 
-  it('공개 계산기 홈 외 경로에선 미노출', () => {
-    expect(shouldShowWelcome('/guide', store(), store())).toBe(false)
+  it('마이페이지 경로에선 미노출', () => {
+    expect(shouldShowWelcome('/my', store(), store())).toBe(false)
   })
 
   it('온보딩 완료자 미노출', () => {
@@ -41,15 +39,6 @@ describe('shouldShowWelcome', () => {
 
   it('이번 세션 면책 확인자(ack) 미노출', () => {
     expect(shouldShowWelcome('/', store(), store({ [DISCLAIMER_ACK_KEY]: '1' }))).toBe(false)
-  })
-
-  it('기존 공개 저장 선택자에게는 새 온보딩을 재노출하지 않음', () => {
-    expect(
-      shouldShowWelcome('/', store({ [PUBLIC_SAVE_CONSENT_KEY]: 'off' }), store()),
-    ).toBe(false)
-    expect(
-      shouldShowWelcome('/', store({ [PUBLIC_SAVE_CONSENT_KEY]: 'local' }), store()),
-    ).toBe(false)
   })
 })
 

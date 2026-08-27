@@ -13,6 +13,11 @@ const post: FeedbackPostRecord = {
   author: '',
   contact: 'me@example.com',
   status: 'new',
+  priority: 'P0',
+  assignee: 'Admin',
+  internalNote: 'This must remain private',
+  staffReply: 'We reproduced this issue and are working on a fix.',
+  staffRepliedAt: '2026-07-09T11:00:00.000Z',
   attachments: [],
   createdAt: '2026-07-09T10:00:00.000Z',
   updatedAt: '2026-07-09T10:00:00.000Z',
@@ -68,6 +73,9 @@ describe('FeedbackBoardView', () => {
     expect(html).toContain(en.boards.myPostListDesc)
     expect(html).toContain('Wrong liquidation result')
     expect(html).toContain('Expected a lower liquidation price.')
+    expect(html).toContain(en.boards.statusLabels.new)
+    expect(html).toContain('We reproduced this issue and are working on a fix.')
+    expect(html).not.toContain('This must remain private')
     expect(html).not.toContain('Saved on this device')
   })
 })

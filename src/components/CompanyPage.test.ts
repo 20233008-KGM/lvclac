@@ -3,60 +3,50 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(resolve('src/components/CompanyPage.tsx'), 'utf8')
+const app = readFileSync(resolve('src/App.tsx'), 'utf8')
 const css = readFileSync(resolve('src/styles/pages.css'), 'utf8')
-const sitemap = readFileSync(resolve('public/sitemap.xml'), 'utf8')
 const operator = readFileSync(resolve('src/config/operator.ts'), 'utf8')
 const footer = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 
-describe('public company page', () => {
+describe('dev company page', () => {
   it('uses the footer-only public information shell without repeating legal details', () => {
     expect(source).toContain('activePath={null}')
     expect(source).toContain('showNavigation={false}')
     expect(source).not.toContain('publicFooterOperatorDetails(locale)')
     expect(source).not.toContain('company-details__grid')
     expect(source).toContain('PUBLIC_OPERATOR_INFO.contactEmail')
-    expect(source).toContain('href={aboutPath}')
-    expect(source).toContain('localizedPublicPath(ABOUT_PATH, locale)')
+    expect(source).toContain('href={ABOUT_PATH}')
+  })
+
+  it('routes the independent company document through the dev app', () => {
+    expect(app).toContain('isCompanyPath')
+    expect(app).toContain("import('./components/CompanyPage')")
+    expect(app).toContain('<CompanyPage />')
   })
 
   it('separates the company mission, direction, principles, product, and stewardship in both locales', () => {
     expect(source).toContain('소수에게, 오래 쓰이는 소프트웨어를')
-    expect(source).toContain(
-      'Software made to last for the people who need it.',
-    )
+    expect(source).toContain('Software made to last for the people who need it.')
     expect(source).toContain("workTitle: '우리가 하는 일'")
     expect(source).toContain("directionTitle: '우리가 향하는 곳'")
     expect(source).toContain("principlesTitle: '제품을 만드는 방식'")
-    expect(source).not.toContain("currentProductTitle: '현재 만드는 제품'")
-    expect(source).not.toContain("currentProductTitle: 'What we are building now'")
     expect(source).toContain("stewardshipTitle: '운영과 책임'")
     expect(source).toContain("stewardshipTitle: 'Ownership and responsibility'")
-    expect(source).toContain("title: '필요한 문제부터'")
-    expect(source).toContain("title: '넓이보다 깊이'")
-    expect(source).toContain("title: '있는 것을 더 좋게'")
-    expect(source).toContain('금융 도구에만 머무르지 않고')
-    expect(source).toContain('서로 다른 분야에서 오래 남는 소프트웨어')
-    expect(source).toContain('제품의 기획, 설계, 개발과 운영을 가까이 연결합니다')
-    expect(source).toContain('take long-term responsibility for the software we build')
     expect(source).toContain('aria-label={PUBLIC_OPERATOR_INFO.productName}')
     expect(source).toContain("makerRole: '대표'")
     expect(source).toContain("makerRole: 'CEO'")
   })
 
-  it('shares localized representative names with the stewardship signature', () => {
+  it('shares localized representative names and keeps the six legal details in the footer', () => {
     expect(source).toContain('publicRepresentativeDisplayName(locale)')
     expect(operator).toContain("ko: '김규민'")
     expect(operator).toContain("en: 'Gyumin Kim'")
-    expect(operator).toContain('publicRepresentativeDisplayName(locale, operator)')
-  })
-
-  it('keeps the six legal operator details in the footer only', () => {
     expect(footer).toContain('publicFooterOperatorDetails(locale)')
     expect(footer).toContain('site-footer__operator')
     expect(source).not.toContain('operatorDetails.map')
   })
 
-  it('uses two editorial columns and three principle columns on desktop, then one column on mobile', () => {
+  it('uses desktop editorial grids and collapses them to one column on mobile', () => {
     expect(css).toMatch(
       /\.public-info-zone \.company-editorial \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
     )
@@ -67,17 +57,7 @@ describe('public company page', () => {
       /@media \(max-width: 720px\)[\s\S]*?\.public-info-zone \.company-editorial,[\s\S]*?\.public-info-zone \.company-principles__list \{[\s\S]*?grid-template-columns: 1fr;/,
     )
     expect(css).toMatch(
-      /\.public-info-zone \.company-current-product \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;/,
-    )
-    expect(css).toMatch(
-      /\.public-info-zone \.company-stewardship \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;/,
-    )
-    expect(css).toMatch(
       /@media \(max-width: 520px\)[\s\S]*?\.public-info-zone \.company-current-product,[\s\S]*?\.public-info-zone \.company-stewardship \{[\s\S]*?grid-template-columns: 1fr;/,
     )
-  })
-
-  it('publishes the company URL in the sitemap', () => {
-    expect(sitemap).toContain('<loc>https://liqguard.com/company</loc>')
   })
 })

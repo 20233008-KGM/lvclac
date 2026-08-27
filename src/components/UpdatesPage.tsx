@@ -11,6 +11,7 @@ import {
   updatesHrefForPage,
   UPDATES_PAGE_SIZE,
 } from './updatesPagination'
+import './updates.css'
 
 const updatesCopy = {
   ko: {
@@ -19,7 +20,6 @@ const updatesCopy = {
     lead: 'LiqGuard의 주요 변경 사항을 확인할 수 있는 공간입니다.',
     tableLabel: 'LiqGuard 업데이트 내역',
     dateHeader: '날짜',
-    authorHeader: '게시자',
     typeHeader: '구분',
     detailsHeader: '업데이트 내용',
     empty:
@@ -39,7 +39,6 @@ const updatesCopy = {
     lead: 'A place to review notable changes to LiqGuard.',
     tableLabel: 'LiqGuard update history',
     dateHeader: 'Date',
-    authorHeader: 'Published by',
     typeHeader: 'Type',
     detailsHeader: 'What changed',
     empty:
@@ -85,7 +84,7 @@ export function UpdatesPage() {
   const [search, setSearch] = useState(() => window.location.search)
   const [transitionState, setTransitionState] = useState<UpdatesTransitionState>('idle')
   const resolvedPage = useMemo(
-    () => resolveUpdatesPage(search, sortedUpdates.length),
+    () => resolveUpdatesPage(search, sortedUpdates.length, window.location.pathname),
     [search],
   )
   const visibleUpdates = updatesForPage(sortedUpdates, resolvedPage.page)
@@ -164,7 +163,7 @@ export function UpdatesPage() {
   }, [resolvedPage.needsNormalization, resolvedPage.normalizedHref])
 
   const goToPage = (page: number) => {
-    const href = updatesHrefForPage(page, window.location.search)
+    const href = updatesHrefForPage(page, window.location.search, window.location.pathname)
     const currentHref = `${window.location.pathname}${window.location.search}`
     if (href === currentHref) return
     runPageTransition(() => {
@@ -198,7 +197,6 @@ export function UpdatesPage() {
                   <th scope="col">{copy.dateHeader}</th>
                   <th scope="col">{copy.typeHeader}</th>
                   <th scope="col">{copy.detailsHeader}</th>
-                  <th scope="col">{copy.authorHeader}</th>
                 </tr>
               </thead>
               <tbody>
@@ -222,11 +220,9 @@ export function UpdatesPage() {
                             navigate(updateDetailPath(entry.id, locale))
                           }}
                         >
-                          <span className="updates-table__release">{content.release}</span>
-                          <span>{content.title}</span>
+                          {content.title}
                         </a>
                       </td>
-                      <td className="updates-table__author">{content.author}</td>
                     </tr>
                   )
                 })}

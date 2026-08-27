@@ -26,7 +26,7 @@
   --color-short-muted: rgba(212, 122, 138, 0.12);
   --color-danger: #e07070;
   --color-danger-muted: rgba(224, 112, 112, 0.1);
-  /* 주의(파괴 아님) — 롤오버 갱신 요청 등. 팔레트 톤에 맞춘 desaturated amber. */
+  /* 주의(파괴 아님) 상태용 desaturated amber. */
   --color-warning: #e0a458;
   --color-warning-muted: rgba(224, 164, 88, 0.12);
   --color-success: #6bc48a;
@@ -87,6 +87,9 @@
   --label-gap: 6px;
   --ctrl-h: 34px;
   --row-min: 48px;
+  --mypage-control-width: 176px;
+  --mypage-instrument-width: 160px;
+  --mypage-automation-width: 40px;
   --mypage-panel-max: 720px;
   --mypage-row-max: 520px;
 }

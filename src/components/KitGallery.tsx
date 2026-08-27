@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { LayoutProvider } from '../context/LayoutContext'
-import { useLanguage } from '../i18n'
+import { useLanguage, type PresetId } from '../i18n'
 import { sampleInputs, type CalculatorInputs } from '../types'
 import type { CalculatorNumberSet } from '../context/CalculatorContext'
 import { InputPanel } from './InputPanel'
@@ -34,34 +34,13 @@ import { MarginKindAskModal } from './MarginKindAskModal'
 
 const noop = () => {}
 
-/** 숫자세트 전시용 목 클라우드 세트(캡처처럼 3개). */
-const mockRolloverOff = {
-  enabled: false,
-  intervalMonths: null,
-  anchor: null,
-  nextDate: null,
-  pending: false,
-} as const
-// 롤오버 설정 켜짐(분기·둘째 목요일) 예시.
-const mockRolloverOn = {
-  enabled: true,
-  intervalMonths: 3,
-  anchor: 'second_thursday',
-  nextDate: '2026-09-10',
-  pending: false,
-} as const
-// 롤오버 대기(갱신 요청 배너) 예시.
-const mockRolloverPending = {
-  enabled: true,
-  intervalMonths: 3,
-  anchor: 'second_thursday',
-  nextDate: '2026-12-10',
-  pending: true,
-} as const
+const mockLocalSets: CalculatorNumberSet[] = [
+  { id: 'local-1', title: '이 기기 기본 세트', inputs: sampleInputs, presetId: 'index', updatedAt: null, storageMode: 'local', autoSnapshotEnabled: false },
+]
 const mockCloudSets: CalculatorNumberSet[] = [
-  { id: 'set-2', title: '슬롯 2', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverOn },
-  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true, rollover: mockRolloverPending },
-  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false, rollover: mockRolloverOff },
+  { id: 'set-2', title: '클라우드 숫자세트 - 변동성 돌파 전략', inputs: sampleInputs, presetId: 'stock', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true },
+  { id: 'set-3', title: '슬롯 3', inputs: sampleInputs, presetId: 'cfd', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: true },
+  { id: 'set-default', title: '기본 세트', inputs: sampleInputs, presetId: 'default', updatedAt: null, storageMode: 'cloud', autoSnapshotEnabled: false },
 ]
 const numberSetLimits: Record<'local' | 'cloud', number> = { local: 10, cloud: 10 }
 
@@ -74,7 +53,7 @@ function KitItem({
 }: {
   name: string
   note?: string
-  width?: number
+  width?: number | string
   children: ReactNode
 }) {
   return (
@@ -96,6 +75,19 @@ export function KitGallery() {
     ...sampleInputs,
     orderPrice: sampleInputs.currentPrice,
   }))
+  const [kitLocalSets, setKitLocalSets] = useState(mockLocalSets)
+  const [kitCloudSets, setKitCloudSets] = useState(mockCloudSets)
+
+  const setKitPreset = (
+    mode: 'local' | 'cloud',
+    setId: string,
+    presetId: PresetId,
+  ) => {
+    const update = (sets: CalculatorNumberSet[]) =>
+      sets.map((set) => (set.id === setId ? { ...set, presetId } : set))
+    if (mode === 'local') setKitLocalSets(update)
+    else setKitCloudSets(update)
+  }
 
   // 언어는 detectInitialLocale()이 URL의 ?lang=en|ko 를 최우선(동기)으로 확정한다.
 
@@ -154,39 +146,49 @@ export function KitGallery() {
             recordsCopy={t.accountRecords}
             loading={false}
             error={null}
-            latestSnapshot={null}
+            recentSnapshots={[]}
             recentOrders={[]}
             archiveHref="#"
             onRetry={noop}
           />
         </KitItem>
-        <KitItem name="NumberSetPreferencesPanel" note="숫자세트 패널" width={560}>
+        <KitItem
+          name="NumberSetPreferencesPanel"
+          note="숫자세트 패널 · 마이페이지 콘텐츠 폭"
+          width="min(1048px, calc(100vw - 32px))"
+        >
           <NumberSetPreferencesPanel
             copy={t.myPage}
-            localNumberSets={[]}
-            cloudNumberSets={mockCloudSets}
+            presetCopy={t.glossaryPreset}
+            localNumberSets={kitLocalSets}
+            cloudNumberSets={kitCloudSets}
             numberSetLimits={numberSetLimits}
             busy={false}
             notice={null}
             isPro
             onCreateNumberSet={noop}
             onRenameNumberSet={noop}
+            onSetPreset={setKitPreset}
             onDeleteNumberSet={noop}
-            onSetAutoSnapshot={noop}
-            onSetRollover={noop}
-            onClearRolloverPending={noop}
+            onSetAutoSnapshot={(_, setId, enabled) =>
+              setKitCloudSets((sets) =>
+                sets.map((set) =>
+                  set.id === setId ? { ...set, autoSnapshotEnabled: enabled } : set,
+                ),
+              )
+            }
           />
         </KitItem>
-        <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·자동 스냅샷 행" width={560}>
+        <KitItem name="AccountSnapshotAutomationPanel" note="환경설정·스냅샷 저장 시각" width={560}>
           <AccountSnapshotAutomationPanel
             copy={t.myPage}
             isPro
             hasCloudInput
+            enabledSlotCount={2}
             settings={null}
             timeZone="Asia/Seoul"
             onTimeZoneChange={noop}
             onSave={noop}
-            onDisable={noop}
           />
         </KitItem>
         <KitItem name="BillingPanel" note="구독 결제" width={540}>

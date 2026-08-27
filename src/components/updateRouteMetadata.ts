@@ -29,7 +29,7 @@ export function resolveUpdateRouteMetadata(
     path: updateDetailPath(updateId, locale),
     koreanPath: updateDetailPath(updateId, 'ko'),
     englishPath: updateDetailPath(updateId, 'en'),
-    title: `${content.release} · ${content.title}`,
+    title: `${content.release ?? content.type} · ${content.title}`,
     description: content.description,
   }
 }

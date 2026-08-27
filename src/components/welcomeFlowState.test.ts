@@ -6,12 +6,12 @@ import {
   welcomeReducer,
 } from './welcomeFlowState'
 
-const init = () => makeInitialDraft('KR', 'futures')
+const init = () => makeInitialDraft('KR', 'index')
 
 describe('welcomeReducer', () => {
-  it('WELCOME_STEP_COUNT는 6, LAST는 5', () => {
-    expect(WELCOME_STEP_COUNT).toBe(6)
-    expect(WELCOME_LAST_STEP).toBe(5)
+  it('WELCOME_STEP_COUNT는 7, LAST는 6', () => {
+    expect(WELCOME_STEP_COUNT).toBe(7)
+    expect(WELCOME_LAST_STEP).toBe(6)
   })
 
   it('next는 마지막 단계에서 clamp', () => {
@@ -33,7 +33,7 @@ describe('welcomeReducer', () => {
   it('선택값을 반영하고 step은 유지', () => {
     let s = init()
     s = welcomeReducer(s, { type: 'setRegion', region: 'US' })
-    s = welcomeReducer(s, { type: 'setInstrument', instrument: 'futures' })
+    s = welcomeReducer(s, { type: 'setInstrument', instrument: 'fx' })
     s = welcomeReducer(s, { type: 'setMargin', marginMode: 'perContract' })
     s = welcomeReducer(s, { type: 'setStage', stage: 'hasPosition' })
     s = welcomeReducer(s, { type: 'setSave', saveLocal: true })
@@ -41,7 +41,7 @@ describe('welcomeReducer', () => {
     expect(s).toMatchObject({
       step: 0,
       region: 'US',
-      instrument: 'futures',
+      instrument: 'fx',
       marginMode: 'perContract',
       stage: 'hasPosition',
       saveLocal: true,
@@ -55,10 +55,10 @@ describe('welcomeReducer', () => {
   })
 
   it('초기 draft(saveLocal=null 미선택)', () => {
-    expect(makeInitialDraft('US', 'futures')).toEqual({
+    expect(makeInitialDraft('US', 'default')).toEqual({
       step: 0,
       region: 'US',
-      instrument: 'futures',
+      instrument: 'default',
       marginMode: null,
       stage: null,
       saveLocal: null,

@@ -19,9 +19,7 @@ describe('mark and order price link UI', () => {
   it('swaps the order-price 현 button to a link while linked', () => {
     const resultPanel = source('src/components/ResultPanel.tsx')
 
-    expect(resultPanel).toContain(
-      'orderPriceLinked ? <span aria-hidden="true">🔗</span> : useCurrentPriceShort',
-    )
+    expect(resultPanel).toContain("orderPriceLinked ? <span aria-hidden=\"true\">🔗</span> : useCurrentPriceShort")
     expect(resultPanel).toContain("onChange({ setOrderPriceLink: false })")
     expect(resultPanel).toContain('price-link-inline-btn--active')
   })

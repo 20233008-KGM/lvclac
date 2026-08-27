@@ -6,47 +6,42 @@ import { publicReviewCopy } from './PaddleReviewPages'
 const source = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
 
 describe('public Paddle review page copy', () => {
-  it('provides specific Korean plan deliverables', () => {
+  it('provides Korean copy for product, pricing, and refund policy pages', () => {
+    expect(publicReviewCopy.ko.product.title).toBe('선물 계산기')
     expect(publicReviewCopy.ko.pricing.title).toBe('요금제')
-    expect(publicReviewCopy.ko.pricing.pro.features).toEqual([
-      '광고 완전 제거.',
-      '로컬 숫자세트 10개와 클라우드 숫자세트 10개.',
-      '계좌 스냅샷 매일 자동 저장.',
-      '주문 기록 무제한 아카이브.',
-    ])
-    expect(publicReviewCopy.ko.pricing.pro.billing.monthly.price).toBe('$5')
-    expect(publicReviewCopy.ko.pricing.pro.billing.yearly.detail).toContain('연 $12 절약')
-    expect(publicReviewCopy.ko.pricing.billingItems.join(' ')).toContain('Paddle')
-    expect(publicReviewCopy.ko.pricing.free.features.join(' ')).toContain(
-      '현재 공개 서비스에는 로그인과 클라우드 저장 기능이 없습니다',
-    )
-    expect(publicReviewCopy.ko.pricing.billingItems.join(' ')).toContain(
-      '도메인 심사가 완료된 뒤에만',
-    )
+    expect(publicReviewCopy.ko.legal.refund.title).toBe('환불 정책')
+    const refund = JSON.stringify(publicReviewCopy.ko.legal.refund)
+
+    expect(refund).toContain('Paddle Sandbox 결제는 테스트 전용')
+    expect(refund).toContain('Merchant of Record')
+    expect(refund).toContain('원칙적으로 환불되지 않습니다')
+    expect(refund).toContain('구독 취소가 현재 결제 기간의 자동 환불을 의미하지는 않습니다')
   })
 
-  it('keeps equivalent English pricing copy for Paddle reviewers', () => {
+  it('keeps English copy for Paddle reviewers', () => {
+    expect(publicReviewCopy.en.product.title).toBe('Futures Calculator')
     expect(publicReviewCopy.en.pricing.title).toBe('Pricing')
-    expect(publicReviewCopy.en.pricing.pro.features).toContain(
-      'Unlimited order-history archive.',
-    )
-    expect(publicReviewCopy.en.pricing.pro.billing.yearly.badge).toBe('Save 20%')
-    expect(publicReviewCopy.en.pricing.billingItems.join(' ')).toContain('Paddle')
-    expect(publicReviewCopy.en.pricing.free.features.join(' ')).toContain(
-      'current public service has no sign-in or cloud storage',
-    )
+    const refund = JSON.stringify(publicReviewCopy.en.legal.refund)
+
+    expect(publicReviewCopy.en.legal.refund.title).toBe('Refund Policy')
+    expect(refund).toContain('Paddle Sandbox checkout in this development environment is for testing only')
+    expect(refund).toContain('merchant of record')
+    expect(refund).toContain('generally non-refundable')
+    expect(refund).toContain('Cancellation does not automatically refund')
   })
 
-  it('presents billing cycles inside one Pro tier instead of duplicate plan cards', () => {
-    expect(source).not.toContain('pricing.plans.map')
-    expect(source).toContain('aria-pressed={selected}')
-    expect(source).toContain('pricing.pro.features')
-    expect(source).not.toContain('pricing.pro.availability')
+  it('links directly to Paddle buyer and refund support in both locales', () => {
+    for (const locale of ['ko', 'en'] as const) {
+      const refund = JSON.stringify(publicReviewCopy[locale].legal.refund)
+
+      expect(refund).toContain('https://www.paddle.com/legal/buyer-terms')
+      expect(refund).toContain('https://www.paddle.com/legal/refund-policy')
+      expect(refund).toContain('https://paddle.net/')
+    }
   })
 
-  it('keeps the five-page information navigator off the pricing page', () => {
-    expect(source).toMatch(
-      /export function PricingReviewPage\(\)[\s\S]*?<PublicInfoShell[\s\S]*?showNavigation=\{false\}/,
-    )
+  it('moves locale switching from the review header into the footer', () => {
+    expect(source).not.toContain('<LanguageToggle variant="header" />')
+    expect(source).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
   })
 })

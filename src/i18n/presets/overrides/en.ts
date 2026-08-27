@@ -1,10 +1,39 @@
 import type { PresetId, PresetOverride } from '../types'
 
+type NamedPreset = Exclude<PresetId, 'default'>
+
 /**
- * 영문 베이스(en.ts)는 지수·종목·원자재 선물에 공통인 제네릭 용어다
+ * 영문 베이스(en.ts)는 이미 상품 무관에 가깝게 제네릭하다
  * ('Entry price', 'Notional', 'Initial margin', 'Open contracts', 'Contract multiplier').
- * 공개판 고정 용어세트는 별도 오버라이드를 적용하지 않는다.
+ * 그래서 en 오버라이드는 **실제로 다른 항목만** 담고 나머지는 베이스를 그대로 쓴다
+ * (ko처럼 canonical 전체를 강제하지 않음 — 무결성 테스트에서 en은 느슨하게 검증).
  */
-export const enPresetOverrides: Record<PresetId, PresetOverride> = {
-  futures: {},
+export const enPresetOverrides: Record<NamedPreset, PresetOverride> = {
+  index: {
+    fields: { contractMultiplier: { label: 'Index multiplier' } },
+  },
+  stock: {
+    fields: { contractMultiplier: { label: 'Shares per contract' } },
+  },
+  commodity: {
+    fields: { contractMultiplier: { label: 'Contract size (unit)' } },
+  },
+  fx: {
+    fields: {
+      contractAmount: { label: 'Entry rate' },
+      contracts: { label: 'Lots' },
+      contractMultiplier: { label: 'Contract size (lot)' },
+      entrustedMarginPerContract: { label: 'Initial margin (per lot)' },
+    },
+    results: {
+      perContractEntrusted: 'Init./lot',
+      perContractEntrustedTitle: 'Initial margin per lot',
+    },
+  },
+  cfd: {
+    fields: {
+      contracts: { label: 'Position size (units)' },
+      contractMultiplier: { label: 'Contract size' },
+    },
+  },
 }

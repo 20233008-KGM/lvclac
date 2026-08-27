@@ -22,6 +22,18 @@ describe('auto snapshot setting hint', () => {
     expect(css).toContain('.my-page-setting-hint')
   })
 
+  it('keeps activation in per-slot switches instead of rendering a second settings toggle', () => {
+    const text = source('src/components/MyPage.tsx')
+    const panelStart = text.indexOf('export function AccountSnapshotAutomationPanel')
+    const panelEnd = text.indexOf('/** 숫자세트 행 상세보기', panelStart)
+    const panel = text.slice(panelStart, panelEnd)
+
+    expect(panel).toContain('enabledSlotCount')
+    expect(panel).toContain('copy.autoSnapshotNoSlotsSelected')
+    expect(panel).not.toContain('<ToggleSwitch')
+    expect(panel).not.toContain('onDisable')
+  })
+
   it('has the hint copy in both locales', () => {
     expect(ko.myPage.autoSnapshotChangeOnlyHint).toContain('값이 바뀐 날만')
     expect(en.myPage.autoSnapshotChangeOnlyHint.toLowerCase()).toContain('skipped')

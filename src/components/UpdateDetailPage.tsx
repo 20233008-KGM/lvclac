@@ -4,6 +4,7 @@ import { useNavigate } from '../hooks/usePathname'
 import { useLanguage, type Locale } from '../i18n'
 import { PublicInfoShell } from './PublicInfoShell'
 import { UPDATE_ENTRIES } from './updatesData'
+import './updates.css'
 
 const detailCopy = {
   ko: {
@@ -72,7 +73,7 @@ export function UpdateDetailPage({ updateId }: { updateId: string }) {
       activePath={null}
       tone="product-doc"
       eyebrow={copy.eyebrow}
-      title={`${content.release} · ${content.title}`}
+      title={content.title}
       lead={content.description}
       showNavigation={false}
     >
@@ -84,8 +85,6 @@ export function UpdateDetailPage({ updateId }: { updateId: string }) {
           </time>
           <span aria-hidden="true">·</span>
           <span>{content.type}</span>
-          <span aria-hidden="true">·</span>
-          <span>{content.author}</span>
         </p>
       </div>
       <article className="updates-article">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { usePublicCalculator } from '../context/PublicCalculatorContext'
+import { useCalculator } from '../context/CalculatorContext'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 
@@ -59,7 +59,7 @@ function ClearAllInputsModal({
 
 export function ClearAllInputsButton({ disabled = false }: ClearAllInputsButtonProps) {
   const { t } = useLanguage()
-  const { resetInputs } = usePublicCalculator()
+  const { resetInputs } = useCalculator()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   function handleConfirm() {

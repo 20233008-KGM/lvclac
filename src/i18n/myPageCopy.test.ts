@@ -29,11 +29,36 @@ describe('my page copy', () => {
     expect(en.myPage.setPasswordAction).toBe('Set password')
   })
 
+  it('identifies Paddle as the payment and receipt partner before and after checkout', () => {
+    const koPartnerNotice = '결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리합니다.'
+
+    expect(ko.myPage.billing.page.upgrade.finalFinePrint).toBe(koPartnerNotice)
+    expect(ko.myPage.billing.checkoutSuccess).toContain(koPartnerNotice)
+    expect(ko.myPage.billing.page.successBody).toContain(koPartnerNotice)
+    expect(ko.myPage.billing.taxNote).toContain('공식 결제 파트너 Paddle')
+
+    expect(en.myPage.billing.page.upgrade.finalFinePrint).toContain('official payment partner')
+    expect(en.myPage.billing.page.upgrade.finalFinePrint).toContain('receipts')
+    expect(en.myPage.billing.checkoutSuccess).toContain('official payment partner')
+    expect(en.myPage.billing.page.successBody).toContain('official payment partner')
+    expect(en.myPage.billing.taxNote).toContain('official payment partner')
+  })
+
   it('provides the order-history auto-save toggle copy in both languages', () => {
-    expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 자동 저장')
-    expect(ko.myPage.autoSaveOrderHistoryHint).toContain('자동 저장')
-    expect(en.myPage.autoSaveOrderHistoryLabel).toBe('Auto-save order history')
-    expect(en.myPage.autoSaveOrderHistoryHint).toContain('order simulation history')
+    expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 저장')
+    expect(ko.myPage.autoSaveOrderHistoryHint).toContain('주문 적용 시')
+    expect(ko.myPage.autoSaveOrderHistoryHint).toContain('기존 기록은 유지')
+    expect(en.myPage.autoSaveOrderHistoryLabel).toBe('Save order history')
+    expect(en.myPage.autoSaveOrderHistoryHint).toContain('saves its simulation history')
+  })
+
+  it('describes account snapshots as a shared schedule controlled by per-slot switches', () => {
+    expect(ko.myPage.autoSnapshotTitle).toBe('계좌스냅샷 저장 시각')
+    expect(ko.myPage.autoSnapshotBody).toContain('매일 기록을 켠 클라우드 세트')
+    expect(ko.myPage.autoSnapshotNoSlotsSelected).toContain('숫자세트에서 매일 기록')
+    expect(en.myPage.autoSnapshotTitle).toBe('Account snapshot time')
+    expect(en.myPage.autoSnapshotBody).toContain('Record daily')
+    expect(en.myPage.autoSnapshotNoSlotsSelected).toContain('number set')
   })
 
   it('provides the account-setting-guard preferences toggle copy in both languages', () => {
@@ -50,10 +75,14 @@ describe('my page copy', () => {
     expect(ko.myPage.numberSetsLimitNote).toContain('각 위치 최대 10개')
     expect(ko.myPage.addLocalNumberSet).toBe('이 기기 세트 추가')
     expect(ko.myPage.addCloudNumberSet).toBe('클라우드 세트 추가')
+    expect(ko.myPage.autoSnapshotColumnLabel).toBe('자동 기록')
+    expect(ko.myPage.numberSetInstrumentColumnLabel).toBe('거래종목')
     expect(en.myPage.numberSetsTitle).toBe('Number sets')
     expect(en.myPage.numberSetsLimitNote).toContain('up to 10 per location')
     expect(en.myPage.addLocalNumberSet).toBe('Add device set')
     expect(en.myPage.addCloudNumberSet).toBe('Add cloud set')
+    expect(en.myPage.autoSnapshotColumnLabel).toBe('Auto record')
+    expect(en.myPage.numberSetInstrumentColumnLabel).toBe('Instrument')
   })
 
   it('provides number-set detail modal copy for both languages', () => {
@@ -84,15 +113,15 @@ describe('my page copy', () => {
 
   it('provides compact records summary copy for both languages', () => {
     expect(ko.myPage.recordsSummaryTitle).toBe('계정 기록')
-    expect(ko.myPage.latestSnapshotTitle).toBe('최근 계좌스냅샷')
+    expect(ko.myPage.recentSnapshotsTitle).toBe('최근 계좌스냅샷')
     expect(ko.myPage.recentOrdersTitle).toBe('최근 주문')
     expect(ko.myPage.recordsArchiveLink).toBe('기록 장부 열기')
-    expect(ko.myPage.latestSnapshotEmpty).toContain('계좌스냅샷')
+    expect(ko.myPage.recentSnapshotsEmpty).toContain('계좌스냅샷')
 
     expect(en.myPage.recordsSummaryTitle).toBe('Account records')
-    expect(en.myPage.latestSnapshotTitle).toBe('Latest account snapshot')
+    expect(en.myPage.recentSnapshotsTitle).toBe('Recent account snapshots')
     expect(en.myPage.recentOrdersTitle).toBe('Recent orders')
     expect(en.myPage.recordsArchiveLink).toBe('Open records ledger')
-    expect(en.myPage.latestSnapshotEmpty).toContain('snapshot')
+    expect(en.myPage.recentSnapshotsEmpty).toContain('snapshot')
   })
 })

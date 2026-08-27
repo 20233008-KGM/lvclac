@@ -1,16 +1,23 @@
 import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from 'react'
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 import { MY_PAGE_PATH } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
+import { useCalculator } from '../context/CalculatorContext'
+import { normalizeMemo } from '../utils/memo'
 import {
   createAccountRecordsRepository,
   type AccountSnapshotRecord,
   type NumberSetFilter,
   type OrderHistoryRecord,
 } from '../db/accountRecords'
-import { fetchNumberSets } from '../db/numberSets'
+import type { NumberSetRecord } from '../db/numberSets'
+import { fetchRecordsSlotContext } from '../db/recordsSlotContext'
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import { useLanguage } from '../i18n'
 import { revertOrderScenarioState } from '../calc/mtmLink'
@@ -18,7 +25,13 @@ import type { CalculatorInputs } from '../types'
 import { InputPanel } from './InputPanel'
 import { ResultPanel } from './ResultPanel'
 import { RecordsContextMenu, type RecordsContextMenuItem } from './RecordsContextMenu'
-import { MemoButton, MemoEditorWindow } from './MemoEditorWindow'
+import {
+  MemoButton,
+  MemoEditorWindow,
+  MemoIcon,
+  MemoWorkspaceEditor,
+  type MemoEditorHandle,
+} from './MemoEditorWindow'
 import type { Messages } from '../i18n/types'
 import {
   formatLeverageValue,
@@ -26,12 +39,26 @@ import {
   formatPercent,
   formatSavedAtCompact,
 } from '../utils/format'
+import {
+  createAccountRecordSlotTitles,
+  resolveAccountRecordSlotLabel,
+} from '../utils/accountRecordSlot'
 import { SiteFooter } from './SiteFooter'
+import {
+  buildOrderExportTable,
+  buildSnapshotExportTable,
+  downloadRecordExport,
+} from '../lib/accountRecordExport'
+import type { RecordsExportRequest, RecordsExportResult } from './RecordsExportModal'
 import '../styles/pages.css'
 import '../styles/auth-dialog.css'
+import '../styles/records-export.css'
 
 const BulkDeleteConfirmModal = lazy(() =>
   import('./BulkDeleteConfirmModal').then((mod) => ({ default: mod.BulkDeleteConfirmModal })),
+)
+const RecordsExportModal = lazy(() =>
+  import('./RecordsExportModal').then((mod) => ({ default: mod.RecordsExportModal })),
 )
 
 type AccountRecordsCopy = Messages['accountRecords']
@@ -44,6 +71,12 @@ export type TimelineRecord =
 type DetailSelection =
   | { type: 'order'; record: OrderHistoryRecord }
   | { type: 'snapshot'; record: AccountSnapshotRecord }
+  | null
+
+type RecordsMemoTarget =
+  | { kind: 'slot'; id: string }
+  | { kind: 'snapshot'; id: string }
+  | { kind: 'order'; id: string }
   | null
 
 type ActivationEvent = ReactMouseEvent<HTMLElement> | ReactKeyboardEvent<HTMLElement>
@@ -67,6 +100,7 @@ function toDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- shared pure helper is covered by the page tests
 export function toTimelineRecords(
   orderRecords: OrderHistoryRecord[],
   snapshotRecords: AccountSnapshotRecord[],
@@ -96,6 +130,7 @@ export function toTimelineRecords(
  * 처음 열 때는 가장 최근 기록일을 기준점으로 삼고, 날짜 점프 뒤에는 사용자가 고른
  * 날짜를 그대로 유지한다. 기준점보다 위쪽은 아직 오지 않은 미래 영역으로 비워 둔다.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- shared pure helper is covered by the page tests
 export function resolveTimelineAnchorDate(
   dateAnchor: string | null,
   timelineRecords: TimelineRecord[],
@@ -105,6 +140,17 @@ export function resolveTimelineAnchorDate(
   if (!latestRecord) return null
   const latestDate = new Date(latestRecord.createdAt)
   return Number.isFinite(latestDate.getTime()) ? toDateInputValue(latestDate) : null
+}
+
+// eslint-disable-next-line react-refresh/only-export-components -- pure initialization rule is covered by page tests
+export function resolveInitialRecordsSlotFilter(
+  slots: { id: string }[],
+  activeSlotId: string | null,
+): NumberSetFilter {
+  if (activeSlotId && slots.some((slot) => slot.id === activeSlotId)) {
+    return { kind: 'slot', id: activeSlotId }
+  }
+  return slots[0] ? { kind: 'slot', id: slots[0].id } : { kind: 'all' }
 }
 
 function TimelineValue({
@@ -450,6 +496,11 @@ export function RecordsArchiveView({
   detail = null,
   onCloseDetail,
   onEditMemo,
+  onEditDetailMemo,
+  memoWorkspace,
+  memoSummary,
+  memoExpanded = false,
+  onToggleMemoWorkspace,
   selectedKeys = EMPTY_SELECTION,
   onSelectedKeysChange,
   onDeleteSelected,
@@ -459,6 +510,7 @@ export function RecordsArchiveView({
   onSlotFilterChange,
   dateAnchor = null,
   onDateAnchorChange,
+  onOpenExport,
 }: {
   copy: AccountRecordsCopy
   backLabel?: string
@@ -485,6 +537,11 @@ export function RecordsArchiveView({
   detail?: DetailSelection
   onCloseDetail?: () => void
   onEditMemo?: (entry: TimelineRecord) => void
+  onEditDetailMemo?: (entry: TimelineRecord) => void
+  memoWorkspace?: ReactNode
+  memoSummary?: string
+  memoExpanded?: boolean
+  onToggleMemoWorkspace?: () => void
   selectedKeys?: Set<string>
   onSelectedKeysChange?: (next: Set<string>) => void
   onDeleteSelected?: () => void
@@ -494,9 +551,12 @@ export function RecordsArchiveView({
   onSlotFilterChange?: (filter: NumberSetFilter) => void
   dateAnchor?: string | null
   onDateAnchorChange?: (date: string | null) => void
+  onOpenExport?: () => void
 }) {
   const timelineRecords = toTimelineRecords(orderRecords, snapshotRecords)
   const timelineAnchorDate = resolveTimelineAnchorDate(dateAnchor, timelineRecords)
+  const slotTitles = useMemo(() => createAccountRecordSlotTitles(slots), [slots])
+  const showTimelineSlotNames = slotFilter.kind === 'all'
   const newestTimelineKey = timelineRecords[0] ? timelineKey(timelineRecords[0]) : null
   const timelineScrollRef = useRef<HTMLDivElement>(null)
   const loadMoreSentinelRef = useInfiniteScroll<HTMLDivElement>({
@@ -657,7 +717,7 @@ export function RecordsArchiveView({
   return (
     <div className="my-page-shell records-archive-page">
       <div className="my-page records-archive">
-        <header className="my-page-header">
+        <header className="my-page-header records-archive-sidebar">
           <a className="my-page-back" href={MY_PAGE_PATH}>
             {backLabel ?? copy.savedModalGoToRecords}
           </a>
@@ -667,6 +727,22 @@ export function RecordsArchiveView({
               <p>{copy.recordsArchiveDescription}</p>
             </div>
           </div>
+          {signedIn && memoWorkspace && (
+            <div className={`records-memo-workspace${memoExpanded ? ' records-memo-workspace--expanded' : ''}`}>
+              {onToggleMemoWorkspace && (
+                <button
+                  type="button"
+                  className="records-memo-workspace__toggle"
+                  aria-expanded={memoExpanded}
+                  onClick={onToggleMemoWorkspace}
+                >
+                  <span>{memoSummary}</span>
+                  <span aria-hidden="true">{memoExpanded ? '▴' : '▾'}</span>
+                </button>
+              )}
+              <div className="records-memo-workspace__body">{memoWorkspace}</div>
+            </div>
+          )}
         </header>
 
         <main className="my-page-console">
@@ -703,6 +779,16 @@ export function RecordsArchiveView({
                         <span className="records-slot-filter-label">{copy.slotFilterLabel}</span>
                         <span className="records-slot-filter-value">{slotFilterValueLabel}</span>
                         <span aria-hidden="true">▾</span>
+                      </button>
+                    )}
+                    {onOpenExport && (
+                      <button
+                        type="button"
+                        className="records-export-trigger"
+                        onClick={onOpenExport}
+                      >
+                        <span aria-hidden="true">⇩</span>
+                        <span>{copy.export}</span>
                       </button>
                     )}
                     {hasToolbarMenu && (
@@ -821,6 +907,14 @@ export function RecordsArchiveView({
                           const entryKey = timelineKey(entry)
                           const selected = selectedKeys.has(entryKey)
                           const contextActive = menu != null && timelineKey(menu.entry) === entryKey
+                          const slotLabel = showTimelineSlotNames
+                            ? resolveAccountRecordSlotLabel(
+                                entry.record.numberSetId,
+                                slotTitles,
+                                copy.slotFilterUnassigned,
+                                copy.slotNameUnavailable,
+                              )
+                            : null
                           return (
                             <div
                               key={`${entry.type}-${entry.id}`}
@@ -847,9 +941,16 @@ export function RecordsArchiveView({
                                   aria-hidden="true"
                                 />
                               )}
-                              <time className="records-timeline-time" dateTime={entry.createdAt}>
-                                {formatSavedAtCompact(entry.createdAt)}
-                              </time>
+                              <div className="records-timeline-meta">
+                                <time className="records-timeline-time" dateTime={entry.createdAt}>
+                                  {formatSavedAtCompact(entry.createdAt)}
+                                </time>
+                                {slotLabel && (
+                                  <span className="records-timeline-slot" title={slotLabel}>
+                                    {slotLabel}
+                                  </span>
+                                )}
+                              </div>
                               {entry.type === 'order' ? (
                                 <div className="records-timeline-cell records-timeline-cell--orders">
                                   <OrderTimelineCard
@@ -910,13 +1011,13 @@ export function RecordsArchiveView({
               onClose={onCloseDetail ?? (() => undefined)}
               onEditMemo={() =>
                 detail.type === 'snapshot'
-                  ? onEditMemo?.({
+                  ? onEditDetailMemo?.({
                       type: 'snapshot',
                       id: detail.record.id,
                       createdAt: detail.record.createdAt,
                       record: detail.record,
                     })
-                  : onEditMemo?.({
+                  : onEditDetailMemo?.({
                       type: 'order',
                       id: detail.record.id,
                       createdAt: detail.record.createdAt,
@@ -959,8 +1060,9 @@ export function RecordsArchiveView({
 }
 
 export function RecordsArchivePage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { user } = useAuth()
+  const { setNumberSetMemo } = useCalculator()
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [orderRecords, setOrderRecords] = useState<OrderHistoryRecord[]>([])
   const [snapshotRecords, setSnapshotRecords] = useState<AccountSnapshotRecord[]>([])
@@ -987,9 +1089,15 @@ export function RecordsArchivePage() {
   const recordsRequestIdRef = useRef(0)
   const activeRecordsUserIdRef = useRef(user?.id ?? null)
   const [numberSetFilter, setNumberSetFilter] = useState<NumberSetFilter>({ kind: 'all' })
-  const [slots, setSlots] = useState<{ id: string; title: string }[]>([])
+  const [slots, setSlots] = useState<NumberSetRecord[]>([])
+  const [slotContextUserId, setSlotContextUserId] = useState<string | null>(null)
   const [dateAnchor, setDateAnchor] = useState<string | null>(null)
   const [memoEntry, setMemoEntry] = useState<TimelineRecord | null>(null)
+  const [memoTarget, setMemoTarget] = useState<RecordsMemoTarget>(null)
+  const [memoRevision, setMemoRevision] = useState(0)
+  const [memoExpanded, setMemoExpanded] = useState(false)
+  const memoWorkspaceRef = useRef<MemoEditorHandle>(null)
+  const [exportOpen, setExportOpen] = useState(false)
 
   // 날짜 점프: 선택한 날(YYYY-MM-DD)의 끝(로컬 23:59:59.999)을 상한으로 삼아
   // 그 시각 이하의 기록만 조회한다. null이면 상한 없음(최신부터).
@@ -1021,6 +1129,8 @@ export function RecordsArchivePage() {
       return
     }
 
+    if (slotContextUserId !== userId) return
+
     setLoading(true)
     setError(null)
     const [bundleResult, countsResult] = await Promise.all([
@@ -1048,7 +1158,7 @@ export function RecordsArchivePage() {
     setSnapshotTotal(countsResult.error === null ? countsResult.data.accountSnapshotCount : null)
     setSelectedKeys(new Set())
     setLoading(false)
-  }, [beforeBound, numberSetFilter, recordsRepository, t.accountRecords.loadError, user?.id])
+  }, [beforeBound, numberSetFilter, recordsRepository, slotContextUserId, t.accountRecords.loadError, user?.id])
 
   const loadOlderRecords = useCallback(async () => {
     const userId = user?.id ?? null
@@ -1246,21 +1356,38 @@ export function RecordsArchivePage() {
   }, [user?.id])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- route entry must start its async repository load
     void loadRecords()
   }, [loadRecords])
 
   useEffect(() => {
     const userId = user?.id ?? null
     if (!userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear user-owned slot labels immediately on sign-out
       setSlots([])
+      setNumberSetFilter({ kind: 'all' })
+      setMemoTarget(null)
+      setSlotContextUserId(null)
       return
     }
     let cancelled = false
-    void fetchNumberSets(userId).then((result) => {
+    void fetchRecordsSlotContext(userId).then((result) => {
       if (cancelled) return
       if (result.error === null) {
-        setSlots(result.data.map((set) => ({ id: set.id, title: set.title })))
+        const nextSlots = result.data.slots
+        const filter = resolveInitialRecordsSlotFilter(
+          nextSlots,
+          result.data.activeSlotId,
+        )
+        setSlots(nextSlots)
+        setNumberSetFilter(filter)
+        setMemoTarget(filter.kind === 'slot' ? { kind: 'slot', id: filter.id } : null)
+      } else {
+        setSlots([])
+        setNumberSetFilter({ kind: 'all' })
+        setMemoTarget(null)
       }
+      setSlotContextUserId(userId)
     })
     return () => {
       cancelled = true
@@ -1269,6 +1396,202 @@ export function RecordsArchivePage() {
 
   const hasOlderRecords = orderHasMore || snapshotHasMore
   const loadingOlderRecords = orderLoadingMore || snapshotLoadingMore
+  const exportEndDate = useMemo(
+    () => resolveTimelineAnchorDate(dateAnchor, toTimelineRecords(orderRecords, snapshotRecords)),
+    [dateAnchor, orderRecords, snapshotRecords],
+  )
+
+  const exportRecords = useCallback(
+    async (request: RecordsExportRequest): Promise<RecordsExportResult> => {
+      const userId = user?.id ?? null
+      if (!userId) return { ok: false, reason: 'error' }
+
+      const from = request.startDate
+        ? new Date(`${request.startDate}T00:00:00.000`).toISOString()
+        : null
+      const to = request.endDate
+        ? new Date(`${request.endDate}T23:59:59.999`).toISOString()
+        : null
+      const filter = { numberSetFilter: request.numberSetFilter, from, to }
+
+      try {
+        if (request.kind === 'orders') {
+          const result = await recordsRepository.fetchAllOrderHistory(userId, filter)
+          if (result.error !== null) return { ok: false, reason: 'error' }
+          if (result.data.length === 0) return { ok: false, reason: 'empty' }
+          const table = buildOrderExportTable(result.data, slots, request.locale)
+          const filename = await downloadRecordExport(table, request.kind, request.format)
+          return { ok: true, filename }
+        }
+
+        const result = await recordsRepository.fetchAllAccountSnapshots(userId, filter)
+        if (result.error !== null) return { ok: false, reason: 'error' }
+        if (result.data.length === 0) return { ok: false, reason: 'empty' }
+        const table = buildSnapshotExportTable(result.data, slots, request.locale)
+        const filename = await downloadRecordExport(table, request.kind, request.format)
+        return { ok: true, filename }
+      } catch {
+        return { ok: false, reason: 'error' }
+      }
+    },
+    [recordsRepository, slots, user?.id],
+  )
+
+  const saveRecordMemo = useCallback(
+    async (
+      type: 'snapshot' | 'order',
+      id: string,
+      memo: string,
+      refreshWorkspace = false,
+    ): Promise<string | null> => {
+      const userId = user?.id ?? null
+      if (!userId) return 'not_logged_in'
+      const result =
+        type === 'snapshot'
+          ? await recordsRepository.updateAccountSnapshotMemo(userId, id, memo)
+          : await recordsRepository.updateOrderHistoryMemo(userId, id, memo)
+      if (result.error !== null) return result.error
+      const savedMemo = result.data
+      if (type === 'snapshot') {
+        setSnapshotRecords((records) =>
+          records.map((record) => (record.id === id ? { ...record, memo: savedMemo } : record)),
+        )
+      } else {
+        setOrderRecords((records) =>
+          records.map((record) => (record.id === id ? { ...record, memo: savedMemo } : record)),
+        )
+      }
+      setDetail((current) => {
+        if (!current || current.record.id !== id) return current
+        if (type === 'snapshot' && current.type === 'snapshot') {
+          return { type: 'snapshot', record: { ...current.record, memo: savedMemo } }
+        }
+        if (type === 'order' && current.type === 'order') {
+          return { type: 'order', record: { ...current.record, memo: savedMemo } }
+        }
+        return current
+      })
+      setMemoEntry((current) => {
+        if (!current || current.record.id !== id) return current
+        if (type === 'snapshot' && current.type === 'snapshot') {
+          return { ...current, record: { ...current.record, memo: savedMemo } }
+        }
+        if (type === 'order' && current.type === 'order') {
+          return { ...current, record: { ...current.record, memo: savedMemo } }
+        }
+        return current
+      })
+      if (refreshWorkspace) setMemoRevision((revision) => revision + 1)
+      return null
+    },
+    [recordsRepository, user?.id],
+  )
+
+  const memoSlot =
+    memoTarget?.kind === 'slot' ? slots.find((slot) => slot.id === memoTarget.id) ?? null : null
+  const memoSnapshot =
+    memoTarget?.kind === 'snapshot'
+      ? snapshotRecords.find((record) => record.id === memoTarget.id) ?? null
+      : null
+  const memoOrder =
+    memoTarget?.kind === 'order'
+      ? orderRecords.find((record) => record.id === memoTarget.id) ?? null
+      : null
+  const memoTitle = memoSlot
+    ? `${memoSlot.title} · ${t.accountRecords.memoWorkspaceTitle}`
+    : memoSnapshot
+      ? t.accountRecords.memoSnapshotTitle
+      : memoOrder
+        ? t.accountRecords.memoOrderTitle
+        : t.accountRecords.memoWorkspaceTitle
+  const memoInitialValue = memoSlot?.memo ?? memoSnapshot?.memo ?? memoOrder?.memo ?? null
+  const memoTargetKey = memoTarget ? `${memoTarget.kind}:${memoTarget.id}:${memoRevision}` : `empty:${memoRevision}`
+  const memoHasEditor = Boolean(memoSlot || memoSnapshot || memoOrder)
+
+  const saveWorkspaceMemo = useCallback(
+    async (memo: string): Promise<string | null> => {
+      if (!memoTarget) return null
+      if (memoTarget.kind === 'slot') {
+        const error = await setNumberSetMemo('cloud', memoTarget.id, memo)
+        if (error) return error
+        const savedMemo = normalizeMemo(memo)
+        setSlots((current) =>
+          current.map((slot) => (slot.id === memoTarget.id ? { ...slot, memo: savedMemo } : slot)),
+        )
+        return null
+      }
+      return saveRecordMemo(memoTarget.kind, memoTarget.id, memo)
+    },
+    [memoTarget, saveRecordMemo, setNumberSetMemo],
+  )
+
+  const switchMemoTarget = useCallback(
+    async (next: RecordsMemoTarget, expand = false) => {
+      const saved = await memoWorkspaceRef.current?.save()
+      if (saved === false) return
+      setMemoTarget(next)
+      if (expand) setMemoExpanded(true)
+    },
+    [],
+  )
+
+  const switchSlotFilter = useCallback(
+    async (filter: NumberSetFilter) => {
+      const saved = await memoWorkspaceRef.current?.save()
+      if (saved === false) return
+      setNumberSetFilter(filter)
+      setMemoTarget(filter.kind === 'slot' ? { kind: 'slot', id: filter.id } : null)
+      setDetail(null)
+    },
+    [],
+  )
+
+  const openDetailMemo = useCallback(
+    async (entry: TimelineRecord) => {
+      const saved = await memoWorkspaceRef.current?.save()
+      if (saved === false) return
+      setMemoTarget({ kind: entry.type, id: entry.id })
+      setMemoExpanded(true)
+      setMemoEntry(entry)
+    },
+    [],
+  )
+
+  const returnMemoTarget: RecordsMemoTarget =
+    numberSetFilter.kind === 'slot' ? { kind: 'slot', id: numberSetFilter.id } : null
+  const memoWorkspace = memoEntry ? (
+    <section className="records-memo-editor records-memo-editor--mirrored" aria-label={memoTitle}>
+      <header className="records-memo-editor__head">
+        <div className="records-memo-editor__title">
+          <MemoIcon filled={Boolean(memoEntry.record.memo?.trim())} />
+          <strong>{memoTitle}</strong>
+        </div>
+      </header>
+      <span className="records-memo-editor__status records-memo-editor__status--saved" role="status">
+        {memoEntry.record.memo?.trim()
+          ? t.accountRecords.memoSaved
+          : t.accountRecords.memoEmptySaved}
+      </span>
+      <p className="records-memo-editor__preview">
+        {memoEntry.record.memo || t.accountRecords.memoPlaceholder}
+      </p>
+    </section>
+  ) : memoHasEditor ? (
+    <MemoWorkspaceEditor
+      key={memoTargetKey}
+      ref={memoWorkspaceRef}
+      title={memoTitle}
+      initialMemo={memoInitialValue}
+      onSave={saveWorkspaceMemo}
+      returnLabel={memoTarget?.kind !== 'slot' ? t.accountRecords.memoBackToSlot : undefined}
+      onReturn={memoTarget?.kind !== 'slot' ? () => void switchMemoTarget(returnMemoTarget) : undefined}
+    />
+  ) : (
+    <div className="records-memo-empty">
+      <strong>{t.accountRecords.memoWorkspaceTitle}</strong>
+      <p>{t.accountRecords.memoWorkspaceHint}</p>
+    </div>
+  )
 
   return (
     <>
@@ -1277,7 +1600,7 @@ export function RecordsArchivePage() {
         backLabel={t.myPage.title}
         closeLabel={t.close}
         signedIn={Boolean(user)}
-        loading={loading}
+        loading={loading || Boolean(user && slotContextUserId !== user.id)}
         error={error}
         notice={notice}
         orderRecords={orderRecords}
@@ -1299,64 +1622,45 @@ export function RecordsArchivePage() {
         onOpenSnapshotDetail={(record) => setDetail({ type: 'snapshot', record })}
         detail={detail}
         onCloseDetail={() => setDetail(null)}
-        onEditMemo={setMemoEntry}
+        onEditMemo={(entry) => void switchMemoTarget({ kind: entry.type, id: entry.id }, true)}
+        onEditDetailMemo={(entry) => void openDetailMemo(entry)}
+        memoWorkspace={memoWorkspace}
+        memoSummary={memoTitle}
+        memoExpanded={memoExpanded}
+        onToggleMemoWorkspace={() => setMemoExpanded((expanded) => !expanded)}
         selectedKeys={selectedKeys}
         onSelectedKeysChange={setSelectedKeys}
         onDeleteSelected={selectedKeys.size > 0 ? () => setSelectionDeleteConfirm(true) : undefined}
         selectionBusy={selectionBusy}
         slots={slots}
         slotFilter={numberSetFilter}
-        onSlotFilterChange={(filter) => {
-          setNumberSetFilter(filter)
-          setDetail(null)
-        }}
+        onSlotFilterChange={(filter) => void switchSlotFilter(filter)}
         dateAnchor={dateAnchor}
         onDateAnchorChange={(date) => {
           setDateAnchor(date)
           setDetail(null)
         }}
+        onOpenExport={user ? () => setExportOpen(true) : undefined}
       />
+      {exportOpen && user && (
+        <Suspense fallback={null}>
+          <RecordsExportModal
+            copy={t.accountRecords}
+            locale={locale}
+            slots={slots}
+            initialFilter={numberSetFilter}
+            initialEndDate={exportEndDate}
+            onClose={() => setExportOpen(false)}
+            onExport={exportRecords}
+          />
+        </Suspense>
+      )}
       {memoEntry && user && (
         <MemoEditorWindow
           key={`${memoEntry.type}:${memoEntry.id}`}
           title={memoEntry.type === 'snapshot' ? t.accountRecords.memoSnapshotTitle : t.accountRecords.memoOrderTitle}
           initialMemo={memoEntry.record.memo}
-          onSave={async (memo) => {
-            const result =
-              memoEntry.type === 'snapshot'
-                ? await recordsRepository.updateAccountSnapshotMemo(user.id, memoEntry.id, memo)
-                : await recordsRepository.updateOrderHistoryMemo(user.id, memoEntry.id, memo)
-            if (result.error !== null) return result.error
-            const savedMemo = result.data
-            if (memoEntry.type === 'snapshot') {
-              setSnapshotRecords((records) =>
-                records.map((record) =>
-                  record.id === memoEntry.id ? { ...record, memo: savedMemo } : record,
-                ),
-              )
-            } else {
-              setOrderRecords((records) =>
-                records.map((record) =>
-                  record.id === memoEntry.id ? { ...record, memo: savedMemo } : record,
-                ),
-              )
-            }
-            setDetail((current) =>
-              current?.type === 'snapshot' && memoEntry.type === 'snapshot' && current.record.id === memoEntry.id
-                ? { type: 'snapshot', record: { ...current.record, memo: savedMemo } }
-                : current?.type === 'order' && memoEntry.type === 'order' && current.record.id === memoEntry.id
-                  ? { type: 'order', record: { ...current.record, memo: savedMemo } }
-                  : current,
-            )
-            setMemoEntry((current) =>
-              current?.type === 'snapshot'
-                ? { ...current, record: { ...current.record, memo: savedMemo } }
-                : current?.type === 'order'
-                  ? { ...current, record: { ...current.record, memo: savedMemo } }
-                  : current,
-            )
-            return null
-          }}
+          onSave={(memo) => saveRecordMemo(memoEntry.type, memoEntry.id, memo, true)}
           onClose={() => setMemoEntry(null)}
         />
       )}

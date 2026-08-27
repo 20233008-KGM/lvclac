@@ -275,7 +275,6 @@ export function BillingUpgrade({
               <p className="billing-up__subtitle">{up.heroSubtitle}</p>
 
               <div className="billing-up__toggle" role="group" aria-label={up.navItems[0]}>
-                <span className="billing-up__toggle-indicator" data-yearly={yearly} aria-hidden="true" />
                 <button
                   type="button"
                   className="billing-up__toggle-btn"

@@ -5,6 +5,7 @@ import type {
 } from '../types'
 import { defaultInputs } from '../types'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
+import { normalizeMemo } from '../utils/memo'
 import {
   computeNextSnapshotRunAt,
   normalizeSnapshotAutomationSettings,
@@ -26,6 +27,7 @@ import { supabase } from './supabaseClient'
 
 const DEFAULT_SNAPSHOT_TITLE = 'Account snapshot'
 const DEFAULT_RECORD_LIMIT = 20
+const EXPORT_RECORD_BATCH_SIZE = 500
 
 // 장부 슬롯 필터: 전체(all) / 미분류(unassigned = number_set_id is null) / 특정 슬롯(slot)
 export type NumberSetFilter =
@@ -34,6 +36,12 @@ export type NumberSetFilter =
   | { kind: 'slot'; id: string }
 
 const ALL_FILTER: NumberSetFilter = { kind: 'all' }
+
+export interface AccountRecordExportFilter {
+  numberSetFilter?: NumberSetFilter
+  from?: string | null
+  to?: string | null
+}
 
 export {
   buildAccountSnapshotPayload,
@@ -132,6 +140,22 @@ export interface AccountRecordCounts {
   accountSnapshotCount: number
 }
 
+function applyExportFilter<
+  Query extends {
+    eq: (column: string, value: string) => Query
+    is: (column: string, value: null) => Query
+    gte: (column: string, value: string) => Query
+    lte: (column: string, value: string) => Query
+  },
+>(query: Query, filter: AccountRecordExportFilter): Query {
+  const numberSetFilter = filter.numberSetFilter ?? ALL_FILTER
+  if (numberSetFilter.kind === 'slot') query = query.eq('number_set_id', numberSetFilter.id)
+  else if (numberSetFilter.kind === 'unassigned') query = query.is('number_set_id', null)
+  if (filter.from) query = query.gte('created_at', filter.from)
+  if (filter.to) query = query.lte('created_at', filter.to)
+  return query
+}
+
 type AccountRecordResult<T> =
   | { data: T; error: null }
   | { data: null; error: string }
@@ -190,7 +214,7 @@ export function rowToOrderHistoryRecord(row: OrderHistoryRow): OrderHistoryRecor
     beforeResult: summaryFromUnknown(row.before_result),
     afterResult: summaryFromUnknown(row.after_result),
     numberSetId: row.number_set_id ?? null,
-    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    memo: normalizeMemo(row.memo),
     createdAt: row.created_at,
   }
 }
@@ -205,7 +229,7 @@ export function rowToAccountSnapshotRecord(row: AccountSnapshotRow): AccountSnap
     source,
     sourceLocalDate: row.source_local_date ?? null,
     numberSetId: row.number_set_id ?? null,
-    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    memo: normalizeMemo(row.memo),
     createdAt: row.created_at,
   }
 }
@@ -276,6 +300,72 @@ export function createAccountRecordsRepository(
   client: SupabaseClient | null = supabase,
 ) {
   return {
+    async fetchAllOrderHistory(
+      userId: string,
+      filter: AccountRecordExportFilter = {},
+    ): Promise<AccountRecordResult<OrderHistoryRecord[]>> {
+      if (!client) return unavailable()
+
+      const records: OrderHistoryRecord[] = []
+      let offset = 0
+
+      while (true) {
+        let query = client
+          .from('order_history')
+          .select(
+            'id,position_side,order_contracts,order_price,before_inputs,after_inputs,before_result,after_result,number_set_id,memo,created_at',
+          )
+          .eq('user_id', userId)
+        query = applyExportFilter(query, filter)
+
+        const { data, error } = await query
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(offset, offset + EXPORT_RECORD_BATCH_SIZE - 1)
+          .returns<OrderHistoryRow[]>()
+
+        if (error) return { data: null, error: mapError(error) }
+        const rows = data ?? []
+        records.push(...rows.map(rowToOrderHistoryRecord))
+        if (rows.length < EXPORT_RECORD_BATCH_SIZE) break
+        offset += rows.length
+      }
+
+      return { data: records, error: null }
+    },
+
+    async fetchAllAccountSnapshots(
+      userId: string,
+      filter: AccountRecordExportFilter = {},
+    ): Promise<AccountRecordResult<AccountSnapshotRecord[]>> {
+      if (!client) return unavailable()
+
+      const records: AccountSnapshotRecord[] = []
+      let offset = 0
+
+      while (true) {
+        let query = client
+          .from('account_snapshots')
+          .select('id,title,inputs,result,source,source_local_date,number_set_id,memo,created_at')
+          .eq('user_id', userId)
+        query = applyExportFilter(query, filter)
+
+        const { data, error } = await query
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(offset, offset + EXPORT_RECORD_BATCH_SIZE - 1)
+          .returns<AccountSnapshotRow[]>()
+
+        if (error) return { data: null, error: mapError(error) }
+        const rows = data ?? []
+        records.push(...rows.map(rowToAccountSnapshotRecord))
+        if (rows.length < EXPORT_RECORD_BATCH_SIZE) break
+        offset += rows.length
+      }
+
+      return { data: records, error: null }
+    },
+
     async fetchOrderHistoryPage(
       userId: string,
       offset: number,
@@ -525,7 +615,7 @@ export function createAccountRecordsRepository(
       memo: string,
     ): Promise<AccountRecordResult<string | null>> {
       if (!client) return unavailable()
-      const normalized = memo.trim() ? memo.slice(0, 500) : null
+      const normalized = normalizeMemo(memo)
       const { data, error } = await client
         .from('order_history')
         .update({ memo: normalized })
@@ -544,7 +634,7 @@ export function createAccountRecordsRepository(
       memo: string,
     ): Promise<AccountRecordResult<string | null>> {
       if (!client) return unavailable()
-      const normalized = memo.trim() ? memo.slice(0, 500) : null
+      const normalized = normalizeMemo(memo)
       const { data, error } = await client
         .from('account_snapshots')
         .update({ memo: normalized })

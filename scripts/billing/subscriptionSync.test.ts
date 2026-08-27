@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import type { BillingDeps } from './billingConfig'
+import { paddleProviderAliases, subscriptionEntitlementProviders } from './billingConfig'
 import {
   customerIdOf,
   getPeriodEndIso,
+  getScheduledChangeAction,
+  getScheduledChangeEffectiveAtIso,
   mapPaddleStatus,
   type PaddleSubscription,
   syncSubscription,
@@ -38,6 +41,44 @@ describe('getPeriodEndIso', () => {
   })
 })
 
+describe('Paddle environment isolation', () => {
+  it('never treats a legacy sandbox row as a live subscription', () => {
+    expect(paddleProviderAliases('live')).toEqual(['paddle_live'])
+    expect(paddleProviderAliases('sandbox')).toEqual(['paddle_sandbox', 'paddle'])
+  })
+
+  it('accepts manual grants for entitlement checks without adding them to Paddle operations', () => {
+    expect(subscriptionEntitlementProviders('live')).toEqual(['paddle_live', 'manual'])
+    expect(subscriptionEntitlementProviders('sandbox')).toEqual([
+      'paddle_sandbox',
+      'paddle',
+      'manual',
+    ])
+  })
+})
+
+describe('scheduled change mapping', () => {
+  it('normalizes a pending cancellation', () => {
+    const sub: PaddleSubscription = {
+      scheduled_change: {
+        action: 'cancel',
+        effective_at: '2027-08-02T03:04:05.000Z',
+      },
+    }
+    expect(getScheduledChangeAction(sub)).toBe('cancel')
+    expect(getScheduledChangeEffectiveAtIso(sub)).toBe('2027-08-02T03:04:05.000Z')
+  })
+
+  it('clears absent or invalid scheduled changes', () => {
+    expect(getScheduledChangeAction({ scheduled_change: null })).toBeNull()
+    expect(
+      getScheduledChangeEffectiveAtIso({
+        scheduled_change: { action: 'cancel', effective_at: 'not-a-date' },
+      }),
+    ).toBeNull()
+  })
+})
+
 describe('customerIdOf', () => {
   it('normalizes Paddle customer references', () => {
     expect(customerIdOf({ customer_id: 'ctm_1' })).toBe('ctm_1')
@@ -59,6 +100,15 @@ function makeDeps(existingRow: { id: string } | null, state: FakeState): Billing
           return this
         },
         eq() {
+          return this
+        },
+        in() {
+          return this
+        },
+        order() {
+          return this
+        },
+        limit() {
           return this
         },
         async maybeSingle() {
@@ -84,36 +134,44 @@ describe('syncSubscription', () => {
     customer_id: 'ctm_1',
     status: 'active',
     current_billing_period: { ends_at: '2023-11-14T22:13:20.000Z' },
+    scheduled_change: {
+      action: 'cancel',
+      effective_at: '2023-11-14T22:13:20.000Z',
+    },
     custom_data: {},
   }
 
   it('inserts a new row when none exists', async () => {
     const state: FakeState = { updates: [], inserts: [] }
     const deps = makeDeps(null, state)
-    const result = await syncSubscription(deps, baseSub, 'user-1')
+    const result = await syncSubscription(deps, baseSub, 'user-1', 'live')
 
     expect(result.ok).toBe(true)
     expect(state.inserts).toHaveLength(1)
     expect(state.inserts[0]).toMatchObject({
       user_id: 'user-1',
-      provider: 'paddle',
+      provider: 'paddle_live',
       provider_customer_id: 'ctm_1',
       provider_subscription_id: 'sub_1',
       status: 'active',
+      scheduled_change_action: 'cancel',
+      scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
     })
   })
 
   it('updates an existing row', async () => {
     const state: FakeState = { updates: [], inserts: [] }
     const deps = makeDeps({ id: 'row-9' }, state)
-    const result = await syncSubscription(deps, baseSub, 'user-1')
+    const result = await syncSubscription(deps, baseSub, 'user-1', 'sandbox')
 
     expect(result.ok).toBe(true)
     expect(state.updates).toHaveLength(1)
     expect(state.updates[0]).toMatchObject({
-      provider: 'paddle',
+      provider: 'paddle_sandbox',
       status: 'active',
       provider_subscription_id: 'sub_1',
+      scheduled_change_action: 'cancel',
+      scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
     })
     expect(state.inserts).toHaveLength(0)
   })
@@ -122,7 +180,7 @@ describe('syncSubscription', () => {
     const state: FakeState = { updates: [], inserts: [] }
     const orphan: PaddleSubscription = { ...baseSub, customer_id: null, custom_data: {} }
     const deps = makeDeps(null, state)
-    const result = await syncSubscription(deps, orphan, null)
+    const result = await syncSubscription(deps, orphan, null, 'live')
 
     expect(result).toEqual({ ok: true, skipped: true })
     expect(state.inserts).toHaveLength(0)

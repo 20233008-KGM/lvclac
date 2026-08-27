@@ -1,88 +1,134 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import {
+  ABOUT_PATH,
+  COMPANY_PATH,
+  GUIDE_PATH,
+  PRIVACY_PATH,
+  REFUND_POLICY_PATH,
+  TERMS_PATH,
+} from '../config/routes'
+import { en } from '../i18n/locales/en'
+import { ko } from '../i18n/locales/ko'
+import { footerLegalCopy } from './ServiceDisclaimer'
+import { buildFooterColumns, footerPolicyColumnTitles, paddleReviewFooterLinks } from './footerNavigation'
 
 const source = readFileSync(resolve('src/components/SiteFooter.tsx'), 'utf8')
 const css = readFileSync(resolve('src/App.css'), 'utf8')
 const footerMark = readFileSync(resolve('public/footer-brand-mark.svg'), 'utf8')
 
-describe('public-lite footer links', () => {
-  it('publishes the product, company, and legal destinations', () => {
-    expect(source).toContain("{ label: '서비스 소개', href: ABOUT_PATH }")
-    expect(source).toContain("{ label: 'Pro 요금제', href: PRICING_PATH }")
-    expect(source).toContain("{ label: '사용 가이드', href: GUIDE_PATH }")
-    expect(source).toContain("{ label: '업데이트', href: UPDATES_PATH }")
-    expect(source).toContain("{ label: '회사 소개', href: COMPANY_PATH }")
-    expect(source).toContain("{ label: '문의하기', href: CONTACT_PATH }")
-    expect(source).toContain("{ label: 'Service overview', href: ABOUT_PATH }")
-    expect(source).toContain("{ label: 'Pro pricing', href: PRICING_PATH }")
-    expect(source).toContain("{ label: 'User guide', href: GUIDE_PATH }")
-    expect(source).toContain("{ label: 'Updates', href: UPDATES_PATH }")
-    expect(source).toContain("{ label: 'About us', href: COMPANY_PATH }")
-    expect(source).toContain("{ label: 'Contact', href: CONTACT_PATH }")
-    expect(source).not.toContain('FORMULAS_PATH')
-    expect(source).toContain("{ label: '이용약관', href: TERMS_PATH }")
-    expect(source).toContain("{ label: '개인정보처리방침', href: PRIVACY_PATH }")
-    expect(source).toContain("{ label: '환불 정책', href: REFUND_POLICY_PATH }")
-    expect(source).toContain("{ label: 'Terms', href: TERMS_PATH }")
-    expect(source).toContain("{ label: 'Privacy', href: PRIVACY_PATH }")
-    expect(source).toContain("{ label: 'Refund policy', href: REFUND_POLICY_PATH }")
-    expect(source).not.toContain("{ label: '선물 계산기', href: '/' }")
-    expect(source).not.toContain("{ label: 'Calculator', href: '/' }")
-    expect(source).toContain('CONTACT_PATH')
-    expect(source).toContain('openPrivacySettings')
-    expect(source).not.toContain('<DisclaimerShowAgainLink variant="footer-nav" />')
-    expect(source).toContain('<DisclaimerShowAgainLink variant="footer" />')
-    expect(source).toContain('<LocaleRouteLink className="site-footer__bottom-link" />')
-    expect(source).not.toContain('<ContentRiskNotice />')
-    expect(source).toContain('site-footer__operator-row')
+describe('public review footer labels', () => {
+  it('uses Korean Pro pricing label when the active locale is Korean', () => {
+    expect(paddleReviewFooterLinks.ko.map((link) => link.label)).toEqual(['Pro 요금제'])
+    expect(footerPolicyColumnTitles.ko).toBe('약관 및 정책')
+    expect(footerLegalCopy.ko.refundPolicy).toBe('환불 정책')
+  })
+
+  it('uses English Pro pricing label when the active locale is English', () => {
+    expect(paddleReviewFooterLinks.en.map((link) => link.label)).toEqual(['Pro Pricing'])
+    expect(footerPolicyColumnTitles.en).toBe('Legal')
+    expect(footerLegalCopy.en.refundPolicy).toBe('Refund Policy')
+  })
+
+  it('moves the user guide into the product column and adds a policies column', () => {
+    const columns = buildFooterColumns(
+      [
+        {
+          title: '제품',
+          links: [
+            { label: '서비스 소개', href: ABOUT_PATH },
+            { label: 'Pro', soon: true },
+            { label: '업데이트 노트', soon: true },
+          ],
+        },
+        {
+          title: '리소스',
+          links: [
+            { label: '이용 가이드', href: GUIDE_PATH },
+            { label: 'API 문서', soon: true },
+            { label: '상태 페이지', soon: true },
+          ],
+        },
+        {
+          title: '회사',
+          links: [
+            { label: '회사 소개', href: COMPANY_PATH },
+            { label: '문의', href: 'mailto:contact@example.com' },
+          ],
+        },
+        { title: '의견 보내기', links: [{ label: '버그 제보', href: '/feedback/bugs' }] },
+      ],
+      'ko',
+      {
+        terms: '이용약관',
+        privacy: '개인정보 처리방침',
+        refund: '환불 정책',
+      },
+    )
+
+    expect(columns.map((column) => column.title)).toEqual(['제품', '회사', '의견 보내기', '약관 및 정책'])
+    expect(columns[0].links.map((link) => link.label)).toEqual([
+      '서비스 소개',
+      'Pro 요금제',
+      '이용 가이드',
+      '업데이트',
+    ])
+    expect(columns[0].links[0].href).toBe(ABOUT_PATH)
+    expect(columns[0].links[2].href).toBe(GUIDE_PATH)
+    expect(columns[1].links[0]).toEqual({ label: '회사 소개', href: COMPANY_PATH })
+    expect(columns[3].links).toEqual([
+      { label: '이용약관', href: TERMS_PATH },
+      { label: '개인정보 처리방침', href: PRIVACY_PATH },
+      { label: '환불 정책', href: REFUND_POLICY_PATH },
+    ])
+  })
+
+  it('keeps localized service and company document links in the dev footer', () => {
+    const koColumns = buildFooterColumns(ko.footer.columns, 'ko')
+    const enColumns = buildFooterColumns(en.footer.columns, 'en')
+
+    expect(koColumns[0].links[0]).toEqual({ label: '서비스 소개', href: ABOUT_PATH })
+    expect(koColumns[1].links[0]).toEqual({ label: '회사 소개', href: COMPANY_PATH })
+    expect(enColumns[0].links[0]).toEqual({ label: 'Service overview', href: ABOUT_PATH })
+    expect(enColumns[1].links[0]).toEqual({ label: 'About us', href: COMPANY_PATH })
+    expect(koColumns[0].links.map((link) => link.label)).toEqual([
+      '서비스 소개',
+      'Pro 요금제',
+      '이용 가이드',
+      '업데이트',
+    ])
+    expect(enColumns[0].links.map((link) => link.label)).toEqual([
+      'Service overview',
+      'Pro Pricing',
+      'User guide',
+      'Updates',
+    ])
+  })
+
+  it('uses the public footer body without replacing dev navigation', () => {
+    expect(source).toContain('PUBLIC_OPERATOR_INFO.productName')
     expect(source).toContain('publicFooterOperatorDetails(locale)')
-    expect(source).not.toContain('site-footer__operator-heading')
-    expect(source).toContain('site-footer__wordmark')
+    expect(source).toContain('site-footer__operator-row')
     expect(source).toContain('src="/footer-brand-mark.svg"')
     expect(source).toContain('alt=""')
-    expect(css).not.toContain('.site-footer__mark::before')
-    expect(css).not.toContain('.site-footer__mark::after')
+    expect(source).toContain('<DisclaimerShowAgainLink variant="footer" />')
+    expect(source).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
+    expect(source).toContain('buildFooterColumns(t.footer.columns')
   })
 
-  it('keeps the requested first-row ordering in product and company columns', () => {
-    expect(source.indexOf("{ label: '서비스 소개', href: ABOUT_PATH }")).toBeLessThan(
-      source.indexOf("{ label: '사용 가이드', href: GUIDE_PATH }"),
-    )
-    expect(source.indexOf("{ label: '회사 소개', href: COMPANY_PATH }")).toBeLessThan(
-      source.indexOf("{ label: '문의하기', href: CONTACT_PATH }"),
-    )
-  })
-
-  it('uses the shared compact type scale for structured company details', () => {
-    expect(css).toMatch(
-      /\.site-footer__operator \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/,
-    )
-    expect(css).toMatch(
-      /\.site-footer__operator dt \{[\s\S]*?font-size: var\(--font-size-xs\);/,
-    )
-    expect(css).toMatch(
-      /\.site-footer__operator dd \{[\s\S]*?font-size: var\(--font-size-xs\);/,
-    )
-  })
-
-  it('switches the main footer columns based on the width actually allocated to the footer', () => {
-    expect(css).toMatch(
-      /\.site-footer \{[\s\S]*?container-name: site-footer;[\s\S]*?container-type: inline-size;/,
-    )
-    expect(css).toMatch(
-      /@container site-footer \(min-width: 800px\) \{[\s\S]*?\.site-footer__main \{[\s\S]*?grid-template-columns: minmax\(220px, 1\.1fr\) minmax\(0, 1\.9fr\);/,
-    )
-  })
-
-  it('keeps the footer brand mark optically balanced with the wordmark', () => {
+  it('keeps the imported brand mark and company grid dimensions', () => {
     expect(css).toMatch(/\.site-footer__wordmark \{[\s\S]*?gap: 9px;/)
     expect(css).toMatch(/\.site-footer__mark \{[^}]*width: 20px;[^}]*height: 20px;/)
-    expect(css).not.toMatch(/\.site-footer__mark \{[^}]*filter:/)
-    expect(css).not.toMatch(/\.site-footer__mark \{[^}]*opacity:/)
-  })
-
-  it('uses a footer-specific cool blue palette with a clear red accent', () => {
+    expect(css).toMatch(
+      /\.site-footer__operator \{[\s\S]*?@media \(min-width: 768px\) \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/,
+    )
+    expect(css).toMatch(
+      /@media \(min-width: 960px\) \{[\s\S]*?\.site-footer__nav \{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/,
+    )
+    expect(css).toMatch(
+      /\.site-footer__main \{[\s\S]*?grid-template-columns: minmax\(230px, 1fr\) minmax\(0, 2\.2fr\);[\s\S]*?gap: clamp\(32px, 4vw, 52px\);/,
+    )
     expect(footerMark).toContain('#7183b8')
     expect(footerMark).toContain('#596a94')
     expect(footerMark).toContain('#46516a')
@@ -91,12 +137,14 @@ describe('public-lite footer links', () => {
     expect(footerMark).toContain('#f5f7fa')
   })
 
-  it('publishes Paddle review destinations and keeps quiet utility links in the bottom row', () => {
-    expect(source).toContain('PRICING_PATH')
-    expect(source).toContain('REFUND_POLICY_PATH')
-    expect(source).toContain('site-footer__bottom-actions')
-    expect(source.indexOf('site-footer__bottom-actions')).toBeGreaterThan(
-      source.indexOf('site-footer__bottom'),
+  it('keeps the accepted calculator notice and footer spacing', () => {
+    expect(css).toMatch(
+      /\.content-risk-notice \{[\s\S]*?margin: calc\(var\(--space-xl\) \* 2\) 0 0;/,
+    )
+    expect(css).toMatch(/\.page-content \{[\s\S]*?gap: var\(--space-md\);/)
+    expect(css).toMatch(/\.site-footer \{[\s\S]*?margin-top: var\(--space-md\);/)
+    expect(css).toMatch(
+      /\.content-risk-notice \+ \.site-footer \{[\s\S]*?margin-top: var\(--space-sm\);/,
     )
   })
 })

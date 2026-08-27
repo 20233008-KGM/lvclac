@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
-  isAdFreePublicInfoPath,
-  isCompanyPath,
-  isContactPath,
+  COMPANY_PATH,
   isLegalPath,
   isAdminFeedbackPath,
+  isCompanyPath,
+  isEnglishPublicPath,
+  isGuidePath,
+  isLocalizablePublicPath,
   isMyPagePath,
   isPricingPath,
   isProductPath,
   isRecordsPath,
   isUpdatesPath,
-  isCalculatorHomePath,
-  isGuidePath,
   localizedPublicPath,
   publicPathWithoutLocale,
   updateDetailPath,
@@ -22,66 +22,32 @@ import {
 } from './routes'
 
 describe('routes', () => {
-  it('keeps company and legal information pages ad-free', () => {
-    expect(isAdFreePublicInfoPath('/about')).toBe(true)
-    expect(isAdFreePublicInfoPath('/about/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/company')).toBe(true)
-    expect(isAdFreePublicInfoPath('/company/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/contact')).toBe(true)
-    expect(isAdFreePublicInfoPath('/contact/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/terms')).toBe(true)
-    expect(isAdFreePublicInfoPath('/terms/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/privacy')).toBe(true)
-    expect(isAdFreePublicInfoPath('/privacy/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/guide')).toBe(true)
-    expect(isAdFreePublicInfoPath('/guide/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/formulas')).toBe(true)
-    expect(isAdFreePublicInfoPath('/formulas/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/updates')).toBe(true)
-    expect(isAdFreePublicInfoPath('/updates/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/pricing')).toBe(true)
-    expect(isAdFreePublicInfoPath('/pricing/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/refund-policy')).toBe(true)
-    expect(isAdFreePublicInfoPath('/refund-policy/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/en/guide')).toBe(true)
-    expect(isAdFreePublicInfoPath('/en/privacy/')).toBe(true)
-    expect(isAdFreePublicInfoPath('/updates/2026-08-12-beta-experience')).toBe(true)
-    expect(isAdFreePublicInfoPath('/en/updates/2026-08-12-beta-experience')).toBe(true)
-
-    expect(isAdFreePublicInfoPath('/')).toBe(false)
-  })
-
-  it('maps public routes between stable Korean and English URLs', () => {
-    expect(isCalculatorHomePath('/')).toBe(true)
-    expect(isCalculatorHomePath('/en')).toBe(true)
-    expect(isCalculatorHomePath('/en/')).toBe(true)
-    expect(isGuidePath('/en/guide')).toBe(true)
-    expect(publicPathWithoutLocale('/en/formulas')).toBe('/formulas')
-    expect(localizedPublicPath('/guide', 'en')).toBe('/en/guide')
-    expect(localizedPublicPath('/en/guide', 'ko')).toBe('/guide')
-    expect(isMyPagePath('/en/my')).toBe(false)
-  })
-
-  it('recognizes the public company route with optional trailing slash', () => {
+  it('recognizes the company page route with optional trailing slash', () => {
+    expect(COMPANY_PATH).toBe('/company')
     expect(isCompanyPath('/company')).toBe(true)
     expect(isCompanyPath('/company/')).toBe(true)
     expect(isCompanyPath('/company/team')).toBe(false)
   })
 
-  it('recognizes the public contact route with optional trailing slash', () => {
-    expect(isContactPath('/contact')).toBe(true)
-    expect(isContactPath('/contact/')).toBe(true)
-    expect(isContactPath('/contact/team')).toBe(false)
+  it('maps English public routes without changing private dev routes', () => {
+    expect(isEnglishPublicPath('/en')).toBe(true)
+    expect(isEnglishPublicPath('/en/guide')).toBe(true)
+    expect(publicPathWithoutLocale('/en/guide')).toBe('/guide')
+    expect(localizedPublicPath('/guide', 'en')).toBe('/en/guide')
+    expect(localizedPublicPath('/en/guide', 'ko')).toBe('/guide')
+    expect(isGuidePath('/en/guide')).toBe(true)
+    expect(isLocalizablePublicPath('/en/guide')).toBe(true)
+    expect(isLocalizablePublicPath('/my')).toBe(false)
+    expect(isMyPagePath('/en/my')).toBe(false)
   })
 
-  it('recognizes the public updates route with optional trailing slash', () => {
+  it('recognizes localized update list and detail routes', () => {
     expect(isUpdatesPath('/updates')).toBe(true)
-    expect(isUpdatesPath('/updates/')).toBe(true)
-    expect(isUpdatesPath('/updates/archive')).toBe(false)
+    expect(isUpdatesPath('/en/updates/')).toBe(true)
     expect(updateIdFromPath('/updates/2026-08-12-beta-experience')).toBe(
       '2026-08-12-beta-experience',
     )
-    expect(updateIdFromPath('/en/updates/2026-08-12-beta-experience/')).toBe(
+    expect(updateIdFromPath('/en/updates/2026-08-12-beta-experience')).toBe(
       '2026-08-12-beta-experience',
     )
     expect(updateIdFromPath('/updates/nested/post')).toBe(null)

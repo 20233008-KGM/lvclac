@@ -16,7 +16,7 @@ export const PUBLIC_PAGE_METADATA = {
     '/guide': {
       title: 'LiqGuard 사용 가이드 | 선물 증거금·청산가 계산 방법',
       description:
-        'LiqGuard의 필수 세팅값, 증거금 모드, 청산가 계산 입력, 주문 시뮬레이션과 기기 내 저장 사용법을 안내합니다.',
+        'LiqGuard의 필수 세팅값, 증거금 모드, 청산가 계산 입력, 주문 시뮬레이션과 기기·클라우드 저장 사용법을 안내합니다.',
     },
     '/formulas': {
       title: '선물 청산가·증거금 계산 공식 | LiqGuard',
@@ -49,12 +49,12 @@ export const PUBLIC_PAGE_METADATA = {
     },
     '/terms': {
       title: '이용약관 | LiqGuard',
-      description: 'LiqGuard 무료 선물 계산기 이용 조건과 책임 범위를 안내합니다.',
+      description: 'LiqGuard 계산기, 계정·클라우드 기록과 Pro 구독 이용 조건 및 책임 범위를 안내합니다.',
     },
     '/privacy': {
       title: '개인정보처리방침 | LiqGuard',
       description:
-        'LiqGuard의 브라우저 저장, 호스팅, 분석, 광고 및 쿠키 관련 개인정보 처리 내용을 안내합니다.',
+        'LiqGuard의 계정, 브라우저·Supabase 저장, 기록, 분석, 결제 및 쿠키 관련 개인정보 처리 내용을 안내합니다.',
     },
     '/refund-policy': {
       title: '환불 정책 | LiqGuard',
@@ -70,7 +70,7 @@ export const PUBLIC_PAGE_METADATA = {
     '/guide': {
       title: 'How to Use LiqGuard | Futures Margin and Liquidation Guide',
       description:
-        'Learn LiqGuard setup values, margin modes, liquidation inputs, order simulation, and on-device saving.',
+        'Learn LiqGuard setup values, margin modes, liquidation inputs, order simulation, and on-device or cloud saving.',
     },
     '/formulas': {
       title: 'Liquidation Price & Margin Formulas | LiqGuard',
@@ -103,12 +103,12 @@ export const PUBLIC_PAGE_METADATA = {
     },
     '/terms': {
       title: 'Terms of Use | LiqGuard',
-      description: 'Terms and responsibility limits for the free LiqGuard futures calculator.',
+      description: 'Terms and responsibility limits for the LiqGuard calculator, account records, and Pro subscriptions.',
     },
     '/privacy': {
       title: 'Privacy Policy | LiqGuard',
       description:
-        'How LiqGuard handles browser storage, hosting, analytics, advertising, cookies, and privacy choices.',
+        'How LiqGuard handles accounts, browser and Supabase storage, records, analytics, billing, cookies, and privacy choices.',
     },
     '/refund-policy': {
       title: 'Refund Policy | LiqGuard',

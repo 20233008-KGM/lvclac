@@ -7,6 +7,7 @@ import {
   deleteLocalNumberSet,
   loadLocalNumberSets,
   renameLocalNumberSet,
+  setLocalNumberSetPreset,
   resolveActiveLocalNumberSetId,
   upsertLocalNumberSet,
   writeLocalNumberSets,
@@ -41,6 +42,7 @@ describe('local number sets', () => {
         id: DEFAULT_LOCAL_NUMBER_SET_ID,
         title: '기본 세트',
         inputs: sampleInputs,
+        presetId: null,
         updatedAt: '2026-07-10T01:02:03.000Z',
       },
     ])
@@ -56,7 +58,7 @@ describe('local number sets', () => {
     })
     const second = appendLocalNumberSet(first.sets, sampleInputs, {
       id: 'local-b',
-      title: '롤오버 기준',
+      title: '기준 세트',
       updatedAt: '2026-07-10T02:00:00.000Z',
     })
     writeLocalNumberSets(storage, second.sets)
@@ -108,5 +110,101 @@ describe('local number sets', () => {
     const result = loadLocalNumberSets(storage, null, null)
     expect(result.sets[0]).not.toHaveProperty('memo')
     expect(storage.getItem(LOCAL_NUMBER_SETS_KEY)).not.toContain('memo')
+  })
+
+  it('keeps legacy slots nullable and stores a preset only on the targeted slot', () => {
+    const storage = new MemoryStorage()
+    storage.setItem(
+      LOCAL_NUMBER_SETS_KEY,
+      JSON.stringify([
+        { id: 'local-a', title: '기본 세트', inputs: defaultInputs, updatedAt: null },
+        { id: 'local-b', title: '주식 세트', inputs: sampleInputs, updatedAt: null },
+      ]),
+    )
+
+    const loaded = loadLocalNumberSets(storage, null, null).sets
+    expect(loaded.map((set) => set.presetId)).toEqual([null, null])
+
+    const next = setLocalNumberSetPreset(loaded, 'local-b', 'stock')
+    expect(next[0].presetId).toBeNull()
+    expect(next[1].presetId).toBe('stock')
+  })
+
+  it('persists an explicit preset when a new local slot is created or saved', () => {
+    const created = appendLocalNumberSet([], defaultInputs, {
+      id: 'local-a',
+      presetId: 'fx',
+      updatedAt: '2026-07-10T01:00:00.000Z',
+    })
+    const updated = upsertLocalNumberSet(created.sets, 'local-a', sampleInputs, {
+      presetId: 'cfd',
+      updatedAt: '2026-07-10T02:00:00.000Z',
+    })
+
+    expect(created.set.presetId).toBe('fx')
+    expect(updated[0].presetId).toBe('cfd')
+  })
+
+  it('copies inputs and preset into a target slot without replacing its identity', () => {
+    const source = appendLocalNumberSet([], sampleInputs, {
+      id: 'local-source',
+      title: '공격형',
+      presetId: 'futures',
+      updatedAt: '2026-07-10T01:00:00.000Z',
+    })
+    const target = appendLocalNumberSet(source.sets, defaultInputs, {
+      id: 'local-target',
+      title: '보수형',
+      presetId: 'stock',
+      updatedAt: '2026-07-10T02:00:00.000Z',
+    })
+
+    const copied = upsertLocalNumberSet(
+      target.sets,
+      'local-target',
+      source.set.inputs,
+      {
+        presetId: source.set.presetId ?? undefined,
+        updatedAt: '2026-07-10T03:00:00.000Z',
+      },
+    )
+
+    expect(copied.find((set) => set.id === 'local-source')).toEqual(source.set)
+    expect(copied.find((set) => set.id === 'local-target')).toMatchObject({
+      id: 'local-target',
+      title: '보수형',
+      inputs: sampleInputs,
+      presetId: 'futures',
+      updatedAt: '2026-07-10T03:00:00.000Z',
+    })
+  })
+
+  it('clears only the selected set inputs while preserving its identity and preset', () => {
+    const first = appendLocalNumberSet([], sampleInputs, {
+      id: 'local-a',
+      title: '삼성08',
+      presetId: 'futures',
+      updatedAt: '2026-07-10T01:00:00.000Z',
+    })
+    const second = appendLocalNumberSet(first.sets, sampleInputs, {
+      id: 'local-b',
+      title: '보조 세트',
+      presetId: 'stock',
+      updatedAt: '2026-07-10T02:00:00.000Z',
+    })
+
+    const cleared = upsertLocalNumberSet(second.sets, 'local-a', defaultInputs, {
+      updatedAt: '2026-07-10T03:00:00.000Z',
+    })
+
+    expect(cleared).toHaveLength(2)
+    expect(cleared.find((set) => set.id === 'local-a')).toEqual({
+      id: 'local-a',
+      title: '삼성08',
+      inputs: defaultInputs,
+      presetId: 'futures',
+      updatedAt: '2026-07-10T03:00:00.000Z',
+    })
+    expect(cleared.find((set) => set.id === 'local-b')).toEqual(second.set)
   })
 })

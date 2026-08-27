@@ -99,9 +99,24 @@ export function isAdFreePublicInfoPath(pathname: string): boolean {
     isUpdatesPath(pathname) ||
     updateIdFromPath(pathname) !== null ||
     isPricingPath(pathname) ||
-    matchesLocalizedPublicPath(pathname, TERMS_PATH) ||
-    matchesLocalizedPublicPath(pathname, PRIVACY_PATH) ||
-    matchesLocalizedPublicPath(pathname, REFUND_POLICY_PATH)
+    isLegalPath(pathname) !== null
+  )
+}
+
+export function isLocalizablePublicPath(pathname: string): boolean {
+  const basePath = publicPathWithoutLocale(pathname)
+  return (
+    isCalculatorHomePath(pathname)
+    || isFormulasPath(pathname)
+    || isGuidePath(pathname)
+    || isAboutPath(pathname)
+    || isCompanyPath(pathname)
+    || isContactPath(pathname)
+    || isUpdatesPath(pathname)
+    || updateIdFromPath(pathname) !== null
+    || isPricingPath(pathname)
+    || isLegalPath(pathname) !== null
+    || /^\/boards\/[^/]+\/?$/.test(basePath)
   )
 }
 

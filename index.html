@@ -25,24 +25,39 @@
     <meta property="og:locale" content="ko_KR" />
     <meta property="og:locale:alternate" content="en_US" />
     <script>
-      window.dataLayer = window.dataLayer || []
-      window.gtag =
-        window.gtag ||
-        function () {
-          window.dataLayer.push(arguments)
+      ;(function () {
+        var locale = new URLSearchParams(window.location.search).get('lang')
+        if (locale !== 'en' && locale !== 'ko') {
+          var pathname = window.location.pathname
+          locale =
+            pathname === '/en' || pathname === '/en/' || pathname.indexOf('/en/') === 0
+              ? 'en'
+              : null
         }
-      window.gtag('consent', 'default', {
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        analytics_storage: 'denied',
-        wait_for_update: 2000,
-      })
-      window.gtag('set', 'ads_data_redaction', true)
-      window.adsbygoogle = window.adsbygoogle || []
-      window.adsbygoogle.pauseAdRequests = 1
-      window.googlefc = window.googlefc || {}
-      window.googlefc.callbackQueue = window.googlefc.callbackQueue || []
+        try {
+          if (!locale) {
+            var storedLocale = localStorage.getItem('leverage_locale')
+            if (storedLocale === 'en' || storedLocale === 'ko') locale = storedLocale
+          }
+          if (!locale) {
+            var sessionLocale = sessionStorage.getItem('leverage_locale_detected')
+            if (sessionLocale === 'en' || sessionLocale === 'ko') locale = sessionLocale
+          }
+        } catch {
+          // Storage can be unavailable in restricted browsing modes.
+        }
+        if (locale !== 'en' && locale !== 'ko') {
+          var country = document.cookie.match(/(?:^|;\s*)leverage_geo_country=([^;]*)/)
+          locale = country
+            ? decodeURIComponent(country[1]).trim().toUpperCase() === 'KR'
+              ? 'ko'
+              : 'en'
+            : navigator.language.toLowerCase().indexOf('ko') === 0
+              ? 'ko'
+              : 'en'
+        }
+        document.documentElement.lang = locale
+      })()
     </script>
     <style>
       :root {

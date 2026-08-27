@@ -6,7 +6,7 @@
 ## 공개/개발 제품 분리
 
 - `main` / `liqguard.com`: 로그인 없는 무료 계산기, 단일 브라우저 로컬 저장,
-  광고 자리, `/guide`, `/formulas`, `/about`, `/terms`, `/privacy`를 제공한다.
+  광고 자리, `/terms`, `/privacy`만 제공한다.
 - `dev` / `devpilgrm.liqguard.com`: 이 문서의 로그인·클라우드·Pro·기록 등
   전체 제품 설계를 보존하고 계속 개발한다.
 - 계산기 핵심 공통 수정은 `dev`에서 먼저 검증한 뒤 해당 커밋만 `main`에

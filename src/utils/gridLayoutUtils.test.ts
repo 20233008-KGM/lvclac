@@ -39,6 +39,13 @@ describe('gridLayoutUtils', () => {
     expect(isLayoutCustom({ ...base, leftX: 200 })).toBe(true)
   })
 
+  it('isResetDefaultLayout — 초기화한 기본 50:50만 최소폭 재보정을 건너뛴다', () => {
+    expect(isResetDefaultLayout({ ...base, manual: true })).toBe(true)
+    expect(isResetDefaultLayout({ ...base, manual: true, split: 0.55 })).toBe(false)
+    expect(isResetDefaultLayout({ ...base, manual: true, leftX: 200 })).toBe(false)
+    expect(isResetDefaultLayout(base)).toBe(false)
+  })
+
   it('computeExpandLayout — 입력 오버플로를 한 번에 split 조정', () => {
     const midWidth = 800
     const steps = 3
@@ -164,13 +171,6 @@ describe('gridLayoutUtils', () => {
       1 - resultMin / mid,
       5,
     )
-  })
-
-  it('isResetDefaultLayout — 초기화한 기본 50:50만 최소폭 재보정을 건너뛴다', () => {
-    expect(isResetDefaultLayout({ ...base, manual: true })).toBe(true)
-    expect(isResetDefaultLayout({ ...base, manual: true, split: 0.55 })).toBe(false)
-    expect(isResetDefaultLayout({ ...base, manual: true, leftX: 200 })).toBe(false)
-    expect(isResetDefaultLayout(base)).toBe(false)
   })
 
   it('reconcileLayoutForColumnMins — 폭이 충분하면 레이아웃 유지', () => {

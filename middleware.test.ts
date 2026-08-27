@@ -1,36 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import { robotsBody, shouldNoIndexPath, sitemapBody } from './middleware'
+import { isPrivateAppPath, robotsBody, shouldNoIndexPath, sitemapBody } from './middleware'
 
-describe('public-lite indexing middleware', () => {
-  it('keeps every route blocked until the public launch flag is enabled', () => {
-    const body = robotsBody(new Request('https://lvclac.example/robots.txt'), false)
-
-    expect(body).toContain('User-agent: Mediapartners-Google\nAllow: /')
-    expect(body).toContain('User-agent: Google-Display-Ads-Bot\nAllow: /')
-    expect(body).toContain('User-agent: *\nDisallow: /')
-
-    expect(shouldNoIndexPath('/', false)).toBe(true)
-    expect(shouldNoIndexPath('/terms/', false)).toBe(true)
-    expect(shouldNoIndexPath('/my', false)).toBe(true)
+describe('public indexing boundary', () => {
+  it('blocks every route when indexing is disabled for Preview', () => {
+    const body = robotsBody(new Request('https://preview.example/robots.txt'), false)
+    expect(body).toContain('Disallow: /')
+    expect(shouldNoIndexPath('/guide', false)).toBe(true)
   })
 
-  it('publishes the public product and legal URLs after launch', () => {
-    const body = sitemapBody(new Request('https://lvclac.example/sitemap.xml'), true)
+  it('always marks private application paths noindex', () => {
+    for (const path of ['/my', '/billing/', '/records', '/admin/feedback', '/boards/bugs', '/kit', '/en/boards/bugs']) {
+      expect(isPrivateAppPath(path), path).toBe(true)
+      expect(shouldNoIndexPath(path, true), path).toBe(true)
+    }
+    expect(shouldNoIndexPath('/en/guide', true)).toBe(false)
+  })
 
-    expect(body).toContain('<loc>https://lvclac.example</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/guide</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/formulas</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/about</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/pricing</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/terms</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/privacy</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/refund-policy</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/updates</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/company</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/contact</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/en</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/en/guide</loc>')
-    expect(body).toContain('<loc>https://lvclac.example/en/formulas</loc>')
-    expect(body.match(/<url>/g)).toHaveLength(22)
+  it('lists bilingual public routes and update details, never private paths', () => {
+    const body = sitemapBody(new Request('https://liqguard.com/sitemap.xml'), true)
+    expect(body).toContain('<loc>https://liqguard.com</loc>')
+    expect(body).toContain('<loc>https://liqguard.com/en/guide</loc>')
+    expect(body).toContain('<loc>https://liqguard.com/contact</loc>')
+    expect(body).toContain('<loc>https://liqguard.com/en/updates/2026-08-16-calculator-flow-polish</loc>')
+    expect(body).not.toContain('/my</loc>')
+    expect(body).not.toContain('/boards/')
   })
 })

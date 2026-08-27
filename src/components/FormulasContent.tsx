@@ -14,9 +14,12 @@ export function FormulasContent({ formulas: f, variant = 'page' }: FormulasConte
   return (
     <div className={rootClass}>
       {variant === 'page' && (
-        <p className="formulas-page__notice" role="note">
-          {f.disclaimer}
-        </p>
+        <>
+          <p className="formulas-page__desc">{f.description}</p>
+          <p className="formulas-page__notice" role="note">
+            {f.disclaimer}
+          </p>
+        </>
       )}
 
       {variant === 'modal' && (

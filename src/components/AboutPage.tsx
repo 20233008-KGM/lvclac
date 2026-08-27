@@ -1,5 +1,5 @@
-import { CONTACT_EMAIL } from '../config/site'
 import { ABOUT_PATH } from '../config/routes'
+import { CONTACT_EMAIL } from '../config/site'
 import { publicOperatorDisplayName } from '../config/operator'
 import { useLanguage } from '../i18n'
 import { PublicInfoShell } from './PublicInfoShell'
@@ -12,7 +12,7 @@ export function AboutPage() {
     <PublicInfoShell
       activePath={ABOUT_PATH}
       tone="company"
-      eyebrow={`${publicOperatorDisplayName(t.lang)} · ${about.title}`}
+      eyebrow={`${publicOperatorDisplayName()} · ${about.title}`}
       title={about.tagline}
       lead={about.lead}
     >

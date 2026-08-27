@@ -382,7 +382,7 @@ describe('주문 시나리오', () => {
     expect(cleared.orderPrice).toBe(320_000)
   })
 
-  it('주문 비우기 — 주문 필드만 초기화하고 연동을 해제한다', () => {
+  it('주문 비우기 — 주문 필드만 초기화한다', () => {
     const cleared = applyInputPatch(
       { ...orderBase, orderPriceLinked: true, orderPrice: orderBase.currentPrice },
       { clearOrderInputs: true },
@@ -404,7 +404,6 @@ describe('주문 시나리오', () => {
     expect(isOrderScenarioModeActive(cleared)).toBe(false)
     expect(cleared.orderContracts).toBeUndefined()
     expect(cleared.orderPrice).toBeUndefined()
-    expect(cleared.orderPriceLinked).toBe(false)
     expect(cleared.accountEval).toBe(orderBase.accountEval)
     expect(cleared.contracts).toBe(orderBase.contracts)
     expect(cleared.contractAmount).toBe(orderBase.contractAmount)

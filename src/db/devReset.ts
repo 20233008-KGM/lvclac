@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import { markForcedConsent } from './devFirstLogin'
+import { clearCloudNumberSetSnapshot } from '../storage/cloudNumberSetSnapshot'
 
 /**
  * 개발 전용 계정 초기화 클라이언트.
@@ -30,6 +31,7 @@ export async function resetTestAccount(mode: DevResetMode): Promise<string | nul
 
   const { data } = await supabase.auth.getSession()
   const accessToken = data.session?.access_token
+  const userId = data.session?.user.id
   if (!accessToken) return 'not_logged_in'
 
   let res: Response
@@ -51,6 +53,7 @@ export async function resetTestAccount(mode: DevResetMode): Promise<string | nul
   }
 
   if (mode === 'full') {
+    if (userId) clearCloudNumberSetSnapshot(localStorage, userId)
     await supabase.auth.signOut().catch(() => {})
     for (const key of APP_LOCAL_STORAGE_KEYS) {
       try {

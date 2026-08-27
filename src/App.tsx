@@ -1,4 +1,6 @@
 import {
+  Suspense,
+  lazy,
   useEffect,
   useMemo,
   useRef,
@@ -9,13 +11,10 @@ import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
 import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
-import { ContentRiskNotice } from './components/ServiceDisclaimer'
-import { GuidePage } from './components/GuidePage'
-import { FormulasPage } from './components/FormulasPage'
-import { AboutPage } from './components/AboutPage'
-import { CompanyPage } from './components/CompanyPage'
-import { ContactPage } from './components/ContactPage'
-import { HowToUseButton } from './components/HowToUseButton'
+import {
+  ContentRiskNotice,
+  DisclaimerProvider,
+} from './components/ServiceDisclaimer'
 import {
   fieldHintCalculationComplete,
   fieldHintActive,
@@ -24,23 +23,28 @@ import {
   TRADER_STAGE_CHANGE_EVENT,
   writeFieldHintDismissed,
 } from './components/fieldHint'
+import { AuthButton } from './components/auth/AuthButton'
+import { useAuth } from './context/AuthContext'
+import { HowToUseButton } from './components/HowToUseButton'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
-import { PublicLegalPage } from './components/PublicLegalPage'
-import { PricingReviewPage } from './components/PaddleReviewPages'
-import { PublicHomeSeoSummary } from './components/PublicSeoContent'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
-import { UpdatesPage } from './components/UpdatesPage'
-import { UpdateDetailPage } from './components/UpdateDetailPage'
+import { PublicHomeSeoSummary } from './components/PublicSeoContent'
+import { parseBoardPath } from './config/boards'
 import {
-  isCalculatorHomePath,
   isAboutPath,
+  isAdminFeedbackPath,
+  isBillingPath,
   isCompanyPath,
   isContactPath,
   isFormulasPath,
   isGuidePath,
   isLegalPath,
+  isKitPath,
+  isMyPagePath,
   isPricingPath,
+  isProductPath,
+  isRecordsPath,
   isUpdatesPath,
   updateIdFromPath,
 } from './config/routes'
@@ -48,13 +52,69 @@ import { isPreviewModeActive } from './calc/mtmLink'
 import { calculateEvaluate, calculateOrder } from './calc/leverage'
 import { LayoutProvider } from './context/LayoutContext'
 import { useFirstVisitWelcome } from './context/FirstVisitFlowContext'
-import { usePublicCalculator } from './context/PublicCalculatorContext'
+import { useCalculator } from './context/CalculatorContext'
+import { GoogleConsentProvider } from './context/GoogleConsentContext'
 import { usePathname } from './hooks/usePathname'
 import { useGridResize } from './hooks/useGridResize'
 import { useLayoutOverflow } from './hooks/useLayoutOverflow'
 import { usePrecisionRisk } from './hooks/usePrecisionRisk'
 import { useLanguage } from './i18n'
+import { loadMyPage } from './routes/lazyPages'
 import './App.css'
+
+const FeedbackBoardPage = lazy(() =>
+  import('./components/FeedbackBoardPage').then((mod) => ({ default: mod.FeedbackBoardPage })),
+)
+const AdminFeedbackPage = lazy(() =>
+  import('./components/AdminFeedbackPage').then((mod) => ({ default: mod.AdminFeedbackPage })),
+)
+const FormulasPage = lazy(() =>
+  import('./components/FormulasPage').then((mod) => ({ default: mod.FormulasPage })),
+)
+const GuidePage = lazy(() =>
+  import('./components/GuidePage').then((mod) => ({ default: mod.GuidePage })),
+)
+const AboutPage = lazy(() =>
+  import('./components/AboutPage').then((mod) => ({ default: mod.AboutPage })),
+)
+const CompanyPage = lazy(() =>
+  import('./components/CompanyPage').then((mod) => ({ default: mod.CompanyPage })),
+)
+const ContactPage = lazy(() =>
+  import('./components/ContactPage').then((mod) => ({ default: mod.ContactPage })),
+)
+const UpdatesPage = lazy(() =>
+  import('./components/UpdatesPage').then((mod) => ({ default: mod.UpdatesPage })),
+)
+const UpdateDetailPage = lazy(() =>
+  import('./components/UpdateDetailPage').then((mod) => ({ default: mod.UpdateDetailPage })),
+)
+const MyPage = lazy(() =>
+  loadMyPage().then((mod) => ({ default: mod.MyPage })),
+)
+const BillingPage = lazy(() =>
+  import('./components/billing/BillingPage').then((mod) => ({ default: mod.BillingPage })),
+)
+const RecordsArchivePage = lazy(() =>
+  import('./components/RecordsArchivePage').then((mod) => ({ default: mod.RecordsArchivePage })),
+)
+const ProductReviewPage = lazy(() =>
+  import('./components/PaddleReviewPages').then((mod) => ({ default: mod.ProductReviewPage })),
+)
+const PricingReviewPage = lazy(() =>
+  import('./components/PaddleReviewPages').then((mod) => ({ default: mod.PricingReviewPage })),
+)
+const PublicLegalPage = lazy(() =>
+  import('./components/PaddleReviewPages').then((mod) => ({ default: mod.PublicLegalPage })),
+)
+const ResetPasswordScreen = lazy(() =>
+  import('./components/auth/ResetPasswordScreen').then((mod) => ({
+    default: mod.ResetPasswordScreen,
+  })),
+)
+const KitGallery = lazy(() =>
+  import('./components/KitGallery').then((mod) => ({ default: mod.KitGallery })),
+)
 
 function isTextEditingTarget(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement
@@ -63,7 +123,7 @@ function isTextEditingTarget(target: EventTarget | null): boolean {
 }
 
 function CalculatorApp() {
-  const { t } = useLanguage()
+  const { t, preset } = useLanguage()
   const firstVisitWelcome = useFirstVisitWelcome()
   const isDevDeployment = import.meta.env.VITE_DEPLOYMENT_CHANNEL === 'dev'
   const {
@@ -77,7 +137,7 @@ function CalculatorApp() {
     redoHistory,
     jumpHistory,
     saveEnabled,
-  } = usePublicCalculator()
+  } = useCalculator()
   const previewMode = isPreviewModeActive(inputs)
   const fitRootRef = useRef<HTMLDivElement>(null)
 
@@ -99,8 +159,8 @@ function CalculatorApp() {
   } = useGridResize(saveEnabled, t)
 
   const measureKey = useMemo(
-    () => JSON.stringify({ inputs, locale: t.htmlLang }),
-    [inputs, t.htmlLang],
+    () => JSON.stringify({ inputs, locale: t.htmlLang, preset }),
+    [inputs, t.htmlLang, preset],
   )
 
   const { fitScale } = useLayoutOverflow({
@@ -232,6 +292,7 @@ function CalculatorApp() {
                       onFieldGuideToggle={traderStage ? toggleFieldHint : undefined}
                     />
                   )}
+                  <AuthButton variant="header" />
                 </div>
               </header>
               <main
@@ -267,126 +328,174 @@ function CalculatorApp() {
 
 function AppRouter() {
   const pathname = usePathname()
+  const { t } = useLanguage()
+  const boardId = parseBoardPath(pathname)
   const legalKind = isLegalPath(pathname)
-  const guidePath = isGuidePath(pathname)
-  const formulasPath = isFormulasPath(pathname)
-  const aboutPath = isAboutPath(pathname)
-  const companyPath = isCompanyPath(pathname)
-  const contactPath = isContactPath(pathname)
-  const updatesPath = isUpdatesPath(pathname)
   const updateId = updateIdFromPath(pathname)
-  const pricingPath = isPricingPath(pathname)
-
-  useEffect(() => {
-    if (
-      !isCalculatorHomePath(pathname) &&
-      !guidePath &&
-      !formulasPath &&
-      !aboutPath &&
-      !companyPath &&
-      !contactPath &&
-      !updatesPath &&
-      !updateId &&
-      !pricingPath &&
-      !legalKind
-    ) {
-      window.history.replaceState(null, '', pathname.startsWith('/en/') ? '/en' : '/')
-    }
-  }, [aboutPath, companyPath, contactPath, formulasPath, guidePath, legalKind, pathname, pricingPath, updateId, updatesPath])
-
   const metadata = <PublicPageMetadata pathname={pathname} />
 
-  if (guidePath) {
+  // 컴포넌트 전시장(UI 키트) — Figma export용. 미링크·noindex라 일반 사용자에겐 노출되지 않지만,
+  // 배포본 URL로 html.to.design가 가져올 수 있도록 프로덕션에서도 라우팅한다.
+  // TODO: 정식 공개(런칭) 전 제거 또는 재게이팅.
+  if (isKitPath(pathname)) {
     return (
-      <>
-        {metadata}
-        <GuidePage />
-      </>
+      <Suspense fallback={null}>
+        <KitGallery />
+      </Suspense>
     )
   }
-
-  if (formulasPath) {
+  if (isAdminFeedbackPath(pathname)) {
     return (
-      <>
-        {metadata}
-        <FormulasPage />
-      </>
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter">
+          <AdminFeedbackPage />
+        </div>
+      </Suspense>
     )
   }
-
-  if (aboutPath) {
+  if (boardId) {
     return (
-      <>
-        {metadata}
-        <AboutPage />
-      </>
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <FeedbackBoardPage boardId={boardId} />
+        </div>
+      </Suspense>
     )
   }
-
-  if (companyPath) {
+  if (isFormulasPath(pathname)) {
     return (
-      <>
-        {metadata}
-        <CompanyPage />
-      </>
+      <>{metadata}<Suspense fallback={null}><FormulasPage /></Suspense></>
     )
   }
-
-  if (contactPath) {
+  if (isGuidePath(pathname)) {
     return (
-      <>
-        {metadata}
-        <ContactPage />
-      </>
+      <>{metadata}<Suspense fallback={null}><GuidePage /></Suspense></>
     )
   }
-
-  if (updatesPath) {
+  if (isAboutPath(pathname)) {
     return (
-      <>
-        {metadata}
-        <UpdatesPage />
-      </>
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <AboutPage />
+        </div>
+      </Suspense></>
     )
   }
-
+  if (isCompanyPath(pathname)) {
+    return (
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <CompanyPage />
+        </div>
+      </Suspense></>
+    )
+  }
+  if (isContactPath(pathname)) {
+    return (
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <ContactPage />
+        </div>
+      </Suspense></>
+    )
+  }
+  if (isUpdatesPath(pathname)) {
+    return (
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <UpdatesPage />
+        </div>
+      </Suspense></>
+    )
+  }
   if (updateId) {
     return (
-      <>
-        {metadata}
-        <UpdateDetailPage updateId={updateId} />
-      </>
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <UpdateDetailPage updateId={updateId} />
+        </div>
+      </Suspense></>
     )
   }
-
-  if (pricingPath) {
+  if (isMyPagePath(pathname)) {
     return (
-      <>
-        {metadata}
-        <PricingReviewPage />
-      </>
+      <Suspense
+        fallback={(
+          <main className="my-page-route-loading" role="status" aria-label={t.loading}>
+            <span className="my-page-route-loading__spinner" aria-hidden="true" />
+            <span>{t.loading}</span>
+          </main>
+        )}
+      >
+        <div key={pathname} className="route-enter">
+          <MyPage />
+        </div>
+      </Suspense>
     )
   }
-
+  if (isBillingPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter">
+          <BillingPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isRecordsPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter">
+          <RecordsArchivePage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isProductPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <ProductReviewPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isPricingPath(pathname)) {
+    return (
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <PricingReviewPage />
+        </div>
+      </Suspense></>
+    )
+  }
   if (legalKind) {
     return (
-      <>
-        {metadata}
-        <PublicLegalPage kind={legalKind} />
-      </>
+      <>{metadata}<Suspense fallback={null}>
+        <div key={pathname} className="route-enter route-enter--contact">
+          <PublicLegalPage kind={legalKind} />
+        </div>
+      </Suspense></>
     )
   }
-
-  return (
-    <>
-      {metadata}
-      <CalculatorApp />
-    </>
-  )
+  return <>{metadata}<CalculatorApp /></>
 }
 
 function App() {
-  return <AppRouter />
+  const { recoveryMode } = useAuth()
+  return (
+    <DisclaimerProvider>
+      <GoogleConsentProvider>
+        {recoveryMode ? (
+          <Suspense fallback={null}>
+            <ResetPasswordScreen />
+          </Suspense>
+        ) : (
+          <AppRouter />
+        )}
+      </GoogleConsentProvider>
+    </DisclaimerProvider>
+  )
 }
 
 export default App

@@ -1,8 +1,8 @@
 export type UpdateLocale = 'ko' | 'en'
 
 export interface UpdateEntryContent {
-  author: string
-  release: string
+  author?: string
+  release?: string
   type: string
   title: string
   description: string
@@ -32,6 +32,9 @@ const UPDATE_FRONTMATTER_KEYS = new Set([
   'title',
   'description',
 ])
+const REQUIRED_UPDATE_FRONTMATTER_KEYS = [
+  'id', 'publishedAt', 'locale', 'type', 'title', 'description',
+] as const
 
 function updateMarkdownError(path: string, message: string): Error {
   return new Error(`Invalid update Markdown (${path}): ${message}`)
@@ -76,7 +79,7 @@ function parseUpdateMarkdown(path: string, source: string): ParsedUpdateMarkdown
     fields.set(key, value)
   }
 
-  for (const key of UPDATE_FRONTMATTER_KEYS) {
+  for (const key of REQUIRED_UPDATE_FRONTMATTER_KEYS) {
     if (!fields.has(key)) {
       throw updateMarkdownError(path, `missing frontmatter field: ${key}`)
     }
@@ -85,8 +88,8 @@ function parseUpdateMarkdown(path: string, source: string): ParsedUpdateMarkdown
   const id = fields.get('id') as string
   const publishedAt = fields.get('publishedAt') as string
   const locale = fields.get('locale') as string
-  const author = fields.get('author') as string
-  const release = fields.get('release') as string
+  const author = fields.get('author')
+  const release = fields.get('release')
   const type = fields.get('type') as string
   const title = fields.get('title') as string
   const description = fields.get('description') as string
@@ -113,7 +116,7 @@ function parseUpdateMarkdown(path: string, source: string): ParsedUpdateMarkdown
     id,
     publishedAt,
     locale,
-    content: { author, release, type, title, description, body },
+    content: { ...(author ? { author } : {}), ...(release ? { release } : {}), type, title, description, body },
   }
 }
 

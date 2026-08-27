@@ -15,15 +15,12 @@ export interface CalculatorHistoryOptions {
 
 export type CalculatorHistoryDirection = 'undo' | 'redo'
 
-export interface CalculatorHistoryEntry {
-  before: CalculatorInputs
-  after: CalculatorInputs
-}
-
-export interface CalculatorHistoryMove extends CalculatorHistoryEntry {
+export interface CalculatorHistoryMove {
   direction: CalculatorHistoryDirection
   steps: number
   target: CalculatorInputs
+  before: CalculatorInputs
+  after: CalculatorInputs
 }
 
 export interface CalculatorPendingEdit {
@@ -37,9 +34,9 @@ export interface CalculatorTransientEdit {
 }
 
 export interface CalculatorHistory {
-  past: CalculatorHistoryEntry[]
+  past: CalculatorInputs[]
   present: CalculatorInputs
-  future: CalculatorHistoryEntry[]
+  future: CalculatorInputs[]
   pendingEdit?: CalculatorPendingEdit
   transientEdit?: CalculatorTransientEdit
   canUndo: boolean
@@ -54,11 +51,8 @@ function withFlags(history: Omit<CalculatorHistory, 'canUndo' | 'canRedo'>): Cal
   }
 }
 
-function appendPast(
-  past: CalculatorHistoryEntry[],
-  entry: CalculatorHistoryEntry,
-): CalculatorHistoryEntry[] {
-  const next = [...past, entry]
+function appendPast(past: CalculatorInputs[], value: CalculatorInputs): CalculatorInputs[] {
+  const next = [...past, value]
   return next.length > CALCULATOR_HISTORY_LIMIT
     ? next.slice(next.length - CALCULATOR_HISTORY_LIMIT)
     : next
@@ -103,26 +97,6 @@ export function replaceCalculatorHistory(
   return createCalculatorHistory(present)
 }
 
-export function commitCalculatorHistoryGroup(
-  history: CalculatorHistory,
-  historyGroup?: string,
-): CalculatorHistory {
-  const pending = history.pendingEdit
-  if (!pending || (historyGroup && pending.group !== historyGroup)) return history
-
-  const base = withoutPending(history)
-  if (sameInputs(pending.before, history.present)) return withFlags(base)
-
-  return withFlags({
-    ...base,
-    past: appendPast(history.past, {
-      before: pending.before,
-      after: history.present,
-    }),
-    future: [],
-  })
-}
-
 function recordTransientHistory(
   history: CalculatorHistory,
   present: CalculatorInputs,
@@ -141,9 +115,8 @@ function recordTransientHistory(
 
   const settled = phase === 'begin' ? commitCalculatorHistoryGroup(history) : history
   const before = settled.transientEdit?.before ?? settled.present
-  const cancelTarget = options.historyTransientTarget
-    ?? settled.transientEdit?.cancelTarget
-    ?? before
+  const cancelTarget =
+    options.historyTransientTarget ?? settled.transientEdit?.cancelTarget ?? before
 
   return withFlags({
     ...withoutPending(settled),
@@ -176,10 +149,7 @@ export function recordCalculatorHistory(
     }
     return withFlags({
       ...base,
-      past: appendPast(settled.past, {
-        before: options.historyBefore,
-        after: present,
-      }),
+      past: appendPast(settled.past, options.historyBefore),
       present,
       future: [],
     })
@@ -191,15 +161,14 @@ export function recordCalculatorHistory(
       if (history.pendingEdit?.group === historyGroup) {
         const updated = sameInputs(history.present, present)
           ? history
-          : withFlags({ ...withoutPending(history), present, pendingEdit: history.pendingEdit })
+          : withFlags({ ...history, present })
         return commitCalculatorHistoryGroup(updated, historyGroup)
       }
 
       const settled = commitCalculatorHistoryGroup(history)
       if (sameInputs(settled.present, present)) return settled
       return withFlags({
-        ...withoutPending(settled),
-        past: appendPast(settled.past, { before: settled.present, after: present }),
+        past: appendPast(settled.past, settled.present),
         present,
         future: [],
       })
@@ -208,9 +177,8 @@ export function recordCalculatorHistory(
     if (history.pendingEdit?.group === historyGroup) {
       if (sameInputs(history.present, present)) return history
       return withFlags({
-        ...withoutPending(history),
+        ...history,
         present,
-        pendingEdit: history.pendingEdit,
       })
     }
 
@@ -231,9 +199,30 @@ export function recordCalculatorHistory(
   if (sameInputs(settled.present, present)) return settled
 
   return withFlags({
-    ...withoutPending(settled),
-    past: appendPast(settled.past, { before: settled.present, after: present }),
+    ...withoutTransient(settled),
+    past: appendPast(settled.past, settled.present),
     present,
+    future: [],
+  })
+}
+
+export function commitCalculatorHistoryGroup(
+  history: CalculatorHistory,
+  historyGroup?: string,
+): CalculatorHistory {
+  const pending = history.pendingEdit
+  if (!pending || (historyGroup && pending.group !== historyGroup)) return history
+
+  if (sameInputs(pending.before, history.present)) {
+    return withFlags({
+      ...withoutPending(history),
+    })
+  }
+
+  return withFlags({
+    ...withoutPending(history),
+    past: appendPast(history.past, pending.before),
+    present: history.present,
     future: [],
   })
 }
@@ -253,12 +242,11 @@ export function undoCalculatorHistory(history: CalculatorHistory): CalculatorHis
   if (settled.transientEdit) return cancelTransientHistory(settled)
   if (settled.past.length === 0) return settled
 
-  const entry = settled.past[settled.past.length - 1]
+  const present = settled.past[settled.past.length - 1]
   return withFlags({
-    ...withoutPending(settled),
     past: settled.past.slice(0, -1),
-    present: entry.before,
-    future: [entry, ...settled.future],
+    present,
+    future: [settled.present, ...settled.future],
   })
 }
 
@@ -266,11 +254,10 @@ export function redoCalculatorHistory(history: CalculatorHistory): CalculatorHis
   const settled = commitCalculatorHistoryGroup(history)
   if (settled.transientEdit || settled.future.length === 0) return settled
 
-  const [entry, ...future] = settled.future
+  const [present, ...future] = settled.future
   return withFlags({
-    ...withoutPending(settled),
-    past: appendPast(settled.past, entry),
-    present: entry.after,
+    past: appendPast(settled.past, settled.present),
+    present,
     future,
   })
 }
@@ -279,20 +266,25 @@ export function getCalculatorHistoryMoves(history: CalculatorHistory): {
   undo: CalculatorHistoryMove[]
   redo: CalculatorHistoryMove[]
 } {
+  const committedPresent =
+    history.pendingEdit?.before ?? history.transientEdit?.before ?? history.present
+  const undoStates = [...history.past, committedPresent]
+  const redoStates = [committedPresent, ...history.future]
+
   return {
-    undo: [...history.past].reverse().map((entry, index) => ({
+    undo: [...history.past].reverse().map((target, index) => ({
       direction: 'undo',
       steps: index + 1,
-      target: entry.before,
-      before: entry.before,
-      after: entry.after,
+      target,
+      before: target,
+      after: undoStates[undoStates.length - 1 - index],
     })),
-    redo: history.future.map((entry, index) => ({
+    redo: history.future.map((target, index) => ({
       direction: 'redo',
       steps: index + 1,
-      target: entry.after,
-      before: entry.before,
-      after: entry.after,
+      target,
+      before: redoStates[index],
+      after: target,
     })),
   }
 }

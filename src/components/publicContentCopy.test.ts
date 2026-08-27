@@ -11,18 +11,14 @@ function aboutText(locale: typeof ko | typeof en): string {
 }
 
 describe('public v1 content copy', () => {
-  it('describes only opt-in browser storage in the guide', () => {
+  it('describes both local and signed-in cloud storage as user choices', () => {
     const koGuide = guideText(ko)
     const enGuide = guideText(en)
 
-    expect(koGuide).toContain('현재 브라우저의 localStorage')
-    expect(enGuide).toContain('this browser localStorage')
-    expect(koGuide).not.toContain('로그인 사용자')
-    expect(koGuide).not.toContain('클라우드 세트')
-    expect(koGuide).not.toContain('유료')
-    expect(enGuide).not.toContain('signed-in user')
-    expect(enGuide).not.toContain('cloud set')
-    expect(enGuide).not.toContain('paid feature')
+    expect(koGuide).toContain('비로그인 상태')
+    expect(koGuide).toContain('클라우드 저장')
+    expect(enGuide).toContain('signed in')
+    expect(enGuide).toContain('Cloud')
   })
 
   it('keeps the formula reference aligned with the calculation engine branches', () => {
@@ -33,12 +29,10 @@ describe('public v1 content copy', () => {
     expect(koFormulas).toContain('계약당 고정금액 × 보유 계약수')
     expect(koFormulas).toContain('약정가치 = 보유 계약수 × 약정가격 × 계약승수(계약크기)')
     expect(koFormulas).toContain('레버리지 = (현재가 × 총 민감도) ÷ 계좌평가금액')
-    expect(enFormulas).toContain(
-      'Total sensitivity = open contracts × contract multiplier / contract size',
-    )
+    expect(enFormulas).toContain('Total sensitivity = N × M')
     expect(enFormulas).toContain('constant, price-independent')
-    expect(enFormulas).toContain('Leverage = (current price × total sensitivity) ÷ account equity')
-    expect(enFormulas).not.toContain('Q = N × M')
+    expect(enFormulas).toContain('Leverage = (C₀ × Q) ÷ E₀')
+    expect(enFormulas).toContain('Q = N × M')
   })
 
   it('presents the about page as a benefit-led SaaS introduction in both languages', () => {
@@ -50,11 +44,11 @@ describe('public v1 content copy', () => {
     expect(koAbout).toContain('흩어진 계산을 한곳에')
     expect(koAbout).toContain('결과와 기준을 함께')
     expect(koAbout).toContain('가볍게 시작하고, 선택해서 저장')
-    expect(koAbout).toContain('현재 브라우저에만 보관됩니다')
+    expect(koAbout).toContain('로그인하면 클라우드 저장과 기록')
     expect(enAbout).toContain('Bring scattered calculations together')
     expect(enAbout).toContain('See the result and the reasoning')
     expect(enAbout).toContain('Start light, save by choice')
-    expect(enAbout).toContain('your inputs remain in this browser')
+    expect(enAbout).toContain('sign in for cloud saving and records')
     expect(koAbout).not.toContain('검증 가능한 도구로')
     expect(enAbout).not.toContain('made verifiable')
   })

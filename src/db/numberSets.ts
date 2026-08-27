@@ -1,12 +1,7 @@
 import type { CalculatorInputs } from '../types'
+import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
-import {
-  isRolloverAnchor,
-  isRolloverInterval,
-  isLocalDateString,
-  type RolloverAnchor,
-  type RolloverIntervalMonths,
-} from './rolloverSchedule'
+import { normalizeMemo } from '../utils/memo'
 import { supabase } from './supabaseClient'
 
 export const DEFAULT_SET_TITLE = '기본 세트'
@@ -16,22 +11,9 @@ interface NumberSetRow {
   title: string
   inputs: unknown
   memo?: string | null
+  preset_id?: string | null
   updated_at: string
   auto_snapshot_enabled?: boolean | null
-  rollover_reminder_enabled?: boolean | null
-  rollover_interval_months?: number | null
-  rollover_anchor?: string | null
-  rollover_next_date?: string | null
-  rollover_pending?: boolean | null
-}
-
-/** 슬롯별 롤오버 알림 설정. enabled=false면 나머지는 무시된다. */
-export interface RolloverSettings {
-  enabled: boolean
-  intervalMonths: RolloverIntervalMonths | null
-  anchor: RolloverAnchor | null
-  nextDate: string | null
-  pending: boolean
 }
 
 export interface NumberSetRecord {
@@ -39,14 +21,24 @@ export interface NumberSetRecord {
   title: string
   inputs: CalculatorInputs
   memo: string | null
+  presetId: PresetId | null
   updatedAt: string
   autoSnapshotEnabled: boolean
-  rollover: RolloverSettings
+}
+
+export interface NumberSetRevision {
+  id: string
+  updatedAt: string
+}
+
+export interface NumberSetDeletionSummary {
+  orderHistoryCount: number
+  accountSnapshotCount: number
+  memoCount: number
 }
 
 const NUMBER_SET_COLUMNS =
-  'id,title,inputs,memo,updated_at,auto_snapshot_enabled,' +
-  'rollover_reminder_enabled,rollover_interval_months,rollover_anchor,rollover_next_date,rollover_pending'
+  'id,title,inputs,memo,preset_id,updated_at,auto_snapshot_enabled'
 
 type NumberSetResult<T> =
   | { data: T; error: null }
@@ -64,27 +56,15 @@ function normalizeTitle(title: string | null | undefined): string {
   return title?.trim() || DEFAULT_SET_TITLE
 }
 
-function rowToRollover(row: NumberSetRow): RolloverSettings {
-  const interval = row.rollover_interval_months
-  const anchor = row.rollover_anchor
-  return {
-    enabled: row.rollover_reminder_enabled ?? false,
-    intervalMonths: isRolloverInterval(interval) ? interval : null,
-    anchor: isRolloverAnchor(anchor) ? anchor : null,
-    nextDate: isLocalDateString(row.rollover_next_date) ? row.rollover_next_date : null,
-    pending: row.rollover_pending ?? false,
-  }
-}
-
 function rowToRecord(row: NumberSetRow): NumberSetRecord {
   return {
     id: row.id,
     title: row.title || DEFAULT_SET_TITLE,
     inputs: parseStoredCalculatorInputs(row.inputs) ?? { mode: 'evaluate', positionSide: 'long' },
-    memo: row.memo?.trim() ? row.memo.slice(0, 500) : null,
+    memo: normalizeMemo(row.memo),
+    presetId: isPresetId(row.preset_id) ? row.preset_id : null,
     updatedAt: row.updated_at,
     autoSnapshotEnabled: row.auto_snapshot_enabled ?? false,
-    rollover: rowToRollover(row),
   }
 }
 
@@ -121,16 +101,36 @@ export async function fetchNumberSets(
   return { data: (data ?? []).map(rowToRecord), error: null }
 }
 
+export async function fetchNumberSetRevisions(
+  userId: string,
+): Promise<NumberSetResult<NumberSetRevision[]>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .select('id,updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .returns<Array<{ id: string; updated_at: string }>>()
+
+  if (error) return { data: null, error: mapError(error) }
+  return {
+    data: (data ?? []).map((row) => ({ id: row.id, updatedAt: row.updated_at })),
+    error: null,
+  }
+}
+
 export async function createNumberSet(
   userId: string,
   inputs: CalculatorInputs,
+  presetId: PresetId,
   title = DEFAULT_SET_TITLE,
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
 
   const { data, error } = await supabase
     .from('number_sets')
-    .insert({ user_id: userId, title: normalizeTitle(title), inputs })
+    .insert({ user_id: userId, title: normalizeTitle(title), inputs, preset_id: presetId })
     .select(NUMBER_SET_COLUMNS)
     .single<NumberSetRow>()
 
@@ -141,6 +141,7 @@ export async function createNumberSet(
 export async function saveNumberSet(
   userId: string,
   inputs: CalculatorInputs,
+  presetId: PresetId,
   setId?: string | null,
   title?: string | null,
 ): Promise<NumberSetResult<NumberSetRecord>> {
@@ -151,7 +152,11 @@ export async function saveNumberSet(
   if (existingId) {
     const { data, error } = await supabase
       .from('number_sets')
-      .update(title == null ? { inputs } : { title: normalizeTitle(title), inputs })
+      .update(
+        title == null
+          ? { inputs, preset_id: presetId }
+          : { title: normalizeTitle(title), inputs, preset_id: presetId },
+      )
       .eq('id', existingId)
       .eq('user_id', userId)
       .select(NUMBER_SET_COLUMNS)
@@ -163,7 +168,7 @@ export async function saveNumberSet(
 
   const { data, error } = await supabase
     .from('number_sets')
-    .insert({ user_id: userId, title: normalizeTitle(title), inputs })
+    .insert({ user_id: userId, title: normalizeTitle(title), inputs, preset_id: presetId })
     .select(NUMBER_SET_COLUMNS)
     .single<NumberSetRow>()
 
@@ -198,10 +203,30 @@ export async function updateNumberSetMemo(
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
 
-  const normalized = memo.trim() ? memo.slice(0, 500) : null
+  const normalized = normalizeMemo(memo)
   const { data, error } = await supabase
     .from('number_sets')
     .update({ memo: normalized })
+    .eq('id', setId)
+    .eq('user_id', userId)
+    .select(NUMBER_SET_COLUMNS)
+    .maybeSingle<NumberSetRow>()
+
+  if (error) return { data: null, error: mapError(error) }
+  if (!data) return { data: null, error: 'number_set_not_found' }
+  return { data: rowToRecord(data), error: null }
+}
+
+export async function setNumberSetPreset(
+  userId: string,
+  setId: string,
+  presetId: PresetId,
+): Promise<NumberSetResult<NumberSetRecord>> {
+  if (!supabase) return unavailable()
+
+  const { data, error } = await supabase
+    .from('number_sets')
+    .update({ preset_id: presetId })
     .eq('id', setId)
     .eq('user_id', userId)
     .select(NUMBER_SET_COLUMNS)
@@ -232,58 +257,6 @@ export async function setNumberSetAutoSnapshot(
   return { data: rowToRecord(data), error: null }
 }
 
-/** 슬롯의 롤오버 알림 설정을 저장한다. 재설정 시 대기(pending)는 초기화한다. */
-export async function setNumberSetRollover(
-  userId: string,
-  setId: string,
-  settings: {
-    enabled: boolean
-    intervalMonths: RolloverIntervalMonths | null
-    anchor: RolloverAnchor | null
-    nextDate: string | null
-  },
-): Promise<NumberSetResult<NumberSetRecord>> {
-  if (!supabase) return unavailable()
-
-  const { data, error } = await supabase
-    .from('number_sets')
-    .update({
-      rollover_reminder_enabled: settings.enabled,
-      rollover_interval_months: settings.enabled ? settings.intervalMonths : null,
-      rollover_anchor: settings.enabled ? settings.anchor : null,
-      rollover_next_date: settings.enabled ? settings.nextDate : null,
-      rollover_pending: false,
-    })
-    .eq('id', setId)
-    .eq('user_id', userId)
-    .select(NUMBER_SET_COLUMNS)
-    .maybeSingle<NumberSetRow>()
-
-  if (error) return { data: null, error: mapError(error) }
-  if (!data) return { data: null, error: 'number_set_not_found' }
-  return { data: rowToRecord(data), error: null }
-}
-
-/** 유저가 새 약정가로 값을 갱신했을 때 롤오버 대기 상태를 해제한다. */
-export async function clearNumberSetRolloverPending(
-  userId: string,
-  setId: string,
-): Promise<NumberSetResult<NumberSetRecord>> {
-  if (!supabase) return unavailable()
-
-  const { data, error } = await supabase
-    .from('number_sets')
-    .update({ rollover_pending: false })
-    .eq('id', setId)
-    .eq('user_id', userId)
-    .select(NUMBER_SET_COLUMNS)
-    .maybeSingle<NumberSetRow>()
-
-  if (error) return { data: null, error: mapError(error) }
-  if (!data) return { data: null, error: 'number_set_not_found' }
-  return { data: rowToRecord(data), error: null }
-}
-
 export async function deleteNumberSet(
   userId: string,
   setId?: string | null,
@@ -301,4 +274,49 @@ export async function deleteNumberSet(
 
   if (error) return { data: null, error: mapError(error) }
   return { data: true, error: null }
+}
+
+type NumberSetDeletionClient = NonNullable<typeof supabase>
+
+interface NumberSetDeletionSummaryRow {
+  order_history_count: number
+  account_snapshot_count: number
+  memo_count: number
+}
+
+export function createNumberSetDeletionRepository(
+  client: NumberSetDeletionClient | null = supabase,
+) {
+  return {
+    async fetchSummary(
+      userId: string,
+      setId: string,
+    ): Promise<NumberSetResult<NumberSetDeletionSummary>> {
+      if (!client) return unavailable()
+      const { data, error } = await client
+        .rpc('get_number_set_deletion_summary', {
+          p_user_id: userId,
+          p_number_set_id: setId,
+        })
+        .maybeSingle<NumberSetDeletionSummaryRow>()
+
+      if (error) return { data: null, error: mapError(error) }
+      if (!data) return { data: null, error: 'number_set_not_found' }
+      return {
+        data: {
+          orderHistoryCount: Number(data.order_history_count),
+          accountSnapshotCount: Number(data.account_snapshot_count),
+          memoCount: Number(data.memo_count),
+        },
+        error: null,
+      }
+    },
+  }
+}
+
+export async function fetchNumberSetDeletionSummary(
+  userId: string,
+  setId: string,
+): Promise<NumberSetResult<NumberSetDeletionSummary>> {
+  return createNumberSetDeletionRepository().fetchSummary(userId, setId)
 }

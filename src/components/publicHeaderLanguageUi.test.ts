@@ -7,10 +7,9 @@ const appSource = readFileSync(resolve('src/App.tsx'), 'utf8')
 const appCss = readFileSync(resolve('src/App.css'), 'utf8')
 
 describe('public header language and release-stage controls', () => {
-  it('keeps the fixed language control available only in local development', () => {
-    expect(mainSource).toContain(
-      '{import.meta.env.DEV && <LanguageToggle variant="fixed" />}',
-    )
+  it('keeps language and preset controls available outside the internal kit route', () => {
+    expect(mainSource).toContain('const showFixedWidgets = !isKitPath(window.location.pathname)')
+    expect(mainSource).toContain('{showFixedWidgets && <LanguageToggle variant="fixed" />}')
   })
 
   it('shows a dedicated beta badge beside the calculator title', () => {

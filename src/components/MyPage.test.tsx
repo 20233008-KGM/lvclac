@@ -35,8 +35,11 @@ function authUser(overrides: Partial<AuthUser> = {}): AuthUser {
   }
 }
 
-function snapshotRecord(): AccountSnapshotRecord {
-  return {
+function snapshotRecord(
+  numberSetId: string | null = 'slot-1',
+  overrides: Partial<AccountSnapshotRecord> = {},
+): AccountSnapshotRecord {
+  const record: AccountSnapshotRecord = {
     id: 'snapshot-1',
     title: 'Latest snapshot',
     inputs: { ...sampleInputs, accountEval: 48_537_669 },
@@ -47,11 +50,17 @@ function snapshotRecord(): AccountSnapshotRecord {
     },
     source: 'manual',
     sourceLocalDate: null,
+    numberSetId,
     createdAt: '2026-07-10T02:01:00.000Z',
   }
+  return { ...record, ...overrides }
 }
 
-function orderRecord(id: string, orderPrice: number): OrderHistoryRecord {
+function orderRecord(
+  id: string,
+  orderPrice: number,
+  numberSetId?: string | null,
+): OrderHistoryRecord {
   return {
     id,
     positionSide: 'long',
@@ -61,6 +70,7 @@ function orderRecord(id: string, orderPrice: number): OrderHistoryRecord {
     afterInputs: sampleInputs,
     beforeResult: summary,
     afterResult: summary,
+    numberSetId,
     createdAt: '2026-07-09T06:01:00.000Z',
   }
 }
@@ -116,6 +126,18 @@ describe('MyPageView', () => {
     expect(html).toContain(en.myPage.googleContinue)
     expect(html).not.toContain(en.myPage.profileTitle)
     expect(html).not.toContain('my-page-console')
+  })
+
+  it('shows a neutral account loader instead of signed-out marketing during auth restore', () => {
+    const html = renderToStaticMarkup(
+      <MyPageView {...baseProps} authLoading user={null} />,
+    )
+
+    expect(html).toContain('my-page-auth-loading')
+    expect(html).toContain(en.myPage.loadingBody)
+    expect(html).not.toContain('my-page-signin')
+    expect(html).not.toContain(en.myPage.loginHeadline)
+    expect(html).not.toContain(en.myPage.loginEmailAction)
   })
 
   it('renders signed-in account hub sections with the records summary entry', () => {
@@ -203,21 +225,53 @@ describe('MyPageView', () => {
 })
 
 describe('AccountRecordsSummaryPanel', () => {
-  it('shows ledger-style snapshot and order summary tables with the records ledger link', () => {
+  it('shows the latest five snapshots in chronological ledger rows with per-record slot labels', () => {
+    const recentSnapshots = [
+      snapshotRecord('slot-1', { id: 'snapshot-1', createdAt: '2026-07-10T05:01:00.000Z' }),
+      snapshotRecord('slot-2', {
+        id: 'snapshot-2',
+        inputs: { ...sampleInputs, accountEval: 47_200_000 },
+        createdAt: '2026-07-10T04:01:00.000Z',
+      }),
+      snapshotRecord('slot-1', {
+        id: 'snapshot-3',
+        inputs: { ...sampleInputs, accountEval: 46_300_000 },
+        createdAt: '2026-07-10T03:01:00.000Z',
+      }),
+      snapshotRecord(null, {
+        id: 'snapshot-4',
+        inputs: { ...sampleInputs, accountEval: 45_400_000 },
+        createdAt: '2026-07-10T02:01:00.000Z',
+      }),
+      snapshotRecord('slot-missing', {
+        id: 'snapshot-5',
+        inputs: { ...sampleInputs, accountEval: 44_500_000 },
+        createdAt: '2026-07-10T01:01:00.000Z',
+      }),
+      snapshotRecord('slot-2', {
+        id: 'snapshot-6',
+        inputs: { ...sampleInputs, accountEval: 43_600_000 },
+        createdAt: '2026-07-10T00:01:00.000Z',
+      }),
+    ]
     const html = renderToStaticMarkup(
       <AccountRecordsSummaryPanel
         copy={en.myPage}
         recordsCopy={en.accountRecords}
         loading={false}
         error={null}
-        latestSnapshot={snapshotRecord()}
+        recentSnapshots={recentSnapshots}
         recentOrders={[
-          orderRecord('order-1', 280_000),
-          orderRecord('order-2', 279_500),
-          orderRecord('order-3', 279_000),
+          orderRecord('order-1', 280_000, 'slot-1'),
+          orderRecord('order-2', 279_500, null),
+          orderRecord('order-3', 279_000, 'slot-missing'),
           orderRecord('order-4', 272_000),
           orderRecord('order-5', 295_500),
           orderRecord('order-6', 276_000),
+        ]}
+        slots={[
+          { id: 'slot-1', title: 'Primary hedge' },
+          { id: 'slot-2', title: 'Secondary book' },
         ]}
         archiveHref="/records"
         onRetry={vi.fn()}
@@ -225,17 +279,25 @@ describe('AccountRecordsSummaryPanel', () => {
     )
 
     expect(html).toContain('records-summary-table records-summary-table--snapshot')
+    expect(html).toContain(en.myPage.recentSnapshotsTitle)
+    expect(html).toContain('5 records')
+    expect(html).toContain(en.accountRecords.savedAtAndSlot)
     expect(occurrences(html, en.accountRecords.summaryAccountEquity)).toBe(1)
     expect(occurrences(html, en.accountRecords.summaryLiquidationBuffer)).toBe(1)
     expect(occurrences(html, en.accountRecords.summaryLeverage)).toBe(1)
     expect(html).toContain('48,537,669')
+    expect(html).toContain('47,200,000')
+    expect(html).toContain('46,300,000')
+    expect(html).toContain('45,400,000')
+    expect(html).toContain('44,500,000')
+    expect(html).not.toContain('43,600,000')
     expect(html).toContain('20.03%')
     expect(html).toContain('2.42')
     expect(html).toContain(en.myPage.recordsArchiveLink)
     expect(html).toContain('<a class="records-summary-link" href="/records">')
     expect(html).toContain('href="/records"')
     expect(html).toContain('records-summary-table records-summary-table--orders')
-    expect(html).toContain(en.accountRecords.createdAt)
+    expect(html).toContain(en.accountRecords.savedAtAndSlot)
     expect(html).toContain(en.accountRecords.side)
     expect(occurrences(html, en.accountRecords.archiveOrderContracts)).toBe(1)
     expect(occurrences(html, en.accountRecords.archiveOrderPrice)).toBe(1)
@@ -243,5 +305,43 @@ describe('AccountRecordsSummaryPanel', () => {
     expect(html).not.toContain(`${en.accountRecords.archiveOrderPrice} <strong>`)
     expect(html).toContain('295,500')
     expect(html).not.toContain('276,000')
+    expect(occurrences(html, 'class="records-summary-row records-summary-snapshot"')).toBe(5)
+    expect(occurrences(html, 'title="Primary hedge"')).toBe(3)
+    expect(html).toContain('title="Secondary book"')
+    expect(html).toContain(`title="${en.accountRecords.slotFilterUnassigned}"`)
+    expect(html).toContain(`title="${en.accountRecords.slotNameUnavailable}"`)
+  })
+
+  it('keeps the existing empty, loading, and retry states', () => {
+    const emptyHtml = renderToStaticMarkup(
+      <AccountRecordsSummaryPanel
+        copy={en.myPage}
+        recordsCopy={en.accountRecords}
+        loading={false}
+        error={null}
+        recentSnapshots={[]}
+        recentOrders={[]}
+        archiveHref="/records"
+        onRetry={vi.fn()}
+      />,
+    )
+    expect(emptyHtml).toContain(en.myPage.recentSnapshotsEmpty)
+    expect(emptyHtml).toContain(en.myPage.recentOrdersEmpty)
+
+    const loadingHtml = renderToStaticMarkup(
+      <AccountRecordsSummaryPanel
+        copy={en.myPage}
+        recordsCopy={en.accountRecords}
+        loading
+        error="Could not load records"
+        recentSnapshots={[]}
+        recentOrders={[]}
+        archiveHref="/records"
+        onRetry={vi.fn()}
+      />,
+    )
+    expect(loadingHtml).toContain(en.accountRecords.loading)
+    expect(loadingHtml).toContain('Could not load records')
+    expect(loadingHtml).toContain(en.accountRecords.retry)
   })
 })

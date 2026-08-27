@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { PUBLIC_PAGE_METADATA } from '../config/publicPageMetadata'
 import { en } from '../i18n/locales/en'
 import { ko } from '../i18n/locales/ko'
 
@@ -26,12 +25,18 @@ describe('public SEO content', () => {
   it('keeps the approved calculator titles unchanged', () => {
     expect(ko.siteTitle).toBe('선물 계산기')
     expect(en.siteTitle).toBe('Futures Calculator')
-    expect(PUBLIC_PAGE_METADATA.ko['/'].title).toBe(
-      '선물 청산가 계산기 | 증거금·레버리지 | LiqGuard',
-    )
-    expect(PUBLIC_PAGE_METADATA.en['/'].title).toBe(
-      'Futures Liquidation Calculator | Margin & Leverage | LiqGuard',
-    )
+  })
+
+  it('keeps a crawlable direct locale link in the quiet footer area', () => {
+    expect(appSource).not.toContain('<LocaleRouteLink className="header-locale-link" />')
+    expect(footerSource).toContain('<LocaleRouteLink className="site-footer__locale-link" />')
+    expect(localeLinkSource).toContain('hrefLang={targetLocale}')
+    expect(localeLinkSource).toContain('lang={targetLocale}')
+    expect(localeLinkSource).toContain('href={href}')
+    expect(localeLinkSource).toContain("targetLocale === 'en' ? 'English' : '한국어'")
+    expect(localeLinkSource).not.toContain('aria-haspopup="menu"')
+    expect(appCss).toContain('.site-footer__locale-link')
+    expect(appCss).not.toContain('.header-locale-menu__popover')
   })
 
   it('links the calculator, guide, and formulas with descriptive text', () => {
@@ -43,15 +48,6 @@ describe('public SEO content', () => {
     expect(source).toContain('Open the futures liquidation calculator')
     expect(guideSource).toContain('<PublicDocumentNext current="guide" />')
     expect(formulasSource).toContain('<PublicDocumentNext current="formulas" />')
-  })
-
-  it('keeps a crawlable direct locale link in the quiet footer area', () => {
-    expect(appSource).not.toContain('<LocaleRouteLink className="header-locale-link" />')
-    expect(footerSource).toContain('<LocaleRouteLink className="site-footer__bottom-link" />')
-    expect(localeLinkSource).toContain('hrefLang={targetLocale}')
-    expect(localeLinkSource).toContain('lang={targetLocale}')
-    expect(localeLinkSource).toContain('href={href}')
-    expect(appCss).not.toContain('.header-locale-link')
   })
 
   it('uses a restrained responsive layout', () => {

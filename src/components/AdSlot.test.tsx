@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { GoogleConsentContext } from '../context/googleConsentState'
 import { AdSlot } from './AdSlot'
+import pageShellSource from './PageShell.tsx?raw'
 
 const consent = {
   ready: true,
@@ -30,5 +31,10 @@ describe('AdSlot', () => {
     )
 
     expect(html).toBe('')
+  })
+
+  it('does not render empty advertising wrapper DOM in the page shell', () => {
+    expect(pageShellSource).toContain('{ADS_ENABLED && <aside')
+    expect(pageShellSource).toContain('{ADS_ENABLED && <div className="page-ads">')
   })
 })

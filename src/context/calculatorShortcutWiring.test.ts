@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -8,10 +8,7 @@ function source(path: string) {
 
 describe('calculator undo/redo shortcut wiring', () => {
   it('exposes undo and redo controls from the calculator context', () => {
-    const contextPath = existsSync(resolve('src/context/PublicCalculatorContext.tsx'))
-      ? 'src/context/PublicCalculatorContext.tsx'
-      : 'src/context/CalculatorContext.tsx'
-    const text = source(contextPath)
+    const text = source('src/context/CalculatorContext.tsx')
 
     expect(text).toContain('undoInputs: () => void')
     expect(text).toContain('redoInputs: () => void')
@@ -25,6 +22,10 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('getCalculatorHistoryMoves')
     expect(text).toContain('jumpCalculatorHistory')
     expect(text).toContain('options?.historyOnly')
+    expect(text).toContain('options?.historyTransient')
+    expect(text).toContain('historyTransientTarget')
+    expect(text).toContain('!prev.transientEdit && hasOrderApplyUndo(prev.present)')
+    expect(text).toContain('if (probe.transientEdit)')
   })
 
   it('handles Ctrl+Z and Ctrl+Shift+Z once at the calculator app level', () => {
@@ -38,10 +39,9 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('isTextEditingTarget(e.target)')
   })
 
-  it('wires a dedicated header history menu with hover, focus, and context-menu access', () => {
+  it('wires a header history menu with hover, focus, and context-menu access', () => {
     const app = source('src/App.tsx')
     const text = source('src/components/CalculatorHistoryMenu.tsx')
-    const css = source('src/App.css')
 
     expect(app).toContain("import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'")
     expect(app).toContain('<CalculatorHistoryMenu')
@@ -57,9 +57,6 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(text).toContain('onClick={handleButtonClick}')
     expect(text).toContain('calculator-history-menu')
     expect(text).toContain('calculator-history-btn')
-    expect(css).toMatch(
-      /\.calculator-history-menu::before\s*\{[^}]*bottom:\s*100%;[^}]*height:\s*var\(--space-xs\);/s,
-    )
   })
 
   it('removes component-local z shortcut listeners that block Shift+Z', () => {
@@ -70,15 +67,5 @@ describe('calculator undo/redo shortcut wiring', () => {
     expect(resultPanel).not.toContain("e.key !== 'z' || e.shiftKey")
     expect(inputPanel).not.toContain("onChange({ undoMarkPrice: true })\n    }")
     expect(resultPanel).not.toContain("onChange({ undoOrderApply: true })\n    }")
-  })
-
-  it('keeps every order price input path transient during preview and settles rapid step clicks together', () => {
-    const resultPanel = source('src/components/ResultPanel.tsx')
-    const numberStepper = source('src/components/NumberStepper.tsx')
-
-    expect(resultPanel.match(/orderInputHistoryOptions\(meta\)/g)).toHaveLength(3)
-    expect(resultPanel.match(/historyTransient: 'cancel'/g)).toHaveLength(2)
-    expect(numberStepper).toContain('HISTORY_GESTURE_SETTLE_MS = 300')
-    expect(numberStepper).toContain('scheduleGestureHistoryCommit()')
   })
 })

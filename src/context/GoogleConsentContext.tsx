@@ -104,7 +104,25 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initializeGoogleConsentDefaults()
-    if (!ADS_ENABLED || !ADSENSE_CLIENT) return
+    if (!ADS_ENABLED || !ADSENSE_CLIENT) {
+      const preferences = readPrivacyPreferences(localStorage)
+      if (preferences) {
+        // The saved choice is the initialization source for this external consent bridge.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        applyDecision({
+          ready: true,
+          regulated: false,
+          adRequestsAllowed: false,
+          adStorageAllowed: false,
+          adUserDataAllowed: false,
+          personalizedAdsAllowed: false,
+          analyticsAllowed: preferences.analytics,
+        })
+      } else {
+        setDeferredAutoOpen(true)
+      }
+      return
+    }
 
     queueGoogleCallback('CONSENT_MODE_DATA_READY', syncGoogleDecision)
     const syncWhenVisible = () => {
@@ -121,7 +139,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('focus', syncGoogleDecision)
       document.removeEventListener('visibilitychange', syncWhenVisible)
     }
-  }, [syncGoogleDecision])
+  }, [applyDecision, syncGoogleDecision])
 
   const choosePrivacyPreferences = useCallback(
     (preferences: PrivacyPreferences) => {
@@ -129,10 +147,10 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
       applyDecision({
         ready: true,
         regulated: false,
-        adRequestsAllowed: true,
-        adStorageAllowed: preferences.personalizedAds,
-        adUserDataAllowed: preferences.personalizedAds,
-        personalizedAdsAllowed: preferences.personalizedAds,
+        adRequestsAllowed: ADS_ENABLED,
+        adStorageAllowed: ADS_ENABLED && preferences.personalizedAds,
+        adUserDataAllowed: ADS_ENABLED && preferences.personalizedAds,
+        personalizedAdsAllowed: ADS_ENABLED && preferences.personalizedAds,
         analyticsAllowed: preferences.analytics,
       })
       setDeferredAutoOpen(false)

@@ -16,12 +16,18 @@ import {
   STORAGE_KEY,
 } from './detectLocale'
 import { isCalcMessageCode, type CalcMessageCode } from './calcMessages'
+import {
+  applyPreset,
+  detectInitialPreset,
+  getPresetOverride,
+  persistPreset,
+} from './presets'
 import type { Locale, Messages, PresetId } from './types'
 
 interface LanguageContextValue {
   locale: Locale
   setLocale: (locale: Locale) => void
-  /** 공개판의 단일 고정 선물 용어세트. 호환 소비자를 위해 읽기 전용 형태로 제공한다. */
+  /** 활성 용어 프리셋(상품군 어휘). 'default' = 현재 국내선물 어휘 */
   preset: PresetId
   setPreset: (preset: PresetId) => void
   t: Messages
@@ -37,7 +43,7 @@ const localeLoaders: Record<Locale, () => Promise<Messages>> = {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(detectInitialLocale)
-  const preset: PresetId = 'futures'
+  const [preset, setPresetState] = useState<PresetId>(detectInitialPreset)
   const [messages, setMessages] = useState<Messages | null>(null)
   const cacheRef = useRef<Partial<Record<Locale, Messages>>>({})
 
@@ -81,16 +87,23 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setPreset = useCallback((next: PresetId) => {
-    // 공개판 용어는 지수·종목·원자재 선물 공통 세트 하나로 고정한다.
-    void next
+    setPresetState(next)
+    persistPreset(next)
   }, [])
 
-  // 저장된 구버전 프리셋과 무관하게 언어별 공통 선물 문구를 그대로 사용한다.
-  const t = messages
+  // 로드된 로케일 위에 프리셋 오버라이드를 얕게 병합(로더/캐시 바깥에서만).
+  // 프리셋은 언어와 직교하므로 로케일 로딩 로직은 전혀 건드리지 않는다.
+  const t = useMemo(
+    () => (messages ? applyPreset(messages, getPresetOverride(locale, preset)) : null),
+    [messages, locale, preset],
+  )
 
   useEffect(() => {
     if (!t) return
     document.documentElement.lang = t.htmlLang
+    document.title = t.siteTitle
+    const meta = document.querySelector('meta[name="description"]')
+    if (meta) meta.setAttribute('content', t.siteDescription)
   }, [t])
 
   useEffect(() => {
@@ -98,8 +111,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false
     void fetchGeoLocale().then((detected) => {
-      // 조회가 진행되는 동안 사용자가 언어를 직접 선택했으면 그 선택을 보존한다.
-      if (cancelled || !detected || !shouldFetchGeo()) return
+      if (cancelled || !detected) return
       sessionStorage.setItem(SESSION_DETECTED_KEY, detected)
       setLocaleState(detected)
     })

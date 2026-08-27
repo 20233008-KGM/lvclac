@@ -7,24 +7,12 @@ function source(path: string) {
 }
 
 describe('calculator modal overlays', () => {
-  it('renders the public save-consent modal at the app overlay root', () => {
-    const text = source('src/components/ServiceDisclaimer.tsx')
-    const frame = source('src/components/TrustModalFrame.tsx')
+  it('renders draft-save modals through the document body portal', () => {
+    const text = source('src/components/SaveDraftToggle.tsx')
 
-    expect(text).toContain('<PublicSaveConsentModal')
-    expect(text).toContain('<TrustModalFrame')
-    expect(text).toContain('variant="storage"')
-    expect(frame).toContain('document.body.style.overflow')
-    expect(frame).toContain('createPortal(modal, document.body)')
-    expect(text).toContain('<LocalComputerIcon')
-    expect(text).toContain('<CloudIcon')
-    expect(text).toContain('public-save-consent-facts')
-    expect(text).toContain('public-save-consent-warning')
-    expect(text).toContain('useState<PublicSaveConsent | null>(null)')
-    expect(text.match(/type="radio"/g)).toHaveLength(2)
-    expect(text).toContain('confirmDecision')
-    expect(text).toContain('disabled={!selectedDecision || busy}')
-    expect(text).not.toContain('onClick={chooseOff}')
+    expect(text).toContain("import { createPortal } from 'react-dom'")
+    expect(text).toContain('document.body.style.overflow')
+    expect(text).toContain('return createPortal(modal, document.body)')
   })
 
   it('renders clear-all confirmation through the document body portal', () => {
@@ -46,11 +34,12 @@ describe('number set detail modal', () => {
     expect(text).toContain('return createPortal(modal, document.body)')
     expect(text).toContain('role="dialog"')
     expect(text).toContain('aria-modal="true"')
-    // Closes on Escape and shows both input and result sections.
+    // Closes on Escape and reuses the same read-only calculator body as ledger detail.
     expect(text).toContain("e.key === 'Escape'")
-    expect(text).toContain('numberSetDetailInputsHeading')
-    expect(text).toContain('numberSetDetailResultsHeading')
-    expect(text).toContain('calculateEvaluate')
+    expect(text).toContain('disclaimer-modal records-detail-modal')
+    expect(text).toContain('<InputPanel inputs={numberSet.inputs} onChange={noopChange} />')
+    expect(text).toContain('<ResultPanel inputs={numberSet.inputs} onChange={noopChange} />')
+    expect(text).toContain('records-detail-calc')
   })
 
   it('wires the number-set row to open the detail modal from the expanded peek', () => {

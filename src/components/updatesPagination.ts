@@ -19,7 +19,11 @@ function parsePositiveInteger(value: string | null): number | null {
   return Number.isSafeInteger(parsed) ? parsed : null
 }
 
-export function updatesHrefForPage(page: number, search: string): string {
+export function updatesHrefForPage(
+  page: number,
+  search: string,
+  pathname = '/updates',
+): string {
   const params = new URLSearchParams(search)
   if (page <= 1) {
     params.delete('page')
@@ -27,20 +31,24 @@ export function updatesHrefForPage(page: number, search: string): string {
     params.set('page', String(page))
   }
   const query = params.toString()
-  return `/updates${query ? `?${query}` : ''}`
+  const basePath = pathname === '/en/updates' || pathname === '/en/updates/'
+    ? '/en/updates'
+    : '/updates'
+  return `${basePath}${query ? `?${query}` : ''}`
 }
 
 export function resolveUpdatesPage(
   search: string,
   totalEntries: number,
+  pathname = '/updates',
 ): ResolvedUpdatesPage {
   const params = new URLSearchParams(search)
   const rawPage = params.get('page')
   const parsedPage = parsePositiveInteger(rawPage)
   const pageCount = updatesPageCount(totalEntries)
   const page = Math.min(parsedPage ?? 1, pageCount)
-  const normalizedHref = updatesHrefForPage(page, search)
-  const currentHref = `/updates${search}`
+  const normalizedHref = updatesHrefForPage(page, search, pathname)
+  const currentHref = `${pathname.replace(/\/$/, '')}${search}`
   const needsNormalization =
     rawPage !== null && (parsedPage === null || parsedPage !== page || page === 1)
 

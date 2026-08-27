@@ -5,6 +5,8 @@ export type BillingPlan = 'monthly' | 'yearly'
 export interface SubscriptionRecord {
   status: string
   currentPeriodEnd: string | null
+  scheduledChangeAction: string | null
+  scheduledChangeEffectiveAt: string | null
 }
 
 type BillingResult<T> = { data: T; error: null } | { data: null; error: string }
@@ -16,22 +18,49 @@ export function isActiveSubscription(status: string | null | undefined): boolean
 interface SubscriptionRow {
   status: string
   current_period_end: string | null
+  scheduled_change_action: string | null
+  scheduled_change_effective_at: string | null
+}
+
+function clientPaddleEnvironment(): PaddleEnvironment | null {
+  const environment = import.meta.env.VITE_PADDLE_ENV
+  return environment === 'sandbox' || environment === 'live' ? environment : null
+}
+
+export function clientSubscriptionProviders(environment: PaddleEnvironment): string[] {
+  return environment === 'live'
+    ? ['paddle_live', 'manual']
+    : ['paddle_sandbox', 'paddle', 'manual']
 }
 
 export async function fetchSubscription(
   userId: string,
 ): Promise<BillingResult<SubscriptionRecord | null>> {
   if (!supabase) return { data: null, error: 'supabase_not_configured' }
+  const environment = clientPaddleEnvironment()
+  if (!environment) return { data: null, error: 'paddle_not_configured' }
 
   const { data, error } = await supabase
     .from('subscriptions')
-    .select('status,current_period_end')
+    .select(
+      'status,current_period_end,scheduled_change_action,scheduled_change_effective_at',
+    )
     .eq('user_id', userId)
+    .in('provider', clientSubscriptionProviders(environment))
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle<SubscriptionRow>()
 
   if (error) return { data: null, error: error.message }
   return {
-    data: data ? { status: data.status, currentPeriodEnd: data.current_period_end } : null,
+    data: data
+      ? {
+          status: data.status,
+          currentPeriodEnd: data.current_period_end,
+          scheduledChangeAction: data.scheduled_change_action,
+          scheduledChangeEffectiveAt: data.scheduled_change_effective_at,
+        }
+      : null,
     error: null,
   }
 }
@@ -190,4 +219,15 @@ export function openBillingPortal(): Promise<string | null> {
     window.location.href = result.data.url
     return null
   })()
+}
+
+export type SandboxSubscriptionAction = 'sync' | 'cancel_now'
+
+export async function controlSandboxSubscription(
+  action: SandboxSubscriptionAction,
+): Promise<string | null> {
+  const result = await postBilling<{ action?: string }>('/api/billing/sandbox-subscription', {
+    action,
+  })
+  return result.error
 }

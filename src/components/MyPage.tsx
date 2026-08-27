@@ -27,28 +27,27 @@ import type {
   AccountSnapshotAutomationSettings,
   AccountSnapshotAutomationSettingsInput,
 } from '../db/accountSnapshotAutomation'
-import { fetchNumberSets, type RolloverSettings } from '../db/numberSets'
-import {
-  computeNextRolloverDate,
-  type RolloverAnchor,
-  type RolloverIntervalMonths,
-} from '../db/rolloverSchedule'
+import { fetchNumberSetDeletionSummary } from '../db/numberSets'
 import type { AuthUser } from '../db/profile'
 import type { Messages } from '../i18n/types'
-import { useLanguage } from '../i18n'
+import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import {
   formatLeverageValue,
   formatNumber,
   formatPercent,
   formatSavedAtCompact,
 } from '../utils/format'
+import {
+  createAccountRecordSlotTitles,
+  resolveAccountRecordSlotLabel,
+} from '../utils/accountRecordSlot'
 import { authErrorMessage } from './auth/authMessages'
 import { GoogleLogo } from './auth/GoogleLogo'
 import { validateNewPassword, validatePasswordConfirmation } from '../auth/validation'
+import { useNavigate } from '../hooks/usePathname'
 import { calculateEvaluate } from '../calc/leverage'
 import { BillingPanel } from './billing/BillingPanel'
 import { NumberSetDetailModal } from './NumberSetDetailModal'
-import { PresetSelect } from './PresetSelect'
 import { ToggleSwitch } from './ToggleSwitch'
 import { TimeZoneSelect } from './TimeZoneSelect'
 import {
@@ -56,12 +55,18 @@ import {
   writePreferredSnapshotTimeZone,
 } from './welcomePreferences'
 import { SiteFooter } from './SiteFooter'
+import type { NumberSetDeleteSummaryState } from './NumberSetDeleteConfirmModal'
+import {
+  isLastEnabledSnapshotSlot,
+  shouldStartSnapshotSchedule,
+} from './snapshotSlotActivation'
 import '../styles/pages.css'
 // 로그아웃 /my 뷰의 Google 로그인 버튼(.google-btn)은 auth-dialog.css에 정의돼 있다.
 // AuthModal이 열리기 전에도 스타일이 적용되도록 여기서 직접 로드한다(기존 스타일 재사용).
 import '../styles/auth-dialog.css'
 
 const AuthModal = lazy(() => import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })))
+const NumberSetDeleteConfirmModal = lazy(() => import('./NumberSetDeleteConfirmModal'))
 
 // 개발 빌드에서만 로드. 프로덕션에서는 import.meta.env.DEV가 false로 치환되어
 // 아래 동적 import가 제거되므로 관련 코드/문자열이 번들에 포함되지 않는다.
@@ -228,6 +233,7 @@ interface MyPageViewProps {
   onLoginClick: () => void
   onGoogleLogin: () => void
   onSignOut: () => void
+  onBackToCalculator?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
 /** 이메일/비밀번호 수단용 단색 아이콘. Google 로고와 아이콘 컬럼을 대칭으로 맞춘다. */
@@ -251,46 +257,53 @@ function MailIcon() {
   )
 }
 
-function LatestSnapshotSummary({
+function RecentSnapshotList({
   copy,
   recordsCopy,
-  snapshot,
+  snapshots,
+  slotTitles,
 }: {
   copy: MyPageCopy
   recordsCopy: AccountRecordsCopy
-  snapshot: AccountSnapshotRecord | null
+  snapshots: AccountSnapshotRecord[]
+  slotTitles: ReadonlyMap<string, string>
 }) {
-  if (!snapshot) {
-    return <p className="account-records-empty">{copy.latestSnapshotEmpty}</p>
+  if (snapshots.length === 0) {
+    return <p className="account-records-empty">{copy.recentSnapshotsEmpty}</p>
   }
 
-  const metrics = [
-    {
-      label: recordsCopy.summaryAccountEquity,
-      value: formatNumber(snapshot.inputs.accountEval ?? null),
-    },
-    {
-      label: recordsCopy.summaryLiquidationBuffer,
-      value: formatPercent(snapshot.result.toleranceRate),
-    },
-    {
-      label: recordsCopy.summaryLeverage,
-      value: formatLeverageValue(snapshot.result.leverageRatio),
-    },
-  ]
-
   return (
-    <div className="records-summary-table records-summary-table--snapshot" role="table">
+    <div
+      className="records-summary-table records-summary-table--snapshot records-summary-table--recent-snapshots"
+      role="table"
+    >
       <div className="records-summary-row records-summary-head" role="row">
-        {metrics.map((metric) => (
-          <span key={metric.label} role="columnheader">{metric.label}</span>
-        ))}
+        <span role="columnheader">{recordsCopy.savedAtAndSlot}</span>
+        <span role="columnheader">{recordsCopy.summaryAccountEquity}</span>
+        <span role="columnheader">{recordsCopy.summaryLiquidationBuffer}</span>
+        <span role="columnheader">{recordsCopy.summaryLeverage}</span>
       </div>
-      <div className="records-summary-row records-summary-values" role="row">
-        {metrics.map((metric) => (
-          <strong key={metric.label} role="cell">{metric.value}</strong>
-        ))}
-      </div>
+      {snapshots.map((snapshot) => {
+        const slotLabel = resolveAccountRecordSlotLabel(
+          snapshot.numberSetId,
+          slotTitles,
+          recordsCopy.slotFilterUnassigned,
+          recordsCopy.slotNameUnavailable,
+        )
+        return (
+          <div key={snapshot.id} className="records-summary-row records-summary-snapshot" role="row">
+            <div className="records-summary-record-meta" role="cell">
+              <time dateTime={snapshot.createdAt}>{formatSavedAtCompact(snapshot.createdAt)}</time>
+              <span className="records-summary-record-slot" title={slotLabel}>
+                {slotLabel}
+              </span>
+            </div>
+            <strong role="cell">{formatNumber(snapshot.inputs.accountEval ?? null)}</strong>
+            <strong role="cell">{formatPercent(snapshot.result.toleranceRate)}</strong>
+            <strong role="cell">{formatLeverageValue(snapshot.result.leverageRatio)}</strong>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -299,10 +312,12 @@ function RecentOrderList({
   copy,
   recordsCopy,
   orders,
+  slotTitles,
 }: {
   copy: MyPageCopy
   recordsCopy: AccountRecordsCopy
   orders: OrderHistoryRecord[]
+  slotTitles: ReadonlyMap<string, string>
 }) {
   if (orders.length === 0) {
     return <p className="account-records-empty">{copy.recentOrdersEmpty}</p>
@@ -311,21 +326,34 @@ function RecentOrderList({
   return (
     <div className="records-summary-table records-summary-table--orders" role="table">
       <div className="records-summary-row records-summary-head" role="row">
-        <span role="columnheader">{recordsCopy.createdAt}</span>
+        <span role="columnheader">{recordsCopy.savedAtAndSlot}</span>
         <span role="columnheader">{recordsCopy.side}</span>
         <span role="columnheader">{recordsCopy.archiveOrderContracts}</span>
         <span role="columnheader">{recordsCopy.archiveOrderPrice}</span>
       </div>
-      {orders.slice(0, 5).map((order) => (
-        <div key={order.id} className="records-summary-row records-summary-order" role="row">
-          <time dateTime={order.createdAt} role="cell">{formatSavedAtCompact(order.createdAt)}</time>
-          <span className={`records-summary-side records-summary-side--${order.positionSide}`} role="cell">
-            {order.positionSide}
-          </span>
-          <strong role="cell">{formatNumber(order.orderContracts)}</strong>
-          <strong role="cell">{formatNumber(order.orderPrice)}</strong>
-        </div>
-      ))}
+      {orders.slice(0, 5).map((order) => {
+        const slotLabel = resolveAccountRecordSlotLabel(
+          order.numberSetId,
+          slotTitles,
+          recordsCopy.slotFilterUnassigned,
+          recordsCopy.slotNameUnavailable,
+        )
+        return (
+          <div key={order.id} className="records-summary-row records-summary-order" role="row">
+            <div className="records-summary-record-meta" role="cell">
+              <time dateTime={order.createdAt}>{formatSavedAtCompact(order.createdAt)}</time>
+              <span className="records-summary-record-slot" title={slotLabel}>
+                {slotLabel}
+              </span>
+            </div>
+            <span className={`records-summary-side records-summary-side--${order.positionSide}`} role="cell">
+              {order.positionSide}
+            </span>
+            <strong role="cell">{formatNumber(order.orderContracts)}</strong>
+            <strong role="cell">{formatNumber(order.orderPrice)}</strong>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -335,8 +363,9 @@ export function AccountRecordsSummaryPanel({
   recordsCopy,
   loading,
   error,
-  latestSnapshot,
+  recentSnapshots,
   recentOrders,
+  slots = [],
   archiveHref,
   onRetry,
 }: {
@@ -344,11 +373,18 @@ export function AccountRecordsSummaryPanel({
   recordsCopy: AccountRecordsCopy
   loading: boolean
   error: string | null
-  latestSnapshot: AccountSnapshotRecord | null
+  recentSnapshots: AccountSnapshotRecord[]
   recentOrders: OrderHistoryRecord[]
+  slots?: { id: string; title: string }[]
   archiveHref: string
   onRetry: () => void
 }) {
+  const slotTitles = useMemo(() => createAccountRecordSlotTitles(slots), [slots])
+  const visibleSnapshots = recentSnapshots.slice(0, 5)
+  const recentSnapshotCount =
+    visibleSnapshots.length > 0
+      ? copy.recordsCount.replace('{count}', String(visibleSnapshots.length))
+      : copy.recordsEmpty
   const recentOrderCount =
     recentOrders.length > 0
       ? copy.recordsCount.replace('{count}', String(recentOrders.length))
@@ -384,12 +420,14 @@ export function AccountRecordsSummaryPanel({
         <div className="records-summary-grid">
           <section className="records-summary-block">
             <div className="records-summary-block-head">
-              <h3>{copy.latestSnapshotTitle}</h3>
+              <h3>{copy.recentSnapshotsTitle}</h3>
+              <span>{recentSnapshotCount}</span>
             </div>
-            <LatestSnapshotSummary
+            <RecentSnapshotList
               copy={copy}
               recordsCopy={recordsCopy}
-              snapshot={latestSnapshot}
+              snapshots={visibleSnapshots}
+              slotTitles={slotTitles}
             />
           </section>
           <section className="records-summary-block">
@@ -397,7 +435,12 @@ export function AccountRecordsSummaryPanel({
               <h3>{copy.recentOrdersTitle}</h3>
               <span>{recentOrderCount}</span>
             </div>
-            <RecentOrderList copy={copy} recordsCopy={recordsCopy} orders={recentOrders} />
+            <RecentOrderList
+              copy={copy}
+              recordsCopy={recordsCopy}
+              orders={recentOrders}
+              slotTitles={slotTitles}
+            />
           </section>
         </div>
       )}
@@ -414,25 +457,26 @@ function suggestedBrowserTimeZone(): string {
 }
 
 /**
- * 계좌스냅샷 자동 저장 설정 행. 시간대 + 스냅샷 시각 + 사용 토글로 구성한다.
+ * 계좌스냅샷 저장 시각 설정 행. 시간대 + 스냅샷 시각 + 활성 슬롯 상태로 구성한다.
  * 시간대는 전체 IANA 목록에서 검색으로 직접 고른다(기본값은 브라우저 추정 시간대).
- * 토글 ON이 곧 규칙 저장, OFF가 규칙 해제다. 켜진 상태에서 시간대·시각을 바꾸면 즉시 재저장한다.
+ * 자동 저장 활성화는 숫자세트의 슬롯별 "매일 기록" 스위치가 전담한다.
  */
 export function AccountSnapshotAutomationPanel({
   copy,
   isPro,
   hasCloudInput,
+  enabledSlotCount,
   settings,
   busy = false,
   notice = null,
   timeZone,
   onTimeZoneChange,
   onSave,
-  onDisable,
 }: {
   copy: MyPageCopy
   isPro: boolean
   hasCloudInput: boolean
+  enabledSlotCount: number
   settings: AccountSnapshotAutomationSettings | null
   busy?: boolean
   notice?: string | null
@@ -440,34 +484,28 @@ export function AccountSnapshotAutomationPanel({
   timeZone: string
   onTimeZoneChange: (timeZone: string) => void
   onSave: (settings: AccountSnapshotAutomationSettingsInput) => void
-  onDisable: () => void
 }) {
   const [timeOfDay, setTimeOfDay] = useState(settings?.timeOfDay ?? '16:00')
-  const canEnable = isPro && hasCloudInput
-  const enabled = settings?.enabled ?? false
+  const canConfigure = isPro && hasCloudInput
+  const scheduleEnabled = enabledSlotCount > 0
   const ruleLabel = settings?.label?.trim() ? settings.label : copy.autoSnapshotDefaultLabel
-
-  const handleToggle = (next: boolean) => {
-    if (busy) return
-    if (next) {
-      if (!canEnable) return
-      onSave({ enabled: true, label: ruleLabel, timeZone, timeOfDay })
-    } else {
-      onDisable()
-    }
-  }
 
   const handleTimeChange = (next: string) => {
     setTimeOfDay(next)
-    if (enabled && canEnable && !busy && next) {
-      onSave({ enabled: true, label: ruleLabel, timeZone, timeOfDay: next })
+    if (canConfigure && !busy && next) {
+      onSave({ enabled: scheduleEnabled, label: ruleLabel, timeZone, timeOfDay: next })
     }
   }
 
   const handleTimeZoneChange = (nextTimeZone: string) => {
     onTimeZoneChange(nextTimeZone)
-    if (enabled && canEnable && !busy) {
-      onSave({ enabled: true, label: ruleLabel, timeZone: nextTimeZone, timeOfDay })
+    if (canConfigure && !busy) {
+      onSave({
+        enabled: scheduleEnabled,
+        label: ruleLabel,
+        timeZone: nextTimeZone,
+        timeOfDay,
+      })
     }
   }
 
@@ -491,7 +529,7 @@ export function AccountSnapshotAutomationPanel({
               <TimeZoneSelect
                 id="auto-snapshot-timezone"
                 value={timeZone}
-                disabled={!canEnable || busy}
+                disabled={!canConfigure || busy}
                 searchPlaceholder={copy.autoSnapshotTimeZoneSearchPlaceholder}
                 onChange={handleTimeZoneChange}
               />
@@ -501,14 +539,14 @@ export function AccountSnapshotAutomationPanel({
               <input
                 type="time"
                 value={timeOfDay}
-                disabled={!canEnable || busy}
+                disabled={!canConfigure || busy}
                 onChange={(event) => handleTimeChange(event.currentTarget.value)}
               />
             </label>
           </div>
           <div className="my-page-automation-status">
             <div className="my-page-automation-status-meta">
-              {settings?.nextRunAt && (
+              {scheduleEnabled && settings?.nextRunAt && (
                 <p>
                   {copy.autoSnapshotNextRun.replace(
                     '{date}',
@@ -525,19 +563,14 @@ export function AccountSnapshotAutomationPanel({
                 </p>
               )}
             </div>
-            <div className="my-page-automation-toggle">
-              {isPro && !hasCloudInput && (
-                <span className="my-page-automation-toggle-hint">
-                  {copy.autoSnapshotCloudRequired}
-                </span>
-              )}
-              <ToggleSwitch
-                checked={enabled}
-                disabled={(!canEnable && !enabled) || busy}
-                label={copy.toggleUseLabel}
-                labelHidden
-                onChange={handleToggle}
-              />
+            <div className="my-page-automation-slot-status">
+              <span className="my-page-automation-slot-status-hint">
+                {!hasCloudInput
+                  ? copy.autoSnapshotCloudRequired
+                  : scheduleEnabled
+                    ? copy.autoSnapshotSlotCountNote.replace('{count}', String(enabledSlotCount))
+                    : copy.autoSnapshotNoSlotsSelected}
+              </span>
             </div>
           </div>
         </div>
@@ -629,165 +662,41 @@ function PlusIcon() {
   )
 }
 
-/** 롤오버 설정 저장 페이로드(활성 시 나머지 값 필수, 비활성 시 전부 null). */
-export interface RolloverSaveSettings {
-  enabled: boolean
-  intervalMonths: RolloverIntervalMonths | null
-  anchor: RolloverAnchor | null
-  nextDate: string | null
-}
-
-/** 유저 브라우저 로컬 달력 기준 오늘(YYYY-MM-DD). 롤오버 예정일 초기 계산의 기준. */
-function todayLocalDateString(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-/**
- * 슬롯별 롤오버(만기 이월) 알림 설정. 자동 스냅샷이 켜진 클라우드 슬롯에서만 노출한다.
- * 주기·기준일을 바꾸면 다음 예정일을 관행 위상으로 재계산하고, 날짜를 직접 고치면 그 날짜를 존중한다.
- */
-function RolloverSettingControl({
-  copy,
-  rollover,
-  busy,
-  onSave,
-}: {
-  copy: MyPageCopy
-  rollover: RolloverSettings
-  busy: boolean
-  onSave: (settings: RolloverSaveSettings) => void
-}) {
-  const enabled = rollover.enabled
-  const interval: RolloverIntervalMonths = rollover.intervalMonths ?? 3
-  const anchor: RolloverAnchor = rollover.anchor ?? 'second_thursday'
-  const nextDate = rollover.nextDate ?? ''
-
-  const handleToggle = (on: boolean) => {
-    if (busy) return
-    if (!on) {
-      onSave({ enabled: false, intervalMonths: null, anchor: null, nextDate: null })
-      return
-    }
-    onSave({
-      enabled: true,
-      intervalMonths: interval,
-      anchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, anchor),
-    })
-  }
-
-  const handleInterval = (value: string) => {
-    const nextInterval = Number(value) as RolloverIntervalMonths
-    onSave({
-      enabled: true,
-      intervalMonths: nextInterval,
-      anchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), nextInterval, anchor),
-    })
-  }
-
-  const handleAnchor = (value: string) => {
-    const nextAnchor = value as RolloverAnchor
-    onSave({
-      enabled: true,
-      intervalMonths: interval,
-      anchor: nextAnchor,
-      nextDate: computeNextRolloverDate(todayLocalDateString(), interval, nextAnchor),
-    })
-  }
-
-  const handleDate = (value: string) => {
-    onSave({ enabled: true, intervalMonths: interval, anchor, nextDate: value || null })
-  }
-
-  return (
-    <div className="my-page-rollover">
-      <div className="my-page-rollover-head">
-        <span>{copy.rolloverTitle}</span>
-        <ToggleSwitch
-          checked={enabled}
-          disabled={busy}
-          label={copy.rolloverToggleLabel}
-          onChange={handleToggle}
-        />
-      </div>
-      {enabled && (
-        <div className="my-page-rollover-fields">
-          <label>
-            <span>{copy.rolloverIntervalLabel}</span>
-            <select
-              value={interval}
-              disabled={busy}
-              onChange={(event) => handleInterval(event.currentTarget.value)}
-            >
-              <option value={1}>{copy.rolloverIntervalMonthly}</option>
-              <option value={2}>{copy.rolloverIntervalBimonthly}</option>
-              <option value={3}>{copy.rolloverIntervalQuarterly}</option>
-              <option value={6}>{copy.rolloverIntervalSemiannual}</option>
-            </select>
-          </label>
-          <label>
-            <span>{copy.rolloverAnchorLabel}</span>
-            <select
-              value={anchor}
-              disabled={busy}
-              onChange={(event) => handleAnchor(event.currentTarget.value)}
-            >
-              <option value="second_thursday">{copy.rolloverAnchorSecondThursday}</option>
-              <option value="third_friday">{copy.rolloverAnchorThirdFriday}</option>
-            </select>
-          </label>
-          <label>
-            <span>{copy.rolloverNextDateLabel}</span>
-            <input
-              type="date"
-              value={nextDate}
-              disabled={busy}
-              onChange={(event) => handleDate(event.currentTarget.value)}
-            />
-          </label>
-          <p className="my-page-field-help">{copy.rolloverNextDateHint}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 /**
  * 숫자세트 행: 이름은 input 직접 편집(blur/Enter 시 커밋), 액션은 상세보기 토글 + 삭제.
  * 상세는 세트 기준값(계좌평가금·현재가)과 계산 결과(레버리지·청산가)를 미니 그리드로 펼친다.
  */
 function NumberSetRow({
   copy,
+  presetCopy,
   numberSet,
   busy,
   autoSnapshotAllowed,
+  showAutoSnapshotColumn,
   onRenameNumberSet,
+  onSetPreset,
   onDeleteNumberSet,
   onSetAutoSnapshot,
-  onSetRollover,
-  onClearRolloverPending,
 }: {
   copy: MyPageCopy
+  presetCopy: Messages['glossaryPreset']
   numberSet: CalculatorNumberSet
   busy: boolean
   // Pro 여부. onSetAutoSnapshot이 있을 때만(클라우드 슬롯) 토글을 노출하고, false면 켜기 불가.
   autoSnapshotAllowed?: boolean
+  showAutoSnapshotColumn: boolean
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onSetPreset: (mode: SaveStorageMode, setId: string, presetId: PresetId) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
-  onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
-  onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
   const [titleDraft, setTitleDraft] = useState(numberSet.title)
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const detailModalTriggerRef = useRef<HTMLButtonElement | null>(null)
-
+  const showAutoSnapshotControl = Boolean(
+    onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled),
+  )
   const commitRename = () => {
     const trimmed = titleDraft.trim()
     if (!trimmed || trimmed === numberSet.title) return
@@ -807,7 +716,9 @@ function NumberSetRow({
 
   return (
     <li className="my-page-number-set-row">
-      <div className="my-page-number-set-row-main">
+      <div
+        className={`my-page-number-set-row-main${showAutoSnapshotColumn ? ' my-page-number-set-row-main--with-auto' : ''}`}
+      >
         <input
           value={titleDraft}
           aria-label={copy.numberSetNamePlaceholder}
@@ -821,17 +732,25 @@ function NumberSetRow({
             if (event.key === 'Escape') setTitleDraft(numberSet.title)
           }}
         />
+        {showAutoSnapshotColumn && (
+          showAutoSnapshotControl && onSetAutoSnapshot ? (
+            <div className="my-page-number-set-row-auto">
+              <span className="my-page-number-set-row-switch-label" aria-hidden="true">
+                {copy.autoSnapshotColumnLabel}
+              </span>
+              <ToggleSwitch
+                checked={numberSet.autoSnapshotEnabled}
+                disabled={busy}
+                label={`${numberSet.title}: ${copy.autoSnapshotSlotToggleLabel}`}
+                labelHidden
+                onChange={(enabled) => onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)}
+              />
+            </div>
+          ) : (
+            <span className="my-page-number-set-row-auto my-page-number-set-row-auto--empty" aria-hidden="true" />
+          )
+        )}
         <div className="my-page-number-set-row-actions">
-          {onSetAutoSnapshot && (autoSnapshotAllowed || numberSet.autoSnapshotEnabled) && (
-            <ToggleSwitch
-              checked={numberSet.autoSnapshotEnabled}
-              disabled={busy}
-              label={copy.autoSnapshotSlotToggleLabel}
-              onChange={(enabled) =>
-                onSetAutoSnapshot(numberSet.storageMode, numberSet.id, enabled)
-              }
-            />
-          )}
           <button
             type="button"
             className="my-page-icon-btn"
@@ -854,19 +773,27 @@ function NumberSetRow({
           </button>
         </div>
       </div>
-      {numberSet.rollover.pending && onClearRolloverPending && (
-        <div className="my-page-rollover-banner" role="status">
-          <span>{copy.rolloverPendingBanner}</span>
-          <button
-            type="button"
-            className="link-btn"
-            disabled={busy}
-            onClick={() => onClearRolloverPending(numberSet.storageMode, numberSet.id)}
-          >
-            {copy.rolloverPendingAction}
-          </button>
-        </div>
-      )}
+      <label className="my-page-number-set-row-preset">
+        <span>{presetCopy.label}</span>
+        <select
+          value={numberSet.presetId}
+          disabled={busy}
+          aria-label={`${numberSet.title}: ${presetCopy.label}`}
+          onChange={(event) =>
+            onSetPreset(
+              numberSet.storageMode,
+              numberSet.id,
+              event.currentTarget.value as PresetId,
+            )
+          }
+        >
+          {PRESET_IDS.map((presetId) => (
+            <option key={presetId} value={presetId}>
+              {presetCopy.options[presetId]}
+            </option>
+          ))}
+        </select>
+      </label>
       {detailOpen && detailMetrics && (
         <div className="my-page-number-set-detail">
           {detailMetrics.map((metric) => (
@@ -887,15 +814,6 @@ function NumberSetRow({
           </button>
         </div>
       )}
-      {/* 롤오버 설정: Pro + 자동 스냅샷이 켜진 슬롯에서만. 상세 펼침 안에 둔다. */}
-      {detailOpen && onSetRollover && autoSnapshotAllowed && numberSet.autoSnapshotEnabled && (
-        <RolloverSettingControl
-          copy={copy}
-          rollover={numberSet.rollover}
-          busy={busy}
-          onSave={(settings) => onSetRollover(numberSet.storageMode, numberSet.id, settings)}
-        />
-      )}
       {detailModalOpen && (
         <NumberSetDetailModal
           numberSet={numberSet}
@@ -910,8 +828,10 @@ function NumberSetRow({
 /** 위치(이 기기/클라우드)별 숫자세트 그룹 카드: 헤더(이름 + n/10 + 추가 아이콘) + 세트 행 리스트. */
 function NumberSetGroup({
   copy,
+  presetCopy,
   title,
   addLabel,
+  automationNote,
   mode,
   sets,
   limit,
@@ -919,14 +839,15 @@ function NumberSetGroup({
   autoSnapshotAllowed,
   onCreateNumberSet,
   onRenameNumberSet,
+  onSetPreset,
   onDeleteNumberSet,
   onSetAutoSnapshot,
-  onSetRollover,
-  onClearRolloverPending,
 }: {
   copy: MyPageCopy
+  presetCopy: Messages['glossaryPreset']
   title: string
   addLabel: string
+  automationNote?: string
   mode: SaveStorageMode
   sets: CalculatorNumberSet[]
   limit: number
@@ -934,12 +855,15 @@ function NumberSetGroup({
   autoSnapshotAllowed?: boolean
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onSetPreset: (mode: SaveStorageMode, setId: string, presetId: PresetId) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   // 넘기면 이 그룹의 각 행에 자동 스냅샷 토글이 붙는다(클라우드 그룹 전용).
   onSetAutoSnapshot?: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
-  onSetRollover?: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
-  onClearRolloverPending?: (mode: SaveStorageMode, setId: string) => void
 }) {
+  const showAutoSnapshotColumn = Boolean(
+    onSetAutoSnapshot && (autoSnapshotAllowed || sets.some((set) => set.autoSnapshotEnabled)),
+  )
+
   return (
     <div className="my-page-number-set-group">
       <div className="my-page-number-set-group-head">
@@ -960,19 +884,31 @@ function NumberSetGroup({
           </button>
         </div>
       </div>
+      {automationNote && (
+        <p className="my-page-number-set-automation-note" role="note">
+          {automationNote}
+        </p>
+      )}
+      <div className="my-page-number-set-list-head" aria-hidden="true">
+        <span />
+        <span>{showAutoSnapshotColumn ? copy.autoSnapshotColumnLabel : null}</span>
+        <span>{copy.numberSetInstrumentColumnLabel}</span>
+        <span />
+      </div>
       <ul className="my-page-number-set-list">
         {sets.map((numberSet) => (
           <NumberSetRow
             key={`${numberSet.storageMode}:${numberSet.id}:${numberSet.title}`}
             copy={copy}
+            presetCopy={presetCopy}
             numberSet={numberSet}
             busy={busy}
             autoSnapshotAllowed={autoSnapshotAllowed}
+            showAutoSnapshotColumn={showAutoSnapshotColumn}
             onRenameNumberSet={onRenameNumberSet}
+            onSetPreset={onSetPreset}
             onDeleteNumberSet={onDeleteNumberSet}
             onSetAutoSnapshot={onSetAutoSnapshot}
-            onSetRollover={onSetRollover}
-            onClearRolloverPending={onClearRolloverPending}
           />
         ))}
       </ul>
@@ -980,9 +916,10 @@ function NumberSetGroup({
   )
 }
 
-/** 숫자세트 독립 패널: 환경설정과 분리된 최상위 섹션, 위치별 2열 그룹 카드. */
+/** 숫자세트 독립 패널: 환경설정과 분리된 최상위 섹션, 위치별 그룹을 1열로 쌓는다. */
 export function NumberSetPreferencesPanel({
   copy,
+  presetCopy,
   localNumberSets,
   cloudNumberSets,
   numberSetLimits,
@@ -991,12 +928,12 @@ export function NumberSetPreferencesPanel({
   isPro,
   onCreateNumberSet,
   onRenameNumberSet,
+  onSetPreset,
   onDeleteNumberSet,
   onSetAutoSnapshot,
-  onSetRollover,
-  onClearRolloverPending,
 }: {
   copy: MyPageCopy
+  presetCopy: Messages['glossaryPreset']
   localNumberSets: CalculatorNumberSet[]
   cloudNumberSets: CalculatorNumberSet[]
   numberSetLimits: Record<SaveStorageMode, number>
@@ -1005,12 +942,12 @@ export function NumberSetPreferencesPanel({
   isPro: boolean
   onCreateNumberSet: (mode: SaveStorageMode) => void
   onRenameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => void
+  onSetPreset: (mode: SaveStorageMode, setId: string, presetId: PresetId) => void
   onDeleteNumberSet: (mode: SaveStorageMode, setId: string) => void
   onSetAutoSnapshot: (mode: SaveStorageMode, setId: string, enabled: boolean) => void
-  onSetRollover: (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => void
-  onClearRolloverPending: (mode: SaveStorageMode, setId: string) => void
 }) {
   const autoSnapshotCount = cloudNumberSets.filter((set) => set.autoSnapshotEnabled).length
+
   return (
     <section
       id="my-page-number-sets"
@@ -1024,6 +961,7 @@ export function NumberSetPreferencesPanel({
       <div className="my-page-number-set-groups">
         <NumberSetGroup
           copy={copy}
+          presetCopy={presetCopy}
           title={copy.numberSetsLocalTitle}
           addLabel={copy.addLocalNumberSet}
           mode="local"
@@ -1032,12 +970,15 @@ export function NumberSetPreferencesPanel({
           busy={busy}
           onCreateNumberSet={onCreateNumberSet}
           onRenameNumberSet={onRenameNumberSet}
+          onSetPreset={onSetPreset}
           onDeleteNumberSet={onDeleteNumberSet}
         />
         <NumberSetGroup
           copy={copy}
+          presetCopy={presetCopy}
           title={copy.numberSetsCloudTitle}
           addLabel={copy.addCloudNumberSet}
+          automationNote={isPro ? copy.autoSnapshotSlotHelp : undefined}
           mode="cloud"
           sets={cloudNumberSets}
           limit={numberSetLimits.cloud}
@@ -1045,12 +986,14 @@ export function NumberSetPreferencesPanel({
           autoSnapshotAllowed={isPro}
           onCreateNumberSet={onCreateNumberSet}
           onRenameNumberSet={onRenameNumberSet}
+          onSetPreset={onSetPreset}
           onDeleteNumberSet={onDeleteNumberSet}
           onSetAutoSnapshot={onSetAutoSnapshot}
-          onSetRollover={onSetRollover}
-          onClearRolloverPending={onClearRolloverPending}
         />
       </div>
+      <p className="my-page-field-help my-page-number-set-storage-footnote" role="note">
+        {copy.localStorageNote}
+      </p>
       {isPro && (
         <p className="my-page-field-help">
           {copy.autoSnapshotSlotCountNote.replace('{count}', String(autoSnapshotCount))}
@@ -1113,6 +1056,7 @@ export function MyPageView({
   onLoginClick,
   onGoogleLogin,
   onSignOut,
+  onBackToCalculator,
 }: MyPageViewProps) {
   const hasEmail = linkedProviders.includes('email')
   const hasGoogle = linkedProviders.includes('google')
@@ -1159,7 +1103,7 @@ export function MyPageView({
     <div className="my-page-shell">
       <div className="my-page">
         <header className="my-page-header">
-          <a className="my-page-back" href="/">
+          <a className="my-page-back" href="/" onClick={onBackToCalculator}>
             {copy.backToCalculator}
           </a>
           <div className="my-page-hero">
@@ -1171,8 +1115,14 @@ export function MyPageView({
         </header>
 
         {authLoading ? (
-          <section className="my-page-panel my-page-login" aria-live="polite">
-            <p>{copy.loginBody}</p>
+          <section
+            className="my-page-auth-loading"
+            role="status"
+            aria-live="polite"
+            aria-label={copy.loadingBody}
+          >
+            <span className="my-page-auth-loading__spinner" aria-hidden="true" />
+            <span>{copy.loadingBody}</span>
           </section>
         ) : !user ? (
           <section className="my-page-signin" aria-labelledby="my-page-login-title">
@@ -1512,6 +1462,7 @@ export function MyPageView({
 
 export function MyPage() {
   const { t } = useLanguage()
+  const navigate = useNavigate()
   const {
     user,
     loading,
@@ -1528,12 +1479,12 @@ export function MyPage() {
   } = useAuth()
   const {
     numberSets,
+    hasCloudDraft,
     numberSetLimits,
     createNumberSet,
     renameNumberSet,
+    setNumberSetPreset,
     setNumberSetAutoSnapshot,
-    setNumberSetRollover,
-    clearNumberSetRolloverPending,
     deleteNumberSetById,
   } = useCalculator()
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -1554,29 +1505,20 @@ export function MyPage() {
     userId: string | null
     value: string | null
   }>({ userId: null, value: null })
-  const [storageState, setStorageState] = useState<{
-    userId: string | null
-    error: string | null
-    hasCloudInput: boolean
-  }>({
-    userId: null,
-    error: null,
-    hasCloudInput: false,
-  })
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [recordsState, setRecordsState] = useState<{
     userId: string | null
     loading: boolean
     error: string | null
     notice: string | null
-    latestSnapshot: AccountSnapshotRecord | null
+    recentSnapshots: AccountSnapshotRecord[]
     recentOrders: OrderHistoryRecord[]
   }>({
     userId: null,
     loading: false,
     error: null,
     notice: null,
-    latestSnapshot: null,
+    recentSnapshots: [],
     recentOrders: [],
   })
   const [autoSaveBusy, setAutoSaveBusy] = useState(false)
@@ -1586,6 +1528,18 @@ export function MyPage() {
   const [automationNotice, setAutomationNotice] = useState<string | null>(null)
   const [numberSetBusy, setNumberSetBusy] = useState(false)
   const [numberSetNotice, setNumberSetNotice] = useState<string | null>(null)
+  const numberSetActionBusyRef = useRef(false)
+  const deleteSummaryRequestRef = useRef(0)
+  const deleteSummaryUserIdRef = useRef(user?.id ?? null)
+  const [numberSetDeleteTarget, setNumberSetDeleteTarget] = useState<{
+    mode: SaveStorageMode
+    id: string
+    title: string
+    userId: string
+    autoSnapshotEnabled: boolean
+  } | null>(null)
+  const [numberSetDeleteSummary, setNumberSetDeleteSummary] =
+    useState<NumberSetDeleteSummaryState>({ status: 'ready', summary: null })
   // 자동 스냅샷 시간대: 저장값이 있으면 그걸, 없으면 브라우저 추정 시간대로 시작한다.
   const [snapshotTimeZone, setSnapshotTimeZone] = useState<string>(
     () => readPreferredSnapshotTimeZone() ?? suggestedBrowserTimeZone(),
@@ -1607,15 +1561,18 @@ export function MyPage() {
     nicknameMessageState.userId === (user?.id ?? null) ? nicknameMessageState.value : null
   const identityMessage =
     identityMessageState.userId === (user?.id ?? null) ? identityMessageState.value : null
-  const hasCloudInput = user && storageState.userId === user.id ? storageState.hasCloudInput : false
+  const hasCloudInput = Boolean(user && hasCloudDraft)
   const recordsLoading = user && recordsState.userId === user.id ? recordsState.loading : false
   const recordsError = user && recordsState.userId === user.id ? recordsState.error : null
   const recordsNotice = user && recordsState.userId === user.id ? recordsState.notice : null
-  const latestSnapshot =
-    user && recordsState.userId === user.id ? recordsState.latestSnapshot : null
+  const recentSnapshots =
+    user && recordsState.userId === user.id ? recordsState.recentSnapshots : []
   const recentOrders = user && recordsState.userId === user.id ? recordsState.recentOrders : []
   const localNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'local')
   const cloudNumberSets = numberSets.filter((numberSet) => numberSet.storageMode === 'cloud')
+  const enabledCloudSnapshotCount = cloudNumberSets.filter(
+    (numberSet) => numberSet.autoSnapshotEnabled,
+  ).length
 
   useEffect(() => {
     if (!user) {
@@ -1626,49 +1583,24 @@ export function MyPage() {
   }, [user])
 
   useEffect(() => {
-    if (!user) {
-      setStorageState({
-        userId: null,
-        error: null,
-        hasCloudInput: false,
-      })
+    deleteSummaryUserIdRef.current = user?.id ?? null
+    deleteSummaryRequestRef.current += 1
+  }, [user?.id])
+
+  const handleBackToCalculator = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) {
       return
     }
-
-    let active = true
-
-    fetchNumberSets(user.id)
-      .then((numberSetResult) => {
-        if (!active) return
-        if (numberSetResult.error) {
-          setStorageState({
-            userId: user.id,
-            error: t.myPage.storageError,
-            hasCloudInput: false,
-          })
-          return
-        }
-        const cloudSets = numberSetResult.data ?? []
-        setStorageState({
-          userId: user.id,
-          error: null,
-          hasCloudInput: cloudSets.length > 0,
-        })
-      })
-      .catch(() => {
-        if (active) {
-          setStorageState({
-            userId: user.id,
-            error: t.myPage.storageError,
-            hasCloudInput: false,
-          })
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [t.myPage.storageError, user])
+    event.preventDefault()
+    navigate('/')
+  }, [navigate])
 
   const loadRecordsSummary = useCallback(async () => {
     if (!user) {
@@ -1677,7 +1609,7 @@ export function MyPage() {
         loading: false,
         error: null,
         notice: null,
-        latestSnapshot: null,
+        recentSnapshots: [],
         recentOrders: [],
       })
       return
@@ -1689,7 +1621,7 @@ export function MyPage() {
       loading: true,
       error: null,
       notice: prev.userId === userId ? prev.notice : null,
-      latestSnapshot: prev.userId === userId ? prev.latestSnapshot : null,
+      recentSnapshots: prev.userId === userId ? prev.recentSnapshots : [],
       recentOrders: prev.userId === userId ? prev.recentOrders : [],
     }))
 
@@ -1700,7 +1632,7 @@ export function MyPage() {
         loading: false,
         error: t.accountRecords.loadError,
         notice: null,
-        latestSnapshot: null,
+        recentSnapshots: [],
         recentOrders: [],
       })
       return
@@ -1711,7 +1643,7 @@ export function MyPage() {
       loading: false,
       error: null,
       notice: null,
-      latestSnapshot: result.data.accountSnapshots[0] ?? null,
+      recentSnapshots: result.data.accountSnapshots.slice(0, 5),
       recentOrders: result.data.orderHistory.slice(0, 5),
     })
   }, [recordsRepository, t.accountRecords.loadError, user])
@@ -1830,46 +1762,44 @@ export function MyPage() {
     user,
   ])
 
-  const handleAutomationSave = useCallback(
+  const persistAutomationSettings = useCallback(
     async (settings: AccountSnapshotAutomationSettingsInput) => {
-      if (!user || automationBusy) return
-      setAutomationBusy(true)
-      setAutomationNotice(null)
+      if (!user) return 'not_logged_in'
       const result = await recordsRepository.saveAccountSnapshotSettings(user.id, settings)
-      setAutomationBusy(false)
       if (result.error) {
         setAutomationNotice(t.myPage.autoSnapshotError)
-        return
+        return result.error
       }
       setAutomationSettings(result.data)
-      setAutomationNotice(t.myPage.autoSnapshotSaved)
+      return null
     },
-    [
-      automationBusy,
-      recordsRepository,
-      t.myPage.autoSnapshotError,
-      t.myPage.autoSnapshotSaved,
-      user,
-    ],
+    [recordsRepository, t.myPage.autoSnapshotError, user],
   )
 
-  const handleAutomationDisable = useCallback(async () => {
+  const persistAutomationDisabled = useCallback(async (): Promise<string | null> => {
+    if (!user) return 'not_logged_in'
+    const result = await recordsRepository.disableAccountSnapshotSettings(user.id)
+    if (result.error) {
+      setAutomationNotice(t.myPage.autoSnapshotError)
+      return result.error
+    }
+    setAutomationSettings(result.data)
+    return null
+  }, [recordsRepository, t.myPage.autoSnapshotError, user])
+
+  const handleAutomationSave = useCallback(async (
+    settings: AccountSnapshotAutomationSettingsInput,
+  ) => {
     if (!user || automationBusy) return
     setAutomationBusy(true)
     setAutomationNotice(null)
-    const result = await recordsRepository.disableAccountSnapshotSettings(user.id)
+    const error = await persistAutomationSettings(settings)
     setAutomationBusy(false)
-    if (result.error) {
-      setAutomationNotice(t.myPage.autoSnapshotError)
-      return
-    }
-    setAutomationSettings(result.data)
-    setAutomationNotice(t.myPage.autoSnapshotDisabled)
+    if (!error) setAutomationNotice(t.myPage.autoSnapshotSaved)
   }, [
     automationBusy,
-    recordsRepository,
-    t.myPage.autoSnapshotDisabled,
-    t.myPage.autoSnapshotError,
+    persistAutomationSettings,
+    t.myPage.autoSnapshotSaved,
     user,
   ])
 
@@ -1892,18 +1822,26 @@ export function MyPage() {
   )
 
   const runNumberSetAction = useCallback(
-    async (action: () => Promise<string | null>) => {
-      if (!user || numberSetBusy) return
+    async (action: () => Promise<string | null>): Promise<boolean> => {
+      if (!user || numberSetActionBusyRef.current) return false
+      numberSetActionBusyRef.current = true
       setNumberSetBusy(true)
       setNumberSetNotice(null)
-      const error = await action()
-      setNumberSetBusy(false)
-      if (error === 'number_set_limit_reached') setNumberSetNotice(t.myPage.numberSetLimitReached)
-      else if (error === 'not_logged_in') setNumberSetNotice(t.myPage.numberSetLoginRequired)
-      else if (error) setNumberSetNotice(t.myPage.numberSetError)
+      try {
+        const error = await action()
+        if (error === 'number_set_limit_reached') setNumberSetNotice(t.myPage.numberSetLimitReached)
+        else if (error === 'not_logged_in') setNumberSetNotice(t.myPage.numberSetLoginRequired)
+        else if (error) setNumberSetNotice(t.myPage.numberSetError)
+        return error === null
+      } catch {
+        setNumberSetNotice(t.myPage.numberSetError)
+        return false
+      } finally {
+        numberSetActionBusyRef.current = false
+        setNumberSetBusy(false)
+      }
     },
     [
-      numberSetBusy,
       t.myPage.numberSetError,
       t.myPage.numberSetLimitReached,
       t.myPage.numberSetLoginRequired,
@@ -1925,33 +1863,178 @@ export function MyPage() {
     [renameNumberSet, runNumberSetAction],
   )
 
+  const loadNumberSetDeleteSummary = useCallback(
+    async (target: { mode: SaveStorageMode; id: string; userId: string }) => {
+      const requestId = deleteSummaryRequestRef.current + 1
+      deleteSummaryRequestRef.current = requestId
+
+      if (target.mode === 'local') {
+        setNumberSetDeleteSummary({ status: 'ready', summary: null })
+        return
+      }
+      if (!user) {
+        setNumberSetDeleteSummary({ status: 'error', summary: null })
+        return
+      }
+
+      setNumberSetDeleteSummary({ status: 'loading', summary: null })
+      try {
+        const result = await fetchNumberSetDeletionSummary(target.userId, target.id)
+        if (
+          deleteSummaryRequestRef.current !== requestId ||
+          deleteSummaryUserIdRef.current !== target.userId
+        ) return
+        if (result.error) {
+          setNumberSetDeleteSummary({ status: 'error', summary: null })
+          return
+        }
+        setNumberSetDeleteSummary({ status: 'ready', summary: result.data })
+      } catch {
+        if (
+          deleteSummaryRequestRef.current === requestId &&
+          deleteSummaryUserIdRef.current === target.userId
+        ) {
+          setNumberSetDeleteSummary({ status: 'error', summary: null })
+        }
+      }
+    },
+    [user],
+  )
+
   const handleDeleteNumberSet = useCallback(
     (mode: SaveStorageMode, setId: string) => {
-      void runNumberSetAction(() => deleteNumberSetById(mode, setId))
+      if (numberSetActionBusyRef.current) return
+      const target = numberSets.find(
+        (numberSet) => numberSet.storageMode === mode && numberSet.id === setId,
+      )
+      if (!target) return
+      if (!user) return
+      const nextTarget = {
+        mode,
+        id: setId,
+        title: target.title,
+        userId: user.id,
+        autoSnapshotEnabled: target.autoSnapshotEnabled,
+      }
+      setNumberSetNotice(null)
+      setNumberSetDeleteTarget(nextTarget)
+      void loadNumberSetDeleteSummary(nextTarget)
     },
-    [deleteNumberSetById, runNumberSetAction],
+    [loadNumberSetDeleteSummary, numberSets, user],
   )
+
+  const handleCloseNumberSetDelete = useCallback(() => {
+    if (numberSetActionBusyRef.current) return
+    deleteSummaryRequestRef.current += 1
+    setNumberSetDeleteTarget(null)
+  }, [])
+
+  const handleRetryNumberSetDelete = useCallback(() => {
+    if (!numberSetDeleteTarget || numberSetDeleteTarget.mode !== 'cloud') return
+    void loadNumberSetDeleteSummary(numberSetDeleteTarget)
+  }, [loadNumberSetDeleteSummary, numberSetDeleteTarget])
+
+  const handleConfirmNumberSetDelete = useCallback(async () => {
+    const target = numberSetDeleteTarget
+    if (!target || numberSetActionBusyRef.current) return
+    if (
+      target.mode === 'cloud' &&
+      (numberSetDeleteSummary.status !== 'ready' || !numberSetDeleteSummary.summary)
+    ) return
+
+    const deleted = await runNumberSetAction(() => deleteNumberSetById(target.mode, target.id))
+    if (!deleted) return
+    if (
+      target.mode === 'cloud' &&
+      isLastEnabledSnapshotSlot(enabledCloudSnapshotCount, target.autoSnapshotEnabled) &&
+      automationSettings
+    ) {
+      setAutomationBusy(true)
+      await persistAutomationDisabled()
+      setAutomationBusy(false)
+    }
+    deleteSummaryRequestRef.current += 1
+    setNumberSetDeleteTarget(null)
+    setNumberSetNotice(t.myPage.numberSetDeleteSuccess)
+  }, [
+    deleteNumberSetById,
+    automationSettings,
+    enabledCloudSnapshotCount,
+    numberSetDeleteSummary.status,
+    numberSetDeleteSummary.summary,
+    numberSetDeleteTarget,
+    persistAutomationDisabled,
+    runNumberSetAction,
+    t.myPage.numberSetDeleteSuccess,
+  ])
 
   const handleSetNumberSetAutoSnapshot = useCallback(
     (mode: SaveStorageMode, setId: string, enabled: boolean) => {
-      void runNumberSetAction(() => setNumberSetAutoSnapshot(mode, setId, enabled))
+      void runNumberSetAction(async () => {
+        if (mode === 'local') return setNumberSetAutoSnapshot(mode, setId, enabled)
+        if (automationBusy) return 'automation_busy'
+        setAutomationBusy(true)
+        setAutomationNotice(null)
+
+        try {
+          const shouldStartSchedule = shouldStartSnapshotSchedule(
+            automationSettings?.enabled ?? false,
+            enabled,
+          )
+          if (shouldStartSchedule) {
+            const scheduleError = await persistAutomationSettings({
+              enabled: true,
+              label: automationSettings?.label ?? t.myPage.autoSnapshotDefaultLabel,
+              timeZone: snapshotTimeZone,
+              timeOfDay: automationSettings?.timeOfDay ?? '16:00',
+            })
+            if (scheduleError) return scheduleError
+          }
+
+          const numberSetError = await setNumberSetAutoSnapshot(mode, setId, enabled)
+          if (numberSetError) {
+            if (shouldStartSchedule && enabledCloudSnapshotCount === 0) {
+              await persistAutomationDisabled()
+            }
+            return numberSetError
+          }
+
+          if (
+            isLastEnabledSnapshotSlot(enabledCloudSnapshotCount, !enabled) &&
+            automationSettings
+          ) {
+            const disableError = await persistAutomationDisabled()
+            if (disableError) return disableError
+          }
+
+          return null
+        } finally {
+          setAutomationBusy(false)
+        }
+      })
     },
-    [setNumberSetAutoSnapshot, runNumberSetAction],
+    [
+      automationBusy,
+      automationSettings,
+      enabledCloudSnapshotCount,
+      persistAutomationDisabled,
+      persistAutomationSettings,
+      runNumberSetAction,
+      setNumberSetAutoSnapshot,
+      snapshotTimeZone,
+      t.myPage.autoSnapshotDefaultLabel,
+    ],
   )
 
-  const handleSetNumberSetRollover = useCallback(
-    (mode: SaveStorageMode, setId: string, settings: RolloverSaveSettings) => {
-      void runNumberSetAction(() => setNumberSetRollover(mode, setId, settings))
+  const handleSetNumberSetPreset = useCallback(
+    (mode: SaveStorageMode, setId: string, presetId: PresetId) => {
+      void runNumberSetAction(() => setNumberSetPreset(mode, setId, presetId))
     },
-    [setNumberSetRollover, runNumberSetAction],
+    [runNumberSetAction, setNumberSetPreset],
   )
 
-  const handleClearNumberSetRolloverPending = useCallback(
-    (mode: SaveStorageMode, setId: string) => {
-      void runNumberSetAction(() => clearNumberSetRolloverPending(mode, setId))
-    },
-    [clearNumberSetRolloverPending, runNumberSetAction],
-  )
+  const visibleNumberSetDeleteTarget =
+    numberSetDeleteTarget?.userId === user?.id ? numberSetDeleteTarget : null
 
   return (
     <>
@@ -1971,6 +2054,7 @@ export function MyPage() {
         passwordDraft={passwordDraft}
         passwordConfirmationDraft={passwordConfirmationDraft}
         supportHref={`mailto:${CONTACT_EMAIL}`}
+        onBackToCalculator={handleBackToCalculator}
         recordsSummaryPanel={
           user && isPro ? (
             <AccountRecordsSummaryPanel
@@ -1978,8 +2062,9 @@ export function MyPage() {
               recordsCopy={t.accountRecords}
               loading={recordsLoading}
               error={recordsError}
-              latestSnapshot={latestSnapshot}
+              recentSnapshots={recentSnapshots}
               recentOrders={recentOrders}
+              slots={cloudNumberSets}
               archiveHref={RECORDS_PATH}
               onRetry={() => void loadRecordsSummary()}
             />
@@ -1988,23 +2073,15 @@ export function MyPage() {
         preferencesPanel={
           user ? (
             <>
-              <section
-                id="my-page-preferences"
-                className="my-page-panel"
-                aria-labelledby="my-page-preferences-title"
-              >
-                <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
-                <div className="my-page-setting-lines">
-                  <div className="my-page-setting-line">
-                    <div className="my-page-setting-line__copy">
-                      <h3>{t.myPage.glossaryPresetTitle}</h3>
-                      <p>{t.myPage.glossaryPresetBody}</p>
-                    </div>
-                    <div className="my-page-setting-line__control">
-                      <PresetSelect variant="inline" />
-                    </div>
-                  </div>
-                  {/* 계좌 스냅샷 자동 저장·주문 기록 자동 저장은 Pro 전용 —
+              {isPro && (
+                <section
+                  id="my-page-preferences"
+                  className="my-page-panel"
+                  aria-labelledby="my-page-preferences-title"
+                >
+                  <h2 id="my-page-preferences-title">{t.myPage.preferencesTitle}</h2>
+                  <div className="my-page-setting-lines">
+                  {/* 계좌스냅샷 저장 시각·주문 기록 저장은 Pro 전용 —
                       무료 유저에겐 "노출 후 차단" 대신 아예 렌더하지 않는다(업그레이드 패널로 일원화). */}
                   {isPro && (
                     <>
@@ -2013,13 +2090,13 @@ export function MyPage() {
                         copy={t.myPage}
                         isPro={isPro}
                         hasCloudInput={hasCloudInput}
+                        enabledSlotCount={enabledCloudSnapshotCount}
                         settings={automationSettings}
                         busy={automationBusy}
                         notice={automationNotice}
                         timeZone={snapshotTimeZone}
                         onTimeZoneChange={handleTimeZoneChange}
                         onSave={(settings) => void handleAutomationSave(settings)}
-                        onDisable={() => void handleAutomationDisable()}
                       />
                       <div className="my-page-setting-line">
                         <div className="my-page-setting-line__copy">
@@ -2043,22 +2120,23 @@ export function MyPage() {
                       </div>
                     </>
                   )}
-                </div>
-              </section>
+                  </div>
+                </section>
+              )}
               <NumberSetPreferencesPanel
                 copy={t.myPage}
+                presetCopy={t.glossaryPreset}
                 localNumberSets={localNumberSets}
                 cloudNumberSets={cloudNumberSets}
                 numberSetLimits={numberSetLimits}
-                busy={numberSetBusy}
+                busy={numberSetBusy || automationBusy}
                 notice={numberSetNotice}
                 isPro={isPro}
                 onCreateNumberSet={handleCreateNumberSet}
                 onRenameNumberSet={handleRenameNumberSet}
+                onSetPreset={handleSetNumberSetPreset}
                 onDeleteNumberSet={handleDeleteNumberSet}
                 onSetAutoSnapshot={handleSetNumberSetAutoSnapshot}
-                onSetRollover={handleSetNumberSetRollover}
-                onClearRolloverPending={handleClearNumberSetRolloverPending}
               />
             </>
           ) : null
@@ -2087,6 +2165,34 @@ export function MyPage() {
         onSignOut={() => void signOut()}
       />
       <SiteFooter />
+      {visibleNumberSetDeleteTarget && (
+        <Suspense fallback={null}>
+          <NumberSetDeleteConfirmModal
+            mode={visibleNumberSetDeleteTarget.mode}
+            setTitle={visibleNumberSetDeleteTarget.title}
+            summaryState={numberSetDeleteSummary}
+            busy={numberSetBusy}
+            copy={{
+              title: t.myPage.numberSetDeleteTitle,
+              cloudBody: t.myPage.numberSetDeleteCloudBody,
+              localBody: t.myPage.numberSetDeleteLocalBody,
+              orderCount: t.myPage.numberSetDeleteOrderCount,
+              snapshotCount: t.myPage.numberSetDeleteSnapshotCount,
+              memoCount: t.myPage.numberSetDeleteMemoCount,
+              warning: t.myPage.numberSetDeleteWarning,
+              summaryLoading: t.myPage.numberSetDeleteSummaryLoading,
+              summaryError: t.myPage.numberSetDeleteSummaryError,
+              retry: t.myPage.numberSetDeleteRetry,
+              cancel: t.myPage.numberSetDeleteCancel,
+              confirm: t.myPage.numberSetDeleteConfirm,
+              confirmBusy: t.myPage.numberSetDeleteBusy,
+            }}
+            onClose={handleCloseNumberSetDelete}
+            onConfirm={() => void handleConfirmNumberSetDelete()}
+            onRetry={handleRetryNumberSetDelete}
+          />
+        </Suspense>
+      )}
       {authModalOpen && (
         <Suspense fallback={null}>
           <AuthModal onClose={() => setAuthModalOpen(false)} />

@@ -1,10 +1,9 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
-import { FORMULAS_PATH, GUIDE_PATH, localizedPublicPath } from '../config/routes'
-import { usePublicCalculator } from '../context/PublicCalculatorContext'
-import { useLanguage } from '../i18n'
+import { FORMULAS_PATH, GUIDE_PATH } from '../config/routes'
+import { useCalculator } from '../context/CalculatorContext'
+import { PRESET_IDS, useLanguage, type PresetId } from '../i18n'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 import { writeTraderStage } from './fieldHint'
-import { writePublicSaveConsent } from './publicSaveConsent'
 import {
   MARGIN_MODE_IDS,
   WELCOME_LAST_STEP,
@@ -14,6 +13,34 @@ import {
   type MarginMode,
   type TraderStage,
 } from './welcomeFlowState'
+import {
+  WELCOME_REGIONS,
+  regionToLocale,
+  regionToSuggestedPreset,
+  regionToTimeZone,
+  writePreferredRegion,
+  writePreferredSnapshotTimeZone,
+  type WelcomeRegion,
+} from './welcomePreferences'
+
+/** 거래 종목 선택지(표준 제외한 5종 상품군). */
+const INSTRUMENT_IDS = PRESET_IDS.filter((id): id is Exclude<PresetId, 'default'> => id !== 'default')
+
+/** 로케일 무관 표기 태그 — 지역 코드칩 / 상품 모노칩. */
+const REGION_CODE: Record<WelcomeRegion, string> = {
+  KR: 'KR',
+  US: 'US',
+  EU: 'EU',
+  JP: 'JP',
+  OTHER: '—',
+}
+const INSTRUMENT_MONO: Record<Exclude<PresetId, 'default'>, string> = {
+  index: 'IX',
+  stock: 'EQ',
+  commodity: 'CM',
+  fx: 'FX',
+  cfd: 'CD',
+}
 
 /** 완료 화면 표시 후 실제 닫힘(onComplete)까지 지연(ms). */
 const FINISH_DELAY_MS = 1100
@@ -37,13 +64,6 @@ function IconChevronRight() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M9 6l6 6-6 6" />
-    </svg>
-  )
-}
-function IconClose() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m6 6 12 12M18 6 6 18" />
     </svg>
   )
 }
@@ -138,30 +158,26 @@ function CheckBadge() {
 
 /**
  * 첫 진입 통합 환영 온보딩(2패널: 좌측 세로 스테퍼 + 우측 헤더/콘텐츠/푸터).
- * 공개판의 인사·증거금 방식·거래상태·짧은 사용법·브라우저 저장·면책동의를 하나의 관문으로 묶는다.
- * 면책 ack/skip + 온보딩 완료 플래그 커밋은 부모(DisclaimerProvider)가 onComplete에서 수행한다.
+ * 인사·지역·거래종목·거래상태·짧은 사용법·면책동의를 하나의 관문으로 묶는다.
+ * 면책 ack/skip + 온보딩 완료 플래그 커밋은 부모(DisclaimerProvider)가 onComplete에서 수행하고,
+ * 여기서는 언어·프리셋(라이브)·자동스냅샷 시간대만 반영한다.
  * 표현 계층만 교체 — welcomeReducer 상태 머신과 부수효과는 그대로 유지.
  */
-export function WelcomeFlow({
-  onComplete,
-  onClose,
-}: {
-  onComplete: () => void
-  onClose: () => void
-}) {
-  const { t, locale, preset } = useLanguage()
-  const { setSaveEnabled, pauseSaving, updateInputs } = usePublicCalculator()
+export function WelcomeFlow({ onComplete }: { onComplete: (persist: boolean) => void }) {
+  const { t, locale, preset, setLocale, setPreset } = useLanguage()
+  const { setSaveEnabled, updateInputs } = useCalculator()
   useModalFocusRestore()
 
+  const initialRegion: WelcomeRegion = locale === 'ko' ? 'KR' : 'US'
+  const initialInstrument: PresetId =
+    preset !== 'default' ? preset : regionToSuggestedPreset(initialRegion)
   const [draft, dispatch] = useReducer(
     welcomeReducer,
-    makeInitialDraft(locale === 'ko' ? 'KR' : 'US', preset),
+    makeInitialDraft(initialRegion, initialInstrument),
   )
 
   const [finished, setFinished] = useState(false)
   const [furthestStep, setFurthestStep] = useState(0)
-  const [saveBusy, setSaveBusy] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
   const finishTimer = useRef<number | null>(null)
   const headingRef = useRef<HTMLHeadingElement | null>(null)
 
@@ -187,19 +203,20 @@ export function WelcomeFlow({
     [],
   )
 
-  // 온보딩은 선택 안내일 뿐, 사용자를 계산기에서 가두지 않는다.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-
   const c = t.welcome
   const stepIndex = draft.step
   const eyebrow = `STEP ${String(stepIndex + 1).padStart(2, '0')}`
   const counterLabel = `${String(stepIndex + 1).padStart(2, '0')} / ${String(WELCOME_STEP_COUNT).padStart(2, '0')}`
+
+  function chooseRegion(region: WelcomeRegion) {
+    dispatch({ type: 'setRegion', region })
+    setLocale(regionToLocale(region)) // 이후 단계 텍스트가 즉시 해당 언어로
+  }
+
+  function chooseInstrument(instrument: PresetId) {
+    dispatch({ type: 'setInstrument', instrument })
+    setPreset(instrument) // 뒤 계산기 라벨을 실시간 반영 + 영속
+  }
 
   function chooseMargin(marginMode: MarginMode) {
     dispatch({ type: 'setMargin', marginMode })
@@ -212,40 +229,34 @@ export function WelcomeFlow({
 
   function chooseSave(saveLocal: boolean) {
     dispatch({ type: 'setSave', saveLocal })
-    setSaveError(null)
   }
 
-  async function goNext() {
-    if (stepIndex === 4) {
-      if (draft.saveLocal === null || saveBusy) return
-      setSaveBusy(true)
-      setSaveError(null)
-      if (draft.saveLocal) {
-        const error = await setSaveEnabled(true, 'local')
-        if (error) {
-          setSaveError(t.draftSave.statusError)
-          setSaveBusy(false)
-          return
-        }
-        writePublicSaveConsent(localStorage, 'local')
-      } else {
-        pauseSaving()
-        writePublicSaveConsent(localStorage, 'off')
-      }
-      setSaveBusy(false)
-    }
-
+  function goNext() {
     const nextStep = Math.min(stepIndex + 1, WELCOME_LAST_STEP)
     setFurthestStep((current) => Math.max(current, nextStep))
     dispatch({ type: 'next' })
   }
 
+  function skipToDisclaimer() {
+    setFurthestStep(WELCOME_LAST_STEP)
+    dispatch({ type: 'goto', step: WELCOME_LAST_STEP })
+  }
+
   function complete() {
     if (!draft.ackChecked) return
-    if (draft.stage) writeTraderStage(draft.stage)
+    // 명시적으로 '저장 안 함'을 고른 경우에만 아무것도 남기지 않는다(=매 새로고침 fresh).
+    // 미선택(건너뜀)은 온보딩 상태는 기억하되 입력값 저장은 켜지 않는다.
+    const persist = draft.saveLocal !== false
+    setPreset(draft.instrument)
+    if (persist) {
+      writePreferredRegion(draft.region)
+      writePreferredSnapshotTimeZone(regionToTimeZone(draft.region))
+      if (draft.stage) writeTraderStage(draft.stage)
+    }
+    if (draft.saveLocal === true) void setSaveEnabled(true, 'local')
     // 완료 화면을 잠깐 보여준 뒤 부모가 모달을 닫도록 onComplete 호출.
     setFinished(true)
-    finishTimer.current = window.setTimeout(onComplete, FINISH_DELAY_MS)
+    finishTimer.current = window.setTimeout(() => onComplete(persist), FINISH_DELAY_MS)
   }
 
   const marginCards: { id: MarginMode; title: string; desc: string }[] = MARGIN_MODE_IDS.map(
@@ -276,9 +287,9 @@ export function WelcomeFlow({
 
   const isLast = stepIndex === WELCOME_LAST_STEP
   const nextDisabled =
-    (stepIndex === 1 && draft.marginMode === null) ||
-    (stepIndex === 2 && draft.stage === null) ||
-    (stepIndex === 4 && draft.saveLocal === null)
+    (stepIndex === 2 && draft.marginMode === null) ||
+    (stepIndex === 3 && draft.stage === null) ||
+    (stepIndex === 5 && draft.saveLocal === null)
 
   // 진행(파랑) 라인 높이: 활성 칩 상단 가장자리에서 멈추도록 -15px 보정.
   const railFillHeight =
@@ -357,14 +368,6 @@ export function WelcomeFlow({
             </div>
           ) : (
             <div className="welcome-panel__branch">
-              <button
-                type="button"
-                className="trust-modal__close"
-                aria-label={t.close}
-                onClick={onClose}
-              >
-                <IconClose />
-              </button>
               <div className="welcome-panel__header">
                 <div className="welcome-eyebrow">
                   <span className="welcome-eyebrow__step">{eyebrow}</span>
@@ -398,61 +401,119 @@ export function WelcomeFlow({
                   )}
 
                   {stepIndex === 1 && (
-                    <div
-                      className="welcome-grid welcome-grid--3"
-                      role="group"
-                      aria-label={c.marginTitle}
-                    >
-                      {marginCards.map((card) => {
-                        const on = draft.marginMode === card.id
-                        return (
-                          <button
-                            key={card.id}
-                            type="button"
-                            className={`welcome-card welcome-card--vertical ${on ? 'welcome-card--selected' : ''}`}
-                            aria-pressed={on}
-                            onClick={() => chooseMargin(card.id)}
-                          >
-                            <span className="welcome-card__title">{card.title}</span>
-                            <span className="welcome-card__desc">{card.desc}</span>
-                            {on && <CheckBadge />}
-                          </button>
-                        )
-                      })}
-                    </div>
+                    <>
+                      <p className="welcome-prompt">{c.regionPrompt}</p>
+                      <div
+                        className="welcome-grid welcome-grid--3"
+                        role="group"
+                        aria-label={c.regionTitle}
+                      >
+                        {WELCOME_REGIONS.map((region) => {
+                          const on = draft.region === region
+                          return (
+                            <button
+                              key={region}
+                              type="button"
+                              className={`welcome-card welcome-card--region ${on ? 'welcome-card--selected' : ''}`}
+                              aria-pressed={on}
+                              onClick={() => chooseRegion(region)}
+                            >
+                              <span className="welcome-code">{REGION_CODE[region]}</span>
+                              <span className="welcome-card__label">{c.regions[region]}</span>
+                              {on && <CheckBadge />}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </>
                   )}
 
                   {stepIndex === 2 && (
-                    <div className="welcome-stack" role="group" aria-label={c.stageTitle}>
-                      {stageCards.map((card) => {
-                        const on = draft.stage === card.id
-                        return (
-                          <button
-                            key={card.id}
-                            type="button"
-                            className={`welcome-card welcome-card--row ${on ? 'welcome-card--selected' : ''}`}
-                            aria-pressed={on}
-                            onClick={() => chooseStage(card.id)}
-                          >
-                            <span className={`welcome-card__icon ${on ? 'welcome-card__icon--on' : ''}`}>
-                              <StageIcon stage={card.id} />
-                            </span>
-                            <span className="welcome-card__stack">
+                    <>
+                      <div
+                        className="welcome-grid welcome-grid--3"
+                        role="group"
+                        aria-label={c.instrumentTitle}
+                      >
+                        {INSTRUMENT_IDS.map((id) => {
+                          const on = draft.instrument === id
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              className={`welcome-card welcome-card--instrument ${on ? 'welcome-card--selected' : ''}`}
+                              aria-pressed={on}
+                              onClick={() => chooseInstrument(id)}
+                            >
+                              <span className="welcome-mono">{INSTRUMENT_MONO[id]}</span>
+                              <span className="welcome-card__label">{t.glossaryPreset.options[id]}</span>
+                              {on && <CheckBadge />}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      <div className="welcome-divider">
+                        <span className="welcome-divider__label">{c.marginDivider}</span>
+                        <span className="welcome-divider__line" aria-hidden="true" />
+                      </div>
+
+                      <div
+                        className="welcome-grid welcome-grid--3"
+                        role="group"
+                        aria-label={c.marginTitle}
+                      >
+                        {marginCards.map((card) => {
+                          const on = draft.marginMode === card.id
+                          return (
+                            <button
+                              key={card.id}
+                              type="button"
+                              className={`welcome-card welcome-card--vertical ${on ? 'welcome-card--selected' : ''}`}
+                              aria-pressed={on}
+                              onClick={() => chooseMargin(card.id)}
+                            >
                               <span className="welcome-card__title">{card.title}</span>
                               <span className="welcome-card__desc">{card.desc}</span>
-                            </span>
-                            {on && (
-                              <span className="welcome-card__check welcome-card__check--inline" aria-hidden="true">
-                                <IconCheck size={11} width={3.5} />
-                              </span>
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
+                              {on && <CheckBadge />}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </>
                   )}
 
                   {stepIndex === 3 && (
+                    <div className="welcome-stack" role="group" aria-label={c.stageTitle}>
+                        {stageCards.map((card) => {
+                          const on = draft.stage === card.id
+                          return (
+                            <button
+                              key={card.id}
+                              type="button"
+                              className={`welcome-card welcome-card--row ${on ? 'welcome-card--selected' : ''}`}
+                              aria-pressed={on}
+                              onClick={() => chooseStage(card.id)}
+                            >
+                              <span className={`welcome-card__icon ${on ? 'welcome-card__icon--on' : ''}`}>
+                                <StageIcon stage={card.id} />
+                              </span>
+                              <span className="welcome-card__stack">
+                                <span className="welcome-card__title">{card.title}</span>
+                                <span className="welcome-card__desc">{card.desc}</span>
+                              </span>
+                              {on && (
+                                <span className="welcome-card__check welcome-card__check--inline" aria-hidden="true">
+                                  <IconCheck size={11} width={3.5} />
+                                </span>
+                              )}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  )}
+
+                  {stepIndex === 4 && (
                     <>
                       <div className="welcome-usage">
                         <div className="welcome-usage__head">
@@ -496,11 +557,21 @@ export function WelcomeFlow({
                         </aside>
                       )}
                       <div className="welcome-links">
-                        <a className="welcome-link" href={localizedPublicPath(GUIDE_PATH, locale)} target="_blank" rel="noopener noreferrer">
+                        <a
+                          className="welcome-link"
+                          href={GUIDE_PATH}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           {c.guideLink}
                           <IconArrowUpRight />
                         </a>
-                        <a className="welcome-link" href={localizedPublicPath(FORMULAS_PATH, locale)} target="_blank" rel="noopener noreferrer">
+                        <a
+                          className="welcome-link"
+                          href={FORMULAS_PATH}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           {c.mathLink}
                           <IconArrowUpRight />
                         </a>
@@ -508,45 +579,38 @@ export function WelcomeFlow({
                     </>
                   )}
 
-                  {stepIndex === 4 && (
-                    <>
-                      <div className="welcome-grid welcome-grid--2" role="group" aria-label={c.saveTitle}>
-                        <button
-                          type="button"
-                          className={`welcome-card welcome-card--vertical welcome-card--icon-top ${draft.saveLocal === true ? 'welcome-card--selected' : ''}`}
-                          aria-pressed={draft.saveLocal === true}
-                          disabled={saveBusy}
-                          onClick={() => chooseSave(true)}
-                        >
-                          <span className={`welcome-card__icon ${draft.saveLocal === true ? 'welcome-card__icon--on' : ''}`}>
-                            <IconSaveYes />
-                          </span>
-                          <span className="welcome-card__title">{c.saveYes}</span>
-                          <span className="welcome-card__desc">{c.saveYesDesc}</span>
-                          {draft.saveLocal === true && <CheckBadge />}
-                        </button>
-                        <button
-                          type="button"
-                          className={`welcome-card welcome-card--vertical welcome-card--icon-top ${draft.saveLocal === false ? 'welcome-card--selected' : ''}`}
-                          aria-pressed={draft.saveLocal === false}
-                          disabled={saveBusy}
-                          onClick={() => chooseSave(false)}
-                        >
-                          <span className={`welcome-card__icon ${draft.saveLocal === false ? 'welcome-card__icon--on' : ''}`}>
-                            <IconSaveNo />
-                          </span>
-                          <span className="welcome-card__title">{c.saveNo}</span>
-                          <span className="welcome-card__desc">{c.saveNoDesc}</span>
-                          {draft.saveLocal === false && <CheckBadge />}
-                        </button>
-                      </div>
-                      {saveError && (
-                        <p className="public-save-consent-error" role="alert">{saveError}</p>
-                      )}
-                    </>
+                  {stepIndex === 5 && (
+                    <div className="welcome-grid welcome-grid--2" role="group" aria-label={c.saveTitle}>
+                      <button
+                        type="button"
+                        className={`welcome-card welcome-card--vertical welcome-card--icon-top ${draft.saveLocal === true ? 'welcome-card--selected' : ''}`}
+                        aria-pressed={draft.saveLocal === true}
+                        onClick={() => chooseSave(true)}
+                      >
+                        <span className={`welcome-card__icon ${draft.saveLocal === true ? 'welcome-card__icon--on' : ''}`}>
+                          <IconSaveYes />
+                        </span>
+                        <span className="welcome-card__title">{c.saveYes}</span>
+                        <span className="welcome-card__desc">{c.saveYesDesc}</span>
+                        {draft.saveLocal === true && <CheckBadge />}
+                      </button>
+                      <button
+                        type="button"
+                        className={`welcome-card welcome-card--vertical welcome-card--icon-top ${draft.saveLocal === false ? 'welcome-card--selected' : ''}`}
+                        aria-pressed={draft.saveLocal === false}
+                        onClick={() => chooseSave(false)}
+                      >
+                        <span className={`welcome-card__icon ${draft.saveLocal === false ? 'welcome-card__icon--on' : ''}`}>
+                          <IconSaveNo />
+                        </span>
+                        <span className="welcome-card__title">{c.saveNo}</span>
+                        <span className="welcome-card__desc">{c.saveNoDesc}</span>
+                        {draft.saveLocal === false && <CheckBadge />}
+                      </button>
+                    </div>
                   )}
 
-                  {stepIndex === 5 && (
+                  {stepIndex === 6 && (
                     <>
                       <div className="welcome-legal">
                         {t.legal.sections.map((section) => (
@@ -606,19 +670,24 @@ export function WelcomeFlow({
                       <button
                         type="button"
                         className="welcome-btn welcome-btn--primary"
-                        onClick={() => void goNext()}
-                        disabled={nextDisabled || saveBusy}
-                        aria-busy={saveBusy}
+                        onClick={goNext}
+                        disabled={nextDisabled}
                       >
-                        {saveBusy ? t.draftSave.statusSaving : c.next}
+                        {c.next}
                         <IconChevronRight />
                       </button>
                     )}
                   </div>
                 </div>
-                <button type="button" className="welcome-skip" onClick={onClose}>
-                  {c.skip}
-                </button>
+                {!isLast && (
+                  <button
+                    type="button"
+                    className="welcome-skip"
+                    onClick={skipToDisclaimer}
+                  >
+                    {c.skip}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -633,12 +702,14 @@ function stepTitle(step: number, c: import('../i18n').Messages['welcome']): stri
     case 0:
       return c.greetingTitle
     case 1:
-      return c.marginTitle
+      return c.regionTitle
     case 2:
-      return c.stageTitle
+      return c.instrumentTitle
     case 3:
-      return c.usageTitle
+      return c.stageTitle
     case 4:
+      return c.usageTitle
+    case 5:
       return c.saveTitle
     default:
       return c.disclaimerStepTitle
@@ -650,12 +721,14 @@ function stepBody(step: number, c: import('../i18n').Messages['welcome']): strin
     case 0:
       return c.greetingBody
     case 1:
-      return c.marginBody
+      return c.regionBody
     case 2:
-      return c.stageBody
+      return c.instrumentBody
     case 3:
-      return c.usageStepBody
+      return c.stageBody
     case 4:
+      return c.usageStepBody
+    case 5:
       return c.saveBody
     default:
       return c.disclaimerStepBody

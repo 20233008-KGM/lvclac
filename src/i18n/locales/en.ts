@@ -1,6 +1,6 @@
 import type { Messages } from '../types'
 import { boardPath } from '../../config/boards'
-import { CONTACT_EMAIL, SUPPORT_URL } from '../../config/site'
+import { SUPPORT_URL } from '../../config/site'
 
 export const en: Messages = {
   lang: 'en',
@@ -43,7 +43,7 @@ export const en: Messages = {
     undoSection: 'Undo',
     redoSection: 'Redo',
     empty: 'No history yet',
-    orderApplied: 'Order {price}, {contracts} contracts',
+    changedValues: '{count} values',
     diff: {
       accountEval: 'Account equity {before} -> {after}',
       currentPrice: 'Current price {before} -> {after}',
@@ -55,6 +55,7 @@ export const en: Messages = {
       orderApply: 'Order applied',
       scenarioPreview: 'Scenario preview',
       scenarioApply: 'P&L applied',
+      markUpdate: 'Mark updated',
       multiple: '{count} fields changed',
       generic: 'Calculator inputs changed',
     },
@@ -89,14 +90,15 @@ export const en: Messages = {
   orderScenarioFieldContracts: 'Order size',
   orderScenarioFieldPrice: 'Order price',
   orderScenarioHint:
-    '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Rollover]\n\nDuring rollover, small differences can come from order price vs actual fill and moving market snapshots.\nAfter rollover or re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity/mark at the same timestamp and align them again.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply (also deletes auto-saved order record)\nCtrl+Shift+Z → Redo',
+    '# Order simulation\nPreview your account right after a fill.\n\n────────\n\n[Shortcuts]\n\nEnter (1st) → Preview\nEnter (2nd) → Apply to account\nEsc → Cancel\nCtrl+Z → Undo apply (also deletes auto-saved order record)\nCtrl+Shift+Z → Redo',
   clearAllInputs: 'Clear all',
+  clearOrderInputs: 'Clear',
   clearAllInputsHint:
-    '# Clear all inputs\nThe Clear all button resets every field at once. Local saving stays enabled when it is already on.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
+    '# Clear all inputs\nThe Clear all button resets every field at once. Saved number sets, memos, and records are not deleted.\n\n────────\n\n[Shortcuts]\n\nDelete → Clear only the focused field',
   clearAllInputsHintLabel: 'Clear shortcut help',
   clearAllInputsModalTitle: 'Clear all inputs',
   clearAllInputsModalBody:
-    'This clears input fields only. Your local save setting is kept. Continue?',
+    'This clears input fields only. Your number set, memos, and records are kept. Continue?',
   clearAllInputsConfirm: 'Clear',
   accountSettingGuard: {
     title: 'Change account setup?',
@@ -108,7 +110,7 @@ export const en: Messages = {
   draftSave: {
     label: 'Save inputs on this device',
     cloudLabel: 'Save inputs to cloud',
-    hint: '# Save inputs on this device\nWhen on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Switching to "Don\'t save" only stops saving — your stored values are kept, not deleted.\n\n────────\n\n[Tip]\n\n💡 Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
+    hint: '# Save inputs on this device\nWhen on, your inputs are stored in this browser only and restored on your next visit. Nothing is sent to a server. Clearing this browser’s site data or storage, or resetting the browser, also deletes the saved values. Switching to "Don\'t save" only stops saving — your stored values are kept, not deleted.\n\n────────\n\n[Tip]\n\n💡 Keeps yesterday’s baseline so you can update only the mark via Scenario price the next day.',
     cloudHint:
       '# Save inputs to cloud\nWhen signed in and Cloud is selected, inputs are saved to Supabase DB and can be restored on another device. Switching to "Don\'t save" keeps your cloud copy intact.\n\n────────\n\n[Tip]\n\n💡 Useful when switching between your desktop and laptop.',
     offHint:
@@ -116,52 +118,32 @@ export const en: Messages = {
     storageModeLabel: 'Input save location',
     localMode: 'This device',
     cloudMode: 'Cloud',
+    cloudLoginRequired: 'Cloud · Login required',
     noSaveMode: "Don't save",
-    publicConsentEyebrow: 'DEVICE STORAGE',
-    publicConsentTitle: 'Save your inputs in this browser?',
-    publicConsentIntro: 'Save only if you choose, then resume from these inputs on your next visit.',
-    publicConsentSummaryLabel: 'Storage summary',
-    publicConsentBrowserOnlyTitle: 'Storage location',
-    publicConsentBrowserOnlyBody: 'On this device, in this browser',
-    publicConsentNoServerTitle: 'Server transfer',
-    publicConsentNoServerBody: 'Not transmitted or collected',
-    publicConsentSavedLabel: 'Saved inputs',
-    publicConsentSavedItems: ['Account equity', 'Margin rate', 'Contracts', 'Other calculator inputs'],
-    publicConsentSharedDeviceLabel: 'Shared device',
-    publicConsentSharedDeviceTitle: 'It is safer not to save on a shared device.',
-    publicConsentSharedDeviceBody:
-      'Browser extensions or malicious software may be able to access locally stored data.',
-    publicConsentActionLabel: 'Choose storage behavior',
-    publicConsentOff: "Don't save",
-    publicConsentOffDescription: 'Leave no inputs behind after this session',
-    publicConsentOffConfirm: 'Continue without saving',
-    publicConsentLocal: 'Save on this device',
-    publicConsentLocalDescription: 'Restore inputs automatically next time',
-    publicConsentLocalConfirm: 'Save on this device',
-    publicConsentSelectPrompt: 'Choose a save option',
-    publicConsentFootnote: "Uses this browser's localStorage.",
     cleared: 'Saved data has been removed.',
     enableModalTitle: 'Save inputs on this device',
     cloudEnableModalTitle: 'Cloud input save notice',
     enableModalBody: [
       'When you turn on "Save inputs on this device," values you enter in the calculator (account equity, margin rates, number of contracts, etc.) may be stored in your browser\'s local storage (localStorage) on your device.',
       'This feature is provided for convenience only; we do not transmit or store this information on our servers.',
-      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs keeps the local save setting and resets only the input fields.',
+      'Choosing "Don\'t save" only stops saving; your stored inputs are kept. Clearing all inputs keeps the number set and resets only its input fields. Clearing this browser’s site data or storage, or resetting the browser, deletes the saved values, and LiqGuard cannot recover them.',
       'However, if others use the same device, or if malware, browser extensions, or an insecure environment is present, stored values may be exposed. We do not guarantee the security of your device environment; you should decide whether to store sensitive information.',
     ],
     cloudEnableModalBody: [
       'When saving is enabled while signed in, calculator inputs (account equity, margin rates, contracts, etc.) may be stored in Supabase DB as number_sets data for your account.',
       'Row-level security is configured so only your signed-in account can read, update, or delete its saved inputs.',
-      'Choosing "Don\'t save" only stops saving; your cloud copy is kept. Clearing all inputs deletes the cloud copy. Device-local saved inputs are managed separately in This device mode.',
+      'Choosing "Don\'t save" only stops saving; your cloud copy is kept. Clearing all inputs keeps the number set, memos, and records while resetting only its input fields. Device-local saved inputs are managed separately in This device mode.',
       'Do not save information you consider sensitive. Saved inputs and calculator results do not replace your own trading judgment.',
     ],
+    localDataLossEmphasis:
+      'Clearing this browser’s site data or storage, or resetting the browser, also deletes them, and LiqGuard cannot recover them.',
     enableConfirm: 'Agree and save',
     skipModalLabel: "Don't show this again",
-    showGuideAgain: 'Show save notice again',
     clearedModalTitle: 'Save disabled',
     deleteConfirmTitle: 'Delete saved inputs',
-    deleteConfirmBody: 'Delete the inputs saved on this device?\nThis cannot be undone.',
-    cloudDeleteConfirmBody: 'Delete the inputs saved to the cloud?\nThis cannot be undone.',
+    deleteConfirmBody: 'Delete the active number set on this device and stop saving?\nThis cannot be undone.',
+    cloudDeleteConfirmBody:
+      'Delete the active cloud number set and stop saving?\nLinked order and snapshot records will also be deleted. This cannot be undone.',
     deleteConfirm: 'Delete',
     deleteCancel: 'Cancel',
     confirm: 'OK',
@@ -175,10 +157,13 @@ export const en: Messages = {
       'Drag a saved slot onto the other slot to copy values only. Example: drop This device on Cloud to copy local values to cloud.',
     copySuccess: 'Copied {source} values to {target}.',
     copyError: 'Could not copy saved values. Please try again shortly.',
+    numberSetCopyHint: 'Drag onto another number set to copy its input values.',
+    numberSetCopySuccess: 'Copied {source} values to {target}.',
     helpHintLabel: 'Input save slots help',
     helpHint:
-      "# Input save slots\nChoose where inputs are stored. A filled icon means saved values exist in that slot.\n\n[Slots]\n\n⊘ Don't save — Stops saving; stored values are not deleted.\n\n💻 This device — Stored in this browser (localStorage) only; not sent to a server.\n\n☁️ Cloud — While signed in, stores to Supabase DB so you can restore on another device.\n\n────────\n\n[Actions]\n\n- Click a slot to switch save location.\n- Click the active slot again to confirm deleting its stored values.\n- Drag a filled slot onto another to copy values only.\n\n────────\n\n[Note]\n\n💡 The first time you turn saving on, a notice appears; you can choose not to show it again.\n\nThe ✓ and number show when saving completed. They hide while you edit.",
+      "# Input save slots\nChoose where inputs are stored. A filled icon means saved values exist in that slot.\n\n[Slots]\n\n⊘ Don't save — Stops saving; stored values are not deleted.\n\n💻 This device — Stored in this browser (localStorage) only; not sent to a server. Clearing its site data or storage, or resetting the browser, deletes these values.\n\n☁️ Cloud — While signed in, stores to Supabase DB so you can restore on another device.\n\n────────\n\n[Actions]\n\n- Click a slot to switch save location.\n- Click the active slot again to confirm deleting its stored values.\n- Drag a filled slot onto another to copy values only.\n- In the number-set picker, drag one set onto another to copy inputs while keeping the target set's name and storage location.\n\n────────\n\n[Note]\n\n💡 The first time you turn saving on, a notice appears; you can choose not to show it again.\n\nThe ✓ and number show when saving completed. They hide while you edit.",
     numberSetPickerLabel: 'Choose number set',
+    localDataLossNote: 'Clearing this browser’s site data or storage also deletes device sets.',
     numberSetMenuTitle: 'Choose active number set',
     numberSetAdd: 'Add set',
     numberSetManage: 'Manage all',
@@ -232,11 +217,15 @@ export const en: Messages = {
     memoSnapshotTitle: 'Snapshot memo',
     memoOrderTitle: 'Order record memo',
     memoNumberSetTitle: 'Cloud number set memo',
+    memoWorkspaceTitle: 'Slot memo',
+    memoWorkspaceHint: 'Select a slot or open a memo from a record row.',
+    memoBackToSlot: 'Back to slot memo',
     memoSaving: 'Saving…',
     memoSaved: 'All changes saved',
     memoEmptySaved: 'Empty memo saved',
     memoSaveError: 'Could not save · edit to retry',
     memoAutoSaveHint: 'Changes save automatically',
+    memoBackgroundOpacity: 'Background opacity',
     memoClose: 'Close memo',
     memoPlaceholder: 'Write down market context or the reason behind your decision.',
     deleteError: 'Could not delete this record.',
@@ -302,11 +291,33 @@ export const en: Messages = {
     slotFilterLabel: 'Slot',
     slotFilterAll: 'All slots',
     slotFilterUnassigned: 'Unassigned',
+    slotNameUnavailable: 'Slot unavailable',
+    savedAtAndSlot: 'Saved · slot',
     slotFilterAria: 'Filter records by slot',
     jumpToDate: 'Jump to date',
     jumpToDateAria: 'Show records on or before a date',
-    timelineAnchorLabel: '{date} anchor',
+    timelineAnchorLabel: '{date}',
     backToLatest: 'Back to latest',
+    export: 'Export',
+    exportTitle: 'Export records',
+    exportDescription: 'Choose an account slot and date range, then save a CSV or Excel file.',
+    exportRecordType: 'Record type',
+    exportOrders: 'Order history',
+    exportSnapshots: 'Account snapshots',
+    exportSlot: 'Account slot',
+    exportStartDate: 'Start date',
+    exportEndDate: 'End date',
+    exportHeaderLanguage: 'Column heading language',
+    exportLanguageKo: '한국어',
+    exportLanguageEn: 'English',
+    exportCsv: 'Download CSV',
+    exportXlsx: 'Download Excel',
+    exportPreparing: 'Preparing your file…',
+    exportSuccess: 'Started downloading {filename}.',
+    exportEmpty: 'No records match the selected filters.',
+    exportError: 'Could not create the file. Please try again shortly.',
+    exportInvalidRange: 'The start date cannot be later than the end date.',
+    exportClose: 'Close',
   },
   myPage: {
     title: 'My page',
@@ -315,6 +326,7 @@ export const en: Messages = {
     loginTitle: 'Log in required',
     loginBody:
       'Log in to manage saved inputs, account records, and future Pro status from this page.',
+    loadingBody: 'Loading your account.',
     loginAction: 'Log in',
     loginHeadline: 'Log in to pick up all your records right where you left off',
     loginPanelTitle: 'Log in',
@@ -375,18 +387,18 @@ export const en: Messages = {
     recordsCount: '{count} records',
     recordsEmpty: 'No saved records yet.',
     recordsSummaryTitle: 'Account records',
-    latestSnapshotTitle: 'Latest account snapshot',
-    latestSnapshotEmpty: 'No account snapshot saved yet.',
+    recentSnapshotsTitle: 'Recent account snapshots',
+    recentSnapshotsEmpty: 'No account snapshot saved yet.',
     recentOrdersTitle: 'Recent orders',
     recentOrdersEmpty: 'No recent order records yet.',
     recordsArchiveLink: 'Open records ledger',
     storageError: 'Could not load saved data status.',
-    autoSaveOrderHistoryLabel: 'Auto-save order history',
+    autoSaveOrderHistoryLabel: 'Save order history',
     autoSaveOrderHistoryHint:
-      'Turning this off stops new order simulation history rows from being saved when you apply an order. Existing rows are unaffected.',
+      'When enabled, applying an order saves its simulation history. Turning it off keeps existing records.',
     autoSaveOrderHistoryError: 'Could not save this setting. Please try again shortly.',
-    autoSnapshotTitle: 'Automatic account snapshot',
-    autoSnapshotBody: 'Saves your account once a day in your region’s time zone.',
+    autoSnapshotTitle: 'Account snapshot time',
+    autoSnapshotBody: 'Saves cloud sets with Record daily enabled at the time below.',
     autoSnapshotChangeOnlyHint: 'Only days with changes are saved — if nothing differs from the last snapshot, that day is skipped.',
     autoSnapshotDefaultLabel: 'Daily close',
     autoSnapshotLabelLabel: 'Rule name',
@@ -398,29 +410,20 @@ export const en: Messages = {
     autoSnapshotSave: 'Save automatic snapshot rule',
     autoSnapshotSaving: 'Saving rule',
     autoSnapshotDisable: 'Turn off automatic snapshots',
-    autoSnapshotSaved: 'Automatic snapshot rule saved.',
+    autoSnapshotSaved: 'Account snapshot time saved.',
     autoSnapshotDisabled: 'Automatic snapshots turned off.',
     autoSnapshotError: 'Could not save automatic snapshot settings. Please try again shortly.',
     autoSnapshotNextRun: 'Next snapshot: {date}',
     autoSnapshotLastRun: 'Last automatic snapshot: {date}',
     autoSnapshotRegionLabel: 'Region (time zone)',
     autoSnapshotTimeZoneSearchPlaceholder: 'Search city or time zone (e.g. Seoul)',
-    autoSnapshotSlotToggleLabel: 'Auto',
-    autoSnapshotSlotCountNote: 'Auto snapshot targets: {count} cloud set(s). Each is saved automatically at your chosen time every day.',
-    rolloverTitle: 'Rollover reminder',
-    rolloverToggleLabel: 'Rollover alert',
-    rolloverIntervalLabel: 'Cycle',
-    rolloverIntervalMonthly: 'Monthly',
-    rolloverIntervalBimonthly: 'Bimonthly',
-    rolloverIntervalQuarterly: 'Quarterly',
-    rolloverIntervalSemiannual: 'Semiannual',
-    rolloverAnchorLabel: 'Anchor day',
-    rolloverAnchorSecondThursday: '2nd Thursday',
-    rolloverAnchorThirdFriday: '3rd Friday',
-    rolloverNextDateLabel: 'Next rollover date',
-    rolloverNextDateHint: 'Auto-computed from cycle and anchor. If it differs from the real expiry, adjust it directly (handles bimonthly phase and irregular months).',
-    rolloverPendingBanner: 'The rollover date has passed. Update this set with the new entry price / open contracts and save it again.',
-    rolloverPendingAction: 'Updated · dismiss',
+    autoSnapshotSlotToggleLabel: 'Record daily',
+    autoSnapshotColumnLabel: 'Auto record',
+    numberSetInstrumentColumnLabel: 'Instrument',
+    autoSnapshotSlotHelp:
+      'Enabled sets are saved to your account records at the time chosen in Preferences above. Days with no changes are skipped.',
+    autoSnapshotSlotCountNote: 'Recording daily: {count} cloud set(s)',
+    autoSnapshotNoSlotsSelected: 'Turn on Record daily in a number set.',
     toggleUseLabel: 'On',
     navLabel: 'Jump to my page section',
     navAccount: 'Account',
@@ -461,6 +464,20 @@ export const en: Messages = {
     numberSetLimitReached: 'Number set limit reached.',
     numberSetLoginRequired: 'Cloud sets require login.',
     numberSetError: 'Could not save the number set. Please try again shortly.',
+    numberSetDeleteTitle: 'Permanently delete “{name}”',
+    numberSetDeleteCloudBody: 'This cloud set and all data linked to it will be deleted.',
+    numberSetDeleteLocalBody: 'The inputs saved on this device will be permanently deleted.',
+    numberSetDeleteOrderCount: '{count} order records',
+    numberSetDeleteSnapshotCount: '{count} account snapshots',
+    numberSetDeleteMemoCount: '{count} memos',
+    numberSetDeleteWarning: 'This action cannot be undone.',
+    numberSetDeleteSummaryLoading: 'Checking what will be deleted…',
+    numberSetDeleteSummaryError: 'Could not load the deletion counts. Please try again.',
+    numberSetDeleteRetry: 'Try again',
+    numberSetDeleteCancel: 'Cancel',
+    numberSetDeleteConfirm: 'Permanently delete',
+    numberSetDeleteBusy: 'Deleting…',
+    numberSetDeleteSuccess: 'The number set was permanently deleted.',
     planTitle: 'Subscription and ads',
     planStatusLabel: 'Current status',
     planStatusValue: 'Paddle integration in progress',
@@ -490,8 +507,10 @@ export const en: Messages = {
       notConfigured: 'Billing is not set up yet. Please try again later.',
       checkoutError: 'Could not start checkout. Please try again shortly.',
       checkoutCanceled: 'Checkout was canceled.',
-      checkoutSuccess: 'Payment complete. Updating your subscription status…',
-      taxNote: 'Payments are processed securely by Paddle. VAT may apply depending on your region.',
+      checkoutSuccess:
+        'Payment complete. Updating your subscription status… Payments and receipts are handled by Paddle, our official payment partner.',
+      taxNote:
+        'Payments and receipts are handled by Paddle, our official payment partner. VAT may apply depending on your region.',
       compareHeadPrice: '$5 / mo · $48 / yr',
       compareSubtitle: 'Keep everything you use today, and expand saving, automation, and history in one step.',
       compareFreeName: 'Free',
@@ -537,16 +556,33 @@ export const en: Messages = {
         manageTitle: 'Manage subscription',
         proPlanName: 'Pro',
         activeBadge: 'Active',
+        cancelScheduledBadge: 'Cancellation scheduled',
+        cancelScheduledBody: 'Your cancellation is scheduled. Pro remains available until the end date.',
+        accessEndsOn: 'Pro available until {date}',
+        noFurtherBilling: 'You will not be billed again after this date.',
         portalAction: 'Open management portal',
         receiptsAction: 'Receipts · Billing history',
         paymentMethodAction: 'Change payment method',
         cancelNote: 'If you cancel, you keep Pro features until the end of the current billing period.',
         cancelAction: 'Cancel subscription',
+        manageCancellationAction: 'Manage cancellation',
+        sandboxTitle: 'Sandbox developer tools',
+        sandboxBody: 'Refresh the current Paddle state. Use the Sandbox test button at the top left to cancel the subscription immediately.',
+        sandboxSyncAction: 'Sync Paddle status',
+        sandboxCancelNowAction: 'Cancel current account subscription now',
+        sandboxCancelConfirm: 'Ending it now immediately removes Pro access from this test subscription.',
+        sandboxCancelConfirmAction: 'Confirm immediate end',
+        sandboxCancelDismissAction: 'Cancel',
+        sandboxBusy: 'Working…',
+        sandboxSyncSuccess: 'The latest Paddle subscription state is now reflected.',
+        sandboxCancelSuccess: 'The test subscription ended. Switching to Free.',
+        sandboxError: 'The Sandbox subscription action could not be completed.',
         failedTitle: 'Payment failed',
         failedBody: 'Your card was declined. Check your card details or try a different payment method.',
         retryAction: 'Try again',
         successTitle: 'Payment complete',
-        successBody: 'Your Pro subscription is active. Ads are removed and all Pro-only features are unlocked. Updating your subscription status…',
+        successBody:
+          'Your Pro subscription is active. Ads are removed and all Pro-only features are unlocked. Updating your subscription status… Payments and receipts are handled by Paddle, our official payment partner.',
         summaryPlan: 'Plan',
         summaryNextBilling: 'Next billing date',
         summaryPending: 'Updating…',
@@ -642,7 +678,7 @@ export const en: Messages = {
           finalSublineMonthly: '$5 / month · cancel anytime',
           finalSublineYearly: '$48 / year · about $4 / month · 2 months free',
           finalCta: 'Check out now',
-          finalFinePrint: 'Secure checkout by Paddle · cancel anytime',
+          finalFinePrint: 'Payments and receipts are handled by our official payment partner, Paddle.',
           trust: ['Secure checkout by Paddle', 'Cancel anytime · keep access until period end', 'VAT varies by region'],
         },
       },
@@ -650,7 +686,8 @@ export const en: Messages = {
     privacyTitle: 'Privacy and security',
     privacyBody:
       'When cloud saving is enabled, inputs and records may be stored in Supabase DB and restricted to your account by RLS policies.',
-    localStorageNote: 'Device-saved inputs stay in browser localStorage and are not sent to our server.',
+    localStorageNote:
+      'Device sets stay in this browser only and disappear when its browser data is cleared.',
     cloudStorageNote: 'Cloud saved inputs and account records are stored and deleted by signed-in account.',
     deleteAccountTitle: 'Account and data deletion',
     deleteAccountBody:
@@ -685,7 +722,24 @@ export const en: Messages = {
     contact: 'Contact',
     createdAt: 'Submitted',
     status: 'Status',
-    updateError: 'Could not update status. Please try again shortly.',
+    updateError: 'Could not save the triage details. Please try again shortly.',
+    save: 'Save triage details',
+    saving: 'Saving',
+    saved: 'Saved.',
+    priority: 'Priority',
+    assignee: 'Assignee',
+    assigneePlaceholder: 'Person or team responsible',
+    internalNote: 'Internal note',
+    internalNotePlaceholder: 'Admin-only reproduction notes, decisions, and follow-up work',
+    staffReply: 'Reply to reporter',
+    staffReplyPlaceholder: 'Resolution details or a question visible to the reporter',
+    staffReplyHint: 'This text is shown in the reporter’s My posts list.',
+    priorityLabels: {
+      P0: 'P0 · Outage/security',
+      P1: 'P1 · Core function',
+      P2: 'P2 · Normal',
+      P3: 'P3 · Minor',
+    },
     statusLabels: {
       new: 'New',
       reviewed: 'Reviewed',
@@ -719,7 +773,12 @@ export const en: Messages = {
   glossaryPreset: {
     label: 'Instrument',
     options: {
-      futures: 'Futures terminology',
+      default: 'Standard',
+      index: 'Index futures',
+      stock: 'Stock futures',
+      commodity: 'Commodity futures',
+      fx: 'Forex (FX)',
+      cfd: 'CFD',
     },
   },
   welcome: {
@@ -737,7 +796,7 @@ export const en: Messages = {
     greetingHighlights: [
       'See the current risk and liquidation threshold of an open position in one place.',
       'Preview how a new order could change your account and liquidation price before it fills.',
-      'We built LiqGuard to make complex derivatives calculations easier to read and verify. You can use it without signing in, and saved calculator inputs stay in this browser only.',
+      "We built LiqGuard to make complex derivatives calculations easier to read and verify. Pick a few settings and we'll tailor the terms, storage, and input guidance to your trading setup.",
     ],
     regionTitle: 'Where do you trade?',
     regionBody:
@@ -812,7 +871,7 @@ export const en: Messages = {
     mathLink: 'Curious about the math? See the formulas',
     saveTitle: 'Save your inputs on this device?',
     saveBody:
-      "Saved values stay inside this browser and aren't sent to a server. Clearing this browser's site data deletes them, and you can change the choice anytime from the calculator's storage menu.",
+      'Saved values stay inside this browser. Clearing its site data or storage also deletes them. You can change this anytime in My Page or the margin section.',
     saveYes: 'Save on this device',
     saveYesDesc: 'Your inputs are still here when you come back.',
     saveNo: "Don't save",
@@ -820,12 +879,12 @@ export const en: Messages = {
     disclaimerStepTitle: 'Before you start',
     disclaimerStepBody:
       'This calculator is for reference only. Trading futures and derivatives carries risk of loss exceeding your principal, and liquidation rules vary by broker and exchange.',
-    stepNav: ['Welcome', 'Margin method', 'Your situation', 'Your guide', 'Save inputs', 'Before you start'],
+    stepNav: ['Welcome', 'Region', 'Instrument', 'Your situation', 'Your guide', 'Save inputs', 'Before you start'],
     regionPrompt: 'Choose where you live or where you mainly trade.',
     railHint: 'About 30 seconds. You can change any setting later.',
     marginDivider: 'Margin input method',
     doneTitle: "You're all set!",
-    doneBody: "We've prepared the calculator and guidance for your choices. Now go calculate your liquidation price.",
+    doneBody: "We've tailored the calculator screen and tips to your choices. Now go calculate your liquidation price.",
   },
   fieldHint: {
     activeButton: 'Guide on',
@@ -921,7 +980,6 @@ export const en: Messages = {
   useCurrentPriceTitle: 'Fill with mark price',
   linkOrderPriceTitle: 'Link mark and order price',
   unlinkOrderPriceTitle: 'Unlink mark and order price',
-  clearOrderInputs: 'Clear',
   results: {
     sheetIndex: 'Metric',
     sheetBefore: 'Before',
@@ -936,7 +994,7 @@ export const en: Messages = {
     leverageRatio: 'Leverage',
     leverageSub: 'Mark-based value ÷ equity',
     maintenanceMargin: 'Maint. margin',
-    contractNotional: 'Entry notional',
+    contractNotional: 'Notional',
     entrustedMargin: 'Init. margin',
     availableMargin: 'Avail. margin',
     availableMarginSub: 'Equity − init. margin',
@@ -1055,15 +1113,15 @@ export const en: Messages = {
   },
   privacySettings: {
     eyebrow: 'PRIVACY CONTROLS',
-    title: 'Privacy and advertising settings',
+    title: 'Privacy and cookie settings',
     intro:
-      'LiqGuard may display ads to support the free service. Analytics and personalized ads are optional, and the calculator and on-device saving remain available without consent.',
+      'Calculator and account features are always available. Service analytics are optional, and Google Analytics is not loaded before you allow it.',
     close: 'Close',
-    coreTitle: 'Core calculator features',
-    coreBody: 'Calculation, language, and on-device save settings',
+    coreTitle: 'Core calculator and account features',
+    coreBody: 'Calculation, language, sign-in, and the storage options you choose',
     coreStatus: 'Always available',
-    optionalTitle: 'Analytics and personalized ads',
-    optionalBody: 'Optional usage analytics and interest-based advertising',
+    optionalTitle: 'Optional features',
+    optionalBody: 'Service analytics and future advertising privacy choices',
     statusDefaultBlocked: 'Blocked by default',
     statusDenied: 'Off',
     statusAllowed: 'On',
@@ -1074,9 +1132,8 @@ export const en: Messages = {
     analyticsTitle: 'Service analytics',
     analyticsBody: 'Google Analytics 4 collects page visits and feature usage statistics.',
     personalizedAdsTitle: 'Personalized ads',
-    personalizedAdsBody: 'Google AdSense uses interests and past activity to personalize ads.',
-    adNotice:
-      'Contextual or limited ads may still appear when personalized ads are turned off.',
+    personalizedAdsBody: 'Used for interest-based ads only if advertising is enabled again.',
+    adNotice: 'Advertising is currently paused. No ad DOM, AdSense script, or ad request is created.',
     save: 'Save choices',
   },
   legal: {
@@ -1085,29 +1142,32 @@ export const en: Messages = {
     resultMismatchWarning:
       'Displayed results may not match actual liquidation prices or margin call timing.',
     contentNoticeLabel: 'Investment risk and calculation limitations',
-    modalEyebrow: 'LIQGUARD · SERVICE NOTICE',
-    modalTitle: 'Review before calculating',
+    modalTitle: 'Before you continue',
     modalIntro:
-      'LiqGuard is a reference tool for reviewing liquidation prices and margin. Leveraged and derivatives trading can result in losses exceeding your deposit.',
+      'Please read the following. Leveraged and futures trading can result in losses exceeding your deposit.',
     sections: [
       {
-        title: 'Reference calculations',
-        body: 'This tool estimates and compares liquidation prices and margin. It does not provide investment advice, recommendations, or legal or tax guidance.',
+        title: 'Purpose',
+        body: 'This tool estimates liquidation prices and margin levels for leveraged positions. It is not investment advice, a recommendation, or legal/tax guidance.',
       },
       {
-        title: 'Broker and exchange rules come first',
-        body: 'Liquidation rules, rounding, fees, and margin formulas vary. Verify official figures and terms before trading.',
+        title: 'Limitations',
+        body: 'Brokers and exchanges use different rounding, fees, and margin rules. We do not guarantee accuracy or completeness.',
       },
       {
-        title: 'The final decision is yours',
-        body: 'You are responsible for every trading decision and outcome. To the extent permitted by law, the operator is not liable for losses arising from use of or reliance on this service.',
+        title: 'Your responsibility',
+        body: 'You are solely responsible for all trading decisions. Always verify against your broker’s official figures and terms before trading.',
+      },
+      {
+        title: 'Disclaimer',
+        body: 'To the extent permitted by law, the operator is not liable for losses arising from use of or reliance on this service.',
       },
     ],
     acknowledge:
       'I have read the above and will use this tool for reference only.',
-    confirmButton: 'Review complete — start calculating',
-    dismissButton: 'Close notice',
-    skipModalLabel: 'Skip this notice on future visits',
+    confirmButton: 'Agree and continue',
+    dismissButton: 'OK',
+    skipModalLabel: "Don't show this again",
     showModalAgain: 'View service notice again',
     termsLink: 'Terms of use',
     privacyLink: 'Privacy policy',
@@ -1184,7 +1244,7 @@ export const en: Messages = {
   guide: {
     title: 'User guide',
     description:
-      'The minimum setup values, margin modes, order tools, and how to update the mark price each day.\nEnter numbers exactly as shown in your broker app.',
+      'How to fill inputs, use order tools, update the mark price each day, and use shortcuts.\nEnter numbers exactly as shown in your broker app.',
     sections: [
       {
         title: 'Getting started',
@@ -1196,31 +1256,29 @@ export const en: Messages = {
         ],
       },
       {
-        title: 'Minimum setup values',
-        paragraphs: [
-          'Start with only the values below to calculate the current position. Tick size is optional and only needed for ▲▼ adjustments.',
-        ],
+        title: 'Recommended input order',
+        paragraphs: ['Fill fields in this order for the smoothest workflow:'],
         items: [
-          'Position — long or short, open contracts, and entry price',
-          'Account — account equity and mark price from the same point in time',
-          'Instrument — contract multiplier (contract size)',
-          'Margin — choose one of the three modes below, then enter its maintenance and initial margin values',
+          'Instrument — mark first, then equity immediately (same broker-platform screen or snapshot)',
+          'Account — open contracts',
+          'Margin — pick the mode that matches your broker platform (rate, per-contract, or total), then enter maintenance and initial margin',
+          'Instrument — entry price, contract multiplier (contract size), tick size',
         ],
       },
       {
         title: 'Margin input modes',
         paragraphs: [
-          'Rate mode — when margin is quoted as a percentage of notional value. Examples: KRX KOSPI 200 index and selected single-stock futures.',
-          'Per-contract mode — when margin is quoted as a fixed amount per contract. Examples: CME E-mini Nasdaq-100, WTI crude oil, and COMEX gold futures.',
-          'Total mode — when your broker platform shows only aggregate margin for the full open position, regardless of market.',
-          'Choose the mode that matches the exchange or broker display, then enter maintenance and initial margin as a pair.',
+          'Rate mode — when margin is shown as a ratio of notional value. Examples: KRX KOSPI 200 index and selected single-stock futures.',
+          'Per-contract mode — when margin is shown as a fixed amount per contract. Examples: CME E-mini Nasdaq-100, WTI crude oil, and COMEX gold futures.',
+          'Total mode — when your broker platform shows aggregate margin for the full open position, regardless of market.',
+          'If you enter both a rate and a direct amount, the direct amount takes precedence.',
         ],
       },
       {
         title: 'Order simulation',
         paragraphs: [
           'In the Order section at the bottom of the results panel, adjust order size and price to preview liquidation, margin, and leverage right after a fill.',
-          'During rollover, small differences can come from order price vs actual fill, and from the mark moving between account and quote snapshots. After rollover or re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity/mark at the same timestamp and align them again.',
+          'After re-entering from flat, enter the new entry price/open contracts, then resnapshot account equity and mark at the same timestamp.',
         ],
         items: [
           'Enter — enter order preview',
@@ -1234,12 +1292,26 @@ export const en: Messages = {
           'Set contracts, margin, and instrument specs once, and turn on “Save inputs on this device.”',
           'Each morning, enter today’s broker mark in the mark price field. The calculator automatically rolls P&L from the previous mark into account equity.',
           'After setup is locked, avoid changing account baseline fields. Move only the mark price for the normal daily routine. Use Ctrl+Z to undo the last mark update.',
-          'This routine assumes your initial account equity and mark are aligned. After rollover or re-entering from flat, resnapshot the new position as described in Order simulation.',
+          'This routine assumes your initial account equity and mark are aligned. After re-entering from flat, resnapshot the new position.',
         ],
         items: [
           'Position size and instrument unchanged',
           'No deposits, withdrawals, fees, or realized P&L',
           'Only the mark price changed (for example, an overnight gap)',
+        ],
+      },
+      {
+        title: 'Scenario price',
+        paragraphs: [
+          'The normal daily routine now uses the mark price field. Scenario price is a secondary tool for checking results at an assumed price.',
+          'Use it when you want to inspect liquidation price or margin headroom without immediately changing the stored mark and account equity.',
+          'When tick size is set, use ▲▼ or drag the field vertically to step by ticks.',
+        ],
+        items: [
+          'Price assumption — inspect results while keeping the current setup',
+          'Esc or Delete — clear the input',
+          'Ctrl+Z — undo',
+          'Ctrl+Shift+Z — redo',
         ],
       },
       {
@@ -1252,9 +1324,9 @@ export const en: Messages = {
       {
         title: 'Saving inputs',
         paragraphs: [
-          'The public version has no sign-in or cloud storage. Inputs are kept in this browser localStorage only when you choose local saving.',
-          'Switching to “Don’t save” pauses automatic saving but keeps the existing draft. Clear all inputs to remove both the visible values and saved calculator draft.',
-          'On shared devices or in an environment with malicious software or browser extensions, saved account-related information may be exposed. Choose carefully.',
+          'When signed out, “Save inputs” keeps values in this browser only.',
+          'When signed in, choose This device or Cloud before enabling saving.',
+          'Turning it off deletes values in the currently selected storage location.',
           'Pairs well with “Daily mark-to-market”: keep yesterday’s contracts and margin, then update only the mark price.',
         ],
       },
@@ -1267,7 +1339,7 @@ export const en: Messages = {
     title: 'About the service',
     tagline: 'See position risk in one place',
     lead:
-      'LiqGuard brings estimated liquidation price, margin headroom, and post-order changes into one workspace for futures positions.\nStart without an account and save only the inputs you choose in this browser.',
+      'LiqGuard brings estimated liquidation price, margin headroom, and post-order changes into one workspace for futures positions.\nStart calculating immediately, or sign in for cloud saving and records across sessions.',
     sections: [
       {
         title: 'Bring scattered calculations together',
@@ -1286,7 +1358,7 @@ export const en: Messages = {
       {
         title: 'Start light, save by choice',
         paragraphs: [
-          'The public service works without an account or cloud profile. If you turn on saving, your inputs remain in this browser.',
+          'The calculator works without signing in. Choose on-device saving, or sign in to use Supabase-backed cloud saving and account records.',
           'Calculator storage stays separate from analytics and advertising choices, and you can change storage and privacy settings at any time.',
         ],
       },
@@ -1304,52 +1376,42 @@ export const en: Messages = {
       'Formulas used by the futures liquidation calculator. Broker and exchange rules may differ — for reference only.',
     disclaimer:
       'Direct maintenance or entrusted margin inputs override rate-based values. Liquidation timing and rounding vary by broker.',
-    symbolTitle: 'Formula terms',
+    symbolTitle: 'Symbols',
     symbols: [
-      { symbol: 'Account equity', meaning: 'The current value of assets in the account' },
-      { symbol: 'Current price', meaning: 'The current market price you entered' },
-      {
-        symbol: 'Price after move',
-        meaning: 'The price after a market move; this is the unknown when solving for liquidation',
-      },
-      { symbol: 'Open contracts', meaning: 'The number of contracts currently held' },
-      {
-        symbol: 'Contract multiplier / contract size',
-        meaning: 'The value used to calculate one contract’s profit or loss for a one-unit price move (default 1)',
-      },
-      {
-        symbol: 'Total sensitivity',
-        meaning: 'Open contracts × contract multiplier / contract size (profit or loss for a one-unit price move)',
-      },
-      { symbol: 'Maintenance margin rate', meaning: 'The maintenance margin as a decimal of mark-based value, e.g. 0.247' },
-      { symbol: 'Entrusted margin rate', meaning: 'The initial / entrusted margin as a decimal of mark-based value' },
+      { symbol: 'E₀', meaning: 'Account equity (current assets)' },
+      { symbol: 'C₀', meaning: 'Current price' },
+      { symbol: 'P', meaning: 'Price after move (unknown when solving for liquidation)' },
+      { symbol: 'N', meaning: 'Open contracts' },
+      { symbol: 'M', meaning: 'Contract multiplier / contract size (default 1)' },
+      { symbol: 'Q', meaning: 'Total sensitivity = N × M (P&L per one price unit)' },
+      { symbol: 'R', meaning: 'Maintenance margin rate (decimal, e.g. 0.247)' },
+      { symbol: 'Rₑ', meaning: 'Initial / entrusted margin rate' },
     ],
     sections: [
       {
         title: 'Entry notional & margin',
-        intro:
-          'Entry notional uses entry price. Current margin and leverage use mark-based value. Total sensitivity is calculated separately for liquidation.',
+        intro: 'Entry notional uses entry price. Current margin and leverage use mark-based value. Q for liquidation is separate.',
         entries: [
           {
             name: 'Entry notional',
-            expression: 'Entry notional = open contracts × entry price × contract multiplier / contract size',
+            expression: 'Notional = N × entry price × M',
           },
           {
             name: 'Maintenance margin (rate)',
-            expression: 'Maintenance margin = current price × total sensitivity × maintenance margin rate',
+            expression: 'Maintenance = C₀ × Q × R',
             description: 'A direct broker-platform amount takes precedence when provided.',
           },
           {
             name: 'Entrusted margin (rate)',
-            expression: 'Entrusted margin = current price × total sensitivity × entrusted margin rate',
+            expression: 'Entrusted = C₀ × Q × Rₑ',
           },
           {
             name: 'Available margin',
-            expression: 'Available margin = account equity − entrusted margin',
+            expression: 'Available = E₀ − entrusted margin',
           },
           {
             name: 'Per-contract margin',
-            expression: 'Per contract = position margin ÷ open contracts',
+            expression: 'Per contract = position margin ÷ N',
           },
         ],
       },
@@ -1358,56 +1420,41 @@ export const en: Messages = {
         intro: 'Liquidation occurs when equity at price P equals maintenance at P.',
         entries: [
           {
-            name: 'Total sensitivity',
-            expression: 'Total sensitivity = open contracts × contract multiplier / contract size',
-            description:
-              'For example: 58 open contracts × multiplier 10 = total sensitivity 580. With a multiplier of 1, it equals the number of open contracts.',
+            name: 'Q (total sensitivity)',
+            expression: 'Q = N × M',
+            description: 'e.g. N=58, M=10 → Q=580. If M=1, Q=N.',
           },
           {
             name: 'Maintenance at current price',
-            expression: 'Maintenance margin at current price = current price × total sensitivity × maintenance margin rate',
+            expression: 'M(C₀) = C₀ × Q × R',
             description: 'Or direct maintenance from your broker platform (scaled by contracts).',
           },
           {
             name: 'Maintenance at price P (rate / total)',
-            expression:
-              'Maintenance margin at price after move = maintenance margin at current price × price after move / current price',
+            expression: 'M(P) = M(C₀) × P / C₀',
           },
           {
             name: 'Fixed margin per contract',
-            expression: 'Maintenance margin = per-contract amount × open contracts (constant, price-independent)',
+            expression: 'Maintenance = per-contract amount × N (constant, price-independent)',
             description:
-              'Fixed per-contract margin does not move with price, so maintenance margin after a move is constant rather than proportional to price.',
+              'Fixed per-contract margin does not move with price, so M(P) is a constant rather than proportional to P.',
           },
         ],
       },
       {
         title: 'Liquidation — long',
         entries: [
-          {
-            name: 'Account equity after a price move',
-            expression: 'Account equity after a price move = account equity + (price after move − current price) × total sensitivity',
-          },
-          {
-            name: 'Liquidation condition',
-            expression: 'Account equity after a price move = maintenance margin at price after move',
-          },
-          {
-            name: 'Liquidation price',
-            expression:
-              'Liquidation price = (current price × total sensitivity − account equity) / (total sensitivity − maintenance margin at current price / current price)',
-          },
+          { name: 'Equity at P', expression: 'Equity(P) = E₀ + (P − C₀) × Q' },
+          { name: 'Liquidation condition', expression: 'Equity(P) = M(P)' },
+          { name: 'Liquidation price', expression: 'P = (C₀×Q − E₀) / (Q − M(C₀)/C₀)' },
           {
             name: 'Summary (rate form)',
-            expression:
-              'Liquidation price = (current price × total sensitivity − account equity) / (total sensitivity × (1 − maintenance margin rate))',
-            description:
-              'Equivalent when maintenance margin at current price = current price × total sensitivity × maintenance margin rate.',
+            expression: 'P = (C₀×Q − E₀) / (Q×(1 − R))',
+            description: 'Equivalent when M(C₀)=C₀×Q×R.',
           },
           {
             name: 'Fixed per-contract margin (long)',
-            expression:
-              'Liquidation price = current price + (fixed maintenance margin − account equity) / total sensitivity',
+            expression: 'P = C₀ + (Mfix − E₀) / Q',
             description: 'With fixed maintenance the price-proportional term drops out.',
           },
         ],
@@ -1415,32 +1462,20 @@ export const en: Messages = {
       {
         title: 'Liquidation — short',
         entries: [
-          {
-            name: 'Account equity after a price move',
-            expression: 'Account equity after a price move = account equity − (price after move − current price) × total sensitivity',
-          },
-          {
-            name: 'Liquidation condition',
-            expression: 'Account equity after a price move = maintenance margin at price after move',
-          },
-          {
-            name: 'Liquidation price',
-            expression:
-              'Liquidation price = (account equity + current price × total sensitivity) / (total sensitivity + maintenance margin at current price / current price)',
-          },
+          { name: 'Equity at P', expression: 'Equity(P) = E₀ − (P − C₀) × Q' },
+          { name: 'Liquidation condition', expression: 'Equity(P) = M(P)' },
+          { name: 'Liquidation price', expression: 'P = (E₀ + C₀×Q) / (Q + M(C₀)/C₀)' },
           {
             name: 'Summary (rate form)',
-            expression:
-              'Liquidation price = (account equity + current price × total sensitivity) / (total sensitivity × (1 + maintenance margin rate))',
+            expression: 'P = (E₀ + C₀×Q) / (Q×(1 + R))',
           },
           {
             name: 'Fixed per-contract margin (short)',
-            expression:
-              'Liquidation price = current price + (account equity − fixed maintenance margin) / total sensitivity',
+            expression: 'P = C₀ + (E₀ − Mfix) / Q',
           },
         ],
         notes: [
-          'With the same account equity and total sensitivity, short upside buffer (%) < long downside buffer (%) — the two are not symmetric.',
+          'For the same E₀ and Q, short upside buffer (%) < long downside buffer (%) — not symmetric.',
         ],
       },
       {
@@ -1448,28 +1483,27 @@ export const en: Messages = {
         entries: [
           {
             name: 'Long — buffer to liquidation (%)',
-            expression: '((current price − liquidation price) / current price) × 100',
+            expression: '((C₀ − P) / C₀) × 100',
           },
           {
             name: 'Short — buffer to liquidation (%)',
-            expression: '((liquidation price − current price) / current price) × 100',
+            expression: '((P − C₀) / C₀) × 100',
           },
           {
             name: 'Price move to liquidation',
-            expression: 'Long: current price − liquidation price  /  Short: liquidation price − current price',
+            expression: 'Long: C₀ − P  /  Short: P − C₀',
           },
-          { name: 'Leverage', expression: 'Leverage = (current price × total sensitivity) ÷ account equity' },
+          { name: 'Leverage', expression: 'Leverage = (C₀ × Q) ÷ E₀' },
           {
             name: 'Add-on buy / sell limit',
-            expression: 'floor((account equity − entrusted margin) / entrusted margin per contract)',
+            expression: 'floor((E₀ − entrusted) / per-contract entrusted)',
             description: 'Same margin math for long adds and short adds.',
           },
           {
             name: 'Order fill P&L (at mark)',
-            expression:
-              'Long: (current price − order price) × order total sensitivity  /  Short: (order price − current price) × order total sensitivity',
+            expression: 'Long: (C₀ − order price) × Q  /  Short: (order price − C₀) × Q',
             description:
-              'Order total sensitivity = order size × contract multiplier / contract size. Applied to post-order equity, entry price, liquidation, and leverage. Blank order price = current price.',
+              'Q = order size × contract multiplier / contract size. Applied to post-order equity, entry price, liquidation, and leverage. Blank order price = mark.',
           },
         ],
       },
@@ -1486,7 +1520,7 @@ export const en: Messages = {
       {
         title: 'Product',
         links: [
-          { label: 'Futures Calculator', href: '/' },
+          { label: 'Service overview', href: '/about' },
           { label: 'Pro', soon: true },
           { label: 'Changelog', soon: true },
         ],
@@ -1494,8 +1528,8 @@ export const en: Messages = {
       {
         title: 'Company',
         links: [
-          { label: 'Farfield Software', href: '/about' },
-          { label: 'Contact', href: `mailto:${CONTACT_EMAIL}` },
+          { label: 'About us', href: '/company' },
+          { label: 'Contact', href: '/contact' },
           { label: 'Support', href: SUPPORT_URL },
           { label: 'Careers', soon: true },
         ],
@@ -1556,6 +1590,16 @@ export const en: Messages = {
     attachmentTooMany: 'You can attach up to 3 screenshots.',
     submit: 'Submit',
     anonymous: 'Anonymous',
+    status: 'Status',
+    staffReply: 'Reply from Farfield Software',
+    staffRepliedAt: 'Replied',
+    statusLabels: {
+      new: 'Received',
+      reviewed: 'Under review',
+      in_progress: 'In progress',
+      done: 'Resolved',
+      on_hold: 'On hold',
+    },
     items: {
       'dev-request': {
         title: 'Dev request',
@@ -1577,8 +1621,6 @@ export const en: Messages = {
     },
   },
   ads: {
-    placeholderTitle: 'Ads are being prepared',
-    placeholderBody: 'This space helps keep LiqGuard free.',
     leftTop: 'Left sidebar ad',
     leftBottom: 'Left sidebar ad',
     top: 'Top banner ad',

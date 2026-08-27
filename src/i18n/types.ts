@@ -3,8 +3,8 @@ import type { CalcMessageCode } from './calcMessages'
 
 export type Locale = 'ko' | 'en'
 
-/** 공개판의 단일 고정 선물 용어세트 식별자. */
-export const PRESET_IDS = ['futures'] as const
+/** 용어 프리셋 식별자. 'default'는 미선택(현재 국내선물 어휘), 나머지는 상품군별. */
+export const PRESET_IDS = ['default', 'index', 'stock', 'commodity', 'fx', 'cfd'] as const
 export type PresetId = (typeof PRESET_IDS)[number]
 
 export interface FieldCopy {
@@ -60,7 +60,7 @@ export interface Messages {
     undoSection: string
     redoSection: string
     empty: string
-    orderApplied: string
+    changedValues: string
     diff: {
       accountEval: string
       currentPrice: string
@@ -72,6 +72,7 @@ export interface Messages {
       orderApply: string
       scenarioPreview: string
       scenarioApply: string
+      markUpdate: string
       multiple: string
       generic: string
     }
@@ -140,37 +141,16 @@ export interface Messages {
     storageModeLabel: string
     localMode: string
     cloudMode: string
+    cloudLoginRequired: string
     noSaveMode: string
-    publicConsentEyebrow: string
-    publicConsentTitle: string
-    publicConsentIntro: string
-    publicConsentSummaryLabel: string
-    publicConsentBrowserOnlyTitle: string
-    publicConsentBrowserOnlyBody: string
-    publicConsentNoServerTitle: string
-    publicConsentNoServerBody: string
-    publicConsentSavedLabel: string
-    publicConsentSavedItems: string[]
-    publicConsentSharedDeviceLabel: string
-    publicConsentSharedDeviceTitle: string
-    publicConsentSharedDeviceBody: string
-    publicConsentActionLabel: string
-    publicConsentOff: string
-    publicConsentOffDescription: string
-    publicConsentOffConfirm: string
-    publicConsentLocal: string
-    publicConsentLocalDescription: string
-    publicConsentLocalConfirm: string
-    publicConsentSelectPrompt: string
-    publicConsentFootnote: string
     cleared: string
     enableModalTitle: string
     cloudEnableModalTitle: string
     enableModalBody: string[]
     cloudEnableModalBody: string[]
+    localDataLossEmphasis: string
     enableConfirm: string
     skipModalLabel: string
-    showGuideAgain: string
     clearedModalTitle: string
     deleteConfirmTitle: string
     deleteConfirmBody: string
@@ -187,9 +167,12 @@ export interface Messages {
     copyHint: string
     copySuccess: string
     copyError: string
+    numberSetCopyHint: string
+    numberSetCopySuccess: string
     helpHint: string
     helpHintLabel: string
     numberSetPickerLabel: string
+    localDataLossNote: string
     numberSetMenuTitle: string
     numberSetAdd: string
     numberSetManage: string
@@ -238,11 +221,15 @@ export interface Messages {
     memoSnapshotTitle: string
     memoOrderTitle: string
     memoNumberSetTitle: string
+    memoWorkspaceTitle: string
+    memoWorkspaceHint: string
+    memoBackToSlot: string
     memoSaving: string
     memoSaved: string
     memoEmptySaved: string
     memoSaveError: string
     memoAutoSaveHint: string
+    memoBackgroundOpacity: string
     memoClose: string
     memoPlaceholder: string
     deleteError: string
@@ -303,11 +290,33 @@ export interface Messages {
     slotFilterLabel: string
     slotFilterAll: string
     slotFilterUnassigned: string
+    slotNameUnavailable: string
+    savedAtAndSlot: string
     slotFilterAria: string
     jumpToDate: string
     jumpToDateAria: string
     timelineAnchorLabel: string
     backToLatest: string
+    export: string
+    exportTitle: string
+    exportDescription: string
+    exportRecordType: string
+    exportOrders: string
+    exportSnapshots: string
+    exportSlot: string
+    exportStartDate: string
+    exportEndDate: string
+    exportHeaderLanguage: string
+    exportLanguageKo: string
+    exportLanguageEn: string
+    exportCsv: string
+    exportXlsx: string
+    exportPreparing: string
+    exportSuccess: string
+    exportEmpty: string
+    exportError: string
+    exportInvalidRange: string
+    exportClose: string
   }
   myPage: {
     title: string
@@ -315,6 +324,7 @@ export interface Messages {
     backToCalculator: string
     loginTitle: string
     loginBody: string
+    loadingBody: string
     loginAction: string
     loginHeadline: string
     loginPanelTitle: string
@@ -374,8 +384,8 @@ export interface Messages {
     recordsCount: string
     recordsEmpty: string
     recordsSummaryTitle: string
-    latestSnapshotTitle: string
-    latestSnapshotEmpty: string
+    recentSnapshotsTitle: string
+    recentSnapshotsEmpty: string
     recentOrdersTitle: string
     recentOrdersEmpty: string
     recordsArchiveLink: string
@@ -404,21 +414,11 @@ export interface Messages {
     autoSnapshotRegionLabel: string
     autoSnapshotTimeZoneSearchPlaceholder: string
     autoSnapshotSlotToggleLabel: string
+    autoSnapshotColumnLabel: string
+    numberSetInstrumentColumnLabel: string
+    autoSnapshotSlotHelp: string
     autoSnapshotSlotCountNote: string
-    rolloverTitle: string
-    rolloverToggleLabel: string
-    rolloverIntervalLabel: string
-    rolloverIntervalMonthly: string
-    rolloverIntervalBimonthly: string
-    rolloverIntervalQuarterly: string
-    rolloverIntervalSemiannual: string
-    rolloverAnchorLabel: string
-    rolloverAnchorSecondThursday: string
-    rolloverAnchorThirdFriday: string
-    rolloverNextDateLabel: string
-    rolloverNextDateHint: string
-    rolloverPendingBanner: string
-    rolloverPendingAction: string
+    autoSnapshotNoSlotsSelected: string
     toggleUseLabel: string
     navLabel: string
     navAccount: string
@@ -458,6 +458,20 @@ export interface Messages {
     numberSetLimitReached: string
     numberSetLoginRequired: string
     numberSetError: string
+    numberSetDeleteTitle: string
+    numberSetDeleteCloudBody: string
+    numberSetDeleteLocalBody: string
+    numberSetDeleteOrderCount: string
+    numberSetDeleteSnapshotCount: string
+    numberSetDeleteMemoCount: string
+    numberSetDeleteWarning: string
+    numberSetDeleteSummaryLoading: string
+    numberSetDeleteSummaryError: string
+    numberSetDeleteRetry: string
+    numberSetDeleteCancel: string
+    numberSetDeleteConfirm: string
+    numberSetDeleteBusy: string
+    numberSetDeleteSuccess: string
     planTitle: string
     planStatusLabel: string
     planStatusValue: string
@@ -535,11 +549,27 @@ export interface Messages {
         manageTitle: string
         proPlanName: string
         activeBadge: string
+        cancelScheduledBadge: string
+        cancelScheduledBody: string
+        accessEndsOn: string
+        noFurtherBilling: string
         portalAction: string
         receiptsAction: string
         paymentMethodAction: string
         cancelNote: string
         cancelAction: string
+        manageCancellationAction: string
+        sandboxTitle: string
+        sandboxBody: string
+        sandboxSyncAction: string
+        sandboxCancelNowAction: string
+        sandboxCancelConfirm: string
+        sandboxCancelConfirmAction: string
+        sandboxCancelDismissAction: string
+        sandboxBusy: string
+        sandboxSyncSuccess: string
+        sandboxCancelSuccess: string
+        sandboxError: string
         /** 결제 실패 배너 */
         failedTitle: string
         failedBody: string
@@ -651,6 +681,18 @@ export interface Messages {
     createdAt: string
     status: string
     updateError: string
+    save: string
+    saving: string
+    saved: string
+    priority: string
+    assignee: string
+    assigneePlaceholder: string
+    internalNote: string
+    internalNotePlaceholder: string
+    staffReply: string
+    staffReplyPlaceholder: string
+    staffReplyHint: string
+    priorityLabels: Record<import('../db/feedbackPosts').FeedbackPriority, string>
     statusLabels: Record<import('../db/feedbackPosts').FeedbackStatus, string>
   }
   marginMode: {
@@ -727,9 +769,9 @@ export interface Messages {
     saveNoDesc: string
     disclaimerStepTitle: string
     disclaimerStepBody: string
-    /** 좌측 레일 세로 스테퍼 & 우측 헤더 섹션명(6단계, 순서대로) */
-    stepNav: [string, string, string, string, string, string]
-    /** STEP01 지역 선택 위 안내문 */
+    /** 좌측 레일 세로 스테퍼 & 우측 헤더 섹션명(7단계, 순서대로) */
+    stepNav: [string, string, string, string, string, string, string]
+    /** 지역 선택 위 안내문 */
     regionPrompt: string
     /** 좌측 레일 하단 안내(자물쇠) */
     railHint: string
@@ -740,7 +782,7 @@ export interface Messages {
     /** 완료 화면 본문 */
     doneBody: string
   }
-  /** 계산기 필드 인디케이터(거래 상태별 '이 칸부터') 안내 모드 카피 */
+  /** 계산기 필드 인디케이터(거래 상태별 '이 칸부터') 상단 안내 모드 카피 */
   fieldHint: {
     activeButton: string
     enable: string
@@ -796,7 +838,6 @@ export interface Messages {
   }
   legal: {
     bannerShort: string
-    modalEyebrow: string
     modalTitle: string
     modalIntro: string
     sections: { title: string; body: string }[]
@@ -885,6 +926,10 @@ export interface Messages {
     attachmentTooMany: string
     submit: string
     anonymous: string
+    status: string
+    staffReply: string
+    staffRepliedAt: string
+    statusLabels: Record<import('../db/feedbackPosts').FeedbackStatus, string>
     items: Record<
       BoardId,
       { title: string; description: string; footerLabel: string }

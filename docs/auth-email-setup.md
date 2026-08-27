@@ -201,4 +201,21 @@ repo 템플릿 + 대시보드 수동 붙여넣기가 번거로우면:
 ## 비밀값
 
 - Resend API 키: Resend / Supabase SMTP에만 저장. **`.env`나 클라이언트에 넣지 않음**
-- `RESEND_API_KEY` 는 향후 서버에서 직접 메일을 보낼 때만 `.env`에 추가
+- `RESEND_API_KEY` 는 `/api/feedback/notify` 서버 함수에서만 사용하며 `VITE_` 접두사를 붙이지 않음
+
+### 피드백 신규 접수 알림
+
+개발판의 개발 의뢰·버그 제보·개선 제안은 Supabase 저장 성공 후 서버 함수가 회사 수신함에 알린다. 제보 저장은 메일 제공자 장애와 분리되어 있으므로 알림 발송 실패가 제보 자체를 취소하지 않는다.
+
+Vercel Production에 다음 서버 전용 환경변수를 등록한다.
+
+```text
+RESEND_API_KEY=
+FEEDBACK_NOTIFICATION_FROM=LiqGuard <notification@farfield.software>
+FEEDBACK_NOTIFICATION_TO=contact@farfield.software
+```
+
+- `FEEDBACK_NOTIFICATION_FROM` 도메인은 Resend에서 발신 검증이 완료된 주소를 사용한다.
+- 수신 주소를 Google Workspace Collaborative Inbox로 바꿔도 코드 변경 없이 환경변수만 유지·교체한다.
+- 같은 제보를 재시도해도 `feedback-new/<post-id>` 멱등 키와 `feedback_post_notifications` 장부가 중복 발송을 막는다.
+- 알림 원문과 첨부파일은 Notion에 복사하지 않고, 관리자 피드백함 링크만 운영 Task에 연결한다.

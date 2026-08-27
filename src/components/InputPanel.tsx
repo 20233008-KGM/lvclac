@@ -9,6 +9,7 @@ import {
   readSkipAccountSettingGuard,
   setSkipAccountSettingGuard,
 } from './accountSettingGuard'
+import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
@@ -20,6 +21,7 @@ import {
   PRICE_SCRUB_PX_PER_TICK,
 } from './numberStepperScrub'
 import { ClearAllInputsButton } from './ClearAllInputsButton'
+import { ActiveNumberSetLabel } from './ActiveNumberSetLabel'
 import { SaveDraftToggle } from './SaveDraftToggle'
 import { resolveInputPanelDisplayInputs } from './inputPanelDisplay'
 import { calcPositionTickPnl } from '../calc/positionMetrics'
@@ -361,6 +363,7 @@ export function ScenarioPriceField({
           text={field.hint}
           label={tooltipLabel}
           highlight={false}
+          guideHref={GUIDE_PATH}
           guideLinkLabel={tooltipGuideLink}
         />
       </span>
@@ -704,7 +707,10 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
     <>
     <section className="panel input-panel">
       <div className="input-panel__head">
-        <h2>{t.input}</h2>
+        <h2>
+          <span>{t.input}</span>
+          <ActiveNumberSetLabel />
+        </h2>
         <ClearAllInputsButton disabled={scenarioModeActive} />
       </div>
 
@@ -734,6 +740,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             label={f.accountEquity.label}
             tooltip={f.accountEquity.hint}
             tooltipLabel={t.fieldTooltipLabel}
+            tooltipGuideHref={GUIDE_PATH}
             tooltipGuideLinkLabel={t.tooltipGuideLink}
             className={`${frozenFieldClass} fh-equity`.trim()}
           >
@@ -796,6 +803,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               stepUpLabel={t.stepUp}
               stepDownLabel={t.stepDown}
               tooltipLabel={t.fieldTooltipLabel}
+              tooltipGuideHref={GUIDE_PATH}
               tooltipGuideLinkLabel={t.tooltipGuideLink}
               linkOrderPriceTitle={t.linkOrderPriceTitle}
               unlinkOrderPriceTitle={t.unlinkOrderPriceTitle}

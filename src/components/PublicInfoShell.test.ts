@@ -9,17 +9,17 @@ import {
 
 const pagesCss = readFileSync(resolve('src/styles/pages.css'), 'utf8')
 const shellSource = readFileSync(resolve('src/components/PublicInfoShell.tsx'), 'utf8')
-const legalSource = readFileSync(resolve('src/components/PublicLegalPage.tsx'), 'utf8')
+const guideSource = readFileSync(resolve('src/components/GuidePage.tsx'), 'utf8')
+const formulasSource = readFileSync(resolve('src/components/FormulasPage.tsx'), 'utf8')
+const aboutSource = readFileSync(resolve('src/components/AboutPage.tsx'), 'utf8')
+const legalSource = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
 
-describe('public information shell navigation', () => {
-  it('keeps the same five routes in Korean and English', () => {
+describe('dev public information shell navigation', () => {
+  it('keeps the same five documents and localizes their English routes', () => {
     expect(publicInfoNavigation('ko').map((item) => item.path)).toEqual(PUBLIC_INFO_PATHS)
     expect(publicInfoNavigation('en').map((item) => item.path)).toEqual(
       PUBLIC_INFO_PATHS.map((path) => `/en${path}`),
     )
-  })
-
-  it('provides localized labels for every route', () => {
     expect(publicInfoNavigation('ko').map((item) => item.label)).toEqual([
       '서비스 소개',
       '사용 가이드',
@@ -36,45 +36,57 @@ describe('public information shell navigation', () => {
     ])
   })
 
-  it('marks only the active route as the current page', () => {
+  it('marks only the active document as the current page', () => {
     expect(publicInfoAriaCurrent('/about', '/about')).toBe('page')
-    expect(publicInfoAriaCurrent('/guide', '/about')).toBeUndefined()
     expect(publicInfoAriaCurrent('/en/about', '/about')).toBe('page')
+    expect(publicInfoAriaCurrent('/guide', '/about')).toBeUndefined()
     expect(publicInfoAriaCurrent('/guide', null)).toBeUndefined()
   })
 
-  it('shares the legal gradient, legal width, and stable localized hero heights', () => {
-    expect(pagesCss).toMatch(
-      /\.public-info-zone\s*{[^}]*--public-info-accent:\s*color-mix\(in srgb, var\(--color-primary\) 64%, var\(--color-text-muted\) 36%\);/s,
-    )
-    expect(pagesCss).not.toMatch(/\.public-info-zone\[data-info-tone=/)
-    expect(pagesCss).toMatch(/\.public-info-standalone\s*{[^}]*width:\s*min\(920px,/s)
-    expect(pagesCss).toMatch(
-      /\.public-info-document::before\s*{[^}]*top:\s*-1px;[^}]*width:\s*min\(210px, 32%\);[^}]*background:\s*linear-gradient\(90deg, var\(--color-primary\), transparent\);/s,
-    )
-    expect(pagesCss).toMatch(/\.public-info-hero\s*{[^}]*min-height:\s*264px;/s)
-    expect(pagesCss).toMatch(/html\[lang='en'\] \.public-info-hero\s*{[^}]*min-height:\s*340px;/s)
-    expect(pagesCss).toMatch(
-      /@media \(max-width: 520px\)[\s\S]*\.public-info-hero\s*{[^}]*min-height:\s*280px;/,
-    )
+  it('routes all five documents through the shared shell without replacing refund', () => {
+    expect(guideSource).toContain('<PublicInfoShell')
+    expect(formulasSource).toContain('<PublicInfoShell')
+    expect(aboutSource).toContain('<PublicInfoShell')
+    expect(guideSource).not.toContain('<PageShell')
+    expect(formulasSource).not.toContain('<PageShell')
+    expect(legalSource).toContain("if (kind === 'terms' || kind === 'privacy')")
+    expect(legalSource).toContain("const activePath = kind === 'terms' ? TERMS_PATH : PRIVACY_PATH")
+    expect(legalSource).toContain('<PublicPageShell')
   })
 
-  it('aligns the footer edges with the public document shell', () => {
-    expect(pagesCss).toMatch(
-      /\.public-info-zone \.site-footer\s*{[^}]*width:\s*100%;[^}]*margin-top:\s*var\(--space-xl\);[^}]*margin-inline:\s*0;/s,
-    )
+  it('preserves the dev sign-in entry and footer inside the imported shell', () => {
+    expect(shellSource).toContain('<AuthButton variant="header" />')
+    expect(shellSource).toContain('<SiteFooter />')
+    expect(shellSource).toContain("data-info-navigation={showNavigation ? 'visible' : 'hidden'}")
+    expect(shellSource).toContain('{showNavigation && (')
   })
 
   it('reuses the header back-link component at the end of legal documents', () => {
     expect(shellSource).toContain('export function BackToCalculatorLink')
     expect(shellSource).toContain('<BackToCalculatorLink />')
-    expect(shellSource).not.toContain('<LocaleRouteLink')
     expect(legalSource).toContain('<BackToCalculatorLink className="public-legal-home" />')
-    expect(legalSource).not.toContain('className="btn btn-primary public-legal-home"')
     expect(pagesCss).toMatch(/\.public-info-zone \.public-legal-home\s*{[^}]*align-self:\s*flex-end;/s)
   })
 
-  it('hides the information navigation only on the refund policy', () => {
-    expect(legalSource).toContain("showNavigation={kind !== 'refund'}")
+  it('supports footer-only documents without adding them to the five-page navigator', () => {
+    expect(shellSource).toContain('activePath: PublicInfoPath | null')
+    expect(shellSource).toContain('showNavigation?: boolean')
+    expect(PUBLIC_INFO_PATHS).not.toContain('/company')
+    expect(pagesCss).toMatch(
+      /\.public-info-document\[data-info-navigation='hidden'\] \.public-info-hero \{[^}]*min-height: 0;/s,
+    )
+  })
+
+  it('uses the 920px document frame and responsive five-item navigator', () => {
+    expect(pagesCss).toMatch(/\.public-info-standalone\s*{[^}]*width:\s*min\(920px,/s)
+    expect(pagesCss).toMatch(
+      /\.public-info-nav__list\s*{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/s,
+    )
+    expect(pagesCss).toMatch(
+      /@media \(max-width: 720px\)[\s\S]*?\.public-info-nav__list\s*{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/,
+    )
+    expect(pagesCss).toMatch(
+      /\.public-info-zone \.site-footer\s*{[^}]*width:\s*100%;[^}]*margin-top:\s*var\(--space-xl\);[^}]*margin-inline:\s*0;/s,
+    )
   })
 })

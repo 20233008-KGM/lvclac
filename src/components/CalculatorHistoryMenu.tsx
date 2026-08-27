@@ -6,16 +6,22 @@ import {
 } from 'react'
 import type { CalculatorHistoryMove } from '../context/calculatorHistory'
 import type { Messages } from '../i18n/types'
-import {
-  describeCalculatorHistoryMove,
-  type CalculatorHistoryDescription,
-} from './calculatorHistoryDescription'
+import type { CalculatorInputs, MarginInputMode, TotalMarginKind } from '../types'
+import { formatNumber } from '../utils/format'
+import { formatRateForInput } from '../utils/inputFormat'
 
 interface CalculatorHistoryMenuProps {
   messages: Messages
   undoHistory: CalculatorHistoryMove[]
   redoHistory: CalculatorHistoryMove[]
   jumpHistory: (direction: CalculatorHistoryMove['direction'], steps: number) => void
+}
+
+interface VisibleHistoryDiff {
+  key: string
+  label: string
+  before: string
+  after: string
 }
 
 function HistoryIcon() {
@@ -39,6 +45,236 @@ function HistoryIcon() {
   )
 }
 
+function replaceHistoryTokens(
+  template: string,
+  values: Record<string, string | number>,
+): string {
+  return Object.entries(values).reduce(
+    (text, [key, value]) => text.replace(`{${key}}`, String(value)),
+    template,
+  )
+}
+
+function formatNumericValue(value: number | undefined): string {
+  return value == null ? '-' : formatNumber(value)
+}
+
+function formatRateValue(value: number | undefined): string {
+  return value == null ? '-' : formatRateForInput(value)
+}
+
+function formatMarginMode(value: MarginInputMode | undefined, messages: Messages): string {
+  if (value === 'perContract') return messages.marginMode.perContract
+  if (value === 'total') return messages.marginMode.total
+  return messages.marginMode.rate
+}
+
+function formatTotalMarginKind(value: TotalMarginKind | undefined, messages: Messages): string {
+  if (value === 'fixed') return messages.marginKindAsk.fixed
+  if (value === 'proportional') return messages.marginKindAsk.proportional
+  return '-'
+}
+
+function visibleHistoryDiffs(
+  before: CalculatorInputs,
+  after: CalculatorInputs,
+  messages: Messages,
+): VisibleHistoryDiff[] {
+  const entries: Array<{
+    key: string
+    label: string
+    before: string
+    after: string
+  }> = [
+    {
+      key: 'mode',
+      label: messages.modeLabel,
+      before: messages.modes[before.mode],
+      after: messages.modes[after.mode],
+    },
+    {
+      key: 'positionSide',
+      label: messages.position,
+      before: before.positionSide === 'long' ? messages.long : messages.short,
+      after: after.positionSide === 'long' ? messages.long : messages.short,
+    },
+    {
+      key: 'marginInputMode',
+      label: messages.marginMode.label,
+      before: formatMarginMode(before.marginInputMode, messages),
+      after: formatMarginMode(after.marginInputMode, messages),
+    },
+    {
+      key: 'totalMarginKind',
+      label: messages.marginKindAsk.question,
+      before: formatTotalMarginKind(before.totalMarginKind, messages),
+      after: formatTotalMarginKind(after.totalMarginKind, messages),
+    },
+    {
+      key: 'accountEval',
+      label: messages.fields.accountEquity.label,
+      before: formatNumericValue(before.accountEval),
+      after: formatNumericValue(after.accountEval),
+    },
+    {
+      key: 'maintenanceMarginRate',
+      label: messages.fields.maintenanceMarginRate.label,
+      before: formatRateValue(before.maintenanceMarginRate),
+      after: formatRateValue(after.maintenanceMarginRate),
+    },
+    {
+      key: 'maintenanceMargin',
+      label: messages.fields.maintenanceMargin.label,
+      before: formatNumericValue(before.maintenanceMargin),
+      after: formatNumericValue(after.maintenanceMargin),
+    },
+    {
+      key: 'maintenanceMarginPerContract',
+      label: messages.fields.maintenanceMarginPerContract.label,
+      before: formatNumericValue(before.maintenanceMarginPerContract),
+      after: formatNumericValue(after.maintenanceMarginPerContract),
+    },
+    {
+      key: 'entrustedMarginRate',
+      label: messages.fields.entrustedMarginRate.label,
+      before: formatRateValue(before.entrustedMarginRate),
+      after: formatRateValue(after.entrustedMarginRate),
+    },
+    {
+      key: 'entrustedMargin',
+      label: messages.fields.entrustedMargin.label,
+      before: formatNumericValue(before.entrustedMargin),
+      after: formatNumericValue(after.entrustedMargin),
+    },
+    {
+      key: 'entrustedMarginPerContract',
+      label: messages.fields.entrustedMarginPerContract.label,
+      before: formatNumericValue(before.entrustedMarginPerContract),
+      after: formatNumericValue(after.entrustedMarginPerContract),
+    },
+    {
+      key: 'contracts',
+      label: messages.fields.contracts.label,
+      before: formatNumericValue(before.contracts),
+      after: formatNumericValue(after.contracts),
+    },
+    {
+      key: 'contractAmount',
+      label: messages.fields.contractAmount.label,
+      before: formatNumericValue(before.contractAmount),
+      after: formatNumericValue(after.contractAmount),
+    },
+    {
+      key: 'currentPrice',
+      label: messages.fields.currentPrice.label,
+      before: formatNumericValue(before.currentPrice),
+      after: formatNumericValue(after.currentPrice),
+    },
+    {
+      key: 'contractMultiplier',
+      label: messages.fields.contractMultiplier.label,
+      before: formatNumericValue(before.contractMultiplier),
+      after: formatNumericValue(after.contractMultiplier),
+    },
+    {
+      key: 'tickSize',
+      label: messages.fields.tickSize.label,
+      before: formatNumericValue(before.tickSize),
+      after: formatNumericValue(after.tickSize),
+    },
+    {
+      key: 'orderContracts',
+      label: messages.fields.orderContracts.label,
+      before: formatNumericValue(before.orderContracts),
+      after: formatNumericValue(after.orderContracts),
+    },
+    {
+      key: 'orderPrice',
+      label: messages.fields.orderPrice.label,
+      before: formatNumericValue(before.orderPrice),
+      after: formatNumericValue(after.orderPrice),
+    },
+    {
+      key: 'orderPriceLinked',
+      label: messages.calculatorHistory.diff.orderPriceLink,
+      before: before.orderPriceLinked
+        ? messages.calculatorHistory.diff.linked
+        : messages.calculatorHistory.diff.unlinked,
+      after: after.orderPriceLinked
+        ? messages.calculatorHistory.diff.linked
+        : messages.calculatorHistory.diff.unlinked,
+    },
+  ]
+
+  return entries.filter((entry) => entry.before !== entry.after)
+}
+
+function historyActionLabel(
+  before: CalculatorInputs,
+  after: CalculatorInputs,
+  messages: Messages,
+  diffs: VisibleHistoryDiff[],
+): string | null {
+  const copy = messages.calculatorHistory.diff
+  if (!before.orderScenarioRevertSnapshot && after.orderScenarioRevertSnapshot) {
+    return copy.orderPreview
+  }
+  if (before.orderScenarioRevertSnapshot && !after.orderScenarioRevertSnapshot) {
+    return copy.orderApply
+  }
+  if (!before.scenarioRevertSnapshot && after.scenarioRevertSnapshot) {
+    return copy.scenarioPreview
+  }
+  if (before.scenarioRevertSnapshot && !after.scenarioRevertSnapshot) {
+    return copy.scenarioApply
+  }
+  if (
+    diffs.some((diff) => diff.key === 'currentPrice')
+    && diffs.some((diff) => diff.key === 'accountEval')
+  ) {
+    return copy.markUpdate
+  }
+  return null
+}
+
+function describeHistoryMove(move: CalculatorHistoryMove, messages: Messages) {
+  const copy = messages.calculatorHistory
+  const diffs = visibleHistoryDiffs(move.before, move.after, messages)
+  const actionLabel = historyActionLabel(move.before, move.after, messages, diffs)
+
+  if (actionLabel) {
+    const value = diffs.length > 0
+      ? replaceHistoryTokens(copy.changedValues, { count: diffs.length })
+      : ''
+    const detail = diffs.length === 1
+      ? `${diffs[0].before} → ${diffs[0].after}`
+      : diffs.map((diff) => diff.label).join(' · ')
+    return { label: actionLabel, value, detail }
+  }
+
+  if (diffs.length === 1) {
+    const [diff] = diffs
+    return {
+      label: diff.label,
+      detail: `${diff.before} → ${diff.after}`,
+    }
+  }
+
+  if (diffs.length > 1) {
+    return {
+      label: replaceHistoryTokens(copy.diff.multiple, { count: diffs.length }),
+      value: '',
+      detail: diffs.map((diff) => diff.label).join(' · '),
+    }
+  }
+
+  return {
+    label: copy.diff.generic,
+    value: '',
+    detail: '',
+  }
+}
+
 function isFocusLeavingHistory(root: HTMLElement, event: FocusEvent<HTMLElement>) {
   const next = event.relatedTarget
   return !(next instanceof Node && root.contains(next))
@@ -57,14 +293,7 @@ export function CalculatorHistoryMenu({
   const copy = messages.calculatorHistory
   const [menuOpen, setMenuOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const describeMoves = (moves: CalculatorHistoryMove[]) =>
-    moves.flatMap((move) => {
-      const description = describeCalculatorHistoryMove(move, messages)
-      return description ? [{ move, description }] : []
-    })
-  const undoItems = describeMoves(undoHistory)
-  const redoItems = describeMoves(redoHistory)
-  const hasHistory = undoItems.length > 0 || redoItems.length > 0
+  const hasHistory = undoHistory.length > 0 || redoHistory.length > 0
 
   useEffect(() => {
     if (!menuOpen) return
@@ -95,43 +324,50 @@ export function CalculatorHistoryMenu({
     setMenuOpen((open) => !open)
   }
 
-  function renderMoves(
-    sectionLabel: string,
-    items: { move: CalculatorHistoryMove; description: CalculatorHistoryDescription }[],
-  ) {
-    if (items.length === 0) return null
+  function renderMoves(sectionLabel: string, moves: CalculatorHistoryMove[]) {
+    if (moves.length === 0) return null
     return (
       <div className="calculator-history-menu__section">
         <div className="calculator-history-menu__section-title">{sectionLabel}</div>
-        {items.map(({ move, description }) => (
+        {moves.map((move) => {
+          const description = describeHistoryMove(move, messages)
+          const fullDescription = [
+            description.label,
+            description.value,
+            description.detail,
+          ].filter(Boolean).join(' · ')
+
+          return (
             <button
               key={`${move.direction}-${move.steps}`}
               type="button"
               role="menuitem"
-              className={`calculator-history-menu__item calculator-history-menu__item--${description.kind}`}
-              title={description.fullDescription}
-              aria-label={description.fullDescription}
+              className="calculator-history-menu__item"
+              title={fullDescription}
+              aria-label={fullDescription}
               onClick={() => {
                 jumpHistory(move.direction, move.steps)
                 setMenuOpen(false)
               }}
             >
-              {description.kind === 'fields' ? (
-                description.diffs.map((diff) => (
-                  <span className="calculator-history-menu__change" key={diff.key}>
-                    <span className="calculator-history-menu__item-label">{diff.label}</span>
-                    <span className="calculator-history-menu__item-detail">
-                      {diff.before} → {diff.after}
-                    </span>
+              <span className="calculator-history-menu__item-head">
+                <span className="calculator-history-menu__item-label">
+                  {description.label}
+                </span>
+                {description.value && (
+                  <span className="calculator-history-menu__item-value">
+                    {description.value}
                   </span>
-                ))
-              ) : (
-                <span className="calculator-history-menu__item-summary">
-                  {description.summary}
+                )}
+              </span>
+              {description.detail && (
+                <span className="calculator-history-menu__item-detail">
+                  {description.detail}
                 </span>
               )}
             </button>
-        ))}
+          )
+        })}
       </div>
     )
   }
@@ -171,8 +407,8 @@ export function CalculatorHistoryMenu({
           <div className="calculator-history-menu__title">{copy.menuTitle}</div>
           {hasHistory ? (
             <>
-              {renderMoves(copy.undoSection, undoItems)}
-              {renderMoves(copy.redoSection, redoItems)}
+              {renderMoves(copy.undoSection, undoHistory)}
+              {renderMoves(copy.redoSection, redoHistory)}
             </>
           ) : (
             <p className="calculator-history-menu__empty">{copy.empty}</p>

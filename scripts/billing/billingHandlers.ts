@@ -232,28 +232,41 @@ function rawBodyBuffer(rawBody: unknown): Buffer | null {
   return null
 }
 
-function parsePaddleSignature(signature: string): { ts: string; h1: string } | null {
-  const parts = new Map(
-    signature.split(';').map((part) => {
-      const [key, ...rest] = part.trim().split('=')
-      return [key, rest.join('=')]
-    }),
-  )
-  const ts = parts.get('ts')
-  const h1 = parts.get('h1')
-  return ts && h1 ? { ts, h1 } : null
+const PADDLE_SIGNATURE_TOLERANCE_SECONDS = 5
+
+function parsePaddleSignature(signature: string): { ts: string; h1: string[] } | null {
+  let ts: string | null = null
+  const h1: string[] = []
+  for (const part of signature.split(';')) {
+    const [key, ...rest] = part.trim().split('=')
+    const value = rest.join('=')
+    if (key === 'ts' && value) ts = value
+    if (key === 'h1' && /^[0-9a-f]{64}$/i.test(value)) h1.push(value)
+  }
+  return ts && h1.length > 0 ? { ts, h1 } : null
 }
 
-function verifyPaddleSignature(rawBody: Buffer, signature: string, secret: string): boolean {
+function verifyPaddleSignature(
+  rawBody: Buffer,
+  signature: string,
+  secret: string,
+  nowMs = Date.now(),
+): boolean {
   const parsed = parsePaddleSignature(signature)
   if (!parsed) return false
+  const timestamp = Number(parsed.ts)
+  if (!Number.isInteger(timestamp)) return false
+  const ageSeconds = Math.abs(nowMs / 1000 - timestamp)
+  if (ageSeconds > PADDLE_SIGNATURE_TOLERANCE_SECONDS) return false
   const digest = createHmac('sha256', secret)
     .update(Buffer.from(`${parsed.ts}:`, 'utf8'))
     .update(rawBody)
     .digest('hex')
   const expected = Buffer.from(digest, 'hex')
-  const received = Buffer.from(parsed.h1, 'hex')
-  return expected.length === received.length && timingSafeEqual(expected, received)
+  return parsed.h1.some((candidate) => {
+    const received = Buffer.from(candidate, 'hex')
+    return expected.length === received.length && timingSafeEqual(expected, received)
+  })
 }
 
 export async function handleWebhook(
@@ -275,12 +288,19 @@ export async function handleWebhook(
     const event = JSON.parse(rawBody.toString('utf8')) as {
       event_type?: string
       type?: string
+      occurred_at?: string
       data?: JsonObject
     }
     const eventType = event.event_type ?? event.type ?? ''
     if (eventType.startsWith('subscription.') && event.data) {
       const hint = stringValue(asRecord(event.data.custom_data)?.user_id)
-      const result = await syncSubscription(deps, event.data, hint, config.paddleEnv)
+      const result = await syncSubscription(
+        deps,
+        event.data,
+        hint,
+        config.paddleEnv,
+        event.occurred_at,
+      )
       if (!result.ok) return fail(500, result.error ?? 'sync_failed')
     }
   } catch (error) {

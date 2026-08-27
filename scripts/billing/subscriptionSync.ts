@@ -80,7 +80,14 @@ export interface SubscriptionPatch {
   current_period_end: string | null
   scheduled_change_action: string | null
   scheduled_change_effective_at: string | null
+  provider_event_time: string | null
   updated_at: string
+}
+
+function eventTimeIso(value: string | null | undefined): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
 export async function upsertSubscriptionByUser(
@@ -88,24 +95,36 @@ export async function upsertSubscriptionByUser(
   userId: string,
   environment: PaddleEnvironment,
   patch: SubscriptionPatch,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
   const provider = paddleProvider(environment)
   const existing = await deps.admin
     .from('subscriptions')
-    .select('id')
+    .select('id,provider_event_time')
     .eq('user_id', userId)
     .in('provider', paddleProviderAliases(environment))
     .order('updated_at', { ascending: false })
     .limit(1)
-    .maybeSingle<{ id: string }>()
+    .maybeSingle<{ id: string; provider_event_time: string | null }>()
 
   if (existing.error) return { ok: false, error: existing.error.message }
 
   if (existing.data) {
-    const { error } = await deps.admin
+    const incomingEventTime = patch.provider_event_time
+    const storedEventTime = eventTimeIso(existing.data.provider_event_time)
+    if (incomingEventTime && storedEventTime && incomingEventTime <= storedEventTime) {
+      return { ok: true, skipped: true }
+    }
+
+    let update = deps.admin
       .from('subscriptions')
       .update({ provider, ...patch })
       .eq('id', existing.data.id)
+    if (incomingEventTime) {
+      update = update.or(
+        `provider_event_time.is.null,provider_event_time.lt.${incomingEventTime}`,
+      )
+    }
+    const { error } = await update
     return error ? { ok: false, error: error.message } : { ok: true }
   }
 
@@ -143,6 +162,7 @@ export async function syncSubscription(
   sub: PaddleSubscription,
   userIdHint: string | null,
   environment: PaddleEnvironment,
+  occurredAt?: string | null,
 ): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
   const customerId = customerIdOf(sub)
   const customUserId = sub.custom_data?.user_id
@@ -157,6 +177,7 @@ export async function syncSubscription(
     current_period_end: getPeriodEndIso(sub),
     scheduled_change_action: getScheduledChangeAction(sub),
     scheduled_change_effective_at: getScheduledChangeEffectiveAtIso(sub),
+    provider_event_time: eventTimeIso(occurredAt),
     updated_at: new Date().toISOString(),
   })
 }

@@ -15,7 +15,7 @@ const CONFIG: BillingConfig = {
 
 const NOOP_DEPS = { admin: {}, fetch: async () => ({}) } as unknown as BillingDeps
 
-function sign(rawBody: string, ts = '1700000000'): string {
+function sign(rawBody: string, ts = String(Math.floor(Date.now() / 1000))): string {
   const h1 = createHmac('sha256', CONFIG.webhookSecret)
     .update(`${ts}:${rawBody}`)
     .digest('hex')
@@ -122,7 +122,9 @@ function makeSandboxDeps(state: SandboxState): BillingDeps {
           if (selected === 'provider_subscription_id') {
             return { data: { provider_subscription_id: 'sub_1' }, error: null }
           }
-          if (selected === 'id') return { data: { id: 'row_1' }, error: null }
+          if (selected === 'id,provider_event_time') {
+            return { data: { id: 'row_1', provider_event_time: null }, error: null }
+          }
           return { data: null, error: null }
         },
         get error() {
@@ -286,10 +288,32 @@ describe('handleWebhook', () => {
     expect(result.body.error).toBe('invalid_signature')
   })
 
+  it('rejects a correctly signed payload outside the replay tolerance', async () => {
+    const deps = makeWebhookDeps({ inserts: [] })
+    const staleTimestamp = String(Math.floor(Date.now() / 1000) - 6)
+    const result = await handleWebhook(
+      CONFIG,
+      { rawBody: '{}', signature: sign('{}', staleTimestamp) },
+      deps,
+    )
+    expect(result.status).toBe(400)
+    expect(result.body.error).toBe('invalid_signature')
+  })
+
+  it('accepts any valid h1 while Paddle rotates webhook secrets', async () => {
+    const deps = makeWebhookDeps({ inserts: [] })
+    const rawBody = JSON.stringify({ event_type: 'transaction.completed', data: {} })
+    const valid = sign(rawBody)
+    const signature = `${valid};h1=${'0'.repeat(64)}`
+    const result = await handleWebhook(CONFIG, { rawBody, signature }, deps)
+    expect(result.status).toBe(200)
+  })
+
   it('syncs a subscription.updated event to the DB', async () => {
     const state: WebhookState = { inserts: [] }
     const event = {
       event_type: 'subscription.updated',
+      occurred_at: '2023-11-14T22:13:20.000Z',
       data: {
         id: 'sub_1',
         customer_id: 'ctm_1',
@@ -315,6 +339,7 @@ describe('handleWebhook', () => {
       status: 'active',
       scheduled_change_action: 'cancel',
       scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
+      provider_event_time: '2023-11-14T22:13:20.000Z',
     })
   })
 

@@ -92,7 +92,10 @@ interface FakeState {
   inserts: Record<string, unknown>[]
 }
 
-function makeDeps(existingRow: { id: string } | null, state: FakeState): BillingDeps {
+function makeDeps(
+  existingRow: { id: string; provider_event_time: string | null } | null,
+  state: FakeState,
+): BillingDeps {
   const admin = {
     from() {
       return {
@@ -116,7 +119,15 @@ function makeDeps(existingRow: { id: string } | null, state: FakeState): Billing
         },
         update(patch: Record<string, unknown>) {
           state.updates.push(patch)
-          return { eq: async () => ({ error: null }) }
+          return {
+            eq() {
+              return this
+            },
+            or() {
+              return this
+            },
+            error: null,
+          }
         },
         async insert(row: Record<string, unknown>) {
           state.inserts.push(row)
@@ -144,7 +155,13 @@ describe('syncSubscription', () => {
   it('inserts a new row when none exists', async () => {
     const state: FakeState = { updates: [], inserts: [] }
     const deps = makeDeps(null, state)
-    const result = await syncSubscription(deps, baseSub, 'user-1', 'live')
+    const result = await syncSubscription(
+      deps,
+      baseSub,
+      'user-1',
+      'live',
+      '2023-11-14T22:13:20.000Z',
+    )
 
     expect(result.ok).toBe(true)
     expect(state.inserts).toHaveLength(1)
@@ -156,13 +173,20 @@ describe('syncSubscription', () => {
       status: 'active',
       scheduled_change_action: 'cancel',
       scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
+      provider_event_time: '2023-11-14T22:13:20.000Z',
     })
   })
 
   it('updates an existing row', async () => {
     const state: FakeState = { updates: [], inserts: [] }
-    const deps = makeDeps({ id: 'row-9' }, state)
-    const result = await syncSubscription(deps, baseSub, 'user-1', 'sandbox')
+    const deps = makeDeps({ id: 'row-9', provider_event_time: null }, state)
+    const result = await syncSubscription(
+      deps,
+      baseSub,
+      'user-1',
+      'sandbox',
+      '2023-11-14T22:13:20.000Z',
+    )
 
     expect(result.ok).toBe(true)
     expect(state.updates).toHaveLength(1)
@@ -172,7 +196,27 @@ describe('syncSubscription', () => {
       provider_subscription_id: 'sub_1',
       scheduled_change_action: 'cancel',
       scheduled_change_effective_at: '2023-11-14T22:13:20.000Z',
+      provider_event_time: '2023-11-14T22:13:20.000Z',
     })
+    expect(state.inserts).toHaveLength(0)
+  })
+
+  it('skips an out-of-order webhook that is older than stored state', async () => {
+    const state: FakeState = { updates: [], inserts: [] }
+    const deps = makeDeps(
+      { id: 'row-9', provider_event_time: '2023-11-15T00:00:00.000Z' },
+      state,
+    )
+    const result = await syncSubscription(
+      deps,
+      baseSub,
+      'user-1',
+      'live',
+      '2023-11-14T22:13:20.000Z',
+    )
+
+    expect(result).toEqual({ ok: true, skipped: true })
+    expect(state.updates).toHaveLength(0)
     expect(state.inserts).toHaveLength(0)
   })
 

@@ -480,9 +480,9 @@ export const en: Messages = {
     numberSetDeleteSuccess: 'The number set was permanently deleted.',
     planTitle: 'Subscription and ads',
     planStatusLabel: 'Current status',
-    planStatusValue: 'Paddle integration in progress',
+    planStatusValue: 'Paddle Live billing available',
     planBody:
-      'Paddle Checkout, subscription management, and Pro access are being connected in order. Live billing starts after sandbox verification.',
+      'Choose a monthly or yearly Pro plan. Checkout, subscription management, and Pro access are handled through Paddle.',
     billing: {
       statusFree: 'Free',
       statusPro: 'Pro',

@@ -472,8 +472,8 @@ export const ko: Messages = {
     numberSetDeleteSuccess: '숫자세트를 영구 삭제했습니다.',
     planTitle: '구독 및 광고',
     planStatusLabel: '현재 상태',
-    planStatusValue: 'Paddle 결제 연동 중',
-    planBody: 'Paddle Checkout, 구독 관리, Pro 권한 반영을 순서대로 연결합니다. 실제 결제 전환은 sandbox 검증 후 진행합니다.',
+    planStatusValue: 'Paddle Live 결제 사용 가능',
+    planBody: '월간 또는 연간 Pro 플랜을 선택할 수 있습니다. 결제, 구독 관리, Pro 권한 반영은 Paddle을 통해 처리됩니다.',
     billing: {
       statusFree: 'Free',
       statusPro: 'Pro',

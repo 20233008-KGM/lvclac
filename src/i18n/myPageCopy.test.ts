@@ -3,11 +3,11 @@ import { en } from './locales/en'
 import { ko } from './locales/ko'
 
 describe('my page copy', () => {
-  it('provides Korean account-hub copy without promising live billing or instant deletion', () => {
+  it('provides Korean account-hub copy for live billing without promising instant deletion', () => {
     expect(ko.myPage.title).toBe('마이페이지')
     expect(ko.myPage.profileTitle).toBe('프로필')
     expect(ko.myPage.storageLoading).toBe('저장 데이터 상태를 불러오는 중')
-    expect(ko.myPage.planStatusValue).toBe('Paddle 결제 연동 중')
+    expect(ko.myPage.planStatusValue).toBe('Paddle Live 결제 사용 가능')
     expect(ko.myPage.deleteAccountBody).toContain('요청')
     expect(ko.myPage.deleteAccountBody).not.toContain('즉시 삭제')
     expect(ko.myPage.linkedLoginTitle).toBe('연동된 로그인')
@@ -16,11 +16,11 @@ describe('my page copy', () => {
     expect(ko.myPage.setPasswordAction).toBe('비밀번호 설정')
   })
 
-  it('provides English account-hub copy without promising live billing or instant deletion', () => {
+  it('provides English account-hub copy for live billing without promising instant deletion', () => {
     expect(en.myPage.title).toBe('My page')
     expect(en.myPage.profileTitle).toBe('Profile')
     expect(en.myPage.storageLoading).toBe('Loading saved data status')
-    expect(en.myPage.planStatusValue).toBe('Paddle integration in progress')
+    expect(en.myPage.planStatusValue).toBe('Paddle Live billing available')
     expect(en.myPage.deleteAccountBody).toContain('request')
     expect(en.myPage.deleteAccountBody).not.toContain('immediately delete')
     expect(en.myPage.linkedLoginTitle).toBe('Linked logins')

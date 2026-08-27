@@ -120,7 +120,7 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         'Payments are processed securely by Paddle as the merchant of record.',
         'Applicable taxes may be added by Paddle depending on the buyer location.',
         'Customers can manage subscriptions and receipts through Paddle order support.',
-        'Live billing starts only after Paddle account and domain verification are complete.',
+        'Live checkout is available after signing in on the billing page.',
       ],
     },
     legal: {
@@ -221,12 +221,12 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
           'How refunds and subscription cancellations are handled for purchases made through Paddle.',
         effectiveDate: 'Effective: August 12, 2026',
         intro:
-          'Paddle Sandbox checkout in this development environment is for testing only. This policy applies to cancellation and refund requests for Futures Calculator Pro Monthly and Pro Yearly subscriptions when Paddle live sales begin.',
+          'This policy applies to cancellation and refund requests for Futures Calculator Pro Monthly and Pro Yearly subscriptions purchased through Paddle.',
         sections: [
           {
             title: '1. Seller and payment provider',
             body:
-              'When live sales begin, Futures Calculator Pro subscriptions are sold through Paddle. Paddle acts as the online reseller and merchant of record for purchase transactions, payments, applicable taxes, invoices and receipts, billing support, and refunds.',
+              'Futures Calculator Pro subscriptions are sold through Paddle. Paddle acts as the online reseller and merchant of record for purchase transactions, payments, applicable taxes, invoices and receipts, billing support, and refunds.',
             links: [
               { label: 'Paddle Buyer Terms', href: 'https://www.paddle.com/legal/buyer-terms' },
               { label: 'Paddle Refund Policy', href: 'https://www.paddle.com/legal/refund-policy' },
@@ -420,12 +420,12 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         lead: 'Paddle을 통해 결제한 구매 및 구독 취소 요청이 어떻게 처리되는지 설명합니다.',
         effectiveDate: '시행일: 2026년 8월 12일',
         intro:
-          '현재 개발 환경의 Paddle Sandbox 결제는 테스트 전용입니다. 본 정책은 Paddle Live 판매가 시작된 뒤 선물 계산기 Pro 월간·연간 구독의 취소와 환불 요청에 적용됩니다.',
+          '본 정책은 Paddle을 통해 구매한 선물 계산기 Pro 월간·연간 구독의 취소와 환불 요청에 적용됩니다.',
         sections: [
           {
             title: '1. 판매 및 결제 주체',
             body:
-              'Live 판매가 시작되면 선물 계산기 Pro 구독은 Paddle을 통해 판매됩니다. Paddle은 온라인 재판매자이자 Merchant of Record로서 구매자 거래, 결제, 관련 세금, 송장과 영수증, 결제 지원 및 환불을 처리합니다.',
+              '선물 계산기 Pro 구독은 Paddle을 통해 판매됩니다. Paddle은 온라인 재판매자이자 Merchant of Record로서 구매자 거래, 결제, 관련 세금, 송장과 영수증, 결제 지원 및 환불을 처리합니다.',
             links: [
               { label: 'Paddle 구매자 약관', href: 'https://www.paddle.com/legal/buyer-terms' },
               { label: 'Paddle 환불 정책', href: 'https://www.paddle.com/legal/refund-policy' },

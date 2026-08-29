@@ -108,8 +108,6 @@ export function FeedbackBoardView({
 
   return (
     <div className="contact-main">
-      <p className="contact-main__notice">{copy.storageNotice}</p>
-
       {authLoading ? (
         <section className="contact-panel" aria-live="polite">
           <p>{copy.loading}</p>

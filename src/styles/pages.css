@@ -1124,16 +1124,6 @@ html[data-zone='contact'] body {
   flex: 1;
 }
 
-.contact-main__notice {
-  margin: 0;
-  padding: var(--space-sm) var(--space-md);
-  border-left: 2px solid var(--contact-accent);
-  background: var(--contact-accent-muted);
-  font-size: 12px;
-  color: var(--contact-text-dim);
-  line-height: 1.55;
-}
-
 .contact-panel {
   display: flex;
   flex-direction: column;

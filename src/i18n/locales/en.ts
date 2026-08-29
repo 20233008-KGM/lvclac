@@ -1554,8 +1554,6 @@ export const en: Messages = {
   },
   boards: {
     portalCompany: 'Farfield Software',
-    storageNotice:
-      'Submissions are stored in Supabase DB for your signed-in account. Other users’ posts are not visible here.',
     loginRequiredTitle: 'Log in required',
     loginRequiredBody:
       'Log in to submit dev requests, bug reports, and suggestions. Your posts are visible only to you and Farfield Software admins.',

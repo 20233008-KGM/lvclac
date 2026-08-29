@@ -1574,8 +1574,6 @@ export const ko: Messages = {
   },
   boards: {
     portalCompany: 'Farfield Software',
-    storageNotice:
-      '제출한 내용은 로그인 계정의 Supabase DB에 저장됩니다. 다른 이용자의 글은 보이지 않습니다.',
     loginRequiredTitle: '로그인이 필요합니다',
     loginRequiredBody:
       '개발 의뢰, 버그 제보, 개선 제안을 남기려면 로그인해 주세요. 작성한 글은 본인과 Farfield Software 관리자만 볼 수 있습니다.',

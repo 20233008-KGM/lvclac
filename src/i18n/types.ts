@@ -894,7 +894,6 @@ export interface Messages {
   }
   boards: {
     portalCompany: string
-    storageNotice: string
     loginRequiredTitle: string
     loginRequiredBody: string
     loginAction: string

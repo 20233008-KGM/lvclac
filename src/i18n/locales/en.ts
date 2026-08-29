@@ -19,8 +19,6 @@ export const en: Messages = {
     footnote:
       '[Note]\n\nDoes not account for multiple open positions or cross-margin accounts.',
   },
-  appIntro:
-    'Instantly estimate liquidation price and margin headroom for a single-instrument position. Each day, enter the new mark in Scenario price and press Enter twice to roll unrealized P&L into equity. For first-time setup, a single broker-platform snapshot is most accurate.',
   loading: 'Loading...',
   login: 'Log in',
   logout: 'Log out',

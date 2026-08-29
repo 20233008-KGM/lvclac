@@ -39,7 +39,6 @@ export interface Messages {
     usageBody: string
     footnote: string
   }
-  appIntro: string
   loading: string
   login: string
   logout: string

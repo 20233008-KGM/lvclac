@@ -27,10 +27,6 @@
     flex-wrap: nowrap;
   }
 
-  .app-intro {
-    display: none;
-  }
-
   .app-header h1 {
     font-size: var(--font-size-base);
   }

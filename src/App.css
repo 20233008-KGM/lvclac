@@ -231,10 +231,6 @@ input:focus:not(:focus-visible) {
   color: var(--scenario-text);
 }
 
-.calc-viewport--scenario .app-intro {
-  color: var(--scenario-text-muted);
-}
-
 .calc-viewport--scenario .panel {
   background: var(--scenario-surface);
   border-color: var(--scenario-border);
@@ -526,14 +522,6 @@ input:focus:not(:focus-visible) {
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
-}
-
-.app-intro {
-  margin: 0;
-  max-width: 52ch;
-  font-size: var(--font-size-sm);
-  line-height: 1.55;
-  color: var(--color-text-muted);
 }
 
 .header-right {

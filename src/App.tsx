@@ -252,7 +252,6 @@ function CalculatorApp() {
                     {isDevDeployment && <span className="deployment-badge">DEV</span>}
                     <SiteTitleTooltip />
                   </div>
-                  <p className="app-intro">{t.appIntro}</p>
                 </div>
                 <div className="header-right">
                   {isCustom && (

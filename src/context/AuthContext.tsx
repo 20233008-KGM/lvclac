@@ -16,7 +16,6 @@ import {
   saveNickname,
   type AuthUser,
 } from '../db/profile'
-import { consumeForcedConsent } from '../db/devFirstLogin'
 import { detectInitialLocale } from '../i18n/detectLocale'
 import {
   fetchSubscription,
@@ -245,16 +244,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) return 'not_configured'
-    // [개발] 테스트 계정 완전 삭제 직후 1회, 구글 동의/계정선택 화면을 강제로 다시 띄워
-    // 첫 로그인 경험을 재현한다. 프로덕션 빌드에서는 DEV가 false라 이 분기가 제거된다.
-    const forceFirstLogin = import.meta.env.DEV && consumeForcedConsent()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin,
-        ...(forceFirstLogin
-          ? { queryParams: { prompt: 'consent select_account' } }
-          : {}),
       },
     })
     return error ? mapAuthError(error.message) : null

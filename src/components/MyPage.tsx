@@ -68,12 +68,6 @@ import '../styles/auth-dialog.css'
 const AuthModal = lazy(() => import('./auth/AuthModal').then((mod) => ({ default: mod.AuthModal })))
 const NumberSetDeleteConfirmModal = lazy(() => import('./NumberSetDeleteConfirmModal'))
 
-// 개발 빌드에서만 로드. 프로덕션에서는 import.meta.env.DEV가 false로 치환되어
-// 아래 동적 import가 제거되므로 관련 코드/문자열이 번들에 포함되지 않는다.
-const DevResetPanel = import.meta.env.DEV
-  ? lazy(() => import('./DevResetPanel').then((mod) => ({ default: mod.DevResetPanel })))
-  : null
-
 type MyPageCopy = Messages['myPage']
 type AccountRecordsCopy = Messages['accountRecords']
 
@@ -218,8 +212,6 @@ interface MyPageViewProps {
   preferencesPanel?: ReactNode
   /** 구독 결제 패널. 로그인 사용자에게만 주입된다. */
   billingPanel?: ReactNode
-  /** 개발 전용 계정 초기화 패널. 프로덕션에서는 null. */
-  devResetPanel?: ReactNode
   onNicknameChange: (value: string) => void
   /** 닉네임 저장. 성공하면 true를 반환해 인라인 편집을 닫는다. */
   onNicknameSubmit: () => Promise<boolean>
@@ -1044,7 +1036,6 @@ export function MyPageView({
   recordsSummaryPanel,
   preferencesPanel,
   billingPanel,
-  devResetPanel,
   onNicknameChange,
   onNicknameSubmit,
   onLinkGoogle,
@@ -1443,8 +1434,6 @@ export function MyPageView({
               {recordsSummaryPanel}
 
               {preferencesPanel}
-
-              {devResetPanel}
 
               <div className="my-page-account-footer">
                 <a className="my-page-delete-btn" href={supportHref}>
@@ -2142,13 +2131,6 @@ export function MyPage() {
           ) : null
         }
         billingPanel={user ? <BillingPanel embedded /> : null}
-        devResetPanel={
-          DevResetPanel && user ? (
-            <Suspense fallback={null}>
-              <DevResetPanel />
-            </Suspense>
-          ) : null
-        }
         onNicknameChange={(value) => {
           setNicknameState({ userId: user?.id ?? null, value })
           setNicknameMessageState({ userId: user?.id ?? null, value: null })

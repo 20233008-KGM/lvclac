@@ -7,9 +7,10 @@ const appSource = readFileSync(resolve('src/App.tsx'), 'utf8')
 const appCss = readFileSync(resolve('src/App.css'), 'utf8')
 
 describe('public header language and release-stage controls', () => {
-  it('keeps language and preset controls available outside the internal kit route', () => {
-    expect(mainSource).toContain('const showFixedWidgets = !isKitPath(window.location.pathname)')
-    expect(mainSource).toContain('{showFixedWidgets && <LanguageToggle variant="fixed" />}')
+  it('does not mount the internal fixed language and preset controls', () => {
+    expect(mainSource).not.toContain('showFixedWidgets')
+    expect(mainSource).not.toContain('<LanguageToggle variant="fixed" />')
+    expect(mainSource).not.toContain('<PresetSelect variant="fixed" />')
   })
 
   it('shows a dedicated beta badge beside the calculator title', () => {

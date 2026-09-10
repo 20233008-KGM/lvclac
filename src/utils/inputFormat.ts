@@ -1,4 +1,4 @@
-import { exceedsSafePrecision, roundTo, trimTrailingZeros } from './format.js'
+import { exceedsSafePrecision, roundTo } from './format.js'
 
 /**
  * 정수부 최대 자릿수. 1000조(10^15)는 16자리이며,
@@ -119,9 +119,19 @@ export function formatNumberForInput(
 }
 
 export function formatRateForInput(value: number | undefined | null): string {
-  if (value === undefined || value === null || Number.isNaN(value)) return ''
-  const rounded = roundTo(value, 3)
-  const raw = trimTrailingZeros(rounded.toFixed(3))
+  if (value == null || !Number.isFinite(value)) return ''
+  // Preserve Number's round-trip precision. Expand scientific notation before
+  // sanitizing so a small rate such as 1e-7 cannot turn into the digits "17".
+  const [coefficient, exponent] = String(value).split('e')
+  if (exponent === undefined) return formatRawRateInput(coefficient)
+  const [integer, fraction = ''] = coefficient.replace('-', '').split('.')
+  const digits = integer + fraction
+  const decimalPosition = integer.length + Number(exponent)
+  const raw = decimalPosition <= 0
+    ? `0.${'0'.repeat(-decimalPosition)}${digits}`
+    : decimalPosition >= digits.length
+      ? digits + '0'.repeat(decimalPosition - digits.length)
+      : `${digits.slice(0, decimalPosition)}.${digits.slice(decimalPosition)}`
   return formatRawRateInput(raw)
 }
 
@@ -152,7 +162,7 @@ export function normalizeInputValue(
   value: number,
   options: { isRate?: boolean; allowDecimal?: boolean },
 ): number {
-  if (options.isRate) return roundTo(value, 3)
+  if (options.isRate) return value
   if (options.allowDecimal) return roundTo(value, 2)
   return Math.round(value)
 }

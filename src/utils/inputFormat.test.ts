@@ -1,13 +1,45 @@
 import { describe, expect, it } from 'vitest'
 import {
   countIntegerDigits,
+  formatRateForInput,
+  formatRawRateInput,
   formatRawNumericInput,
+  normalizeInputValue,
+  parseFormattedInput,
   isAtIntegerDigitLimit,
   shouldShowDigitLimitBorder,
   shouldShowDigitLimitHint,
   wasIntegerDigitTruncated,
 } from './inputFormat'
 import { SAFE_PRECISION_MAX } from './format'
+
+describe('rate input precision', () => {
+  it.each(['0.4995', '0.499499', '0.1234567890123456', '0.0000001', '0.00000012345', '0', '1'])('preserves %s through commit and refocus', (raw) => {
+    const parsed = parseFormattedInput(formatRawRateInput(raw)) as number
+    const committed = normalizeInputValue(parsed, { isRate: true, allowDecimal: true })
+    expect(committed).toBe(Number(raw))
+    expect(formatRateForInput(committed)).toBe(raw)
+    expect(parseFormattedInput(formatRateForInput(committed))).toBe(committed)
+  })
+
+  it('expands scientific notation without changing the numeric value', () => {
+    for (const value of [Number.MIN_VALUE, 1.2345e-20, 1e21, Number.MAX_VALUE]) {
+      const text = formatRateForInput(value)
+      expect(text).toMatch(/^\d+(\.\d+)?$/)
+      expect(Number(text)).toBe(value)
+    }
+  })
+
+  it('keeps empty rates empty and removes insignificant trailing zeros', () => {
+    for (const value of [undefined, null, NaN, Infinity]) expect(formatRateForInput(value)).toBe('')
+    expect(formatRateForInput(Number('0.499500'))).toBe('0.4995')
+  })
+
+  it('preserves existing non-rate rounding', () => {
+    expect(normalizeInputValue(12.3456, { allowDecimal: true })).toBe(12.35)
+    expect(normalizeInputValue(12.6, {})).toBe(13)
+  })
+})
 
 describe('formatRawNumericInput 자릿수 상한', () => {
   it('정수부 16자리까지는 그대로 포맷', () => {

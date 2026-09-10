@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isPrivateAppPath, robotsBody, shouldNoIndexPath, sitemapBody } from './middleware'
+import { UPDATE_ENTRIES } from './src/components/updatesData'
 
 describe('public indexing boundary', () => {
   it('blocks every route when indexing is disabled for Preview', () => {
@@ -24,5 +25,14 @@ describe('public indexing boundary', () => {
     expect(body).toContain('<loc>https://liqguard.com/en/updates/2026-08-16-calculator-flow-polish</loc>')
     expect(body).not.toContain('/my</loc>')
     expect(body).not.toContain('/boards/')
+  })
+
+  it('includes every published Markdown update in both languages', () => {
+    const body = sitemapBody(new Request('https://liqguard.com/sitemap.xml'), true)
+    for (const entry of UPDATE_ENTRIES) {
+      for (const prefix of ['', '/en']) {
+        expect(body).toContain(`${prefix}/updates/${entry.id}</loc>`)
+      }
+    }
   })
 })

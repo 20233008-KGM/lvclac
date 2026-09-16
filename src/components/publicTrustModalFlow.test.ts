@@ -34,7 +34,7 @@ describe('public trust modal flow', () => {
   })
 
   it('uses equal-weight direct choices, granular settings, and localized ad notice', () => {
-    expect(googleConsent.match(/btn btn-ghost privacy-settings-action/g)).toHaveLength(2)
+    expect(googleConsent.match(/className="btn btn-ghost privacy-settings-action"/g)).toHaveLength(2)
     expect(googleConsent.match(/role="switch"/g)).toHaveLength(2)
     expect(googleConsent).toContain('aria-label={copy.analyticsTitle}')
     expect(googleConsent).toContain('aria-label={copy.personalizedAdsTitle}')

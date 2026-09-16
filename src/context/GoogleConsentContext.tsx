@@ -244,34 +244,32 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
               </button>
             </div>
           ) : (
-            <>
-              <div className="privacy-settings-actions">
-                <button
-                  type="button"
-                  className="btn btn-ghost privacy-settings-action"
-                  onClick={() => choosePrivacyPreferences(DENIED_PREFERENCES)}
-                >
-                  {copy.deny}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost privacy-settings-action"
-                  onClick={() => choosePrivacyPreferences({
-                    analytics: true,
-                    personalizedAds: true,
-                  })}
-                >
-                  {copy.allow}
-                </button>
-              </div>
+            <div className="privacy-settings-actions">
               <button
                 type="button"
-                className="privacy-settings-details"
+                className="btn btn-ghost privacy-settings-action"
+                onClick={() => choosePrivacyPreferences(DENIED_PREFERENCES)}
+              >
+                {copy.deny}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost privacy-settings-action"
+                onClick={() => choosePrivacyPreferences({
+                  analytics: true,
+                  personalizedAds: true,
+                })}
+              >
+                {copy.allow}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost privacy-settings-action privacy-settings-details"
                 onClick={openDetailedSettings}
               >
                 {copy.details}
               </button>
-            </>
+            </div>
           )}
         >
           <div className="privacy-settings-facts">

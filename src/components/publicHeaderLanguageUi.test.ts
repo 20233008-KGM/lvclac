@@ -13,8 +13,8 @@ describe('public header language and release-stage controls', () => {
     expect(mainSource).not.toContain('<PresetSelect variant="fixed" />')
   })
 
-  it('shows a dedicated beta badge beside the calculator title', () => {
-    expect(appSource).toContain('<span className="product-stage-badge">BETA</span>')
-    expect(appCss).toContain('.product-stage-badge')
+  it('does not show a beta badge beside the calculator title', () => {
+    expect(appSource).not.toContain('product-stage-badge')
+    expect(appCss).not.toContain('.product-stage-badge')
   })
 })

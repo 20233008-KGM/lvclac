@@ -248,7 +248,6 @@ function CalculatorApp() {
                 <div className="header-left">
                   <div className="site-title-row">
                     <h1>{t.siteTitle}</h1>
-                    <span className="product-stage-badge">BETA</span>
                     {isDevDeployment && <span className="deployment-badge">DEV</span>}
                     <SiteTitleTooltip />
                   </div>

@@ -8130,7 +8130,7 @@ a.site-footer__link:hover {
   padding: 0;
   border: 0;
   background: transparent;
-  font: inherit;
+  font-family: inherit;
   cursor: pointer;
 }
 

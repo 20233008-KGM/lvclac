@@ -21,6 +21,10 @@ it('sets denied consent before configuring the discoverable head tag', () => {
   }])
   expect(commands[1]).toEqual(['set', 'ads_data_redaction', true])
   expect(commands[3]).toEqual(['config', 'AW-18471363418'])
+  expect(commands[4]).toEqual(['event', 'conversion', {
+    send_to: 'AW-18471363418/OqVBCLahlYMdENrG6udE', value: 1.0, currency: 'KRW',
+  }])
+  expect(commands.filter((command) => command[0] === 'event')).toHaveLength(1)
   expect(html.indexOf('id="google-consent-defaults"')).toBeLessThan(html.indexOf('id="google-ads-tag"'))
 })
 

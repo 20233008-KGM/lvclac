@@ -16,6 +16,12 @@
       gtag('set', 'ads_data_redaction', true)
       gtag('js', new Date())
       gtag('config', 'AW-18471363418')
+      // Record a page view, not a purchase or revenue event.
+      gtag('event', 'conversion', {
+        send_to: 'AW-18471363418/OqVBCLahlYMdENrG6udE',
+        value: 1.0,
+        currency: 'KRW'
+      })
     </script>
     <script id="google-ads-tag" async src="https://www.googletagmanager.com/gtag/js?id=AW-18471363418"></script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=8" sizes="any" />

@@ -58,17 +58,90 @@ const snapshot: AccountSnapshotRecord = {
 }
 
 describe('account record export tables', () => {
-  it('flattens every public order field in a stable 54-column order with Korean headers', () => {
+  it.each(['ko', 'en'] as const)('omits internal metadata in %s exports', (locale) => {
+    for (const table of [
+      buildOrderExportTable([order], [], locale),
+      buildSnapshotExportTable([snapshot], [], locale),
+    ]) {
+      expect(table.headers.join('|')).not.toMatch(/기록 ID|계좌 슬롯 ID|스냅샷 제목|자동 스냅샷 현지 날짜|Record ID|Account slot ID|Snapshot title|Auto snapshot local date/)
+      expect(table.rows[0]).not.toContain('order-1')
+      expect(table.rows[0]).not.toContain('snapshot-1')
+      expect(table.rows[0]).not.toContain('slot-1')
+    }
+  })
+
+  it('rounds exported numbers like the calculator and keeps precise input rates', () => {
+    const record: AccountSnapshotRecord = {
+      ...snapshot,
+      inputs: {
+        ...snapshot.inputs,
+        accountEval: 12345.6789,
+        contractAmount: 1234.5678,
+        contractAmountRole: 'entryPrice',
+        contractMultiplier: 1.2345,
+        maintenanceMarginRate: 0.499512345,
+      },
+      result: {
+        ...summary,
+        liquidationPrice: 1234.5678,
+        toleranceRate: 12.3456,
+        toleranceDelta: 123.5678,
+        leverageRatio: 3.4567,
+        maintenanceMargin: 1234.5678,
+        availableMargin: -1234.5678,
+      },
+    }
+    const original = structuredClone(record)
+    const table = buildSnapshotExportTable([record], [], 'en')
+    const row = Object.fromEntries(table.headers.map((header, index) => [header, table.rows[0][index]]))
+    expect(row).toMatchObject({
+      'Account equity': 12346,
+      'Entry price / fixed contract amount': 1235,
+      'Contract value type': 'Entry price',
+      'Contract multiplier': 1.23,
+      'Maintenance margin rate': 0.499512345,
+      'Liquidation price': 1235,
+      'Liquidation buffer rate (%)': -12.35,
+      'Liquidation buffer price': -124,
+      Leverage: 3.46,
+      'Calculated maintenance margin': 1235,
+      'Available margin': -1235,
+    })
+    const csv = serializeRecordExportCsv(table)
+    expect(csv).not.toContain('1234.5678')
+    expect(csv).toContain('-12.35,-124,3.46')
+    const sheet = toXlsxSheetData(table)
+    expect(sheet[1][table.headers.indexOf('Leverage')]).toMatchObject({ value: 3.46, type: Number })
+    expect(record).toEqual(original)
+  })
+
+  it('uses the order side for both summaries, hides exhausted buffers, and translates fixed specs', () => {
+    const table = buildOrderExportTable([{
+      ...order,
+      positionSide: 'short',
+      orderPrice: 123.6789,
+      beforeInputs: { ...order.beforeInputs, contractAmountRole: 'fixedSpec' },
+      beforeResult: { ...summary, toleranceRate: 2.3456, toleranceDelta: 12.5 },
+      afterResult: { ...summary, toleranceRate: -2, liquidationPrice: NaN },
+    }], [], 'ko')
+    const value = (header: string) => table.rows[0][table.headers.indexOf(header)]
+    expect(value('주문 가격')).toBe(124)
+    expect(value('주문 전 · 약정값 구분')).toBe('고정 계약금액')
+    expect(value('주문 전 · 청산 여유율 (%)')).toBe(2.35)
+    expect(value('주문 전 · 청산 여유 가격폭')).toBe(13)
+    expect(value('주문 후 · 청산 여유율 (%)')).toBeNull()
+    expect(value('주문 후 · 청산가격')).toBeNull()
+  })
+
+  it('flattens user-facing order fields in a stable 52-column order with Korean headers', () => {
     const table = buildOrderExportTable([order], [{ id: 'slot-1', title: '주계좌' }], 'ko', 'Asia/Seoul')
 
-    expect(table.headers).toHaveLength(54)
+    expect(table.headers).toHaveLength(52)
     expect(table.rows[0]).toHaveLength(table.headers.length)
-    expect(table.headers.slice(0, 10)).toEqual([
-      '기록 ID',
+    expect(table.headers.slice(0, 8)).toEqual([
       '저장 시각 (UTC)',
       '저장 시각 (현지)',
       '시간대',
-      '계좌 슬롯 ID',
       '계좌 슬롯 이름',
       '메모',
       '포지션 방향',
@@ -77,10 +150,10 @@ describe('account record export tables', () => {
     ])
     expect(table.headers).toContain('주문 전 · 계좌 평가금액')
     expect(table.headers).toContain('주문 후 · 청산 위험')
-    expect(table.rows[0][1]).toBe('2026-07-21T03:04:05.678Z')
-    expect(table.rows[0][3]).toBe('Asia/Seoul')
-    expect(table.rows[0][5]).toBe('주계좌')
-    expect(table.rows[0][8]).toBe(0)
+    expect(table.rows[0][0]).toBe('2026-07-21T03:04:05.678Z')
+    expect(table.rows[0][2]).toBe('Asia/Seoul')
+    expect(table.rows[0][3]).toBe('주계좌')
+    expect(table.rows[0][6]).toBe(0)
     expect(table.rows[0]).toContain(null)
     expect(table.rows[0]).toContain(false)
     expect(table.rows[0]).toContain(true)
@@ -90,7 +163,7 @@ describe('account record export tables', () => {
   it('uses English headers while retaining stable enum codes', () => {
     const table = buildOrderExportTable([order], [], 'en', 'UTC')
 
-    expect(table.headers[0]).toBe('Record ID')
+    expect(table.headers[0]).toBe('Saved at (UTC)')
     expect(table.headers).toContain('Before order · Margin input mode')
     expect(table.rows[0]).toContain('long')
     expect(table.rows[0]).toContain('perContract')
@@ -100,16 +173,15 @@ describe('account record export tables', () => {
   it('exports snapshot inputs and results but no transient UI restore state', () => {
     const table = buildSnapshotExportTable([snapshot], [], 'ko', 'Asia/Seoul')
 
-    expect(table.headers).toHaveLength(33)
-    expect(table.rows[0]).toHaveLength(33)
-    expect(table.headers).toContain('스냅샷 제목')
+    expect(table.headers).toHaveLength(29)
+    expect(table.rows[0]).toHaveLength(29)
+    expect(table.headers).not.toContain('스냅샷 제목')
     expect(table.headers).toContain('생성 방식')
     expect(table.headers).toContain('계좌 평가금액')
     expect(table.headers).toContain('청산 위험')
     expect(table.rows[0]).toContain('auto')
     expect(table.rows[0]).toContain(0)
-    expect(table.rows[0][4]).toBeNull()
-    expect(table.rows[0][5]).toBeNull()
+    expect(table.rows[0][3]).toBeNull()
     expect(table.headers.join('|')).not.toMatch(/undo|scenario|restore|복원/i)
   })
 })
@@ -148,10 +220,10 @@ describe('Excel export', () => {
     const table = buildSnapshotExportTable([snapshot], [], 'en', 'UTC')
     const sheet = toXlsxSheetData(table)
 
-    expect(sheet[0][0]).toMatchObject({ value: 'Record ID', type: String, fontWeight: 'bold' })
-    expect(sheet[1][2]).toMatchObject({ type: Date })
-    expect(sheet[1][4]).toBeNull()
-    expect(sheet[1][11]).toMatchObject({ value: 0, type: Number })
+    expect(sheet[0][0]).toMatchObject({ value: 'Saved at (UTC)', type: String, fontWeight: 'bold' })
+    expect(sheet[1][1]).toMatchObject({ type: Date })
+    expect(sheet[1][3]).toBeNull()
+    expect(sheet[1][7]).toMatchObject({ value: 0, type: Number })
     expect(sheet[1].at(-1)).toMatchObject({ value: false, type: Boolean })
   })
 

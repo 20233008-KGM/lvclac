@@ -5,6 +5,7 @@ import type {
   OrderHistoryRecord,
 } from '../db/accountRecords'
 import type { CalculatorInputs } from '../types'
+import { formatToleranceDelta, formatTolerancePercent, roundTo } from '../utils/format'
 
 export type RecordExportKind = 'orders' | 'snapshots'
 export type RecordExportFormat = 'csv' | 'xlsx'
@@ -36,16 +37,12 @@ interface ExportColumn<RecordType> {
 
 const labels = {
   ko: {
-    recordId: '기록 ID',
     createdAtUtc: '저장 시각 (UTC)',
     createdAtLocal: '저장 시각 (현지)',
     timeZone: '시간대',
-    numberSetId: '계좌 슬롯 ID',
     numberSetTitle: '계좌 슬롯 이름',
     memo: '메모',
-    title: '스냅샷 제목',
     source: '생성 방식',
-    sourceLocalDate: '자동 스냅샷 현지 날짜',
     positionSide: '포지션 방향',
     orderContracts: '주문 계약수',
     orderPrice: '주문 가격',
@@ -53,7 +50,7 @@ const labels = {
     after: '주문 후',
     accountEval: '계좌 평가금액',
     contracts: '보유 계약수',
-    contractAmount: '계약 금액',
+    contractAmount: '약정가격 / 고정 계약금액',
     currentPrice: '현재가',
     marginInputMode: '증거금 입력 방식',
     totalMarginKind: '총 증거금 성격',
@@ -64,10 +61,12 @@ const labels = {
     entrustedMargin: '입력 위탁증거금',
     entrustedMarginPerContract: '계약당 위탁증거금',
     contractMultiplier: '계약승수',
-    contractAmountRole: '계약 금액 역할',
+    contractAmountRole: '약정값 구분',
+    entryPrice: '진입가격',
+    fixedSpec: '고정 계약금액',
     tickSize: '틱 크기',
     liquidationPrice: '청산가격',
-    toleranceRate: '청산 여유율',
+    toleranceRate: '청산 여유율 (%)',
     toleranceDelta: '청산 여유 가격폭',
     leverageRatio: '레버리지',
     resultMaintenanceMargin: '계산 유지증거금',
@@ -77,16 +76,12 @@ const labels = {
     snapshotsSheet: '계좌 스냅샷',
   },
   en: {
-    recordId: 'Record ID',
     createdAtUtc: 'Saved at (UTC)',
     createdAtLocal: 'Saved at (local)',
     timeZone: 'Time zone',
-    numberSetId: 'Account slot ID',
     numberSetTitle: 'Account slot name',
     memo: 'Memo',
-    title: 'Snapshot title',
     source: 'Source',
-    sourceLocalDate: 'Auto snapshot local date',
     positionSide: 'Position side',
     orderContracts: 'Order contracts',
     orderPrice: 'Order price',
@@ -94,7 +89,7 @@ const labels = {
     after: 'After order',
     accountEval: 'Account equity',
     contracts: 'Position contracts',
-    contractAmount: 'Contract amount',
+    contractAmount: 'Entry price / fixed contract amount',
     currentPrice: 'Current price',
     marginInputMode: 'Margin input mode',
     totalMarginKind: 'Total margin kind',
@@ -105,10 +100,12 @@ const labels = {
     entrustedMargin: 'Input initial margin',
     entrustedMarginPerContract: 'Initial margin per contract',
     contractMultiplier: 'Contract multiplier',
-    contractAmountRole: 'Contract amount role',
+    contractAmountRole: 'Contract value type',
+    entryPrice: 'Entry price',
+    fixedSpec: 'Fixed contract amount',
     tickSize: 'Tick size',
     liquidationPrice: 'Liquidation price',
-    toleranceRate: 'Liquidation buffer rate',
+    toleranceRate: 'Liquidation buffer rate (%)',
     toleranceDelta: 'Liquidation buffer price',
     leverageRatio: 'Leverage',
     resultMaintenanceMargin: 'Calculated maintenance margin',
@@ -129,11 +126,19 @@ function nullable<T>(value: T | null | undefined): T | null {
   return value ?? null
 }
 
+// Match calculator display rounding without turning spreadsheet numbers into text.
+function displayNumber(value: number | null | undefined, decimals = 0): number | null {
+  return value == null || !Number.isFinite(value) ? null : roundTo(value, decimals)
+}
+
+function displayValue(value: string): number | null {
+  return value === '-' ? null : displayNumber(Number(value.replaceAll(',', '')), 2)
+}
+
 function commonColumns<RecordType extends { id: string; createdAt: string; numberSetId?: string | null; memo?: string | null }>(
   copy: ExportLabels,
 ): ExportColumn<RecordType>[] {
   return [
-    { header: copy.recordId, width: 36, value: (record) => record.id },
     { header: copy.createdAtUtc, width: 24, value: (record) => new Date(record.createdAt).toISOString() },
     {
       header: copy.createdAtLocal,
@@ -141,7 +146,6 @@ function commonColumns<RecordType extends { id: string; createdAt: string; numbe
       value: (record) => toLocalExcelDate(record.createdAt),
     },
     { header: copy.timeZone, width: 22, value: (_record, context) => context.timeZone },
-    { header: copy.numberSetId, width: 36, value: (record) => nullable(record.numberSetId) },
     {
       header: copy.numberSetTitle,
       width: 22,
@@ -168,21 +172,21 @@ function inputColumns<RecordType>(
   })
 
   return [
-    column(copy.accountEval, 18, (inputs) => nullable(inputs.accountEval)),
-    column(copy.contracts, 16, (inputs) => nullable(inputs.contracts)),
-    column(copy.contractAmount, 18, (inputs) => nullable(inputs.contractAmount)),
-    column(copy.currentPrice, 16, (inputs) => nullable(inputs.currentPrice)),
+    column(copy.accountEval, 18, (inputs) => displayNumber(inputs.accountEval)),
+    column(copy.contracts, 16, (inputs) => displayNumber(inputs.contracts)),
+    column(copy.contractAmount, 18, (inputs) => displayNumber(inputs.contractAmount)),
+    column(copy.currentPrice, 16, (inputs) => displayNumber(inputs.currentPrice)),
     column(copy.marginInputMode, 20, (inputs) => nullable(inputs.marginInputMode)),
     column(copy.totalMarginKind, 20, (inputs) => nullable(inputs.totalMarginKind)),
     column(copy.maintenanceMarginRate, 20, (inputs) => nullable(inputs.maintenanceMarginRate)),
-    column(copy.maintenanceMargin, 20, (inputs) => nullable(inputs.maintenanceMargin)),
-    column(copy.maintenanceMarginPerContract, 24, (inputs) => nullable(inputs.maintenanceMarginPerContract)),
+    column(copy.maintenanceMargin, 20, (inputs) => displayNumber(inputs.maintenanceMargin)),
+    column(copy.maintenanceMarginPerContract, 24, (inputs) => displayNumber(inputs.maintenanceMarginPerContract)),
     column(copy.entrustedMarginRate, 20, (inputs) => nullable(inputs.entrustedMarginRate)),
-    column(copy.entrustedMargin, 20, (inputs) => nullable(inputs.entrustedMargin)),
-    column(copy.entrustedMarginPerContract, 24, (inputs) => nullable(inputs.entrustedMarginPerContract)),
-    column(copy.contractMultiplier, 18, (inputs) => nullable(inputs.contractMultiplier)),
-    column(copy.contractAmountRole, 20, (inputs) => nullable(inputs.contractAmountRole)),
-    column(copy.tickSize, 14, (inputs) => nullable(inputs.tickSize)),
+    column(copy.entrustedMargin, 20, (inputs) => displayNumber(inputs.entrustedMargin)),
+    column(copy.entrustedMarginPerContract, 24, (inputs) => displayNumber(inputs.entrustedMarginPerContract)),
+    column(copy.contractMultiplier, 18, (inputs) => displayNumber(inputs.contractMultiplier, 2)),
+    column(copy.contractAmountRole, 20, (inputs) => inputs.contractAmountRole ? copy[inputs.contractAmountRole] : null),
+    column(copy.tickSize, 14, (inputs) => displayNumber(inputs.tickSize)),
   ]
 }
 
@@ -190,24 +194,25 @@ function summaryColumns<RecordType>(
   copy: ExportLabels,
   prefix: string,
   summaryOf: (record: RecordType) => AccountRecordSummary,
+  sideOf: (record: RecordType) => CalculatorInputs['positionSide'],
 ): ExportColumn<RecordType>[] {
   const column = (
     header: string,
     width: number,
-    value: (summary: AccountRecordSummary) => RecordExportValue,
+    value: (summary: AccountRecordSummary, side: CalculatorInputs['positionSide']) => RecordExportValue,
   ): ExportColumn<RecordType> => ({
     header: prefixed(prefix, header),
     width,
-    value: (record) => value(summaryOf(record)),
+    value: (record) => value(summaryOf(record), sideOf(record)),
   })
 
   return [
-    column(copy.liquidationPrice, 18, (summary) => nullable(summary.liquidationPrice)),
-    column(copy.toleranceRate, 18, (summary) => nullable(summary.toleranceRate)),
-    column(copy.toleranceDelta, 20, (summary) => nullable(summary.toleranceDelta)),
-    column(copy.leverageRatio, 16, (summary) => nullable(summary.leverageRatio)),
-    column(copy.resultMaintenanceMargin, 22, (summary) => nullable(summary.maintenanceMargin)),
-    column(copy.availableMargin, 20, (summary) => nullable(summary.availableMargin)),
+    column(copy.liquidationPrice, 18, (summary) => displayNumber(summary.liquidationPrice)),
+    column(copy.toleranceRate, 18, (summary, side) => displayValue(formatTolerancePercent(summary.toleranceRate, side))),
+    column(copy.toleranceDelta, 20, (summary, side) => displayValue(formatToleranceDelta(summary.toleranceDelta, side))),
+    column(copy.leverageRatio, 16, (summary) => displayNumber(summary.leverageRatio, 2)),
+    column(copy.resultMaintenanceMargin, 22, (summary) => displayNumber(summary.maintenanceMargin)),
+    column(copy.availableMargin, 20, (summary) => displayNumber(summary.availableMargin)),
     column(copy.isAtRisk, 14, (summary) => summary.isAtRisk),
   ]
 }
@@ -250,12 +255,12 @@ export function buildOrderExportTable(
   const columns: ExportColumn<OrderHistoryRecord>[] = [
     ...commonColumns<OrderHistoryRecord>(copy),
     { header: copy.positionSide, width: 16, value: (record) => record.positionSide },
-    { header: copy.orderContracts, width: 16, value: (record) => record.orderContracts },
-    { header: copy.orderPrice, width: 16, value: (record) => record.orderPrice },
+    { header: copy.orderContracts, width: 16, value: (record) => displayNumber(record.orderContracts) },
+    { header: copy.orderPrice, width: 16, value: (record) => displayNumber(record.orderPrice) },
     ...inputColumns<OrderHistoryRecord>(copy, copy.before, (record) => record.beforeInputs),
-    ...summaryColumns<OrderHistoryRecord>(copy, copy.before, (record) => record.beforeResult),
+    ...summaryColumns<OrderHistoryRecord>(copy, copy.before, (record) => record.beforeResult, (record) => record.positionSide),
     ...inputColumns<OrderHistoryRecord>(copy, copy.after, (record) => record.afterInputs),
-    ...summaryColumns<OrderHistoryRecord>(copy, copy.after, (record) => record.afterResult),
+    ...summaryColumns<OrderHistoryRecord>(copy, copy.after, (record) => record.afterResult, (record) => record.positionSide),
   ]
   return tableFromColumns(records, columns, slots, timeZone, copy.ordersSheet)
 }
@@ -269,15 +274,13 @@ export function buildSnapshotExportTable(
   const copy = labels[locale]
   const columns: ExportColumn<AccountSnapshotRecord>[] = [
     ...commonColumns<AccountSnapshotRecord>(copy),
-    { header: copy.title, width: 24, value: (record) => record.title },
     { header: copy.source, width: 14, value: (record) => record.source ?? 'manual' },
-    { header: copy.sourceLocalDate, width: 22, value: (record) => nullable(record.sourceLocalDate) },
     { header: copy.positionSide, width: 16, value: (record) => record.inputs.positionSide },
     ...inputColumns<AccountSnapshotRecord>(copy, '', (record) => record.inputs).map((column) => ({
       ...column,
       header: column.header.replace(/^ · /, ''),
     })),
-    ...summaryColumns<AccountSnapshotRecord>(copy, '', (record) => record.result).map((column) => ({
+    ...summaryColumns<AccountSnapshotRecord>(copy, '', (record) => record.result, (record) => record.inputs.positionSide).map((column) => ({
       ...column,
       header: column.header.replace(/^ · /, ''),
     })),

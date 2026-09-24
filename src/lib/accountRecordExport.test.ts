@@ -67,6 +67,8 @@ describe('account record export tables', () => {
       expect(table.rows[0]).not.toContain('order-1')
       expect(table.rows[0]).not.toContain('snapshot-1')
       expect(table.rows[0]).not.toContain('slot-1')
+      expect(table.headers.join('|')).not.toMatch(/약정값 구분|Contract value type/)
+      expect(table.rows[0]).not.toContain('entryPrice')
     }
   })
 
@@ -97,7 +99,6 @@ describe('account record export tables', () => {
     expect(row).toMatchObject({
       'Account equity': 12346,
       'Entry price / fixed contract amount': 1235,
-      'Contract value type': 'Entry price',
       'Contract multiplier': 1.23,
       'Maintenance margin rate': 0.499512345,
       'Liquidation price': 1235,
@@ -115,7 +116,7 @@ describe('account record export tables', () => {
     expect(record).toEqual(original)
   })
 
-  it('uses the order side for both summaries, hides exhausted buffers, and translates fixed specs', () => {
+  it('uses the order side for both summaries, hides exhausted buffers, and omits internal value roles', () => {
     const table = buildOrderExportTable([{
       ...order,
       positionSide: 'short',
@@ -126,17 +127,18 @@ describe('account record export tables', () => {
     }], [], 'ko')
     const value = (header: string) => table.rows[0][table.headers.indexOf(header)]
     expect(value('주문 가격')).toBe(124)
-    expect(value('주문 전 · 약정값 구분')).toBe('고정 계약금액')
+    expect(table.headers.join('|')).not.toContain('약정값 구분')
+    expect(table.rows[0]).not.toContain('fixedSpec')
     expect(value('주문 전 · 청산 여유율 (%)')).toBe(2.35)
     expect(value('주문 전 · 청산 여유 가격폭')).toBe(13)
     expect(value('주문 후 · 청산 여유율 (%)')).toBeNull()
     expect(value('주문 후 · 청산가격')).toBeNull()
   })
 
-  it('flattens user-facing order fields in a stable 52-column order with Korean headers', () => {
+  it('flattens user-facing order fields in a stable 50-column order with Korean headers', () => {
     const table = buildOrderExportTable([order], [{ id: 'slot-1', title: '주계좌' }], 'ko', 'Asia/Seoul')
 
-    expect(table.headers).toHaveLength(52)
+    expect(table.headers).toHaveLength(50)
     expect(table.rows[0]).toHaveLength(table.headers.length)
     expect(table.headers.slice(0, 8)).toEqual([
       '저장 시각 (UTC)',
@@ -173,8 +175,8 @@ describe('account record export tables', () => {
   it('exports snapshot inputs and results but no transient UI restore state', () => {
     const table = buildSnapshotExportTable([snapshot], [], 'ko', 'Asia/Seoul')
 
-    expect(table.headers).toHaveLength(29)
-    expect(table.rows[0]).toHaveLength(29)
+    expect(table.headers).toHaveLength(28)
+    expect(table.rows[0]).toHaveLength(28)
     expect(table.headers).not.toContain('스냅샷 제목')
     expect(table.headers).toContain('생성 방식')
     expect(table.headers).toContain('계좌 평가금액')

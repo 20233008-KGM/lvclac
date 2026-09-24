@@ -61,9 +61,6 @@ const labels = {
     entrustedMargin: '입력 위탁증거금',
     entrustedMarginPerContract: '계약당 위탁증거금',
     contractMultiplier: '계약승수',
-    contractAmountRole: '약정값 구분',
-    entryPrice: '진입가격',
-    fixedSpec: '고정 계약금액',
     tickSize: '틱 크기',
     liquidationPrice: '청산가격',
     toleranceRate: '청산 여유율 (%)',
@@ -100,9 +97,6 @@ const labels = {
     entrustedMargin: 'Input initial margin',
     entrustedMarginPerContract: 'Initial margin per contract',
     contractMultiplier: 'Contract multiplier',
-    contractAmountRole: 'Contract value type',
-    entryPrice: 'Entry price',
-    fixedSpec: 'Fixed contract amount',
     tickSize: 'Tick size',
     liquidationPrice: 'Liquidation price',
     toleranceRate: 'Liquidation buffer rate (%)',
@@ -185,7 +179,6 @@ function inputColumns<RecordType>(
     column(copy.entrustedMargin, 20, (inputs) => displayNumber(inputs.entrustedMargin)),
     column(copy.entrustedMarginPerContract, 24, (inputs) => displayNumber(inputs.entrustedMarginPerContract)),
     column(copy.contractMultiplier, 18, (inputs) => displayNumber(inputs.contractMultiplier, 2)),
-    column(copy.contractAmountRole, 20, (inputs) => inputs.contractAmountRole ? copy[inputs.contractAmountRole] : null),
     column(copy.tickSize, 14, (inputs) => displayNumber(inputs.tickSize)),
   ]
 }

@@ -1124,7 +1124,7 @@ export const en: Messages = {
     eyebrow: 'PRIVACY CONTROLS',
     title: 'Privacy and cookie settings',
     intro:
-      'Calculator and account features are always available. Service analytics are optional, and Google Analytics is not loaded before you allow it.',
+      'Calculator and account features are always available. Service analytics are optional, and Google analytics and ad measurement tags are not loaded before you allow them.',
     close: 'Close',
     coreTitle: 'Core calculator and account features',
     coreBody: 'Calculation, language, sign-in, and the storage options you choose',
@@ -1139,7 +1139,7 @@ export const en: Messages = {
     allow: 'Allow all',
     details: 'Manage options',
     analyticsTitle: 'Service analytics',
-    analyticsBody: 'Google Analytics 4 collects page visits and feature usage statistics.',
+    analyticsBody: 'Google tags measure ad traffic and performance. When configured, Google Analytics 4 also collects page visits and feature usage statistics.',
     personalizedAdsTitle: 'Personalized ads',
     personalizedAdsBody: 'Used for interest-based ads only if advertising is enabled again.',
     adNotice: 'Advertising is currently paused. No ad DOM, AdSense script, or ad request is created.',
@@ -1226,7 +1226,7 @@ export const en: Messages = {
     privacyArticles: [
       {
         title: '1. Information collected',
-        body: 'Calculator inputs and display settings (such as panel widths) are stored only when saving is enabled. Signed-out users store inputs in browser storage. Signed-in users can choose This device or Cloud storage; when Cloud is selected, inputs may be stored as number_sets data in Supabase DB. If a signed-in user uses records, order simulation history and account snapshots may also be stored in Supabase DB. When Google Analytics or AdSense is configured, cookies and access logs may be collected automatically.',
+        body: 'Calculator inputs and display settings (such as panel widths) are stored only when saving is enabled. Signed-out users store inputs in browser storage. Signed-in users can choose This device or Cloud storage; when Cloud is selected, inputs may be stored as number_sets data in Supabase DB. If a signed-in user uses records, order simulation history and account snapshots may also be stored in Supabase DB. When Google Analytics, Google Ads or AdSense is configured, cookies and access logs may be collected automatically.',
       },
       {
         title: '2. Purposes',
@@ -1238,7 +1238,7 @@ export const en: Messages = {
       },
       {
         title: '4. Third parties',
-        body: 'When analytics or advertising services such as Google Analytics or AdSense are used, information may be sent to those providers under their policies.',
+        body: 'When analytics or advertising services such as Google Analytics, Google Ads or AdSense are used, information may be sent to those providers under their policies.',
       },
       {
         title: '5. Your rights',

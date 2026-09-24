@@ -352,6 +352,7 @@ function ComparePlansCard({
         </div>
       </div>
       <p className="my-page-field-help">{copy.taxNote}</p>
+      <p className="billing-note-policy">* {copy.notePolicy}</p>
       {message}
     </section>
   )

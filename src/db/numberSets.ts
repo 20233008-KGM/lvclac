@@ -2,6 +2,7 @@ import type { CalculatorInputs } from '../types'
 import { isPresetId, type PresetId } from '../i18n'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 import { normalizeMemo } from '../utils/memo'
+import { saveMemo } from './memos'
 import { supabase } from './supabaseClient'
 
 export const DEFAULT_SET_TITLE = '기본 세트'
@@ -197,21 +198,13 @@ export async function renameNumberSet(
 }
 
 export async function updateNumberSetMemo(
-  userId: string,
-  setId: string,
-  memo: string,
+  userId: string, setId: string, memo: string, previous: string,
 ): Promise<NumberSetResult<NumberSetRecord>> {
   if (!supabase) return unavailable()
-
-  const normalized = normalizeMemo(memo)
-  const { data, error } = await supabase
-    .from('number_sets')
-    .update({ memo: normalized })
-    .eq('id', setId)
-    .eq('user_id', userId)
-    .select(NUMBER_SET_COLUMNS)
-    .maybeSingle<NumberSetRow>()
-
+  const saveError = await saveMemo(supabase, 'number_sets', setId, previous, memo)
+  if (saveError) return { data: null, error: saveError }
+  const { data, error } = await supabase.from('number_sets').select(NUMBER_SET_COLUMNS)
+    .eq('id', setId).eq('user_id', userId).maybeSingle<NumberSetRow>()
   if (error) return { data: null, error: mapError(error) }
   if (!data) return { data: null, error: 'number_set_not_found' }
   return { data: rowToRecord(data), error: null }

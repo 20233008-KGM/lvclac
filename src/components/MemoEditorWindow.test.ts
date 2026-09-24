@@ -51,6 +51,6 @@ describe('MemoEditorWindow production contract', () => {
   it('offers number-set memos only on cloud slots', () => {
     expect(slotSource).toContain("mode === 'cloud' && (")
     expect(slotSource).toContain('cloudNumberSets.find((set) => set.id === memoSetId)')
-    expect(slotSource).toContain("setNumberSetMemo('cloud', numberSet.id, memo)")
+    expect(slotSource).toContain("setNumberSetMemo('cloud', numberSet.id, memo, previous)")
   })
 })

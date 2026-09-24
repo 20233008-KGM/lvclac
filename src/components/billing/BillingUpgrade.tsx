@@ -339,6 +339,7 @@ export function BillingUpgrade({
                       </li>
                     ))}
                   </ul>
+                  <p className="billing-note-policy">* {copy.notePolicy}</p>
                 </div>
               </div>
             </div>
@@ -495,6 +496,7 @@ export function BillingUpgrade({
             </div>
           </div>
 
+          <p className="billing-note-policy">* {copy.notePolicy}</p>
           <div className="billing-up__faq">
             {up.faq.map((item) => (
               <div key={item.q} className="billing-up__faq-item">

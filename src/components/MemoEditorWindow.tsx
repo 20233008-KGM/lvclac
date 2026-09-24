@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useLanguage } from '../i18n'
-import { MEMO_COUNTER_VISIBLE_FROM, MEMO_MAX_LENGTH } from '../utils/memo'
+import { canEditMemo, FREE_MEMO_MAX_LENGTH, MEMO_COUNTER_VISIBLE_FROM, MEMO_PASTE_MAX_LENGTH, memoExceedsLength, memoLength } from '../utils/memo'
 
 export type MemoSaveState = 'saved' | 'saving' | 'error'
 
@@ -84,55 +84,107 @@ export function MemoButton({
 
 function useMemoAutosave(
   initialMemo: string | null | undefined,
-  onSave: (memo: string) => Promise<string | null>,
+  onSave: (memo: string, previous: string) => Promise<string | null>,
 ) {
   const [value, setValue] = useState(initialMemo ?? '')
   const [saveState, setSaveState] = useState<MemoSaveState>('saved')
   const valueRef = useRef(value)
   const savedValueRef = useRef(initialMemo ?? '')
   const saveTimerRef = useRef<number | null>(null)
-  const generationRef = useRef(0)
+  const inFlightRef = useRef<Promise<boolean> | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const onSaveRef = useRef(onSave)
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
 
-  const save = async (nextValue = valueRef.current) => {
+  const save = (): Promise<boolean> => {
     if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = null
-    if (nextValue === savedValueRef.current) {
+    if (inFlightRef.current) return inFlightRef.current
+    const pending = (async () => {
+      while (valueRef.current !== savedValueRef.current) {
+        const nextValue = valueRef.current
+        setSaveState('saving')
+        let error: string | null
+        try { error = await onSaveRef.current(nextValue, savedValueRef.current) }
+        catch { error = 'memo_save_error' }
+        if (error) {
+          setSaveError(error)
+          setSaveState('error')
+          return false
+        }
+        savedValueRef.current = nextValue
+      }
+      setSaveError(null)
       setSaveState('saved')
       return true
-    }
-    const generation = generationRef.current + 1
-    generationRef.current = generation
-    setSaveState('saving')
-    const error = await onSave(nextValue)
-    if (generationRef.current !== generation) return false
-    if (error) {
-      setSaveState('error')
-      return false
-    }
-    savedValueRef.current = nextValue
-    setSaveState('saved')
-    return true
+    })()
+    inFlightRef.current = pending
+    void pending.finally(() => { inFlightRef.current = null })
+    return pending
   }
 
   useEffect(() => {
     saveTimerRef.current = window.setTimeout(() => {
-      void save(value)
+      void save()
     }, 400)
     return () => {
       if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current)
     }
-    // onSave is intentionally consumed by save; callers should keep it stable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
   const updateValue = (nextValue: string) => {
-    generationRef.current += 1
     valueRef.current = nextValue
     setValue(nextValue)
     setSaveState('saving')
   }
 
-  return { value, saveState, save, updateValue }
+  return { value, saveState, saveError, save, updateValue }
+}
+
+function useMemoInput(value: string, updateValue: (value: string) => void, isPro: boolean) {
+  const { t } = useLanguage()
+  const [notice, setNotice] = useState<string | null>(null)
+  const change = (next: string) => {
+    if (!canEditMemo(value, next, isPro)) { setNotice(t.accountRecords.memoFreeLimit); return }
+    setNotice(null)
+    updateValue(next)
+  }
+  const paste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const raw = event.clipboardData.getData('text/plain')
+    // CRLF normalization can at most halve the raw character count.
+    if (memoExceedsLength(raw, MEMO_PASTE_MAX_LENGTH * 2)) {
+      event.preventDefault()
+      setNotice(t.accountRecords.memoPasteLimit)
+      return
+    }
+    const pasted = raw.replace(/\r\n?/g, '\n')
+    if (memoExceedsLength(pasted, MEMO_PASTE_MAX_LENGTH)) {
+      event.preventDefault()
+      setNotice(t.accountRecords.memoPasteLimit)
+      return
+    }
+    const target = event.currentTarget
+    const next = value.slice(0, target.selectionStart) + pasted + value.slice(target.selectionEnd)
+    if (!canEditMemo(value, next, isPro)) {
+      event.preventDefault()
+      setNotice(t.accountRecords.memoFreeLimit)
+    }
+  }
+  const drop = (event: React.DragEvent<HTMLTextAreaElement>) => {
+    // Dropping large text/files must not bypass the paste guard.
+    if (event.dataTransfer.files.length || memoExceedsLength(event.dataTransfer.getData('text/plain'), MEMO_PASTE_MAX_LENGTH)) {
+      event.preventDefault()
+      setNotice(t.accountRecords.memoPasteLimit)
+    }
+  }
+  return { change, paste, drop, notice, isPro, length: memoLength(value) }
+}
+
+function memoErrorText(error: string | null, copy: ReturnType<typeof useLanguage>['t']['accountRecords']) {
+  if (error?.includes('memo_free_limit')) return copy.memoFreeLimit
+  if (error?.includes('memo_rate_limited')) return copy.memoRateLimit
+  if (error?.includes('memo_conflict')) return copy.memoConflict
+  return error ? copy.memoSaveError : null
 }
 
 function memoStatusText(
@@ -153,17 +205,20 @@ export const MemoWorkspaceEditor = forwardRef<
   MemoEditorHandle,
   {
     title: string
+    isPro: boolean
     initialMemo?: string | null
-    onSave: (memo: string) => Promise<string | null>
+    onSave: (memo: string, previous: string) => Promise<string | null>
     returnLabel?: string
     onReturn?: () => void
   }
 >(function MemoWorkspaceEditor(
-  { title, initialMemo, onSave, returnLabel, onReturn },
+  { title, isPro, initialMemo, onSave, returnLabel, onReturn },
   ref,
 ) {
   const { t } = useLanguage()
-  const { value, saveState, save, updateValue } = useMemoAutosave(initialMemo, onSave)
+  const { value, saveState, saveError, save, updateValue } = useMemoAutosave(initialMemo, onSave)
+  const input = useMemoInput(value, updateValue, isPro)
+  const notice = input.notice || memoErrorText(saveError, t.accountRecords)
 
   useImperativeHandle(ref, () => ({ save }), [save])
 
@@ -185,11 +240,13 @@ export const MemoWorkspaceEditor = forwardRef<
       </span>
       <textarea
         className="records-memo-editor__textarea"
-        maxLength={MEMO_MAX_LENGTH}
         rows={12}
         value={value}
         placeholder={t.accountRecords.memoPlaceholder}
-        onChange={(event) => updateValue(event.target.value)}
+        onChange={(event) => input.change(event.target.value)}
+        onPaste={input.paste}
+        onDrop={input.drop}
+        aria-label={title}
         onKeyDown={(event) => {
           if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
             event.preventDefault()
@@ -197,8 +254,10 @@ export const MemoWorkspaceEditor = forwardRef<
           }
         }}
       />
+      {notice && <p className="memo-editor-notice" role="alert">{notice}</p>}
+      {saveState === 'error' && <button type="button" className="link-btn" onClick={() => void save()}>{t.accountRecords.memoRetry}</button>}
       <footer className="records-memo-editor__foot">
-        {value.length >= MEMO_COUNTER_VISIBLE_FROM && <span>{value.length} / {MEMO_MAX_LENGTH}</span>}
+        {!input.isPro && input.length >= MEMO_COUNTER_VISIBLE_FROM && <span>{input.length} / {FREE_MEMO_MAX_LENGTH}</span>}
         <span>{t.accountRecords.memoAutoSaveHint}</span>
       </footer>
     </section>
@@ -207,17 +266,21 @@ export const MemoWorkspaceEditor = forwardRef<
 
 export function MemoEditorWindow({
   title,
+  isPro,
   initialMemo,
   onSave,
   onClose,
 }: {
   title: string
+  isPro: boolean
   initialMemo?: string | null
-  onSave: (memo: string) => Promise<string | null>
+  onSave: (memo: string, previous: string) => Promise<string | null>
   onClose: () => void
 }) {
   const { t } = useLanguage()
-  const { value, saveState, save, updateValue } = useMemoAutosave(initialMemo, onSave)
+  const { value, saveState, saveError, save, updateValue } = useMemoAutosave(initialMemo, onSave)
+  const input = useMemoInput(value, updateValue, isPro)
+  const notice = input.notice || memoErrorText(saveError, t.accountRecords)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
   const [editorOpacity, setEditorOpacity] = useState(readMemoEditorOpacity)
   const panelRef = useRef<HTMLElement>(null)
@@ -329,15 +392,19 @@ export function MemoEditorWindow({
       <textarea
         autoFocus
         className="memo-editor-window__textarea"
-        maxLength={MEMO_MAX_LENGTH}
         rows={3}
         value={value}
         placeholder={t.accountRecords.memoPlaceholder}
-        onChange={(event) => updateValue(event.target.value)}
+        onChange={(event) => input.change(event.target.value)}
+        onPaste={input.paste}
+        onDrop={input.drop}
+        aria-label={title}
       />
+      {notice && <p className="memo-editor-notice" role="alert">{notice}</p>}
+      {saveState === 'error' && <button type="button" className="link-btn" onClick={() => void save()}>{t.accountRecords.memoRetry}</button>}
       <footer className="memo-editor-window__foot">
         <div className="memo-editor-window__meta">
-          {value.length >= MEMO_COUNTER_VISIBLE_FROM && <span>{value.length} / {MEMO_MAX_LENGTH}</span>}
+          {!input.isPro && input.length >= MEMO_COUNTER_VISIBLE_FROM && <span>{input.length} / {FREE_MEMO_MAX_LENGTH}</span>}
           <span className="memo-editor-window__autosave-hint">
             {t.accountRecords.memoAutoSaveHint}
           </span>

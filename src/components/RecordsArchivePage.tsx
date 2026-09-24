@@ -1061,7 +1061,7 @@ export function RecordsArchiveView({
 
 export function RecordsArchivePage() {
   const { t, locale } = useLanguage()
-  const { user } = useAuth()
+  const { user, isPro } = useAuth()
   const { setNumberSetMemo } = useCalculator()
   const recordsRepository = useMemo(() => createAccountRecordsRepository(), [])
   const [orderRecords, setOrderRecords] = useState<OrderHistoryRecord[]>([])
@@ -1442,14 +1442,15 @@ export function RecordsArchivePage() {
       type: 'snapshot' | 'order',
       id: string,
       memo: string,
+      previous: string,
       refreshWorkspace = false,
     ): Promise<string | null> => {
       const userId = user?.id ?? null
       if (!userId) return 'not_logged_in'
       const result =
         type === 'snapshot'
-          ? await recordsRepository.updateAccountSnapshotMemo(userId, id, memo)
-          : await recordsRepository.updateOrderHistoryMemo(userId, id, memo)
+          ? await recordsRepository.updateAccountSnapshotMemo(userId, id, memo, previous)
+          : await recordsRepository.updateOrderHistoryMemo(userId, id, memo, previous)
       if (result.error !== null) return result.error
       const savedMemo = result.data
       if (type === 'snapshot') {
@@ -1509,10 +1510,10 @@ export function RecordsArchivePage() {
   const memoHasEditor = Boolean(memoSlot || memoSnapshot || memoOrder)
 
   const saveWorkspaceMemo = useCallback(
-    async (memo: string): Promise<string | null> => {
+    async (memo: string, previous: string): Promise<string | null> => {
       if (!memoTarget) return null
       if (memoTarget.kind === 'slot') {
-        const error = await setNumberSetMemo('cloud', memoTarget.id, memo)
+        const error = await setNumberSetMemo('cloud', memoTarget.id, memo, previous)
         if (error) return error
         const savedMemo = normalizeMemo(memo)
         setSlots((current) =>
@@ -1520,7 +1521,7 @@ export function RecordsArchivePage() {
         )
         return null
       }
-      return saveRecordMemo(memoTarget.kind, memoTarget.id, memo)
+      return saveRecordMemo(memoTarget.kind, memoTarget.id, memo, previous)
     },
     [memoTarget, saveRecordMemo, setNumberSetMemo],
   )
@@ -1578,6 +1579,7 @@ export function RecordsArchivePage() {
     </section>
   ) : memoHasEditor ? (
     <MemoWorkspaceEditor
+      isPro={isPro}
       key={memoTargetKey}
       ref={memoWorkspaceRef}
       title={memoTitle}
@@ -1657,10 +1659,11 @@ export function RecordsArchivePage() {
       )}
       {memoEntry && user && (
         <MemoEditorWindow
+          isPro={isPro}
           key={`${memoEntry.type}:${memoEntry.id}`}
           title={memoEntry.type === 'snapshot' ? t.accountRecords.memoSnapshotTitle : t.accountRecords.memoOrderTitle}
           initialMemo={memoEntry.record.memo}
-          onSave={(memo) => saveRecordMemo(memoEntry.type, memoEntry.id, memo, true)}
+          onSave={(memo, previous) => saveRecordMemo(memoEntry.type, memoEntry.id, memo, previous, true)}
           onClose={() => setMemoEntry(null)}
         />
       )}

@@ -265,6 +265,7 @@ export function BillingPage() {
           </li>
         ))}
       </ul>
+      <p className="billing-note-policy">* {copy.notePolicy}</p>
     </div>
   )
 

@@ -125,7 +125,7 @@ interface CalculatorContextValue {
   selectNumberSet: (mode: SaveStorageMode, setId: string) => Promise<string | null>
   createNumberSet: (mode: SaveStorageMode) => Promise<string | null>
   renameNumberSet: (mode: SaveStorageMode, setId: string, title: string) => Promise<string | null>
-  setNumberSetMemo: (mode: SaveStorageMode, setId: string, memo: string) => Promise<string | null>
+  setNumberSetMemo: (mode: SaveStorageMode, setId: string, memo: string, previous: string) => Promise<string | null>
   setNumberSetPreset: (
     mode: SaveStorageMode,
     setId: string,
@@ -1248,13 +1248,13 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   )
 
   const setNumberSetMemo = useCallback(
-    async (mode: SaveStorageMode, setId: string, memo: string): Promise<string | null> => {
+    async (mode: SaveStorageMode, setId: string, memo: string, previous: string): Promise<string | null> => {
       if (mode === 'local') {
         return 'local_number_set_memo_unsupported'
       }
 
       if (!activeUserId) return 'not_logged_in'
-      const result = await updateCloudNumberSetMemo(activeUserId, setId, memo)
+      const result = await updateCloudNumberSetMemo(activeUserId, setId, memo, previous)
       if (result.error) return result.error
       if (!result.data) return 'number_set_not_found'
       const updatedSet = result.data

@@ -1156,10 +1156,11 @@ export function SaveDraftToggle() {
         if (!numberSet) return null
         return (
           <MemoEditorWindow
+            isPro={isPro}
             key={`${numberSet.storageMode}:${numberSet.id}`}
             title={`${numberSet.title} · ${t.accountRecords.memoNumberSetTitle}`}
             initialMemo={numberSet.memo}
-            onSave={(memo) => setNumberSetMemo('cloud', numberSet.id, memo)}
+            onSave={(memo, previous) => setNumberSetMemo('cloud', numberSet.id, memo, previous)}
             onClose={() => setMemoSetId(null)}
           />
         )

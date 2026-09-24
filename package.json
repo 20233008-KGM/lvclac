@@ -15,7 +15,8 @@
     "db:schema-smoke": "tsx scripts/db/schemaSmoke.ts",
     "db:schema-smoke:crud": "tsx scripts/db/schemaSmoke.ts --crud",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:memo-policy": "vitest run src/utils/memo.test.ts src/db/memos.test.ts src/db/memoPolicy.test.ts && playwright test --config playwright.memo.config.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",
@@ -27,6 +28,7 @@
     "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@types/node": "^24.12.3",

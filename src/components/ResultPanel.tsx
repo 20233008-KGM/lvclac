@@ -1111,13 +1111,14 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
       )}
       {memoTarget && userId && (
         <MemoEditorWindow
+          isPro={isPro}
           key={`${memoTarget.type}:${memoTarget.id}`}
           title={memoTarget.type === 'snapshot' ? t.accountRecords.memoSnapshotTitle : t.accountRecords.memoOrderTitle}
-          onSave={async (memo) => {
+          onSave={async (memo, previous) => {
             const result =
               memoTarget.type === 'snapshot'
-                ? await recordsRepository.updateAccountSnapshotMemo(userId, memoTarget.id, memo)
-                : await recordsRepository.updateOrderHistoryMemo(userId, memoTarget.id, memo)
+                ? await recordsRepository.updateAccountSnapshotMemo(userId, memoTarget.id, memo, previous)
+                : await recordsRepository.updateOrderHistoryMemo(userId, memoTarget.id, memo, previous)
             return result.error
           }}
           onClose={() => setMemoTarget(null)}

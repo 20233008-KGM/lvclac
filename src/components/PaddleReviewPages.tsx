@@ -101,22 +101,23 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         {
           title: 'Free',
           price: '$0',
-          body: 'Core calculator, guide, formula reference, and local input saving.',
+          body: 'Core calculator, guide, formula reference, local input saving, and up to 1,000 characters per cloud note.',
         },
         {
           title: 'Pro Monthly',
           price: '$5 / month',
-          body: 'Ad-free use and Pro workflow features. Subscriptions renew monthly until canceled.',
+          body: 'Ad-free use, unlimited note writing*, and Pro workflow features. Subscriptions renew monthly until canceled.',
         },
         {
           title: 'Pro Yearly',
           price: '$48 / year',
           body:
-            'Same Pro benefits with annual billing. Equivalent to two months free compared with monthly billing.',
+            'Same Pro benefits, including unlimited note writing*, with annual billing. Equivalent to two months free compared with monthly billing.',
         },
       ],
       billingTitle: 'Billing notes',
       billingItems: [
+        '* There is no length quota for ordinary personal note writing. Each paste supports up to 50,000 characters; save request frequency and automated bulk input may be restricted.',
         'Payments are processed securely by Paddle as the merchant of record.',
         'Applicable taxes may be added by Paddle depending on the buyer location.',
         'Customers can manage subscriptions and receipts through Paddle order support.',
@@ -303,21 +304,22 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         {
           title: '무료',
           price: '$0',
-          body: '핵심 계산기, 사용 가이드, 공식 설명, 로컬 입력 저장 기능을 제공합니다.',
+          body: '핵심 계산기, 사용 가이드, 공식 설명, 로컬 입력 저장과 클라우드 노트당 1,000자를 제공합니다.',
         },
         {
           title: 'Pro 월간',
           price: '$5 / 월',
-          body: '광고 없는 사용과 Pro 워크플로 기능을 제공합니다. 구독은 취소 전까지 매월 갱신됩니다.',
+          body: '광고 없는 사용, 노트 작성 무제한*, Pro 워크플로 기능을 제공합니다. 구독은 취소 전까지 매월 갱신됩니다.',
         },
         {
           title: 'Pro 연간',
           price: '$48 / 년',
-          body: '월간 플랜과 동일한 Pro 혜택을 연간 결제로 제공합니다. 월간 결제 대비 2개월분이 절약됩니다.',
+          body: '노트 작성 무제한* 등 월간 플랜과 동일한 Pro 혜택을 연간 결제로 제공합니다. 월간 결제 대비 2개월분이 절약됩니다.',
         },
       ],
       billingTitle: '결제 안내',
       billingItems: [
+        '* 일반적인 개인의 노트 작성에는 분량 제한을 두지 않습니다. 한 번에 붙여넣기는 50,000자까지 가능하며, 저장 요청 빈도와 자동화된 대량 입력은 제한될 수 있습니다.',
         '결제는 Merchant of Record인 Paddle을 통해 안전하게 처리됩니다.',
         '구매자의 지역에 따라 Paddle이 세금을 추가로 부과할 수 있습니다.',
         '구독 관리, 영수증, 결제 지원은 Paddle 주문 지원을 통해 처리할 수 있습니다.',

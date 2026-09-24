@@ -6973,3 +6973,8 @@ a.my-page-compare-card__action {
     white-space: nowrap;
   }
 }
+
+/* Long plan cards scroll naturally on small screens; keep the hint off copy. */
+@media (max-width: 720px) {
+  .billing-up__hint { display: none; }
+}

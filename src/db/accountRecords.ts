@@ -6,6 +6,7 @@ import type {
 import { defaultInputs } from '../types'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 import { normalizeMemo } from '../utils/memo'
+import { saveMemo } from './memos'
 import {
   computeNextSnapshotRunAt,
   normalizeSnapshotAutomationSettings,
@@ -610,41 +611,19 @@ export function createAccountRecordsRepository(
     },
 
     async updateOrderHistoryMemo(
-      userId: string,
-      id: string,
-      memo: string,
+      _userId: string, id: string, memo: string, previous: string,
     ): Promise<AccountRecordResult<string | null>> {
       if (!client) return unavailable()
-      const normalized = normalizeMemo(memo)
-      const { data, error } = await client
-        .from('order_history')
-        .update({ memo: normalized })
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select('memo')
-        .maybeSingle<{ memo: string | null }>()
-      if (error) return { data: null, error: mapError(error) }
-      if (!data) return { data: null, error: 'order_history_not_found' }
-      return { data: data.memo, error: null }
+      const error = await saveMemo(client, 'order_history', id, previous, memo)
+      return error ? { data: null, error } : { data: normalizeMemo(memo), error: null }
     },
 
     async updateAccountSnapshotMemo(
-      userId: string,
-      id: string,
-      memo: string,
+      _userId: string, id: string, memo: string, previous: string,
     ): Promise<AccountRecordResult<string | null>> {
       if (!client) return unavailable()
-      const normalized = normalizeMemo(memo)
-      const { data, error } = await client
-        .from('account_snapshots')
-        .update({ memo: normalized })
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select('memo')
-        .maybeSingle<{ memo: string | null }>()
-      if (error) return { data: null, error: mapError(error) }
-      if (!data) return { data: null, error: 'account_snapshot_not_found' }
-      return { data: data.memo, error: null }
+      const error = await saveMemo(client, 'account_snapshots', id, previous, memo)
+      return error ? { data: null, error } : { data: normalizeMemo(memo), error: null }
     },
 
     async deleteAccountSnapshot(

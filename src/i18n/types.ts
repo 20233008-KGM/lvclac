@@ -227,6 +227,11 @@ export interface Messages {
     memoSaved: string
     memoEmptySaved: string
     memoSaveError: string
+    memoFreeLimit: string
+    memoPasteLimit: string
+    memoRateLimit: string
+    memoConflict: string
+    memoRetry: string
     memoAutoSaveHint: string
     memoBackgroundOpacity: string
     memoClose: string
@@ -517,6 +522,7 @@ export interface Messages {
       freeFeaturesIncluded: string[]
       freeFeaturesExcluded: string[]
       proFeatures: string[]
+      notePolicy: string
       currentPlanAction: string
       proCta: string
       /** 구독 결제 전용 페이지(/billing) */

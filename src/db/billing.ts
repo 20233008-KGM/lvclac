@@ -27,7 +27,10 @@ function clientPaddleEnvironment(): PaddleEnvironment | null {
   return environment === 'sandbox' || environment === 'live' ? environment : null
 }
 
-export function clientSubscriptionProviders(environment: PaddleEnvironment): string[] {
+export function clientSubscriptionProviders(environment: PaddleEnvironment | null): string[] {
+  // Manual grants do not depend on a configured Paddle checkout environment.
+  // Without one, exclude every Paddle provider rather than guessing Live or Sandbox.
+  if (!environment) return ['manual']
   return environment === 'live'
     ? ['paddle_live', 'manual']
     : ['paddle_sandbox', 'paddle', 'manual']
@@ -38,7 +41,6 @@ export async function fetchSubscription(
 ): Promise<BillingResult<SubscriptionRecord | null>> {
   if (!supabase) return { data: null, error: 'supabase_not_configured' }
   const environment = clientPaddleEnvironment()
-  if (!environment) return { data: null, error: 'paddle_not_configured' }
 
   const { data, error } = await supabase
     .from('subscriptions')

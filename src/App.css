@@ -7853,7 +7853,7 @@ a.site-footer__link:hover {
   }
 }
 /* 메모 편집기: 슬롯·스냅샷·주문기록 공통 */
-.memo-note-button{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--color-text-muted);cursor:pointer;opacity:0;transition:opacity 120ms ease,color 120ms ease,box-shadow 120ms ease,background 120ms ease}
+.memo-note-button{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--color-text-muted);cursor:pointer;opacity:0;transition:opacity 120ms ease,color 120ms ease,box-shadow 120ms ease,background 120ms ease}
 .memo-note-button svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .memo-note-button--filled{color:var(--color-primary);opacity:1}
 .draft-number-set-menu__item:hover .memo-note-button,.draft-number-set-menu__item:focus-within .memo-note-button,.records-timeline-card:hover .memo-note-button,.records-timeline-card:focus-within .memo-note-button,.memo-note-button:focus-visible,.draft-number-set-menu__item--active .memo-note-button{opacity:1}

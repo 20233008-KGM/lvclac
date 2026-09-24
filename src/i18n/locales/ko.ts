@@ -1099,7 +1099,7 @@ export const ko: Messages = {
     eyebrow: 'PRIVACY CONTROLS',
     title: '개인정보 및 쿠키 설정',
     intro:
-      '계산기와 계정 기능은 항상 사용할 수 있습니다. 서비스 이용 분석은 선택 사항이며, 허용하기 전에는 Google Analytics를 불러오지 않습니다.',
+      '계산기와 계정 기능은 항상 사용할 수 있습니다. 서비스 이용 분석은 선택 사항이며, 허용하기 전에는 Google 분석·광고 성과 측정 태그를 불러오지 않습니다.',
     close: '닫기',
     coreTitle: '계산기·계정 기본 기능',
     coreBody: '계산, 언어, 로그인과 선택한 저장 기능',
@@ -1114,7 +1114,7 @@ export const ko: Messages = {
     allow: '모두 허용',
     details: '세부 설정',
     analyticsTitle: '서비스 이용 분석',
-    analyticsBody: 'Google Analytics 4로 방문 페이지와 기능 이용 통계를 수집합니다.',
+    analyticsBody: 'Google 태그로 광고 유입과 성과를 측정하며, Google Analytics 4가 설정된 경우 방문 페이지와 기능 이용 통계도 수집합니다.',
     personalizedAdsTitle: '맞춤 광고',
     personalizedAdsBody: '광고 기능이 재개될 경우 관심사 기반 광고 허용 여부에 사용합니다.',
     adNotice: '현재 광고는 중지되어 있으며 광고 DOM, AdSense 스크립트와 광고 요청을 생성하지 않습니다.',
@@ -1199,7 +1199,7 @@ export const ko: Messages = {
     privacyArticles: [
       {
         title: '1. 수집하는 정보',
-        body: '계산기 입력값 및 화면 설정(패널 너비 등)은 저장 기능을 켠 경우에만 보관됩니다. 비로그인 사용자는 브라우저 저장소에 저장합니다. 로그인 사용자는 이 기기 저장 또는 클라우드 저장을 선택할 수 있으며, 클라우드 저장 선택 시 Supabase DB의 number_sets 데이터에 입력값이 저장될 수 있습니다. 로그인 사용자가 기록 기능을 쓰면 주문 시뮬레이션 기록과 계좌스냅샷도 Supabase DB에 저장될 수 있습니다. Google Analytics·AdSense 등을 설정한 경우 쿠키 및 접속 로그가 자동으로 수집될 수 있습니다.',
+        body: '계산기 입력값 및 화면 설정(패널 너비 등)은 저장 기능을 켠 경우에만 보관됩니다. 비로그인 사용자는 브라우저 저장소에 저장합니다. 로그인 사용자는 이 기기 저장 또는 클라우드 저장을 선택할 수 있으며, 클라우드 저장 선택 시 Supabase DB의 number_sets 데이터에 입력값이 저장될 수 있습니다. 로그인 사용자가 기록 기능을 쓰면 주문 시뮬레이션 기록과 계좌스냅샷도 Supabase DB에 저장될 수 있습니다. Google Analytics·Google Ads·AdSense 등을 설정한 경우 쿠키 및 접속 로그가 자동으로 수집될 수 있습니다.',
       },
       {
         title: '2. 이용 목적',
@@ -1211,7 +1211,7 @@ export const ko: Messages = {
       },
       {
         title: '4. 제3자 제공',
-        body: 'Google Analytics·AdSense 등 분석·광고 서비스를 사용하는 경우, 해당 사업자의 정책에 따라 정보가 전송될 수 있습니다.',
+        body: 'Google Analytics·Google Ads·AdSense 등 분석·광고 서비스를 사용하는 경우, 해당 사업자의 정책에 따라 정보가 전송될 수 있습니다.',
       },
       {
         title: '5. 이용자 권리',

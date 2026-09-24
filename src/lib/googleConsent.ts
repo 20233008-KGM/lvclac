@@ -161,6 +161,11 @@ export function applyGoogleConsentMode(decision: GoogleConsentDecision): void {
 
 export function initializeGoogleConsentDefaults(): void {
   if (typeof window === 'undefined') return
+  window.adsbygoogle = window.adsbygoogle || []
+  window.adsbygoogle.pauseAdRequests = 1
+  // The head establishes defaults before the async Google tag. Do not reset a
+  // later consent update when React mounts again or its effect is replayed.
+  if (typeof document !== 'undefined' && document.getElementById('google-consent-defaults')) return
   window.dataLayer = window.dataLayer || []
   window.gtag =
     window.gtag ||

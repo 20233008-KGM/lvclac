@@ -5497,7 +5497,7 @@ a.my-page-compare-card__action {
 .billing-current__badge {
   padding: 3px 9px;
   border-radius: 999px;
-  font-family: var(--font-mono);
+  font-family: inherit;
   font-size: 11px;
   font-weight: 600;
   background: var(--color-long-muted);

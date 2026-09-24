@@ -1124,7 +1124,7 @@ export const en: Messages = {
     eyebrow: 'PRIVACY CONTROLS',
     title: 'Privacy and cookie settings',
     intro:
-      'Calculator and account features are always available. Service analytics are optional, and Google analytics and ad measurement tags are not loaded before you allow them.',
+      'Calculator and account features are always available. Google Ads sends limited cookieless measurement requests before consent. Analytics cookies and personalization permissions default to denied and follow your choices.',
     close: 'Close',
     coreTitle: 'Core calculator and account features',
     coreBody: 'Calculation, language, sign-in, and the storage options you choose',
@@ -1139,7 +1139,7 @@ export const en: Messages = {
     allow: 'Allow all',
     details: 'Manage options',
     analyticsTitle: 'Service analytics',
-    analyticsBody: 'Google tags measure ad traffic and performance. When configured, Google Analytics 4 also collects page visits and feature usage statistics.',
+    analyticsBody: 'When allowed and configured, Google Analytics 4 collects page visits and feature usage statistics. Google Ads also sends limited cookieless measurement requests when consent is denied.',
     personalizedAdsTitle: 'Personalized ads',
     personalizedAdsBody: 'Used for interest-based ads only if advertising is enabled again.',
     adNotice: 'Advertising is currently paused. No ad DOM, AdSense script, or ad request is created.',

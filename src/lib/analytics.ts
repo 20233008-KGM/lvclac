@@ -15,12 +15,15 @@ export function initAnalytics(): void {
     // eslint-disable-next-line prefer-rest-params
     window.dataLayer?.push(arguments)
   }
-  window.gtag('js', new Date())
-  // Called only after analytics consent; preserve the existing consent queue.
-  window.gtag('config', GOOGLE_ADS_ID)
+  const adsBootstrapped = Boolean(document.getElementById('google-ads-tag'))
+  if (!adsBootstrapped) {
+    window.gtag('js', new Date())
+    window.gtag('config', GOOGLE_ADS_ID)
+  }
+  // GA4 remains opt-in; Ads uses default-denied Consent Mode in the document head.
   if (GA4_ID) window.gtag('config', GA4_ID, { send_page_view: true })
 
-  if (!document.getElementById(SCRIPT_ID)) {
+  if (!adsBootstrapped && !document.getElementById(SCRIPT_ID)) {
     const script = document.createElement('script')
     script.id = SCRIPT_ID
     script.async = true

@@ -3,12 +3,12 @@ id: 2026-09-10-saved-workflows-and-precision
 publishedAt: 2026-09-10
 locale: en
 author: LiqGuard Team
-release: v0.3.0-beta
+release: 1.2.1
 type: Improvement
 title: Expanded saved calculations and records, with more precise rate inputs
 description: Cloud number sets, record exports, and Pro checkout improvements, alongside more precise margin rates and clearer current-price guidance.
 ---
-This post brings together the changes since the August 16 update. We expanded the tools for saving calculations, returning to them later, and organizing simulated orders and account records. We also fixed margin rates being rounded when an input was confirmed.
+This post brings together the changes since the August 18 update. We expanded the tools for saving calculations, returning to them later, and organizing simulated orders and account records. We also fixed margin rates being rounded when an input was confirmed.
 
 ## Save calculations and pick up where you left off
 

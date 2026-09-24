@@ -3,7 +3,7 @@ id: 2026-09-25-notes-and-record-exports
 publishedAt: 2026-09-25
 locale: en
 author: LiqGuard Team
-release: 0.3.1
+release: 1.2.2
 type: Improvement
 title: Write longer notes and export clearer records
 description: More room for Pro notes, clearer saving feedback, and CSV and Excel exports that match the calculator display.

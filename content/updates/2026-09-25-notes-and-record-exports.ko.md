@@ -3,7 +3,7 @@ id: 2026-09-25-notes-and-record-exports
 publishedAt: 2026-09-25
 locale: ko
 author: LiqGuard 팀
-release: 0.3.1
+release: 1.2.2
 type: 개선
 title: 메모를 더 길게 작성하고, 기록을 보기 좋게 내보내세요
 description: Pro 메모 작성 분량을 확대하고 저장 안내를 보강했습니다. CSV·Excel 내보내기도 계산기 화면에 맞게 정리했습니다.

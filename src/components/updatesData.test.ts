@@ -41,14 +41,19 @@ describe('update Markdown content', () => {
     expect(UPDATE_ENTRIES[0].content.en.body).toContain('## More natural first-use guidance')
     expect(UPDATE_ENTRIES[1]).toMatchObject({
       id: '2026-08-16-calculator-flow-polish',
-      publishedAt: '2026-08-16',
+      publishedAt: '2026-08-18',
+      content: { ko: { release: '1.2.0' }, en: { release: '1.2.0' } },
+    })
+    expect(UPDATE_ENTRIES[3]).toMatchObject({
+      publishedAt: '2026-09-25',
+      content: { ko: { release: '1.2.2' }, en: { release: '1.2.2' } },
     })
     expect(UPDATE_ENTRIES[2]).toMatchObject({
       id: '2026-09-10-saved-workflows-and-precision',
       publishedAt: '2026-09-10',
       content: {
-        ko: { release: 'v0.3.0-beta' },
-        en: { release: 'v0.3.0-beta' },
+        ko: { release: '1.2.1' },
+        en: { release: '1.2.1' },
       },
     })
   })

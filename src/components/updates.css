@@ -50,7 +50,7 @@
 .updates-table thead tr,
 .updates-table tbody tr {
   display: grid;
-  grid-template-columns: 124px 92px minmax(0, 1fr);
+  grid-template-columns: 124px 76px 92px minmax(0, 1fr);
 }
 
 .updates-table thead tr {
@@ -78,7 +78,8 @@
   vertical-align: top;
 }
 
-.updates-table__date {
+.updates-table__date,
+.updates-table__version {
   color: var(--color-text-dim);
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
@@ -299,7 +300,7 @@
   }
 
   .updates-table tbody tr {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     gap: var(--space-sm);
     padding: var(--space-lg) 0;
   }
@@ -308,7 +309,8 @@
     padding: 0;
   }
 
-  .updates-table__date {
+  .updates-table__date,
+  .updates-table__version {
     align-self: center;
   }
 

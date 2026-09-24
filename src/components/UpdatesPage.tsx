@@ -20,6 +20,7 @@ const updatesCopy = {
     lead: 'LiqGuard의 주요 변경 사항을 확인할 수 있는 공간입니다.',
     tableLabel: 'LiqGuard 업데이트 내역',
     dateHeader: '날짜',
+    versionHeader: '버전',
     typeHeader: '구분',
     detailsHeader: '업데이트 내용',
     empty:
@@ -39,6 +40,7 @@ const updatesCopy = {
     lead: 'A place to review notable changes to LiqGuard.',
     tableLabel: 'LiqGuard update history',
     dateHeader: 'Date',
+    versionHeader: 'Version',
     typeHeader: 'Type',
     detailsHeader: 'What changed',
     empty:
@@ -195,6 +197,7 @@ export function UpdatesPage() {
               <thead>
                 <tr>
                   <th scope="col">{copy.dateHeader}</th>
+                  <th scope="col">{copy.versionHeader}</th>
                   <th scope="col">{copy.typeHeader}</th>
                   <th scope="col">{copy.detailsHeader}</th>
                 </tr>
@@ -208,6 +211,9 @@ export function UpdatesPage() {
                         <time dateTime={entry.publishedAt}>
                           {formatUpdateDate(entry.publishedAt, locale)}
                         </time>
+                      </td>
+                      <td className="updates-table__version">
+                        {content.release?.match(/\d+\.\d+\.\d+/)?.[0] ?? '—'}
                       </td>
                       <td className="updates-table__type">
                         <span>{content.type}</span>

@@ -6091,7 +6091,7 @@ a.my-page-compare-card__action {
   background: rgba(92, 184, 138, 0.14);
   border: 1px solid rgba(92, 184, 138, 0.4);
   color: var(--color-success);
-  font-family: var(--font-mono);
+  font-family: inherit;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;

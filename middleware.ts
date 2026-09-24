@@ -24,6 +24,7 @@ const PUBLIC_UPDATE_IDS = [
   '2026-08-12-beta-experience',
   '2026-08-16-calculator-flow-polish',
   '2026-09-10-saved-workflows-and-precision',
+  '2026-09-25-notes-and-record-exports',
 ]
 const PUBLIC_PATHS = (['ko', 'en'] as const).flatMap((locale) => [
   ...PUBLIC_BASE_PATHS.map((path) => localizedPublicPath(path, locale)),

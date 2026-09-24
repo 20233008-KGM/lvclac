@@ -182,7 +182,8 @@ describe('Google consent decision', () => {
       analyticsAllowed: true,
     })
 
-    expect(dataLayer).toEqual([
+    expect(Object.prototype.toString.call(dataLayer[0])).toBe('[object Arguments]')
+    expect(dataLayer.map((entry) => Array.from(entry as IArguments))).toEqual([
       [
         'consent',
         'update',

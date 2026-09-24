@@ -10,8 +10,10 @@ export function initAnalytics(): void {
   initialized = true
 
   window.dataLayer = window.dataLayer || []
-  window.gtag = window.gtag || function gtag(...args: unknown[]) {
-    window.dataLayer?.push(args)
+  window.gtag = window.gtag || function gtag() {
+    // Google distinguishes gtag Arguments entries from dataLayer command arrays.
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer?.push(arguments)
   }
   window.gtag('js', new Date())
   // Called only after analytics consent; preserve the existing consent queue.

@@ -147,8 +147,9 @@ export function applyGoogleConsentMode(decision: GoogleConsentDecision): void {
   window.dataLayer = window.dataLayer || []
   window.gtag =
     window.gtag ||
-    function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args)
+    function gtag() {
+      // eslint-disable-next-line prefer-rest-params -- Google's gtag queue uses Arguments entries.
+      window.dataLayer?.push(arguments)
     }
   window.gtag('consent', 'update', {
     ad_storage: decision.adStorageAllowed ? 'granted' : 'denied',
@@ -163,8 +164,9 @@ export function initializeGoogleConsentDefaults(): void {
   window.dataLayer = window.dataLayer || []
   window.gtag =
     window.gtag ||
-    function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args)
+    function gtag() {
+      // eslint-disable-next-line prefer-rest-params -- Google's gtag queue uses Arguments entries.
+      window.dataLayer?.push(arguments)
     }
   window.gtag('consent', 'default', {
     ad_storage: 'denied',

@@ -39,8 +39,10 @@ it('shares one loader with an optional GA4 destination', async () => {
   })
   const { initAnalytics } = await import('./analytics')
   initAnalytics()
-  expect(window.dataLayer).toContainEqual(['config', 'AW-18471363418'])
-  expect(window.dataLayer).toContainEqual([
+  const commands = window.dataLayer?.map((entry) => Array.from(entry as IArguments))
+  expect(Object.prototype.toString.call(window.dataLayer?.[0])).toBe('[object Arguments]')
+  expect(commands).toContainEqual(['config', 'AW-18471363418'])
+  expect(commands).toContainEqual([
     'config', 'G-TEST123456', { send_page_view: true },
   ])
 })

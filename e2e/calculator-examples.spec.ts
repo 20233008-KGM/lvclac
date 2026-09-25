@@ -154,6 +154,10 @@ for (const locale of ['ko', 'en']) {
       })).toBe(stored)
       await page.reload()
       await expect(link).toHaveCount(0)
+      await expect(page.locator('.header-how-btn')).toBeVisible()
+      await page.locator('.header-how-btn').focus()
+      await expect(page.locator('.header-how-tooltip')).toBeVisible()
+      await expect(page.locator('.header-how-tooltip__guide-btn')).toHaveAttribute('href', locale === 'en' ? '/en/guide' : '/guide')
       // A fresh browser identity uses the reduced-motion path on pointer activation.
       await page.evaluate(() => localStorage.clear())
       await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -229,5 +233,8 @@ for (const [key, value] of [
     await page.goto('/?lang=ko')
     await expect(page.locator('.calculator-examples')).toBeVisible()
     await expect(page.locator('.header-welcome-btn')).toHaveCount(0)
+    await expect(page.locator('.header-how-btn')).toBeVisible()
+    await page.locator('.header-how-btn').click()
+    await expect(page.locator('.header-how-tooltip')).toBeVisible()
   })
 }

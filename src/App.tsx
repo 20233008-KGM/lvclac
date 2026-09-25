@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from 'react'
 import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
+import { HowToUseButton } from './components/HowToUseButton'
 import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
 import { ResultPanel } from './components/ResultPanel'
@@ -257,6 +258,7 @@ function CalculatorApp() {
                     <span>{t.welcome.headerCta}</span>
                     <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
                   </a>}
+                  <HowToUseButton />
                   <AuthButton variant="header" />
                 </div>
               </header>

@@ -8,7 +8,6 @@ import {
 } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
-import { LegalLinks } from '../ServiceDisclaimer'
 import { authErrorMessage } from './authMessages'
 import { PasswordStrengthMeter } from './PasswordStrengthMeter'
 
@@ -111,9 +110,6 @@ export function RegisterForm() {
         />
         <span>{t.auth.termsConsent}</span>
       </label>
-      <div className="auth-legal-links">
-        <LegalLinks />
-      </div>
       {error && (
         <p className="auth-alert auth-alert--error" role="alert">
           {error}

@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
 } from 'react'
 import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
@@ -17,6 +18,7 @@ import {
 import { AuthButton } from './components/auth/AuthButton'
 import { useAuth } from './context/AuthContext'
 import { CalculatorExamples } from './components/CalculatorExamples'
+import { EXAMPLES_VIEWED_KEY, hasPriorCalculatorVisit, shouldShowExamplesWelcome } from './components/examplesWelcomeLogic'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
@@ -112,6 +114,11 @@ function isTextEditingTarget(target: EventTarget | null): boolean {
 }
 
 function CalculatorApp() {
+  const { user, sessionUserId, sessionLoading } = useAuth()
+  const [examplesWelcomeHidden, setExamplesWelcomeHidden] = useState(() =>
+    hasPriorCalculatorVisit(localStorage, sessionStorage),
+  )
+  const showExamplesWelcome = shouldShowExamplesWelcome(examplesWelcomeHidden, sessionLoading, Boolean(user || sessionUserId))
   const { t, preset } = useLanguage()
   const isDevDeployment = import.meta.env.VITE_DEPLOYMENT_CHANNEL === 'dev'
   const {
@@ -224,7 +231,7 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
-                  <a
+                  {showExamplesWelcome && <a
                     className="header-welcome-btn"
                     href="#calculator-examples-title"
                     onClick={(event) => {
@@ -235,17 +242,21 @@ function CalculatorApp() {
                       if (window.location.hash !== '#calculator-examples-title') {
                         window.history.pushState(null, '', '#calculator-examples-title')
                       }
-                      heading.focus({ preventScroll: true })
-                      heading.scrollIntoView({
-                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-                        block: 'start',
+                      try { localStorage.setItem(EXAMPLES_VIEWED_KEY, '1') } catch { /* Still hide for this visit. */ }
+                      setExamplesWelcomeHidden(true)
+                      requestAnimationFrame(() => {
+                        heading.focus({ preventScroll: true })
+                        heading.scrollIntoView({
+                          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                          block: 'start',
+                        })
                       })
                     }}
                     aria-label={t.welcome.headerCtaAriaLabel}
                   >
                     <span>{t.welcome.headerCta}</span>
                     <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
-                  </a>
+                  </a>}
                   <AuthButton variant="header" />
                 </div>
               </header>

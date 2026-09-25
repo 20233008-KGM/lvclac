@@ -130,7 +130,7 @@ test('fresh visit shows blank calculator and all example steps without a dialog'
 
 for (const locale of ['ko', 'en']) {
   for (const width of [390, 1440]) {
-    test(`${locale} ${width}: welcome link scrolls to examples without a dialog or saved-state changes`, async ({ page }) => {
+    test(`${locale} ${width}: new visitor shortcut scrolls once and stays hidden after reload`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.route('https://ipapi.co/**', (route) => route.abort())
       await page.goto(`/?lang=${locale}`)
@@ -145,7 +145,17 @@ for (const locale of ['ko', 'en']) {
         return top >= 24 && top < 60
       })).toBe(true)
       await expect(page.getByRole('dialog')).toHaveCount(0)
-      expect(await page.evaluate(() => JSON.stringify(localStorage))).toBe(stored)
+      await expect(link).toHaveCount(0)
+      expect(await page.evaluate(() => localStorage.getItem('liqguard-examples-viewed-v1'))).toBe('1')
+      expect(await page.evaluate(() => {
+        const values = { ...localStorage }
+        delete values['liqguard-examples-viewed-v1']
+        return JSON.stringify(values)
+      })).toBe(stored)
+      await page.reload()
+      await expect(link).toHaveCount(0)
+      // A fresh browser identity uses the reduced-motion path on pointer activation.
+      await page.evaluate(() => localStorage.clear())
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto(`/?lang=${locale}`)
       await link.click()
@@ -206,3 +216,18 @@ test('fresh privacy choice remains independent from the examples shortcut', asyn
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await context.close()
 })
+
+for (const [key, value] of [
+  ['leverage-welcome-completed-v1', '1'],
+  ['leverage-disclaimer-skip-v3', '1'],
+  ['leverage_calculator_draft', '{"accountEval":10000}'],
+  ['liqguard-examples-viewed-v1', '1'],
+]) {
+  test(`returning visitor hides shortcut with ${key}`, async ({ page }) => {
+    await page.addInitScript(({ key, value }) => localStorage.setItem(key, value), { key, value })
+    await page.route('https://ipapi.co/**', (route) => route.abort())
+    await page.goto('/?lang=ko')
+    await expect(page.locator('.calculator-examples')).toBeVisible()
+    await expect(page.locator('.header-welcome-btn')).toHaveCount(0)
+  })
+}

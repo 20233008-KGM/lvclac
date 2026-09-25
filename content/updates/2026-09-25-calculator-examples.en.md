@@ -8,7 +8,7 @@ type: New feature
 title: Follow calculation examples from inputs to orders
 description: Explore stock, index, and commodity futures through initial inputs, completed calculations, additional orders, and position reductions.
 ---
-**Calculation examples** now appear below the calculator. Select **New here?** at the top to scroll smoothly to them.
+**Calculation examples** now appear below the calculator. New visitors can select **New here?** to scroll smoothly to them; the shortcut disappears after use. It is hidden for signed-in users and visitors with previous calculator activity.
 
 ## Four stages in the actual calculator interface
 

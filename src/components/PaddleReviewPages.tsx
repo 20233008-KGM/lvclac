@@ -112,7 +112,7 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
           title: 'Pro Yearly',
           price: '$48 / year',
           body:
-            'Same Pro benefits, including unlimited note writing*, with annual billing. Equivalent to two months free compared with monthly billing.',
+            'Same Pro benefits, including unlimited note writing*, with annual billing. Includes a two-month discount compared with monthly billing.',
         },
       ],
       billingTitle: 'Billing notes',
@@ -314,7 +314,7 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
         {
           title: 'Pro 연간',
           price: '$48 / 년',
-          body: '노트 작성 무제한* 등 월간 플랜과 동일한 Pro 혜택을 연간 결제로 제공합니다. 월간 결제 대비 2개월분이 절약됩니다.',
+          body: '노트 작성 무제한* 등 월간 플랜과 동일한 Pro 혜택을 연간 결제로 제공합니다. 월간 결제 대비 2개월 할인 혜택을 제공합니다.',
         },
       ],
       billingTitle: '결제 안내',

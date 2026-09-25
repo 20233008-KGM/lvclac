@@ -1068,6 +1068,8 @@ export const en: Messages = {
     email: 'Email',
     nickname: 'Nickname',
     password: 'Password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     passwordRule: 'At least 8 characters, including a letter, a number, and a symbol.',
     passwordConfirmation: 'Confirm password',
     submitLogin: 'Log in',

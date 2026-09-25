@@ -3,6 +3,7 @@ import { validateEmail, validateLoginPassword } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { authErrorMessage } from './authMessages'
+import { PasswordField } from './PasswordField'
 
 interface LoginFormProps {
   onForgotPassword?: () => void
@@ -42,16 +43,13 @@ export function LoginForm({ onForgotPassword }: LoginFormProps = {}) {
           required
         />
       </label>
-      <label className="field">
-        <span>{t.auth.password}</span>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-        />
-      </label>
+      <PasswordField
+        label={t.auth.password}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="current-password"
+        required
+      />
       {error && (
         <p className="auth-alert auth-alert--error" role="alert">
           {error}

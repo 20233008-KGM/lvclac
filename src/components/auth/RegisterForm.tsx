@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { authErrorMessage } from './authMessages'
+import { PasswordField } from './PasswordField'
 import { PasswordStrengthMeter } from './PasswordStrengthMeter'
 
 export function RegisterForm() {
@@ -77,30 +78,26 @@ export function RegisterForm() {
           required
         />
       </label>
-      <label className="field">
-        <span>{t.auth.password}</span>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="new-password"
-          required
-        />
+      <PasswordField
+        label={t.auth.password}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="new-password"
+        required
+      >
         <span className="hint">{t.auth.passwordRule}</span>
         <PasswordStrengthMeter password={password} />
         {pwErr && <span className="hint hint-warn">{pwErr}</span>}
-      </label>
-      <label className="field">
-        <span>{t.auth.passwordConfirmation}</span>
-        <input
-          type="password"
-          value={passwordConfirmation}
-          onChange={(e) => setPasswordConfirmation(e.target.value)}
-          autoComplete="new-password"
-          required
-        />
+      </PasswordField>
+      <PasswordField
+        label={t.auth.passwordConfirmation}
+        value={passwordConfirmation}
+        onChange={(e) => setPasswordConfirmation(e.target.value)}
+        autoComplete="new-password"
+        required
+      >
         {confirmationErr && <span className="hint hint-warn">{confirmationErr}</span>}
-      </label>
+      </PasswordField>
       <label className="auth-consent">
         <input
           type="checkbox"

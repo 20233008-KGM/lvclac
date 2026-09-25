@@ -12,6 +12,11 @@
 .calculator-examples__tabs button:hover { background: var(--color-surface); color: var(--color-text); }
 .calculator-examples__tabs button[aria-selected="true"] { background: var(--color-primary-muted); border-color: var(--color-primary); color: var(--color-text); font-weight: 650; }
 .calculator-examples :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
+.calculator-examples__margin { margin: -12px 0 24px; }
+.calculator-examples__margin-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.calculator-examples__margin-controls > span { font-size: 12px; color: var(--color-text-muted); }
+.calculator-examples__margin .margin-mode-btn { min-height: 36px; padding: 6px 12px; }
+.calculator-examples__margin p { margin: 8px 0 0; font-size: 12px; line-height: 1.7; color: var(--color-text-muted); }
 .calculator-examples__context { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .calculator-examples__context h3 { font-size: 15px; margin: 0; }
 .calculator-examples__context > span { font-size: 11px; color: var(--color-text-muted); border: 1px solid var(--color-border-subtle); padding: 4px 8px; border-radius: 4px; }

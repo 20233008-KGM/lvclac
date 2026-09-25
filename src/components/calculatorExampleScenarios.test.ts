@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { calcPositionTickPnl } from '../calc/positionMetrics'
 import { calculateEvaluate } from '../calc/leverage'
-import { buildExampleStages, calculatorExamples } from './calculatorExampleScenarios'
+import { buildExampleInputs, buildExampleStages, calculatorExamples } from './calculatorExampleScenarios'
 
 // Independently worked values: rate margin solves E + (P-C)*Q = P*Q*r;
 // fixed margin solves E + (P-C)*Q = N*m. No production helper builds these expectations.
@@ -57,4 +57,68 @@ describe.each(calculatorExamples)('$id teaching scenario', (example) => {
     expect(example).toEqual(previous)
     expect(buildExampleStages(example).reduced.contracts).toBe(expected[example.id].contracts[2])
   })
+})
+
+describe.each(calculatorExamples)('$id margin methods', (example) => {
+  it.each(['rate', 'perContract', 'total'] as const)('%s matches independent margin and liquidation equations at every stage', (mode) => {
+    const original = structuredClone(example)
+    const stages = buildExampleStages(example, mode)
+    const oracle = expected[example.id]
+    const snapshots = [stages.initial, stages.added, stages.reduced]
+    const liquidation: number[] = []
+    snapshots.forEach((input, index) => {
+      const result = calculateEvaluate(input)
+      const price = example.inputs.currentPrice!
+      const quantity = oracle.contracts[index] * example.inputs.contractMultiplier!
+      const maintenance = oracle.maintenance[index]
+      const equity = example.inputs.accountEval!
+      // Fixed: E + (P-C)Q = M. Proportional: E + (P-C)Q = M(P/C).
+      const expectedPrice = mode === 'perContract'
+        ? price + (maintenance - equity) / quantity
+        : (price * quantity - equity) / (quantity - maintenance / price)
+      liquidation.push(expectedPrice)
+      expect(input.contracts).toBe(oracle.contracts[index])
+      expect(input.accountEval).toBe(equity)
+      expect(result.margins?.maintenanceMargin).toBeCloseTo(maintenance, 8)
+      expect(result.margins?.entrustedMargin).toBeCloseTo(oracle.initial[index], 8)
+      expect(result.leverageRatio).toBeCloseTo(oracle.leverage[index], 8)
+      expect(calcPositionTickPnl(input)).toBeCloseTo(oracle.tickPnl[index], 8)
+      expect(result.liquidationPrice).toBeCloseTo(expectedPrice, 8)
+      expect(result.isAtRisk).toBe(false)
+      if (mode === 'total') {
+        expect(input.totalMarginKind).toBe('proportional')
+        expect(input.maintenanceMargin).toBeCloseTo(maintenance, 8)
+        expect(input.entrustedMargin).toBeCloseTo(oracle.initial[index], 8)
+      }
+    })
+    expect(stages.addition.beforeLiquidation).toBeCloseTo(liquidation[0], 8)
+    expect(stages.addition.afterLiquidation).toBeCloseTo(liquidation[1], 8)
+    expect(stages.reduction.beforeLiquidation).toBeCloseTo(liquidation[1], 8)
+    expect(stages.reduction.afterLiquidation).toBeCloseTo(liquidation[2], 8)
+    expect(stages.addition.orderMessage).toBeNull()
+    expect(stages.reduction.orderMessage).toBeNull()
+    expect(example).toEqual(original)
+  })
+
+  it('keeps only the selected margin fields and matches rate with proportional total', () => {
+    for (const mode of ['rate', 'perContract', 'total'] as const) {
+      const input = buildExampleInputs(example, mode)
+      for (const field of ['maintenanceMargin', 'entrustedMargin'] as const) {
+        expect(input[field] !== undefined).toBe(mode === 'total')
+        expect(input[`${field}Rate`] !== undefined).toBe(mode === 'rate')
+        expect(input[`${field}PerContract`] !== undefined).toBe(mode === 'perContract')
+      }
+      expect(input.totalMarginKind).toBe(mode === 'total' ? 'proportional' : undefined)
+    }
+    const rate = buildExampleStages(example, 'rate')
+    const total = buildExampleStages(example, 'total')
+    expect(total.evaluation.liquidationPrice).toBeCloseTo(rate.evaluation.liquidationPrice!, 8)
+    expect(total.addition.afterLiquidation).toBeCloseTo(rate.addition.afterLiquidation!, 8)
+    expect(total.reduction.afterLiquidation).toBeCloseTo(rate.reduction.afterLiquidation!, 8)
+  })
+})
+
+it('retains the full commodity rate precision', () => {
+  const input = buildExampleInputs(calculatorExamples[2], 'rate')
+  expect(input.maintenanceMarginRate).toBe(5000 / 75000)
 })

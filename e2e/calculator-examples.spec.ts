@@ -42,6 +42,7 @@ for (const locale of ['ko', 'en'] as const) {
       await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true')
       for (const [index, amount, liquidation] of [[0, '10,000', '170'], [1, '150,000', '3,804'], [2, '30,000', '65']] as const) {
         await tabs.nth(index).click()
+        await section.getByRole('radio').nth(index === 2 ? 1 : 0).click()
         await expect(tabs.nth(index)).toHaveAttribute('aria-selected', 'true')
         await expect(section.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', await tabs.nth(index).getAttribute('id') as string)
         await expect(section.locator('.calculator-examples__context h3')).toContainText(['Asteron Technologies', 'Crestline 500', 'Westhaven Crude'][index])
@@ -104,6 +105,8 @@ for (const locale of ['ko', 'en'] as const) {
       await tabs.nth(1).press('Home')
       await expect(tabs.nth(0)).toBeFocused()
       await tabs.nth(0).press('Tab')
+      await expect(section.getByRole('radio', { checked: true })).toBeFocused()
+      await page.keyboard.press('Tab')
       await expect(section.getByRole('tabpanel')).toBeFocused()
 
       expect(await page.locator('.calc-grid input').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value))).toEqual(inputValues)

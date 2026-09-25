@@ -12,7 +12,7 @@ describe('public content entry points', () => {
     const button = source('src/components/HowToUseButton.tsx')
 
     expect(app).toContain('href="#calculator-examples-title"')
-    expect(app).not.toContain('<HowToUseButton')
+    expect(app).toContain('<HowToUseButton />')
     expect(app).toContain('if (isGuidePath(pathname))')
     expect(app).toContain('<GuidePage />')
     expect(app).toContain('if (isFormulasPath(pathname))')

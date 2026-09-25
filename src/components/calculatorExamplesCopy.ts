@@ -17,7 +17,14 @@ export const calculatorExamplesCopy = {
     contracts: '보유 계약수', liquidation: '예상 청산가',
     readOnly: '보기 전용 계산기',
     emptyScreen: '계좌·증거금 입력 전의 계산기 화면',
-    marginFields: { rate: '유지증거금률·개시증거금률', perContract: '계약당 유지증거금·개시증거금' },
+    marginFields: { rate: '유지증거금률·개시증거금률', perContract: '계약당 유지증거금·개시증거금', total: '유지증거금 총액·개시증거금 총액' },
+    marginDescriptions: {
+      rate: '명목금액에 적용할 증거금률을 입력합니다.',
+      perContract: '1계약에 필요한 고정 증거금을 입력합니다.',
+      total: '현재 보유 계약 전체의 증거금을 입력합니다. 이 예제는 가격 비례형입니다.',
+    },
+    marginComparison: '현재가 기준 증거금은 같지만, 가격 변화에 대한 가정에 따라 청산가는 달라질 수 있습니다.',
+    totalBasis: '증거금 총액은 최초 보유분 기준',
     focusNotes: [
       '입력할 값 · 계좌 평가금액·현재가·보유 계약수·계약승수·{margins}',
       '스펙 표와 비교 · 계약승수 · 유지증거금 · 개시증거금',
@@ -51,7 +58,14 @@ export const calculatorExamplesCopy = {
     contracts: 'Open contracts', liquidation: 'Est. liquidation price',
     readOnly: 'Read-only calculator',
     emptyScreen: 'Calculator before entering account and margin values',
-    marginFields: { rate: 'maintenance margin rate · initial margin rate', perContract: 'maintenance margin per contract · initial margin per contract' },
+    marginFields: { rate: 'maintenance margin rate · initial margin rate', perContract: 'maintenance margin per contract · initial margin per contract', total: 'total maintenance margin · total initial margin' },
+    marginDescriptions: {
+      rate: 'Enter margin rates applied to the notional value.',
+      perContract: 'Enter the fixed margin required for one contract.',
+      total: 'Enter margin for the entire current position. This example uses price-proportional margins.',
+    },
+    marginComparison: 'Margins match at the current price, but liquidation prices can differ because of assumptions about price changes.',
+    totalBasis: 'Margin totals are for the starting position',
     focusNotes: [
       'Enter these values · Account equity · Current price · Open contracts · Multiplier · {margins}',
       'Check the specifications · Multiplier · Maintenance margin · Initial margin',

@@ -1,5 +1,5 @@
 import { buildAfterOrderInputs, calculateEvaluate, calculateOrder } from '../calc/leverage'
-import type { CalculatorInputs } from '../types'
+import type { CalculatorInputs, MarginInputMode } from '../types'
 
 export type ExampleProduct = 'stock' | 'index' | 'commodity'
 
@@ -42,8 +42,35 @@ export const calculatorExamples: readonly CalculatorExample[] = [
   },
 ]
 
-export function buildExampleStages(example: CalculatorExample) {
+export function buildExampleInputs(example: CalculatorExample, marginInputMode: MarginInputMode): CalculatorInputs {
   const initial = { ...example.inputs }
+  const notional = initial.currentPrice! * initial.contractMultiplier!
+  const maintenance = initial.maintenanceMarginPerContract ?? notional * initial.maintenanceMarginRate!
+  const entrusted = initial.entrustedMarginPerContract ?? notional * initial.entrustedMarginRate!
+  delete initial.maintenanceMarginRate
+  delete initial.entrustedMarginRate
+  delete initial.maintenanceMarginPerContract
+  delete initial.entrustedMarginPerContract
+  delete initial.maintenanceMargin
+  delete initial.entrustedMargin
+  delete initial.totalMarginKind
+  initial.marginInputMode = marginInputMode
+  if (marginInputMode === 'rate') {
+    initial.maintenanceMarginRate = maintenance / notional
+    initial.entrustedMarginRate = entrusted / notional
+  } else if (marginInputMode === 'perContract') {
+    initial.maintenanceMarginPerContract = maintenance
+    initial.entrustedMarginPerContract = entrusted
+  } else {
+    initial.maintenanceMargin = maintenance * initial.contracts!
+    initial.entrustedMargin = entrusted * initial.contracts!
+    initial.totalMarginKind = 'proportional'
+  }
+  return initial
+}
+
+export function buildExampleStages(example: CalculatorExample, marginInputMode = example.inputs.marginInputMode ?? 'rate') {
+  const initial = buildExampleInputs(example, marginInputMode)
   const addOrder: CalculatorInputs = {
     ...initial, mode: 'order', orderContracts: example.add, orderPrice: initial.currentPrice,
   }

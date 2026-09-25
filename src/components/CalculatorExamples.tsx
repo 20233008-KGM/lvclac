@@ -3,32 +3,37 @@ import { useLanguage } from '../i18n'
 import { formatNumber } from '../utils/format'
 import { buildExampleStages, calculatorExamples } from './calculatorExampleScenarios'
 import { ReadOnlyCalculator } from './ReadOnlyCalculator'
-import type { CalculatorInputs } from '../types'
+import type { CalculatorInputs, MarginInputMode } from '../types'
 import { calculatorExamplesCopy } from './calculatorExamplesCopy'
 import '../styles/calculatorExamples.css'
 
+const marginModes: MarginInputMode[] = ['rate', 'perContract', 'total']
+
 export function CalculatorExamples() {
-  const { locale } = useLanguage()
+  const { locale, t } = useLanguage()
   const copy = calculatorExamplesCopy[locale]
   const [selected, setSelected] = useState(0)
+  const [marginMode, setMarginMode] = useState<MarginInputMode>('rate')
+  const marginButtons = useRef<(HTMLButtonElement | null)[]>([])
   const tabs = useRef<(HTMLButtonElement | null)[]>([])
   const example = calculatorExamples[selected]
-  const stages = buildExampleStages(example)
+  const stages = buildExampleStages(example, marginMode)
   const spec = copy.specs
-  const inputs = example.inputs
-  const marginFields = copy.marginFields[inputs.marginInputMode === 'perContract' ? 'perContract' : 'rate']
+  const inputs = stages.initial
+  const marginFields = copy.marginFields[marginMode]
   const unit = example.id === 'index' ? spec.point : example.id === 'stock' ? spec.perShare : spec.perBarrel
   const multiplierUnit = example.id === 'index' ? spec.perPoint : example.id === 'stock' ? spec.shares : spec.barrels
-  const margin = (rate: number | undefined, amount: number | undefined) => inputs.marginInputMode === 'rate'
-    ? `${formatNumber((rate ?? 0) * 100)}% (${rate})`
-    : `${formatNumber(amount ?? null)} ${spec.perContract}`
+  const margin = (rate: number | undefined, amount: number | undefined, total: number | undefined) => marginMode === 'rate'
+    ? `${formatNumber((rate ?? 0) * 100, 4)}% (${formatNumber(rate ?? null, 8)})`
+    : marginMode === 'perContract' ? `${formatNumber(amount ?? null)} ${spec.perContract}`
+      : `${formatNumber(total ?? null)} ${example.currency}`
   const specifications = [
     [spec.currency, example.currency],
     [spec.price, `${formatNumber(inputs.currentPrice ?? null)} ${unit}`],
     [spec.multiplier, `${formatNumber(inputs.contractMultiplier ?? null)} ${multiplierUnit}`],
     [spec.notional, `${formatNumber((inputs.currentPrice ?? 0) * (inputs.contractMultiplier ?? 0))} ${example.currency}`],
-    [spec.maintenance, margin(inputs.maintenanceMarginRate, inputs.maintenanceMarginPerContract)],
-    [spec.initial, margin(inputs.entrustedMarginRate, inputs.entrustedMarginPerContract)],
+    [spec.maintenance, margin(inputs.maintenanceMarginRate, inputs.maintenanceMarginPerContract, inputs.maintenanceMargin)],
+    [spec.initial, margin(inputs.entrustedMarginRate, inputs.entrustedMarginPerContract, inputs.entrustedMargin)],
     [spec.equity, `${formatNumber(inputs.accountEval ?? null)} ${example.currency}`],
     [spec.tickSize, `${formatNumber(inputs.tickSize ?? null, 2)} ${unit}`],
     [spec.position, `${spec.long} · ${inputs.contracts} ${spec.contracts}`],
@@ -40,7 +45,7 @@ export function CalculatorExamples() {
     `${copy.contracts} ${stages.added.contracts} → ${stages.reduced.contracts} · ${copy.liquidation} ${formatNumber(stages.reduction.beforeLiquidation)} → ${formatNumber(stages.reduction.afterLiquidation)}`,
   ]
   const screens: CalculatorInputs[] = [
-    { mode: 'evaluate', positionSide: 'long', marginInputMode: example.inputs.marginInputMode },
+    { mode: 'evaluate', positionSide: 'long', marginInputMode: marginMode, totalMarginKind: inputs.totalMarginKind },
     stages.initial,
     { ...stages.initial, mode: 'order', orderContracts: example.add, orderPrice: stages.initial.currentPrice },
     { ...stages.added, mode: 'order', orderContracts: -example.reduce, orderPrice: stages.added.currentPrice },
@@ -56,6 +61,16 @@ export function CalculatorExamples() {
     tabs.current[next]?.focus()
   }
 
+  function selectMarginWithKeyboard(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const next = ['ArrowRight', 'ArrowDown'].includes(event.key) ? (index + 1) % marginModes.length
+      : ['ArrowLeft', 'ArrowUp'].includes(event.key) ? (index + marginModes.length - 1) % marginModes.length
+        : event.key === 'Home' ? 0 : event.key === 'End' ? marginModes.length - 1 : null
+    if (next == null) return
+    event.preventDefault()
+    setMarginMode(marginModes[next])
+    marginButtons.current[next]?.focus()
+  }
+
   return <section className="calculator-examples" aria-labelledby="calculator-examples-title">
     <header className="calculator-examples__header">
       <span className="calculator-examples__eyebrow">LiqGuard · EXAMPLES</span>
@@ -69,12 +84,28 @@ export function CalculatorExamples() {
         {copy.products[item.id]}
       </button>)}
     </div>
+    <div className="calculator-examples__margin">
+      <div className="calculator-examples__margin-controls">
+        <span id="example-margin-label">{t.marginMode.label}</span>
+        <div className="margin-mode-toggle" role="radiogroup" aria-labelledby="example-margin-label" aria-describedby="example-margin-description">
+          {marginModes.map((mode, index) => <button key={mode} type="button" role="radio"
+            className={`margin-mode-btn${marginMode === mode ? ' active' : ''}`}
+            aria-checked={marginMode === mode} tabIndex={marginMode === mode ? 0 : -1}
+            ref={(node) => { marginButtons.current[index] = node }}
+            onClick={() => setMarginMode(mode)} onKeyDown={(event) => selectMarginWithKeyboard(event, index)}>
+            {t.marginMode[mode]}
+          </button>)}
+        </div>
+      </div>
+      <p id="example-margin-description">{copy.marginDescriptions[marginMode]}</p>
+      <p>{copy.marginComparison}</p>
+    </div>
     <div id="calculator-example-panel" role="tabpanel" aria-labelledby={`example-tab-${example.id}`} tabIndex={0}>
       <div className="calculator-examples__context"><h3>{copy.names[example.id]}</h3><span>{copy.readOnly}</span></div>
       <p className="calculator-examples__profile">{copy.profiles[example.id]}</p>
       <p className="calculator-examples__assumptions">{copy.assumptions}</p>
       <table className="calculator-examples__specs" role="table">
-        <caption>{spec.title}</caption>
+        <caption>{spec.title}{marginMode === 'total' ? ` · ${copy.totalBasis}` : ''}</caption>
         <tbody role="rowgroup">{specifications.map(([label, value]) => <tr key={label} role="row">
           <th scope="row" role="rowheader">{label}</th><td role="cell">{value}</td>
         </tr>)}</tbody>
@@ -87,7 +118,7 @@ export function CalculatorExamples() {
             {index !== 1 && <p className="calc-example__focus-note"><span aria-hidden="true">◆</span> {copy.focusNotes[index].replaceAll('{count}', String(example.reduce)).replace('{margins}', marginFields)}</p>}
           </div>
           <figure className="calc-example__preview">
-            <ReadOnlyCalculator key={`${locale}-${example.id}-${index}`} inputs={screen}
+            <ReadOnlyCalculator key={`${locale}-${example.id}-${marginMode}-${index}`} inputs={screen}
               label={`${copy.products[example.id]} · ${copy.steps[index]}. ${summaries[index]}`}
               showOrderInputs={index >= 2} />
             <figcaption>{summaries[index]}</figcaption>

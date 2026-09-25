@@ -2672,15 +2672,15 @@ html[data-zone='about'] body {
 .records-memo-editor__resize {
   display: flex;
   width: 100%;
-  min-height: 32px;
+  min-height: 16px;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   margin-top: 4px;
   padding: 0;
-  border: 1px solid var(--color-border-subtle);
+  border: 0;
   border-radius: var(--radius-sm);
-  background: var(--color-bg-elevated);
+  background: transparent;
   color: var(--color-text-muted);
   cursor: ns-resize;
   touch-action: none;
@@ -2688,8 +2688,8 @@ html[data-zone='about'] body {
 }
 
 .records-memo-editor__resize span {
-  width: 64px;
-  height: 4px;
+  width: 48px;
+  height: 3px;
   border-radius: 999px;
   background: currentColor;
 }
@@ -2697,7 +2697,6 @@ html[data-zone='about'] body {
 .records-memo-editor__resize:hover,
 .records-memo-editor__resize:active,
 .records-memo-editor__resize:focus-visible {
-  border-color: var(--color-primary);
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated));
 }

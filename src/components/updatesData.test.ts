@@ -20,7 +20,7 @@ ${locale === 'ko' ? '첫 문단입니다.\n\n## 자세한 내용\n\n본문입니
 
 describe('update Markdown content', () => {
   it('loads the published bilingual update from Markdown files', () => {
-    expect(UPDATE_ENTRIES).toHaveLength(4)
+    expect(UPDATE_ENTRIES).toHaveLength(5)
     expect(UPDATE_ENTRIES[0]).toMatchObject({
       id: '2026-08-12-beta-experience',
       publishedAt: '2026-08-12',
@@ -44,9 +44,14 @@ describe('update Markdown content', () => {
       publishedAt: '2026-08-18',
       content: { ko: { release: '1.2.0' }, en: { release: '1.2.0' } },
     })
-    expect(UPDATE_ENTRIES[3]).toMatchObject({
-      publishedAt: '2026-09-25',
+    expect(UPDATE_ENTRIES.find((entry) => entry.id === '2026-09-25-notes-and-record-exports')).toMatchObject({
+      publishedAt: '2026-09-18',
       content: { ko: { release: '1.2.2' }, en: { release: '1.2.2' } },
+    })
+    expect(UPDATE_ENTRIES.find((entry) => entry.id === '2026-09-25-calculator-examples')).toMatchObject({
+      id: '2026-09-25-calculator-examples',
+      publishedAt: '2026-09-25',
+      content: { ko: { release: '1.2.3' }, en: { release: '1.2.3' } },
     })
     expect(UPDATE_ENTRIES[2]).toMatchObject({
       id: '2026-09-10-saved-workflows-and-precision',

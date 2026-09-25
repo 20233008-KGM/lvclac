@@ -1,0 +1,60 @@
+import { describe, expect, it } from 'vitest'
+import { calcPositionTickPnl } from '../calc/positionMetrics'
+import { calculateEvaluate } from '../calc/leverage'
+import { buildExampleStages, calculatorExamples } from './calculatorExampleScenarios'
+
+// Independently worked values: rate margin solves E + (P-C)*Q = P*Q*r;
+// fixed margin solves E + (P-C)*Q = N*m. No production helper builds these expectations.
+const expected = {
+  stock: {
+    tickPnl: [1000, 1200, 800], contracts: [10, 12, 8], liquidation: [170.4545455, 189.3939394, 142.0454545],
+    maintenance: [3_000, 3_600, 2_400], initial: [4_500, 5_400, 3_600],
+    leverage: [2.5, 3, 2],
+  },
+  index: {
+    tickPnl: [25, 37.5, 12.5], contracts: [2, 3, 1], liquidation: [3804.3478261, 4347.826087, 2173.9130435],
+    maintenance: [40_000, 60_000, 20_000], initial: [60_000, 90_000, 30_000],
+    leverage: [10 / 3, 5, 5 / 3],
+  },
+  commodity: {
+    tickPnl: [20000, 30000, 10000], contracts: [2, 3, 1], liquidation: [65, 70, 50],
+    maintenance: [10_000, 15_000, 5_000], initial: [12_000, 18_000, 6_000], leverage: [5, 7.5, 2.5],
+  },
+}
+
+describe.each(calculatorExamples)('$id teaching scenario', (example) => {
+  it('matches independently calculated outcomes through both consecutive orders', () => {
+    const stages = buildExampleStages(example)
+    const oracle = expected[example.id]
+    const results = [stages.evaluation, calculateEvaluate(stages.added), calculateEvaluate(stages.reduced)]
+    ;[stages.initial, stages.added, stages.reduced].forEach((inputs, index) => {
+      const result = results[index]
+      expect(inputs.contracts).toBe(oracle.contracts[index])
+      expect(calcPositionTickPnl(inputs)).toBeCloseTo(oracle.tickPnl[index], 8)
+      expect(inputs.accountEval).toBe(example.inputs.accountEval)
+      expect(result.liquidationPrice).toBeCloseTo(oracle.liquidation[index], 4)
+      expect(result.margins?.maintenanceMargin).toBeCloseTo(oracle.maintenance[index], 4)
+      expect(result.margins?.entrustedMargin).toBeCloseTo(oracle.initial[index], 4)
+      expect(result.leverageRatio).toBeCloseTo(oracle.leverage[index], 6)
+      expect(result.isAtRisk).toBe(false)
+    })
+    expect(stages.addition.beforeLiquidation).toBeCloseTo(oracle.liquidation[0], 4)
+    expect(stages.addition.afterLiquidation).toBeCloseTo(oracle.liquidation[1], 4)
+    expect(stages.reduction.beforeLiquidation).toBe(stages.addition.afterLiquidation)
+    expect(stages.reduction.afterLiquidation).toBeCloseTo(oracle.liquidation[2], 4)
+    for (const order of [stages.addition, stages.reduction]) {
+      expect(order.orderMessage).toBeNull()
+      expect(order.orderCapacityMessage).toBeNull()
+      expect(order.isAtRiskAfter).toBe(false)
+    }
+  })
+
+  it('returns independent snapshots without changing reusable fixtures', () => {
+    const previous = structuredClone(example)
+    const stages = buildExampleStages(example)
+    stages.initial.accountEval = 1
+    stages.added.contracts = 999
+    expect(example).toEqual(previous)
+    expect(buildExampleStages(example).reduced.contracts).toBe(expected[example.id].contracts[2])
+  })
+})

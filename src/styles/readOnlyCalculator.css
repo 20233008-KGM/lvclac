@@ -1,0 +1,29 @@
+/* Extracted from the saved-record detail calculator. Preserve the actual panel UI. */
+.read-only-calculator__panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
+
+.read-only-calculator .active-number-set-label,
+.read-only-calculator .result-panel__head-actions,
+.read-only-calculator .field-label-tooltip-anchor,
+.read-only-calculator .input-panel__clear-actions,
+.read-only-calculator .result-panel--order__clear-btn,
+.read-only-calculator .field-section-footer {
+  display: none;
+}
+
+.read-only-calculator__panels:not(.read-only-calculator__panels--order-entry) .result-order-fields {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .read-only-calculator__panels { grid-template-columns: minmax(0, 1fr); }
+}

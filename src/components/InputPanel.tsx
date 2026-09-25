@@ -11,6 +11,7 @@ import {
 } from './accountSettingGuard'
 import { GUIDE_PATH } from '../config/routes'
 import { useLanguage } from '../i18n'
+import { useCalculatorFieldId } from '../context/CalculatorFieldScope'
 import { FieldLabelTooltip } from './FieldLabelTooltip'
 import {
   ScenarioPriceApplyButton,
@@ -33,7 +34,7 @@ interface InputPanelProps {
   onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
 }
 
-const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>(['contractMultiplier'])
+const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>(['contractMultiplier', 'tickSize'])
 const RATE_FIELDS = new Set<keyof CalculatorInputs>([
   'maintenanceMarginRate',
   'entrustedMarginRate',
@@ -111,7 +112,7 @@ function DerivedMetricField({ label, value }: { label: string; value: string }) 
 function formatTickPnl(value: number | null): string {
   if (value == null) return '-'
   if (value === 0) return '0'
-  return `±${formatNumber(value)}`
+  return `±${formatNumber(value, 8)}`
 }
 
 function numField(
@@ -193,6 +194,7 @@ function CurrentPriceField({
   disabled?: boolean
   rollPnlOnChange?: boolean
 }) {
+  const currentPriceLabelId = useCalculatorFieldId('current-price-label')
   const tickSize = inputs.tickSize
   const useStepper = tickSize != null && tickSize > 0
   function handleChange(
@@ -214,7 +216,7 @@ function CurrentPriceField({
 
   const fieldProps = {
     label: field.label,
-    labelId: 'current-price-label',
+    labelId: currentPriceLabelId,
     tooltip: field.hint,
     tooltipLabel,
     tooltipGuideHref,
@@ -249,7 +251,7 @@ function CurrentPriceField({
           placeholder={field.placeholder || undefined}
           stepUpLabel={stepUpLabel}
           stepDownLabel={stepDownLabel}
-          ariaLabelledBy="current-price-label"
+          ariaLabelledBy={currentPriceLabelId}
           deferChangeUntilBlur={rollPnlOnChange}
           onCommit={handleChange}
           onDeleteKey={rollPnlOnChange ? () => undefined : undefined}
@@ -270,7 +272,7 @@ function CurrentPriceField({
           value={inputs.currentPrice}
           allowDecimal={false}
           placeholder={field.placeholder || undefined}
-          aria-labelledby="current-price-label"
+          aria-labelledby={currentPriceLabelId}
           className="current-price-link-row__input"
           disabled={disabled}
           deferChangeUntilBlur={rollPnlOnChange}
@@ -307,6 +309,7 @@ export function ScenarioPriceField({
   applyPnlLabel: string
   disabled?: boolean
 }) {
+  const scenarioPriceLabelId = useCalculatorFieldId('scenario-price-label')
   const inputRef = useRef<NumberInputHandle>(null)
   const [draftPrice, setDraftPrice] = useState<number | undefined>()
   const tickSize = inputs.tickSize
@@ -356,7 +359,7 @@ export function ScenarioPriceField({
   )
 
   const labelRow = (
-    <span className="field-label-row field-label-row--with-action" id="scenario-price-label">
+    <span className="field-label-row field-label-row--with-action" id={scenarioPriceLabelId}>
       <span className="field-label-text">
         {field.label}
         <FieldLabelTooltip
@@ -397,7 +400,7 @@ export function ScenarioPriceField({
           placeholder={scenarioPlaceholder}
           stepUpLabel={stepUpLabel}
           stepDownLabel={stepDownLabel}
-          ariaLabelledBy="scenario-price-label"
+          ariaLabelledBy={scenarioPriceLabelId}
           inlineSlot={commitBtnSlot}
           disabled={disabled}
           enableDragScrub
@@ -420,7 +423,7 @@ export function ScenarioPriceField({
           value={draftPrice}
           allowDecimal={false}
           placeholder={scenarioPlaceholder}
-          aria-labelledby="scenario-price-label"
+          aria-labelledby={scenarioPriceLabelId}
           className="input-commit-row__input"
           disabled={disabled}
           onEnterKey={handleScenarioEnter}
@@ -670,6 +673,7 @@ function AccountSettingChangeModal({
 }
 
 export function InputPanel({ inputs, onChange }: InputPanelProps) {
+  const contractsLabelId = useCalculatorFieldId('contracts-label')
   const { t } = useLanguage()
   const f = t.fields
   const scenarioModeActive = isPreviewModeActive(inputs)
@@ -767,7 +771,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           })}
           <Field
             label={f.contracts.label}
-            labelId="contracts-label"
+            labelId={contractsLabelId}
             tooltip={f.contracts.hint}
             tooltipLabel={t.fieldTooltipLabel}
             className={`${frozenFieldClass} fh-contracts`.trim()}
@@ -779,7 +783,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
               placeholder={f.contracts.placeholder || undefined}
               stepUpLabel={t.stepUp}
               stepDownLabel={t.stepDown}
-              ariaLabelledBy="contracts-label"
+              ariaLabelledBy={contractsLabelId}
               disabled={scenarioModeActive}
               guardLocked={guardLocked}
               onGuardBlocked={requestUnlock}

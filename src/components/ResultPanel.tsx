@@ -1,3 +1,4 @@
+import { useCalculatorFieldId } from '../context/CalculatorFieldScope'
 import {
   Suspense,
   lazy,
@@ -466,6 +467,8 @@ function OrderInputs({
   applyLabel: string
   onApplyOrderScenario?: OrderApplyHandler
 }) {
+  const contractsLabelId = useCalculatorFieldId('order-contracts-label')
+  const priceLabelId = useCalculatorFieldId('order-price-label')
   const priceInputRef = useRef<NumberInputHandle>(null)
   const wasOrderScenarioRef = useRef(false)
   const tickSize = inputs.tickSize
@@ -585,7 +588,7 @@ function OrderInputs({
       className={`result-order-fields${orderScenarioActive ? ' result-order-fields--preview' : ''}`}
     >
       <div className="field result-order-field result-order-field--contracts">
-        <span className="result-order-field__label field-label-row" id="order-contracts-label">
+        <span className="result-order-field__label field-label-row" id={contractsLabelId}>
           <span className="field-label-text">
             {contractsLabel}
             <FieldLabelTooltip
@@ -603,7 +606,7 @@ function OrderInputs({
               placeholder={contractsField.placeholder || undefined}
               stepUpLabel={stepUpLabel}
               stepDownLabel={stepDownLabel}
-              ariaLabelledBy="order-contracts-label"
+              ariaLabelledBy={contractsLabelId}
               enableDragScrub
               dragScrubPxPerTick={CONTRACTS_SCRUB_PX_PER_TICK}
               scrubSeedValue={0}
@@ -616,7 +619,7 @@ function OrderInputs({
         </div>
 
         <div className="field result-order-field result-order-field--price">
-          <span className="result-order-field__label field-label-row" id="order-price-label">
+          <span className="result-order-field__label field-label-row" id={priceLabelId}>
             <span className="field-label-text">
               {priceLabel}
               <FieldLabelTooltip
@@ -637,7 +640,7 @@ function OrderInputs({
                 placeholder={orderPricePlaceholder}
                 stepUpLabel={stepUpLabel}
                 stepDownLabel={stepDownLabel}
-                ariaLabelledBy="order-price-label"
+                ariaLabelledBy={priceLabelId}
                 trailingSlot={markInlineButton}
                 enableDragScrub
                 dragScrubPxPerTick={PRICE_SCRUB_PX_PER_TICK}
@@ -654,7 +657,7 @@ function OrderInputs({
                   value={inputs.orderPrice}
                   allowDecimal={false}
                   placeholder={orderPricePlaceholder}
-                  aria-labelledby="order-price-label"
+                  aria-labelledby={priceLabelId}
                   className="result-order-price-row__input"
                   onEnterKey={handleOrderEnter}
                   onChange={(v, meta) =>

@@ -4,7 +4,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   type CSSProperties,
 } from 'react'
 import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
@@ -15,17 +14,9 @@ import {
   ContentRiskNotice,
   DisclaimerProvider,
 } from './components/ServiceDisclaimer'
-import {
-  fieldHintCalculationComplete,
-  fieldHintActive,
-  readFieldHintDismissed,
-  readTraderStage,
-  TRADER_STAGE_CHANGE_EVENT,
-  writeFieldHintDismissed,
-} from './components/fieldHint'
 import { AuthButton } from './components/auth/AuthButton'
 import { useAuth } from './context/AuthContext'
-import { HowToUseButton } from './components/HowToUseButton'
+import { CalculatorExamples } from './components/CalculatorExamples'
 import { SiteTitleTooltip } from './components/SiteTitleTooltip'
 import { SiteFooter } from './components/SiteFooter'
 import { PublicPageMetadata } from './components/PublicPageMetadata'
@@ -49,9 +40,7 @@ import {
   updateIdFromPath,
 } from './config/routes'
 import { isPreviewModeActive } from './calc/mtmLink'
-import { calculateEvaluate, calculateOrder } from './calc/leverage'
 import { LayoutProvider } from './context/LayoutContext'
-import { useFirstVisitWelcome } from './context/FirstVisitFlowContext'
 import { useCalculator } from './context/CalculatorContext'
 import { GoogleConsentProvider } from './context/GoogleConsentContext'
 import { usePathname } from './hooks/usePathname'
@@ -124,7 +113,6 @@ function isTextEditingTarget(target: EventTarget | null): boolean {
 
 function CalculatorApp() {
   const { t, preset } = useLanguage()
-  const firstVisitWelcome = useFirstVisitWelcome()
   const isDevDeployment = import.meta.env.VITE_DEPLOYMENT_CHANNEL === 'dev'
   const {
     inputs,
@@ -197,43 +185,6 @@ function CalculatorApp() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [canRedo, canUndo, redoInputs, undoInputs])
 
-  // 온보딩에서 고른 거래 상태 기반 필드 안내. 상단 사용법 버튼으로 언제든 다시 켤 수 있다.
-  const [traderStage, setTraderStage] = useState(readTraderStage)
-  const [fieldHintDismissed, setFieldHintDismissed] = useState(readFieldHintDismissed)
-  const fieldHintOn = fieldHintActive(traderStage, fieldHintDismissed)
-  const fieldHintComplete = useMemo(() => {
-    if (!traderStage) return false
-    return fieldHintCalculationComplete(
-      traderStage,
-      calculateEvaluate(inputs).liquidationPrice,
-      calculateOrder(inputs).afterLiquidation,
-    )
-  }, [inputs, traderStage])
-  const previousFieldHintComplete = useRef(fieldHintComplete)
-
-  useEffect(() => {
-    function syncTraderStage() {
-      setTraderStage(readTraderStage())
-    }
-
-    window.addEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)
-    return () => window.removeEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)
-  }, [])
-
-  useEffect(() => {
-    if (fieldHintOn && fieldHintComplete && !previousFieldHintComplete.current) {
-      writeFieldHintDismissed(true)
-      setFieldHintDismissed(true)
-    }
-    previousFieldHintComplete.current = fieldHintComplete
-  }, [fieldHintComplete, fieldHintOn])
-
-  function toggleFieldHint() {
-    const nextDismissed = fieldHintOn
-    writeFieldHintDismissed(nextDismissed)
-    setFieldHintDismissed(nextDismissed)
-  }
-
   return (
     <LayoutProvider layoutMode={layoutMode} fitScale={fitScale}>
       <PageShell>
@@ -273,30 +224,34 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
-                  {firstVisitWelcome?.welcomePending ? (
-                    <button
-                      type="button"
-                      className="header-welcome-btn"
-                      aria-label={t.welcome.headerCtaAriaLabel}
-                      onClick={firstVisitWelcome.showWelcome}
-                    >
-                      <span>{t.welcome.headerCta}</span>
-                      <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
-                    </button>
-                  ) : (
-                    <HowToUseButton
-                      fieldGuideStage={traderStage}
-                      fieldGuideActive={fieldHintOn}
-                      onFieldGuideToggle={traderStage ? toggleFieldHint : undefined}
-                    />
-                  )}
+                  <a
+                    className="header-welcome-btn"
+                    href="#calculator-examples-title"
+                    onClick={(event) => {
+                      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+                      const heading = document.getElementById('calculator-examples-title')
+                      if (!heading) return
+                      event.preventDefault()
+                      if (window.location.hash !== '#calculator-examples-title') {
+                        window.history.pushState(null, '', '#calculator-examples-title')
+                      }
+                      heading.focus({ preventScroll: true })
+                      heading.scrollIntoView({
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                        block: 'start',
+                      })
+                    }}
+                    aria-label={t.welcome.headerCtaAriaLabel}
+                  >
+                    <span>{t.welcome.headerCta}</span>
+                    <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
+                  </a>
                   <AuthButton variant="header" />
                 </div>
               </header>
               <main
                 className={`calc-grid${gridScanning ? ' calc-grid--scan' : ''}`}
                 data-scan-gen={gridScanning ? scanGeneration : undefined}
-                data-field-hint={fieldHintOn && traderStage ? traderStage : undefined}
                 ref={containerRef}
                 style={gridStyle}
               >
@@ -316,6 +271,7 @@ function CalculatorApp() {
             </div>
           </div>
         </div>
+        <CalculatorExamples />
         <PublicHomeSeoSummary />
         <ContentRiskNotice />
         <SiteFooter />

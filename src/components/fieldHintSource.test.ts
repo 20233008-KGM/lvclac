@@ -13,11 +13,10 @@ const css = readFileSync(resolve('src/App.css'), 'utf8')
 const FIELD_CLASSES = ['fh-equity', 'fh-entry', 'fh-contracts', 'fh-mark', 'fh-mult', 'fh-margin']
 
 describe('field hint 배선 (클래스 계약)', () => {
-  it('App: data-field-hint 속성 + 상단 사용법 토글 배선', () => {
-    expect(app).toContain('data-field-hint=')
-    expect(app).toContain('fieldGuideActive={fieldHintOn}')
-    expect(app).toContain("window.addEventListener(TRADER_STAGE_CHANGE_EVENT, syncTraderStage)")
-    expect(app).not.toContain('<FieldHintBanner')
+  it('App: header links to isolated examples', () => {
+    expect(app).toContain('href="#calculator-examples-title"')
+    expect(app).not.toContain('data-field-hint=')
+    expect(app).not.toContain('fieldGuideActive={fieldHintOn}')
   })
 
   it('InputPanel: 핵심 입력 필드에 fh-* 클래스', () => {

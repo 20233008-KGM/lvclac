@@ -792,8 +792,8 @@ export const en: Messages = {
   },
   welcome: {
     headerCta: 'New here?',
-    headerCtaMeta: '1-min guide',
-    headerCtaAriaLabel: 'New here? Open the 1-minute guide',
+    headerCtaMeta: 'Examples',
+    headerCtaAriaLabel: 'New here? Jump to calculation examples below',
     stepLabel: '{current} / {total}',
     next: 'Next',
     back: 'Back',

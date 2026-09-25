@@ -123,7 +123,7 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   // 컴포넌트 전시장(/kit, 개발·export 전용)에선 온보딩·면책 오버레이를 띄우지 않는다.
   const suppressOverlays = isKitPath(pathname)
-  // 신규 방문자는 계산기를 먼저 보고 헤더 CTA로 환영 플로우를 직접 연다.
+  // Retain legacy welcome state, but only open dialogs gate privacy settings.
   const [welcomePending, setWelcomePending] = useState(() =>
     !suppressOverlays && shouldShowWelcome(pathname, localStorage, sessionStorage),
   )
@@ -163,7 +163,7 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
 
   return (
     <FirstVisitFlowContext.Provider
-      value={{ skipActive, showAgain, welcomePending, showWelcome }}
+      value={{ skipActive, showAgain, welcomePending, showWelcome, gateActive: welcomeOpen || open }}
     >
       {children}
       {welcomeOpen ? (

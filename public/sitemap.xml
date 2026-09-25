@@ -110,4 +110,12 @@
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>https://liqguard.com/updates/2026-09-25-calculator-examples</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://liqguard.com/en/updates/2026-09-25-calculator-examples</loc>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

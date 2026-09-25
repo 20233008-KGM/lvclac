@@ -75,15 +75,11 @@ describe('DisclaimerProvider 게이트 배선', () => {
     expect(provider).toContain('setWelcomePending(false)')
   })
 
-  it('헤더에서 신규 방문 CTA를 기존 사용법 자리에 교체하고 로그인 버튼은 유지', () => {
-    expect(app).toContain('firstVisitWelcome?.welcomePending ?')
+  it('header scrolls to examples while retaining login', () => {
     expect(app).toContain('className="header-welcome-btn"')
-    expect(app).toContain('onClick={firstVisitWelcome.showWelcome}')
-    expect(app.indexOf('className="header-welcome-btn"')).toBeLessThan(
-      app.indexOf('<HowToUseButton'),
-    )
-    expect(app.indexOf('<HowToUseButton')).toBeLessThan(
-      app.indexOf('<AuthButton variant="header" />'),
-    )
+    expect(app).toContain('href="#calculator-examples-title"')
+    expect(app).not.toContain('onClick={firstVisitWelcome.showWelcome}')
+    expect(app).toContain('<AuthButton variant="header" />')
+    expect(provider).toContain('gateActive: welcomeOpen || open')
   })
 })

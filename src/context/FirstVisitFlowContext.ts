@@ -3,6 +3,7 @@ import { createContext, useContext } from 'react'
 export type FirstVisitFlowContextValue = {
   skipActive: boolean
   showAgain: () => void
+  gateActive?: boolean
   welcomePending: boolean
   showWelcome: () => void
 }
@@ -35,5 +36,5 @@ export function useFirstVisitWelcome(): Pick<
 
 export function useFirstVisitGateActive(): boolean {
   const context = useContext(FirstVisitFlowContext)
-  return Boolean(context?.welcomePending)
+  return Boolean(context?.gateActive ?? context?.welcomePending)
 }

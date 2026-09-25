@@ -8154,3 +8154,5 @@ a.site-footer__link:hover {
 
 .memo-editor-notice{margin:8px 12px;font-size:12px;line-height:1.5;color:var(--color-text-muted);overflow-wrap:anywhere}
 .billing-note-policy{font-size:12px;line-height:1.6;color:var(--color-text-muted);margin:12px 0;overflow-wrap:anywhere}
+
+.header-welcome-btn { text-decoration: none; }

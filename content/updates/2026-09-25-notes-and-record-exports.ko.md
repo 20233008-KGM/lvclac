@@ -1,6 +1,6 @@
 ---
 id: 2026-09-25-notes-and-record-exports
-publishedAt: 2026-09-25
+publishedAt: 2026-09-18
 locale: ko
 author: LiqGuard 팀
 release: 1.2.2

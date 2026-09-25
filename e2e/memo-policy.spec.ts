@@ -1,5 +1,31 @@
 import { expect, test, type Page } from '@playwright/test'
 
+for (const width of [1440, 390]) {
+  test(`workspace resize bar: drag, keyboard and minimum at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.goto('/e2e/fixtures/memo-policy.html?lang=en&editor=workspace')
+    const field = page.getByRole('textbox')
+    const bar = page.getByRole('button', { name: 'Drag or use the up and down arrow keys to resize the memo' })
+    await expect(bar).toBeVisible()
+    const initial = (await field.boundingBox())!.height
+    const handle = (await bar.boundingBox())!
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2 + 100)
+    await page.mouse.up()
+    await expect.poll(async () => (await field.boundingBox())!.height).toBe(initial + 100)
+    await bar.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect.poll(async () => (await field.boundingBox())!.height).toBe(initial + 140)
+    await page.keyboard.press('Home')
+    await expect.poll(async () => (await field.boundingBox())!.height).toBe(width === 390 ? 280 : 420)
+    await page.keyboard.press('ArrowUp')
+    await expect.poll(async () => (await field.boundingBox())!.height).toBe(width === 390 ? 280 : 420)
+    await field.fill('memo remains editable after resizing')
+    await expect.poll(() => stored(page)).toBe('memo remains editable after resizing')
+  })
+}
+
 async function paste(page: Page, value: string) {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.evaluate(text => navigator.clipboard.writeText(text), value)

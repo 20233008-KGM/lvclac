@@ -233,6 +233,7 @@ export interface Messages {
     memoConflict: string
     memoRetry: string
     memoAutoSaveHint: string
+    memoResizeHint: string
     memoBackgroundOpacity: string
     memoClose: string
     memoPlaceholder: string

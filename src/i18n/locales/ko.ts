@@ -224,6 +224,7 @@ export const ko: Messages = {
     memoConflict: '다른 창에서 노트가 변경되었습니다. 작성 중인 내용을 복사해 보관한 뒤 노트를 다시 열어 주세요.',
     memoRetry: '다시 저장',
     memoAutoSaveHint: '입력하면 자동 저장',
+    memoResizeHint: '드래그하거나 위아래 방향키로 메모 높이 조절',
     memoBackgroundOpacity: '배경 불투명도',
     memoClose: '메모 닫기',
     memoPlaceholder: '시장 상황이나 판단 근거를 적어두세요.',

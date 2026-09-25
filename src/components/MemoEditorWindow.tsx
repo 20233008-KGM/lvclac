@@ -220,6 +220,17 @@ export const MemoWorkspaceEditor = forwardRef<
   const input = useMemoInput(value, updateValue, isPro)
   const notice = input.notice || memoErrorText(saveError, t.accountRecords)
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const resizeRef = useRef<{ pointerId: number; y: number; height: number } | null>(null)
+  const [editorHeight, setEditorHeight] = useState<number>()
+
+  function resizeEditor(height: number) {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const minimum = parseFloat(window.getComputedStyle(textarea).minHeight)
+    setEditorHeight(Math.max(minimum, Math.min(1200, height)))
+  }
+
   useImperativeHandle(ref, () => ({ save }), [save])
 
   return (
@@ -239,7 +250,9 @@ export const MemoWorkspaceEditor = forwardRef<
         {memoStatusText(saveState, value, t.accountRecords)}
       </span>
       <textarea
+        ref={textareaRef}
         className="records-memo-editor__textarea"
+        style={editorHeight === undefined ? undefined : { height: editorHeight, flex: 'none' }}
         rows={12}
         value={value}
         placeholder={t.accountRecords.memoPlaceholder}
@@ -254,6 +267,40 @@ export const MemoWorkspaceEditor = forwardRef<
           }
         }}
       />
+      <button
+        type="button"
+        className="records-memo-editor__resize"
+        aria-label={t.accountRecords.memoResizeHint}
+        title={t.accountRecords.memoResizeHint}
+        onPointerDown={(event) => {
+          if (event.button !== 0 || !textareaRef.current) return
+          resizeRef.current = {
+            pointerId: event.pointerId,
+            y: event.clientY,
+            height: textareaRef.current.getBoundingClientRect().height,
+          }
+          event.currentTarget.setPointerCapture(event.pointerId)
+        }}
+        onPointerMove={(event) => {
+          const drag = resizeRef.current
+          if (drag?.pointerId === event.pointerId) resizeEditor(drag.height + event.clientY - drag.y)
+        }}
+        onPointerUp={(event) => {
+          if (resizeRef.current?.pointerId !== event.pointerId) return
+          resizeRef.current = null
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }}
+        onPointerCancel={() => { resizeRef.current = null }}
+        onLostPointerCapture={() => { resizeRef.current = null }}
+        onKeyDown={(event) => {
+          if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key) || !textareaRef.current) return
+          event.preventDefault()
+          const height = textareaRef.current.getBoundingClientRect().height
+          resizeEditor(event.key === 'Home' ? 0 : event.key === 'End' ? 1200 : height + (event.key === 'ArrowDown' ? 40 : -40))
+        }}
+      >
+        <span aria-hidden="true" />
+      </button>
       {notice && <p className="memo-editor-notice" role="alert">{notice}</p>}
       {saveState === 'error' && <button type="button" className="link-btn" onClick={() => void save()}>{t.accountRecords.memoRetry}</button>}
       <footer className="records-memo-editor__foot">

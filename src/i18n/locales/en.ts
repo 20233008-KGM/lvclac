@@ -228,6 +228,7 @@ export const en: Messages = {
     memoConflict: 'This note changed in another window. Copy your draft somewhere safe, then reopen the note.',
     memoRetry: 'Retry save',
     memoAutoSaveHint: 'Changes save automatically',
+    memoResizeHint: 'Drag or use the up and down arrow keys to resize the memo',
     memoBackgroundOpacity: 'Background opacity',
     memoClose: 'Close memo',
     memoPlaceholder: 'Write down market context or the reason behind your decision.',

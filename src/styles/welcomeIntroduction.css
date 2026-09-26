@@ -123,6 +123,12 @@
   font-size: 22px;
 }
 
+/* Keep the percent glyph independent of platform-specific monospace fallbacks. */
+.welcome-introduction__percent {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 0;
+}
+
 .welcome-introduction__comparison {
   margin-top: 14px;
 }

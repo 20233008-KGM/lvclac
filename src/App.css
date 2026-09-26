@@ -8147,7 +8147,7 @@ a.site-footer__link:hover {
 
 .privacy-notice .privacy-settings-action--deny {
   border-color: color-mix(in srgb, var(--color-text) 45%, var(--color-border));
-  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  background: transparent;
   color: var(--color-text);
 }
 
@@ -8229,7 +8229,7 @@ a.site-footer__link:hover {
 
 @media (min-width: 1024px) {
   .privacy-settings-actions:not(.privacy-settings-actions--single) {
-    grid-template-columns: minmax(0, 1fr) repeat(2, 112px);
+    grid-template-columns: minmax(0, 1fr) repeat(2, 128px);
     align-items: center;
   }
 

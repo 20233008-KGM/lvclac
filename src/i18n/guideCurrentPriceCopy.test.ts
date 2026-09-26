@@ -24,10 +24,12 @@ describe('guide current price routine copy', () => {
     expect(daily).not.toContain('시나리오 가격')
     expect(daily).not.toContain('Enter → Enter')
 
-    const scenario = sectionText(guideSection(ko, '시나리오 가격'))
-    expect(scenario).toContain('보조 도구')
-    expect(scenario).not.toContain('핵심 도구')
-    expect(scenario).not.toContain('손익을 현재가·평가금액에 반영')
+    const priceCheck = sectionText(guideSection(ko, '현재가를 바꿔 결과 확인하기'))
+    expect(priceCheck).toContain('계좌 평가금액에 반영')
+    expect(priceCheck).toContain('저장값도 갱신')
+    expect(priceCheck).toContain('Ctrl+Z')
+    expect(priceCheck).not.toContain('Esc')
+    expect(JSON.stringify(ko.guide)).not.toContain('시나리오 가격')
 
     const saving = sectionText(guideSection(ko, '입력값 저장'))
     expect(saving).toContain('현재가만')
@@ -45,10 +47,12 @@ describe('guide current price routine copy', () => {
     expect(daily).not.toContain('Scenario price')
     expect(daily).not.toContain('Enter → Enter')
 
-    const scenario = sectionText(guideSection(en, 'Scenario price'))
-    expect(scenario).toContain('secondary tool')
-    expect(scenario).not.toContain('core tool')
-    expect(scenario).not.toContain('roll P&L into mark and equity')
+    const priceCheck = sectionText(guideSection(en, 'Check results at a different mark price'))
+    expect(priceCheck).toContain('apply the price-change P&L to account equity')
+    expect(priceCheck).toContain('saved values update too')
+    expect(priceCheck).toContain('Ctrl+Z')
+    expect(priceCheck).not.toContain('Esc')
+    expect(JSON.stringify(en.guide)).not.toContain('Scenario price')
 
     const saving = sectionText(guideSection(en, 'Saving inputs'))
     expect(saving).toContain('only the mark')

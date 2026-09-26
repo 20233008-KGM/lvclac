@@ -1313,15 +1313,15 @@ export const en: Messages = {
         ],
       },
       {
-        title: 'Scenario price',
+        title: 'Check results at a different mark price',
         paragraphs: [
-          'The normal daily routine now uses the mark price field. Scenario price is a secondary tool for checking results at an assumed price.',
-          'Use it when you want to inspect liquidation price or margin headroom without immediately changing the stored mark and account equity.',
-          'When tick size is set, use ▲▼ or drag the field vertically to step by ticks.',
+          'To see how a price rise or fall affects your account, complete setup and enter the price you want to check in the mark price field.',
+          'Press Enter or click outside the field to apply the price-change P&L to account equity and recalculate liquidation price, margin headroom, and leverage.',
+          'For example, if the mark is 100, enter 95 to see the results after a fall to 95. Use Ctrl+Z afterward to restore the previous state.',
+          'An assumed price also updates the mark and account equity. If saving is enabled, the saved values update too.',
         ],
         items: [
-          'Price assumption — inspect results while keeping the current setup',
-          'Esc or Delete — clear the input',
+          'When tick size is set, use ▲▼ or drag the field to adjust by ticks',
           'Ctrl+Z — undo',
           'Ctrl+Shift+Z — redo',
         ],

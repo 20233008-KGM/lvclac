@@ -12,7 +12,7 @@ const copy = {
     holding: '포지션', long: '롱', contracts: '계약',
     price: '진입/현재 (pt)', equity: '평가금',
     maintenance: '유지증거금',
-    tolerance: '청산 여유', liquidation: '예상 청산가 (pt)',
+    current: '현재가 (pt)', tolerance: '청산 여유', liquidation: '예상 청산가 (pt)',
     comparisonTitle: '같은 가격에 1계약을 더 매수하면?',
     comparisonLabel: 'S&P 500 마이크로 선물 추가 매수 전후 비교',
     metric: '항목', before: '주문 전', after: '주문 후', liquidationRow: '예상 청산가 (pt)',
@@ -26,7 +26,7 @@ const copy = {
     holding: 'Position', long: 'Long', contracts: '',
     price: 'Entry/current (pt)', equity: 'Equity',
     maintenance: 'Maint. margin',
-    tolerance: 'Liquidation buffer', liquidation: 'Liquidation price (pt)',
+    current: 'Current price (pt)', tolerance: 'Liquidation buffer', liquidation: 'Liquidation price (pt)',
     comparisonTitle: 'What if you buy 1 more at the same price?',
     comparisonLabel: 'S&P 500 Micro E-mini futures before and after buying one more contract',
     metric: 'Metric', before: 'Before', after: 'After', liquidationRow: 'Liq. price (pt)',
@@ -88,12 +88,16 @@ export function WelcomeIntroduction({ onClose }: { onClose: () => void }) {
         </table>
         <div className="result-hero welcome-introduction__result">
           <div className="result-hero-card">
-            <span className="result-hero-label">{c.tolerance}</span>
-            <span className="result-hero-value">{buffer(before.toleranceRate)}</span>
+            <span className="result-hero-label">{c.current}</span>
+            <span className="result-hero-value">{number(position.currentPrice)}</span>
           </div>
           <div className="result-hero-card">
             <span className="result-hero-label">{c.liquidation}</span>
             <span className="result-hero-value">{number(before.liquidationPrice)}</span>
+          </div>
+          <div className="result-hero-card">
+            <span className="result-hero-label">{c.tolerance}</span>
+            <span className="result-hero-value">{buffer(before.toleranceRate)}</span>
           </div>
         </div>
         <div className="welcome-introduction__comparison">

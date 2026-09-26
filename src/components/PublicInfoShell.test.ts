@@ -12,7 +12,8 @@ const shellSource = readFileSync(resolve('src/components/PublicInfoShell.tsx'), 
 const guideSource = readFileSync(resolve('src/components/GuidePage.tsx'), 'utf8')
 const formulasSource = readFileSync(resolve('src/components/FormulasPage.tsx'), 'utf8')
 const aboutSource = readFileSync(resolve('src/components/AboutPage.tsx'), 'utf8')
-const legalSource = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
+const legalSource = readFileSync(resolve('src/components/PublicLegalPage.tsx'), 'utf8')
+const reviewSource = readFileSync(resolve('src/components/PaddleReviewPages.tsx'), 'utf8')
 
 describe('dev public information shell navigation', () => {
   it('keeps the same five documents and localizes their English routes', () => {
@@ -49,9 +50,10 @@ describe('dev public information shell navigation', () => {
     expect(aboutSource).toContain('<PublicInfoShell')
     expect(guideSource).not.toContain('<PageShell')
     expect(formulasSource).not.toContain('<PageShell')
-    expect(legalSource).toContain("if (kind === 'terms' || kind === 'privacy')")
+    expect(reviewSource).toContain("if (kind === 'terms' || kind === 'privacy')")
     expect(legalSource).toContain("const activePath = kind === 'terms' ? TERMS_PATH : PRIVACY_PATH")
-    expect(legalSource).toContain('<PublicPageShell')
+    expect(reviewSource).toContain('<DetailedLegalPage kind={kind} />')
+    expect(reviewSource).toContain('<PublicPageShell')
   })
 
   it('preserves the dev sign-in entry and footer inside the imported shell', () => {

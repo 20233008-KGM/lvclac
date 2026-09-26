@@ -1,10 +1,10 @@
 import { useEffect, type ReactNode } from 'react'
-import { PRIVACY_PATH, TERMS_PATH, type LegalPageKind } from '../config/routes'
+import { type LegalPageKind } from '../config/routes'
 import { CONTACT_EMAIL } from '../config/site'
 import { useNavigate } from '../hooks/usePathname'
 import { useLanguage, type Locale } from '../i18n'
 import { LocaleRouteLink } from './LocaleRouteLink'
-import { BackToCalculatorLink, PublicInfoShell } from './PublicInfoShell'
+import { PublicLegalPage as DetailedLegalPage } from './PublicLegalPage'
 import { LegalLinks } from './ServiceDisclaimer'
 import { AuthButton } from './auth/AuthButton'
 import '../styles/pages.css'
@@ -55,7 +55,7 @@ interface PublicReviewCopy {
   copyright: string
   product: ProductCopy
   pricing: PricingCopy
-  legal: Record<LegalPageKind, LegalDocCopy>
+  legal: Record<'refund', LegalDocCopy>
 }
 
 // Exported for copy-contract tests; runtime exports below remain React components.
@@ -125,96 +125,6 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
       ],
     },
     legal: {
-      terms: {
-        eyebrow: 'Terms',
-        title: 'Terms and Conditions',
-        lead: 'Terms for using Futures Calculator and paid Pro subscriptions.',
-        effectiveDate: 'Effective: July 9, 2026',
-        intro:
-          'These terms apply to Futures Calculator, provided by Farfield Software. By using the service, you agree to use it only as an informational calculator and to make your own trading decisions.',
-        sections: [
-          {
-            title: '1. Service provider',
-            body: `Futures Calculator is operated by Farfield Software. Contact: ${CONTACT_EMAIL}.`,
-          },
-          {
-            title: '2. Product scope',
-            body:
-              'The service estimates liquidation price, margin headroom, leverage, and related values from user-entered inputs. Results may differ from broker, exchange, tax, fee, or liquidation rules.',
-          },
-          {
-            title: '3. No financial advice',
-            body:
-              'The service does not provide investment, financial, legal, or tax advice. Users are responsible for checking broker values and for all trading decisions and outcomes.',
-          },
-          {
-            title: '4. Paid subscriptions',
-            body:
-              'Paid Pro subscriptions are sold through Paddle. Paddle may act as the merchant of record for payment processing, tax handling, invoices, receipts, cancellations, and refunds.',
-          },
-          {
-            title: '5. User obligations',
-            body:
-              'Users must not misuse the service, interfere with its operation, attempt unauthorized access, or use the service for illegal activity.',
-          },
-          {
-            title: '6. Availability and changes',
-            body:
-              'The service may change, pause, or discontinue features. We try to keep the calculator reliable, but do not guarantee uninterrupted availability.',
-          },
-          {
-            title: '7. Limitation of liability',
-            body:
-              'To the maximum extent permitted by law, Farfield Software is not liable for trading losses, missed opportunities, indirect damages, or differences between calculator output and third-party systems.',
-          },
-        ],
-        contactTitle: 'Contact',
-        contactBodyPrefix: 'Email ',
-        contactBodySuffix: ' for support, privacy, or product questions.',
-      },
-      privacy: {
-        eyebrow: 'Privacy',
-        title: 'Privacy Policy',
-        lead:
-          'How Futures Calculator handles account, saved input, analytics, advertising, and payment-related data.',
-        effectiveDate: 'Effective: July 9, 2026',
-        intro:
-          'This policy explains what information may be processed when you use Futures Calculator.',
-        sections: [
-          {
-            title: '1. Information you provide',
-            body:
-              'If you create an account, we may process your email address, display name, authentication provider, and saved calculator data that you choose to store.',
-          },
-          {
-            title: '2. Calculator data',
-            body:
-              'Device-local saving stores inputs in your browser. Cloud saving and account records may store calculator inputs, snapshots, and order simulation history in Supabase for your signed-in account.',
-          },
-          {
-            title: '3. Payments',
-            body:
-              'Paid subscriptions are processed by Paddle. We do not store card details. Paddle may process payment, tax, invoice, receipt, refund, and subscription data under its own buyer terms and privacy terms.',
-          },
-          {
-            title: '4. Analytics and advertising',
-            body:
-              'We may use analytics and advertising providers to understand usage and operate the service. Those providers may process cookies, device information, IP address, and usage events under their own policies.',
-          },
-          {
-            title: '5. Retention and deletion',
-            body:
-              'Device-local data remains in your browser until you clear it or turn off saving. Cloud data and account deletion requests can be sent to our support email.',
-          },
-          {
-            title: '6. Contact',
-            body: `For privacy questions or deletion requests, contact ${CONTACT_EMAIL}.`,
-          },
-        ],
-        contactTitle: 'Contact',
-        contactBodyPrefix: 'Email ',
-        contactBodySuffix: ' for support, privacy, or product questions.',
-      },
       refund: {
         eyebrow: 'Refunds',
         title: 'Refund Policy',
@@ -327,95 +237,6 @@ export const publicReviewCopy: Record<Locale, PublicReviewCopy> = {
       ],
     },
     legal: {
-      terms: {
-        eyebrow: '약관',
-        title: '이용약관',
-        lead: '선물 계산기와 유료 Pro 구독 이용에 적용되는 약관입니다.',
-        effectiveDate: '시행일: 2026년 7월 9일',
-        intro:
-          '이 약관은 Farfield Software가 제공하는 선물 계산기 서비스에 적용됩니다. 서비스를 이용하면 이 서비스를 정보 제공용 계산 도구로만 사용하고, 모든 거래 판단은 직접 수행하는 데 동의한 것으로 봅니다.',
-        sections: [
-          {
-            title: '1. 서비스 제공자',
-            body: `선물 계산기는 Farfield Software가 운영합니다. 문의: ${CONTACT_EMAIL}.`,
-          },
-          {
-            title: '2. 제품 범위',
-            body:
-              '이 서비스는 사용자가 입력한 값으로 청산가, 증거금 여유, 레버리지 및 관련 값을 추정합니다. 결과는 브로커, 거래소, 세금, 수수료, 청산 규칙과 다를 수 있습니다.',
-          },
-          {
-            title: '3. 투자 자문 아님',
-            body:
-              '이 서비스는 투자, 금융, 법률 또는 세무 자문을 제공하지 않습니다. 사용자는 브로커 화면의 값을 직접 확인해야 하며, 모든 거래 결정과 그 결과에 대한 책임은 사용자에게 있습니다.',
-          },
-          {
-            title: '4. 유료 구독',
-            body:
-              '유료 Pro 구독은 Paddle을 통해 판매됩니다. Paddle은 결제 처리, 세금 처리, 송장, 영수증, 취소 및 환불에 대해 Merchant of Record 역할을 할 수 있습니다.',
-          },
-          {
-            title: '5. 사용자 의무',
-            body:
-              '사용자는 서비스를 오용하거나, 서비스 운영을 방해하거나, 무단 접근을 시도하거나, 불법적인 목적으로 서비스를 이용해서는 안 됩니다.',
-          },
-          {
-            title: '6. 서비스 변경 및 가용성',
-            body:
-              '서비스의 기능은 변경, 일시 중단 또는 종료될 수 있습니다. 안정적인 계산기 제공을 위해 노력하지만, 중단 없는 이용 가능성을 보장하지는 않습니다.',
-          },
-          {
-            title: '7. 책임 제한',
-            body:
-              '법이 허용하는 최대 범위에서 Farfield Software는 거래 손실, 기회 손실, 간접 손해 또는 계산 결과와 제3자 시스템 간 차이에 대해 책임지지 않습니다.',
-          },
-        ],
-        contactTitle: '문의',
-        contactBodyPrefix: '지원, 개인정보, 제품 문의는 ',
-        contactBodySuffix: ' 로 보내주세요.',
-      },
-      privacy: {
-        eyebrow: '개인정보',
-        title: '개인정보처리방침',
-        lead:
-          '선물 계산기가 계정, 저장 입력값, 분석, 광고, 결제 관련 데이터를 처리하는 방식을 설명합니다.',
-        effectiveDate: '시행일: 2026년 7월 9일',
-        intro: '이 방침은 선물 계산기 이용 시 처리될 수 있는 정보를 설명합니다.',
-        sections: [
-          {
-            title: '1. 사용자가 제공하는 정보',
-            body:
-              '계정을 생성하면 이메일 주소, 표시 이름, 인증 제공자, 사용자가 저장하기로 선택한 계산기 데이터를 처리할 수 있습니다.',
-          },
-          {
-            title: '2. 계산기 데이터',
-            body:
-              '기기 내 저장은 입력값을 사용자의 브라우저에 저장합니다. 클라우드 저장과 계좌 기록 기능은 로그인 계정의 Supabase 데이터베이스에 계산기 입력값, 스냅샷, 주문 시뮬레이션 기록을 저장할 수 있습니다.',
-          },
-          {
-            title: '3. 결제',
-            body:
-              '유료 구독은 Paddle을 통해 처리됩니다. 당사는 카드 정보를 저장하지 않습니다. Paddle은 자체 구매자 약관 및 개인정보 조건에 따라 결제, 세금, 송장, 영수증, 환불, 구독 데이터를 처리할 수 있습니다.',
-          },
-          {
-            title: '4. 분석 및 광고',
-            body:
-              '서비스 개선과 운영을 위해 분석 및 광고 제공자를 사용할 수 있습니다. 해당 제공자는 자체 정책에 따라 쿠키, 기기 정보, IP 주소, 사용 이벤트를 처리할 수 있습니다.',
-          },
-          {
-            title: '5. 보관 및 삭제',
-            body:
-              '기기 내 데이터는 사용자가 삭제하거나 저장을 끌 때까지 브라우저에 남습니다. 클라우드 데이터 및 계정 삭제 요청은 지원 이메일로 보낼 수 있습니다.',
-          },
-          {
-            title: '6. 문의',
-            body: `개인정보 문의 또는 삭제 요청은 ${CONTACT_EMAIL} 로 보내주세요.`,
-          },
-        ],
-        contactTitle: '문의',
-        contactBodyPrefix: '지원, 개인정보, 제품 문의는 ',
-        contactBodySuffix: ' 로 보내주세요.',
-      },
       refund: {
         eyebrow: '환불',
         title: '환불 정책',
@@ -619,45 +440,10 @@ export function PricingReviewPage() {
 export function PublicLegalPage({ kind }: { kind: LegalPageKind }) {
   const { locale } = useLanguage()
   const copy = publicReviewCopy[locale]
-  const doc = copy.legal[kind]
-
   if (kind === 'terms' || kind === 'privacy') {
-    const activePath = kind === 'terms' ? TERMS_PATH : PRIVACY_PATH
-
-    return (
-      <PublicInfoShell
-        activePath={activePath}
-        tone="legal"
-        eyebrow={doc.eyebrow}
-        title={doc.title}
-        lead={doc.lead}
-      >
-        <div className="public-legal-document">
-          <p className="public-legal-effective">{doc.effectiveDate}</p>
-          <p className="public-legal-intro">{doc.intro}</p>
-          <div className="public-legal-sections">
-            {doc.sections.map((section) => (
-              <section key={section.title}>
-                <h2>{section.title}</h2>
-                <p>{section.body}</p>
-                <LegalSectionLinks links={section.links} className="public-legal-section-links" />
-              </section>
-            ))}
-          </div>
-
-          <section className="public-legal-contact">
-            <h2>{doc.contactTitle}</h2>
-            <p>
-              {doc.contactBodyPrefix}
-              <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-              {doc.contactBodySuffix}
-            </p>
-          </section>
-          <BackToCalculatorLink className="public-legal-home" />
-        </div>
-      </PublicInfoShell>
-    )
+    return <DetailedLegalPage kind={kind} />
   }
+  const doc = copy.legal.refund
 
   return (
     <PublicPageShell

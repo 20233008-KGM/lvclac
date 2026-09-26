@@ -2,7 +2,14 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 
+const trackMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@vercel/analytics', () => ({
+  track: trackMock,
+}))
+
 afterEach(() => {
+  trackMock.mockClear()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
   vi.resetModules()
@@ -66,5 +73,32 @@ it('shares one loader with an optional GA4 destination', async () => {
   expect(commands).not.toContainEqual(['config', 'AW-18471363418'])
   expect(commands).toContainEqual([
     'config', 'G-TEST123456', { send_page_view: true },
+  ])
+})
+
+it('tracks anonymous calculator events through Vercel and configured GA4', async () => {
+  vi.stubEnv('VITE_GA4_MEASUREMENT_ID', 'G-TEST123456')
+  const queue: unknown[] = []
+  const gtag = (...args: unknown[]) => queue.push(args)
+  vi.stubGlobal('window', { gtag })
+
+  const { trackLiqGuardEvent } = await import('./analytics')
+  trackLiqGuardEvent('calculation_result_viewed', {
+    mode: 'evaluate',
+    field_count: 7,
+    ignored: { nested: true } as unknown as string,
+  })
+
+  expect(trackMock).toHaveBeenCalledWith('calculation_result_viewed', {
+    mode: 'evaluate',
+    field_count: 7,
+  })
+  expect(queue).toContainEqual([
+    'event',
+    'calculation_result_viewed',
+    {
+      mode: 'evaluate',
+      field_count: 7,
+    },
   ])
 })

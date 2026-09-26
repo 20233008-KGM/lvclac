@@ -1,6 +1,11 @@
+import { track } from '@vercel/analytics'
+
 const GA4_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID?.trim() || undefined
 const GOOGLE_ADS_ID = 'AW-18471363418'
 const SCRIPT_ID = 'ga4-script'
+
+type AnalyticsValue = string | number | boolean | null | undefined
+type AnalyticsProperties = Record<string, AnalyticsValue>
 
 let initialized = false
 
@@ -29,5 +34,27 @@ export function initAnalytics(): void {
     script.async = true
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`
     document.head.appendChild(script)
+  }
+}
+
+function cleanProperties(properties: AnalyticsProperties = {}): AnalyticsProperties {
+  return Object.fromEntries(
+    Object.entries(properties).filter(([, value]) => (
+      value == null || ['string', 'number', 'boolean'].includes(typeof value)
+    )),
+  )
+}
+
+export function trackLiqGuardEvent(
+  name: string,
+  properties: AnalyticsProperties = {},
+): void {
+  if (typeof window === 'undefined') return
+
+  const clean = cleanProperties(properties)
+  track(name, clean)
+
+  if (GA4_ID && typeof window.gtag === 'function') {
+    window.gtag('event', name, clean)
   }
 }

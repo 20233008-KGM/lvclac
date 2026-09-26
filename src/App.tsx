@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from 'react'
 import { CalculatorHistoryMenu } from './components/CalculatorHistoryMenu'
+import { CalculatorAnalytics } from './components/CalculatorAnalytics'
 import { HowToUseButton } from './components/HowToUseButton'
 import { InputPanel } from './components/InputPanel'
 import { PageShell } from './components/PageShell'
@@ -195,6 +196,7 @@ function CalculatorApp() {
 
   return (
     <LayoutProvider layoutMode={layoutMode} fitScale={fitScale}>
+      <CalculatorAnalytics />
       <PageShell>
         <div
           className={`calc-viewport${previewMode ? ' calc-viewport--scenario' : ''}`}

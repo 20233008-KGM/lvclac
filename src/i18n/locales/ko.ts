@@ -168,9 +168,6 @@ export const ko: Messages = {
     numberSetEmptyTitle: '아직 저장한 세트가 없어요',
     numberSetEmptyBody: '자주 쓰는 계좌·증거금 기준값을 세트로 저장해 두고 빠르게 전환하세요.',
     numberSetEmptyCta: '첫 세트 추가',
-    numberSetLimitScope: '위치별',
-    numberSetFreeLimit: '무료 1개',
-    numberSetProLimit: 'Pro 최대 10개',
     numberSetGateGuestTitle: '로그인하고 세트를 저장하세요',
     numberSetGateGuestBody:
       '로그인하면 이 기기·클라우드에 숫자세트를 저장하고, Pro에서 각 위치 최대 10개까지 관리할 수 있어요.',

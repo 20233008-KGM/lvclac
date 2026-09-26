@@ -3256,33 +3256,6 @@ input:focus:not(:focus-visible) {
   stroke-linecap: round;
 }
 
-/* 위치별 저장 한도 — 메뉴에 자연스럽게 이어지는 보조 정보 */
-.draft-number-set-menu__limit-hint {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  padding: 4px 2px 0;
-  color: var(--color-text-muted);
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.draft-number-set-menu__plan-limits {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.draft-number-set-menu__pro-limit {
-  padding-left: 10px;
-  border-left: 1px solid var(--color-border);
-  color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text));
-  font-weight: 600;
-}
-
 .draft-number-set-menu__actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

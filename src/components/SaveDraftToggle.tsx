@@ -962,17 +962,6 @@ export function SaveDraftToggle() {
               <>
                 {renderNumberSetGroup('local', t.draftSave.localMode)}
                 {renderNumberSetGroup('cloud', t.draftSave.cloudMode)}
-                {!isPro && (
-                  <div className="draft-number-set-menu__limit-hint">
-                    <span>{t.draftSave.numberSetLimitScope}</span>
-                    <span className="draft-number-set-menu__plan-limits">
-                      <span>{t.draftSave.numberSetFreeLimit}</span>
-                      <span className="draft-number-set-menu__pro-limit">
-                        {t.draftSave.numberSetProLimit}
-                      </span>
-                    </span>
-                  </div>
-                )}
                 <div className="draft-number-set-menu__actions">
                   <button
                     type="button"

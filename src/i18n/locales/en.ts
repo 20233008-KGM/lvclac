@@ -172,9 +172,6 @@ export const en: Messages = {
     numberSetEmptyBody:
       'Save your go-to account and margin values as sets and switch between them fast.',
     numberSetEmptyCta: 'Add your first set',
-    numberSetLimitScope: 'Per location',
-    numberSetFreeLimit: 'Free 1',
-    numberSetProLimit: 'Pro up to 10',
     numberSetGateGuestTitle: 'Log in to save sets',
     numberSetGateGuestBody:
       'Log in to save number sets on this device and the cloud, and manage up to 10 per location with Pro.',

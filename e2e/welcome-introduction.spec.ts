@@ -8,7 +8,7 @@ test('first visit, focus containment, dismissal and replay preserve calculator a
   await page.goto('/?lang=ko')
   const dialog = page.getByRole('dialog', { name: 'LiqGuard에 오신 것을 환영합니다', exact: true })
   await expect(dialog).toBeVisible()
-  const position = dialog.getByRole('table', { name: '가상 포지션 · S&P 500 마이크로 선물' })
+  const position = dialog.getByRole('table', { name: 'S&P 500 마이크로 선물 · 가상 포지션' })
   await expect(position).toBeVisible()
   await expect(position.getByRole('row')).toHaveCount(2)
   await expect(position.getByRole('columnheader')).toHaveText(['포지션', '평가금', '진입/현재 (pt)', '유지증거금'])

@@ -1235,8 +1235,14 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       }
 
       if (!activeUserId) return 'not_logged_in'
+      setCloudNumberSets((sets) =>
+        sets.map((set) => (set.id === setId ? { ...set, title: trimmed } : set)),
+      )
       const result = await renameCloudNumberSet(activeUserId, setId, trimmed)
-      if (result.error) return result.error
+      if (result.error) {
+        void refreshCloudNumberSetState(activeUserId)
+        return result.error
+      }
       const renamedSet = result.data
       if (!renamedSet) return 'number_set_not_found'
       setCloudNumberSets((sets) =>
@@ -1244,7 +1250,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       )
       return null
     },
-    [activeUserId, refreshLocalNumberSetState],
+    [activeUserId, refreshCloudNumberSetState, refreshLocalNumberSetState],
   )
 
   const setNumberSetMemo = useCallback(

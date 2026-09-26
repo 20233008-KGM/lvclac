@@ -234,6 +234,7 @@ function CalculatorApp() {
                     redoHistory={redoHistory}
                     jumpHistory={jumpHistory}
                   />
+                  <HowToUseButton />
                   {showExamplesWelcome && <a
                     className="header-welcome-btn"
                     href="#calculator-examples-title"
@@ -260,9 +261,6 @@ function CalculatorApp() {
                     <span>{t.welcome.headerCta}</span>
                     <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
                   </a>}
-                  <HowToUseButton />
-                </div>
-                <div className="header-auth">
                   <AuthButton variant="header" />
                 </div>
               </header>

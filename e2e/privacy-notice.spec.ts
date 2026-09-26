@@ -37,10 +37,10 @@ for (const locale of ['ko', 'en'] as const) {
       await expect(page.getByRole('switch')).toHaveCount(0)
       const compactBounds = await expectWithinViewport(page)
       if (viewport.width >= 1024) {
-        const expectedRightOffset = Math.max(24, (viewport.width - 860) / 2)
+        const noticeCenter = compactBounds.left + compactBounds.noticeWidth / 2
+        const viewportCenter = compactBounds.width / 2
         expect(compactBounds.noticeWidth).toBeGreaterThanOrEqual(858)
-        expect(compactBounds.width - compactBounds.right).toBeGreaterThanOrEqual(expectedRightOffset - 1)
-        expect(compactBounds.width - compactBounds.right).toBeLessThanOrEqual(expectedRightOffset + 1)
+        expect(Math.abs(noticeCenter - viewportCenter)).toBeLessThanOrEqual(1)
         expect(compactBounds.height - compactBounds.bottom).toBeGreaterThanOrEqual(23)
         expect(compactBounds.height - compactBounds.bottom).toBeLessThanOrEqual(25)
       }

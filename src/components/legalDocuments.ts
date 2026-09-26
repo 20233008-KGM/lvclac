@@ -1,4 +1,4 @@
-import { PUBLIC_OPERATOR_INFO, publicOperatorDetails, publicOperatorDisplayName } from '../config/operator'
+import { PUBLIC_OPERATOR_INFO, publicOperatorDetails, publicOperatorDisplayName, publicPrivacyOfficerDisplayName } from '../config/operator'
 import type { Locale } from '../i18n'
 
 export interface LegalSection {
@@ -35,7 +35,9 @@ export function buildLegalDocuments(locale: Locale): Record<'terms' | 'privacy',
     title: ko ? '운영자 정보' : 'Operator information',
     table: {
       headers: ko ? ['항목', '내용'] : ['Item', 'Details'],
-      rows: publicOperatorDetails(locale).map(({ label, value }) => [label, value]),
+      rows: publicOperatorDetails(locale)
+        .filter(({ label }) => label !== (ko ? '개인정보 보호책임자' : 'Privacy officer'))
+        .map(({ label, value }) => [label, value]),
     },
   }
   const effective = ko ? '시행일: 2026년 9월 26일' : 'Effective: September 26, 2026'
@@ -180,7 +182,7 @@ export function buildLegalDocuments(locale: Locale): Record<'terms' | 'privacy',
           '계산 결과는 입력값에 따른 수식 계산이며 운영자가 이용자를 대신해 매매하거나 신용·투자 적격성을 평가하는 결정이 아닙니다. 구독 권한은 결제·구독 상태에 따라 반영됩니다. 잘못된 권한 반영은 문의처를 통해 확인·정정을 요청할 수 있습니다.',
         ] },
         { title: '12. 개인정보 보호책임자와 구제방법', paragraphs: [
-          `개인정보 보호책임자는 위 운영자 정보에 표시되어 있으며, 문의·권리 행사 접수처는 ${email}입니다.`,
+          `개인정보 보호책임자는 대표자 ${publicPrivacyOfficerDisplayName(locale)}입니다. 관련 문의 및 권리 행사 요청은 ${email}로 보내주세요.`,
           '개인정보 침해 상담이나 분쟁조정은 개인정보 포털 및 개인정보분쟁조정위원회의 공식 접수 경로를 이용할 수 있습니다.',
         ], links: [
           { label: '개인정보 포털', href: 'https://www.privacy.go.kr/' },
@@ -334,7 +336,7 @@ export function buildLegalDocuments(locale: Locale): Record<'terms' | 'privacy',
           'Results are formulas applied to your inputs, not decisions to trade on your behalf or assess credit or investment eligibility. Subscription access reflects payment/subscription status. Contact us for review and correction of an incorrect access decision.',
         ] },
         { title: '12. Privacy contact and remedies', paragraphs: [
-          `The privacy officer is listed under Operator information. Send privacy questions and rights requests to ${email}.`,
+          `Our representative, ${publicPrivacyOfficerDisplayName(locale)}, is the privacy officer. Send privacy questions and rights requests to ${email}.`,
           'For Korean privacy complaints or dispute resolution, use the official Privacy Portal or Personal Information Dispute Mediation Committee channels below.',
         ], links: [
           { label: 'Korean Privacy Portal', href: 'https://www.privacy.go.kr/' },

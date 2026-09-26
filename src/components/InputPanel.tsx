@@ -103,7 +103,7 @@ function DerivedMetricField({ label, value }: { label: string; value: string }) 
         <span className="field-label-text">{label}</span>
       </span>
       <div className="derived-metric-box" aria-label={`${label}: ${value}`}>
-        <span className="derived-metric-value">{value}</span>
+        <span className="derived-metric-value" data-clarity-mask="True">{value}</span>
       </div>
     </div>
   )
@@ -473,7 +473,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="account-setup-summary__item">
       <span>{label}</span>
-      <strong>{value}</strong>
+      <strong data-clarity-mask="True">{value}</strong>
     </div>
   )
 }

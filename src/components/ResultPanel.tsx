@@ -136,10 +136,10 @@ function ResultHero({
           <ResultHeroLabelMeta value={labelMeta} tooltip={labelMetaTooltip} />
         )}
       </span>
-      <span className="result-hero-value">
+      <span className="result-hero-value" data-clarity-mask="True">
         <FitText>{value}</FitText>
       </span>
-      {sub && <span className="result-hero-sub">{sub}</span>}
+      {sub && <span className="result-hero-sub" data-clarity-mask="True">{sub}</span>}
     </div>
   )
 }
@@ -169,7 +169,7 @@ function ResultHeroLabelMeta({
       {hasTooltip &&
         renderTooltip(
           'field-label-tooltip result-hero-pnl-tooltip',
-          <span className="result-hero-pnl-tooltip__value">{tooltip}</span>,
+          <span className="result-hero-pnl-tooltip__value" data-clarity-mask="True">{tooltip}</span>,
           { id },
         )}
     </span>
@@ -206,11 +206,11 @@ function ResultRow({
     <div className={`result-row ${danger ? 'danger' : ''}`}>
       <div className="result-row-main">
         <span className="result-row-label">{label}</span>
-        <span className="result-row-value">
+        <span className="result-row-value" data-clarity-mask="True">
           <FitText title={valueTitle}>{value}</FitText>
         </span>
       </div>
-      {sub && <span className="result-row-sub">{sub}</span>}
+      {sub && <span className="result-row-sub" data-clarity-mask="True">{sub}</span>}
     </div>
   )
 }
@@ -288,10 +288,10 @@ function ResultSheet({
         {rows.map((row) => (
           <tr key={row.index}>
             <th scope="row">{row.index}</th>
-            <td className={row.dangerBefore ? 'danger' : undefined}>
+            <td className={row.dangerBefore ? 'danger' : undefined} data-clarity-mask="True">
               <FitText>{row.before}</FitText>
             </td>
-            <td className={row.dangerAfter ? 'danger' : undefined}>
+            <td className={row.dangerAfter ? 'danger' : undefined} data-clarity-mask="True">
               <FitText>{row.after}</FitText>
             </td>
           </tr>
@@ -1036,7 +1036,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
           </h2>
           <div className="result-panel--order__head-meta">
             {orderScenarioActive && orderChipText && (
-              <span className="order-scenario-chip" role="status">
+              <span className="order-scenario-chip" role="status" data-clarity-mask="True">
                 {orderChipText}
               </span>
             )}

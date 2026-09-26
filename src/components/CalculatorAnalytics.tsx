@@ -8,7 +8,20 @@ import type { CalculatorInputs } from '../types'
 
 type InputGroup = 'account' | 'position' | 'instrument' | 'margin' | 'scenario' | 'order'
 
-const ACTIVE_TIME_THRESHOLDS = [15, 60, 180] as const
+const ACTIVE_TIME_THRESHOLDS = [
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  45,
+  60,
+  90,
+  120,
+  180,
+  300,
+] as const
 
 const INPUT_GROUPS: Record<InputGroup, (keyof CalculatorInputs)[]> = {
   account: ['accountEval', 'contracts', 'contractAmount', 'contractAmountRole'],

@@ -170,7 +170,7 @@ export const ko: Messages = {
     numberSetEmptyCta: '첫 세트 추가',
     numberSetGateGuestTitle: '로그인하고 세트를 저장하세요',
     numberSetGateGuestBody:
-      '로그인하면 이 기기·클라우드에 숫자세트를 저장하고, Pro에서 각 위치 최대 10개까지 관리할 수 있어요.',
+      '로그인하면 숫자세트를 클라우드에 저장하고 어디서든 계좌를 점검할 수 있습니다. Pro는 저장공간 확대와 일일 계좌 변화 자동 기록을 제공합니다.',
     numberSetGateFreeTitle: '세트를 더 만들려면 Pro',
     numberSetGateFreeBody:
       '무료 플랜은 위치당 1개까지 저장할 수 있어요. Pro로 업그레이드하면 이 기기·클라우드 각 위치에서 최대 10개까지 만들 수 있어요.',

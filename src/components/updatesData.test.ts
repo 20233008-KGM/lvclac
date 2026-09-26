@@ -20,7 +20,7 @@ ${locale === 'ko' ? '첫 문단입니다.\n\n## 자세한 내용\n\n본문입니
 
 describe('update Markdown content', () => {
   it('loads the published bilingual update from Markdown files', () => {
-    expect(UPDATE_ENTRIES).toHaveLength(5)
+    expect(UPDATE_ENTRIES).toHaveLength(6)
     expect(UPDATE_ENTRIES[0]).toMatchObject({
       id: '2026-08-12-beta-experience',
       publishedAt: '2026-08-12',

@@ -8013,12 +8013,28 @@ a.site-footer__link:hover {
   max-width: 420px;
   max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   margin-left: auto;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-text) 24%, var(--color-border));
   border-radius: 14px;
-  background: var(--color-surface);
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--color-primary) 18%, transparent) 0, transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-2) 86%, var(--color-text) 8%) 0%, color-mix(in srgb, var(--color-surface) 92%, black 8%) 100%);
   color: var(--color-text);
-  box-shadow: 0 8px 32px rgb(0 0 0 / 28%);
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 52%),
+    0 0 0 1px rgb(255 255 255 / 4%) inset;
+  overflow: hidden;
   overflow-wrap: anywhere;
+}
+
+.privacy-notice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 42%), transparent);
+  pointer-events: none;
 }
 
 .privacy-notice__header {
@@ -8091,8 +8107,11 @@ a.site-footer__link:hover {
     bottom: max(24px, env(safe-area-inset-bottom));
     width: min(var(--layout-max-width), calc(100vw - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: none;
+    border-color: color-mix(in srgb, var(--color-text) 32%, var(--color-border));
     border-radius: 12px;
-    box-shadow: 0 18px 48px rgb(0 0 0 / 34%);
+    box-shadow:
+      0 34px 86px rgb(0 0 0 / 62%),
+      0 0 0 1px rgb(255 255 255 / 5%) inset;
   }
 
   .privacy-notice__header {
@@ -8140,6 +8159,22 @@ a.site-footer__link:hover {
   white-space: normal;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.privacy-notice .privacy-settings-action--allow {
+  border-color: color-mix(in srgb, var(--color-primary) 78%, white 12%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 82%, white 18%) 0%, var(--color-primary) 100%);
+  color: white;
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--color-primary) 26%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 24%);
+}
+
+.privacy-notice .privacy-settings-action--allow:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 72%, white 20%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 76%, white 24%) 0%, color-mix(in srgb, var(--color-primary) 92%, white 8%) 100%);
 }
 
 .privacy-notice .privacy-settings-fact {
@@ -8194,6 +8229,7 @@ a.site-footer__link:hover {
   min-height: 32px;
   padding: 4px 8px;
   border-color: transparent;
+  color: var(--color-text-muted);
 }
 
 @media (min-width: 1024px) {
@@ -8205,7 +8241,8 @@ a.site-footer__link:hover {
   .privacy-notice .privacy-settings-details {
     min-height: 40px;
     padding: 8px;
-    border-color: var(--color-border-subtle);
+    border-color: color-mix(in srgb, var(--color-text) 10%, var(--color-border-subtle));
+    background: color-mix(in srgb, var(--color-surface-2) 68%, transparent);
   }
 }
 

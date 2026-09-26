@@ -17,7 +17,7 @@ export interface LegalDocument {
 
 const providerLinks = [
   { label: 'Supabase', href: 'https://supabase.com/privacy' },
-  { label: 'Supabase subprocessors', href: 'https://supabase.com/legal/subprocessors' },
+  { label: 'Supabase subprocessors', href: 'https://supabase.com/legal/customer-resources/subprocessor-list' },
   { label: 'Vercel', href: 'https://vercel.com/legal/privacy-notice' },
   { label: 'Vercel Web Analytics', href: 'https://vercel.com/docs/analytics/privacy-policy' },
   { label: 'Google', href: 'https://policies.google.com/privacy' },

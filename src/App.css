@@ -5961,6 +5961,12 @@ body.scrub-drag-active * {
   line-height: 1.6;
 }
 
+@media (max-width: 767px) {
+  .service-disclaimer .legal-emphasis {
+    display: block;
+  }
+}
+
 .disclaimer-modal--form {
   text-align: left;
   display: flex;

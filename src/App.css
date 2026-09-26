@@ -8083,7 +8083,7 @@ a.site-footer__link:hover {
 @media (min-width: 1024px) {
   .privacy-notice {
     left: auto;
-    right: max(24px, env(safe-area-inset-right));
+    right: max(24px, env(safe-area-inset-right), calc((100vw - var(--layout-max-width)) / 2));
     bottom: max(24px, env(safe-area-inset-bottom));
     width: min(420px, calc(100vw - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: none;

@@ -166,6 +166,7 @@ export const en: Messages = {
     numberSetAdd: 'Add',
     numberSetManage: 'Manage all',
     numberSetActive: 'Active',
+    numberSetDefaultTitle: 'Number set {index}',
     numberSetLimitReached: 'Number set limit reached.',
     numberSetEmptyTitle: 'No sets saved yet',
     numberSetEmptyBody:

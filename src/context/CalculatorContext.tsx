@@ -362,7 +362,7 @@ function getInitialInputs(saveEnabled: boolean): CalculatorInputs {
 
 export function CalculatorProvider({ children }: { children: ReactNode }) {
   const { user, sessionLoading, sessionUserId, isPro } = useAuth()
-  const { preset, setPreset } = useLanguage()
+  const { preset, setPreset, t } = useLanguage()
   const activeUserId = sessionUserId ?? user?.id ?? null
   const cloudAvailable = Boolean(activeUserId)
   const numberSetLimits: Record<SaveStorageMode, number> = useMemo(
@@ -1160,12 +1160,14 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const createNumberSet = useCallback(
     async (mode: SaveStorageMode): Promise<string | null> => {
       setSyncError(null)
+      const formatDefaultTitle = (index: number) =>
+        t.draftSave.numberSetDefaultTitle.replace('{index}', String(index))
       if (mode === 'local') {
         const sets = readLocalNumberSetState()
         if (sets.length >= numberSetLimits.local) return 'number_set_limit_reached'
         const result = appendLocalNumberSet(sets, inputs, {
           presetId: preset,
-          title: `숫자세트 ${sets.length + 1}`,
+          title: formatDefaultTitle(sets.length + 1),
         })
         writeLocalNumberSets(localStorage, result.sets)
         writeActiveLocalNumberSetId(localStorage, result.set.id)
@@ -1180,7 +1182,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         activeUserId,
         inputs,
         preset,
-        `숫자세트 ${cloudNumberSets.length + 1}`,
+        formatDefaultTitle(cloudNumberSets.length + 1),
       )
       if (result.error) {
         setSyncStatus('error')
@@ -1219,6 +1221,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       replaceNumberSetFromStorage,
       refreshLocalNumberSetState,
       selectNumberSet,
+      t.draftSave.numberSetDefaultTitle,
     ],
   )
 

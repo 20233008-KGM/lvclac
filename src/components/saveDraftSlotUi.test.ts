@@ -467,6 +467,20 @@ describe('draft save slot UI', () => {
     expect(text).toContain('deleteNumberSetById: (mode: SaveStorageMode, setId: string) => Promise<string | null>')
   })
 
+  it('creates default number-set names from the active locale copy', () => {
+    const text = source('src/context/CalculatorContext.tsx')
+    const types = source('src/i18n/types.ts')
+    const ko = source('src/i18n/locales/ko.ts')
+    const en = source('src/i18n/locales/en.ts')
+
+    expect(types).toContain('numberSetDefaultTitle: string')
+    expect(ko).toContain("numberSetDefaultTitle: '숫자세트 {index}'")
+    expect(en).toContain("numberSetDefaultTitle: 'Number set {index}'")
+    expect(text).toContain('t.draftSave.numberSetDefaultTitle.replace')
+    expect(text).not.toContain('title: `숫자세트 ${sets.length + 1}`')
+    expect(text).not.toContain('`숫자세트 ${cloudNumberSets.length + 1}`')
+  })
+
   it('restores and persists the terminology preset with the active number-set slot', () => {
     const text = source('src/context/CalculatorContext.tsx')
 

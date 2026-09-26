@@ -163,6 +163,7 @@ export const ko: Messages = {
     numberSetAdd: '추가',
     numberSetManage: '전체 관리',
     numberSetActive: '활성',
+    numberSetDefaultTitle: '숫자세트 {index}',
     numberSetLimitReached: '숫자세트 한도에 도달했습니다.',
     numberSetEmptyTitle: '아직 저장한 세트가 없어요',
     numberSetEmptyBody: '자주 쓰는 계좌·증거금 기준값을 세트로 저장해 두고 빠르게 전환하세요.',

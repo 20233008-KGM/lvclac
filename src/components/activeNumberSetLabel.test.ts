@@ -10,6 +10,8 @@ describe('active number set label', () => {
   it('keeps automatically generated names out of the input panel header', () => {
     expect(isUserNamedNumberSetTitle('기본 세트')).toBe(false)
     expect(isUserNamedNumberSetTitle('숫자세트 2')).toBe(false)
+    expect(isUserNamedNumberSetTitle('Default set')).toBe(false)
+    expect(isUserNamedNumberSetTitle('Number set 2')).toBe(false)
     expect(isUserNamedNumberSetTitle('   ')).toBe(false)
   })
 })

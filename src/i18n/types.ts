@@ -176,6 +176,7 @@ export interface Messages {
     numberSetAdd: string
     numberSetManage: string
     numberSetActive: string
+    numberSetDefaultTitle: string
     numberSetLimitReached: string
     numberSetEmptyTitle: string
     numberSetEmptyBody: string

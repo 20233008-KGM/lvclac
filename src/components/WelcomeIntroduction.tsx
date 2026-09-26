@@ -8,7 +8,7 @@ const copy = {
   ko: {
     title: 'LiqGuard에 오신 것을 환영합니다',
     intro: '청산 위험과 주문 변화를 입력 즉시 확인하세요.',
-    position: '가상 포지션 · S&P 500 마이크로 선물',
+    position: 'S&P 500 마이크로 선물 · 가상 포지션',
     holding: '포지션', long: '롱', contracts: '계약',
     price: '진입/현재 (pt)', equity: '평가금',
     maintenance: '유지증거금',
@@ -22,7 +22,7 @@ const copy = {
   en: {
     title: 'Welcome to LiqGuard',
     intro: 'See liquidation risk and order impact instantly.',
-    position: 'Example position · Micro S&P 500 futures',
+    position: 'Micro S&P 500 futures · Example position',
     holding: 'Position', long: 'Long', contracts: '',
     price: 'Entry/current (pt)', equity: 'Equity',
     maintenance: 'Maint. margin',

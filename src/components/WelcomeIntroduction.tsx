@@ -44,6 +44,12 @@ export function WelcomeIntroduction({ onClose }: { onClose: () => void }) {
     const formatted = formatTolerancePercent(value, 'long', 1)
     return formatted === '-' ? formatted : `${formatted}%`
   }
+  const bufferContent = (value: number | null) => {
+    const formatted = buffer(value)
+    return formatted === '-' ? formatted : (
+      <>{formatted.slice(0, -1)}<span className="welcome-introduction__percent">%</span></>
+    )
+  }
   const position = welcomeIntroductionPosition
 
   return (
@@ -97,7 +103,7 @@ export function WelcomeIntroduction({ onClose }: { onClose: () => void }) {
           </div>
           <div className="result-hero-card">
             <span className="result-hero-label">{c.tolerance}</span>
-            <span className="result-hero-value">{buffer(before.toleranceRate)}</span>
+            <span className="result-hero-value">{bufferContent(before.toleranceRate)}</span>
           </div>
         </div>
         <div className="welcome-introduction__comparison">
@@ -114,8 +120,8 @@ export function WelcomeIntroduction({ onClose }: { onClose: () => void }) {
             <tbody>
               <tr>
                 <th scope="row">{c.tolerance}</th>
-                <td aria-label={`${c.before}: ${buffer(before.toleranceRate)}`}>{buffer(before.toleranceRate)}</td>
-                <td className="welcome-introduction__after" aria-label={`${c.after}: ${buffer(after.toleranceRate)}`}>{buffer(after.toleranceRate)}</td>
+                <td aria-label={`${c.before}: ${buffer(before.toleranceRate)}`}>{bufferContent(before.toleranceRate)}</td>
+                <td className="welcome-introduction__after" aria-label={`${c.after}: ${buffer(after.toleranceRate)}`}>{bufferContent(after.toleranceRate)}</td>
               </tr>
               <tr>
                 <th scope="row">{c.liquidationRow}</th>

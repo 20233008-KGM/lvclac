@@ -80,6 +80,6 @@ describe('DisclaimerProvider 게이트 배선', () => {
     expect(app).toContain('href="#calculator-examples-title"')
     expect(app).not.toContain('onClick={firstVisitWelcome.showWelcome}')
     expect(app).toContain('<AuthButton variant="header" />')
-    expect(provider).toContain('gateActive: welcomeOpen || open')
+    expect(provider).toContain('gateActive: introductionOpen || welcomeOpen || open')
   })
 })

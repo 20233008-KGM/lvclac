@@ -6,15 +6,15 @@ import {
 import { createPortal } from 'react-dom'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 
-type TrustModalVariant = 'service' | 'storage' | 'privacy'
+type TrustModalVariant = 'service' | 'storage' | 'privacy' | 'introduction'
 
 type TrustModalFrameProps = {
   variant: TrustModalVariant
   titleId: string
-  eyebrow: string
+  eyebrow?: string
   title: string
   intro: string
-  icon: ReactNode
+  icon?: ReactNode
   children: ReactNode
   footer: ReactNode
   descriptionId?: string
@@ -84,7 +84,7 @@ export function TrustModalFrame({
       const last = focusable[focusable.length - 1]
       const active = document.activeElement
 
-      if (event.shiftKey && (active === first || !dialog.contains(active))) {
+      if (event.shiftKey && (active === first || !focusable.includes(active as HTMLElement))) {
         event.preventDefault()
         last.focus()
       } else if (!event.shiftKey && active === last) {
@@ -102,7 +102,7 @@ export function TrustModalFrame({
 
   const modal = (
     <div
-      className="disclaimer-overlay trust-modal-overlay"
+      className={`disclaimer-overlay trust-modal-overlay${variant === 'introduction' ? ' trust-modal-overlay--introduction' : ''}`}
       role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget) closeHandlerRef.current?.()
@@ -130,11 +130,11 @@ export function TrustModalFrame({
           </button>
         )}
         <header className="trust-modal__header">
-          <span className="trust-modal__icon" aria-hidden="true">
+          {icon && <span className="trust-modal__icon" aria-hidden="true">
             {icon}
-          </span>
+          </span>}
           <div className="trust-modal__heading">
-            <span className="trust-modal__eyebrow">{eyebrow}</span>
+            {eyebrow && <span className="trust-modal__eyebrow">{eyebrow}</span>}
             <h2 ref={titleRef} id={titleId} className="trust-modal__title" tabIndex={-1}>
               {title}
             </h2>

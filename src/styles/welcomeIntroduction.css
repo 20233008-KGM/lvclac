@@ -1,0 +1,176 @@
+.trust-modal-overlay.trust-modal-overlay--introduction {
+  align-items: center;
+  padding: 16px;
+}
+
+.trust-modal.trust-modal--introduction {
+  width: min(100%, 390px);
+  max-height: calc(100dvh - 32px);
+  border-color: #353e52;
+  border-radius: var(--modal-radius);
+  background:
+    radial-gradient(
+      ellipse 85% 190px at 50% -30px,
+      color-mix(in srgb, var(--color-primary) 22%, transparent),
+      transparent 76%
+    ),
+    linear-gradient(180deg, #1d2330, var(--color-bg-elevated) 48%);
+  box-shadow:
+    0 30px 72px -28px rgba(0, 0, 0, 0.85),
+    0 0 40px -24px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.trust-modal.trust-modal--introduction::before {
+  left: 15%;
+  right: 15%;
+  background: linear-gradient(90deg, transparent, #99bdff, transparent);
+  opacity: 0.85;
+}
+
+.trust-modal--introduction .trust-modal__header {
+  display: block;
+  flex-shrink: 0;
+  padding: 20px 20px 12px;
+  border-bottom: 0;
+}
+
+.trust-modal--introduction .trust-modal__title {
+  margin: 0;
+  font-size: clamp(16px, 5vw, 20px);
+  line-height: 1.35;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  outline: none;
+}
+
+.trust-modal--introduction .trust-modal__intro {
+  font-size: clamp(12px, 3.4vw, 13px);
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.trust-modal--introduction .trust-modal__body {
+  padding: 0 20px;
+}
+
+.trust-modal--introduction .trust-modal__footer {
+  border: 0;
+  padding: 16px 20px;
+  background: transparent;
+}
+
+.welcome-introduction__example h3,
+.welcome-introduction__position caption {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.welcome-introduction__position {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.welcome-introduction__position caption { padding-bottom: 8px; }
+.welcome-introduction__holding-column { width: 23%; }
+.welcome-introduction__price-column { width: 30%; }
+.welcome-introduction__equity-column { width: 21.5%; }
+.welcome-introduction__margin-column { width: 25.5%; }
+
+.welcome-introduction__position th,
+.welcome-introduction__position td {
+  padding: 5px 4px;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.welcome-introduction__position th {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  text-align: center;
+  font-weight: 500;
+}
+
+.welcome-introduction__position td {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.welcome-introduction__result.result-hero {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.welcome-introduction__result .result-hero-card {
+  padding: 8px 10px;
+}
+
+.welcome-introduction__result .result-hero-label {
+  font-size: 11px;
+  white-space: normal;
+}
+
+.welcome-introduction__result .result-hero-value {
+  font-size: 22px;
+}
+
+.welcome-introduction__comparison {
+  margin-top: 14px;
+}
+
+.welcome-introduction__comparison .result-sheet {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.welcome-introduction__metric { width: 44%; }
+
+.welcome-introduction__comparison .result-sheet th,
+.welcome-introduction__comparison .result-sheet td {
+  padding: 7px 10px;
+}
+
+.welcome-introduction__comparison .result-sheet td {
+  max-width: none;
+  font-size: 14px;
+}
+
+.welcome-introduction__comparison .result-sheet .welcome-introduction__after {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.welcome-introduction__takeaway { margin: 10px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
+.welcome-introduction__start { width: 100%; min-height: 46px; font-size: 14px; }
+
+.welcome-introduction__start.btn-primary {
+  background: linear-gradient(180deg, #709cf0, #5885d9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 5px 18px -9px color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+
+@media (max-width: 620px) {
+  .trust-modal--introduction .trust-modal__intro { margin-top: 6px; }
+}
+
+@media (max-width: 359px) {
+  .trust-modal--introduction .trust-modal__header { padding: 20px 16px 16px; }
+  .trust-modal--introduction .trust-modal__body { padding: 0 16px; }
+  .trust-modal--introduction .trust-modal__footer { padding: 16px; }
+  .welcome-introduction__comparison .result-sheet th,
+  .welcome-introduction__comparison .result-sheet td { padding-right: 7px; padding-left: 7px; }
+}
+
+@media (max-height: 480px) {
+  .trust-modal--introduction .trust-modal__header { padding-top: 16px; padding-bottom: 12px; }
+  .trust-modal--introduction .trust-modal__footer { padding-top: 12px; padding-bottom: 12px; }
+}

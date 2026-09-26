@@ -6,6 +6,7 @@ import { LocaleRouteLink } from './LocaleRouteLink'
 import { DisclaimerShowAgainLink, footerLegalCopy } from './ServiceDisclaimer'
 import { buildFooterColumns } from './footerNavigation'
 import { useGoogleConsent } from '../context/googleConsentState'
+import { useShowWelcomeIntroduction } from '../context/FirstVisitFlowContext'
 
 const footerDescription: Record<Locale, string> = {
   ko: '선물 포지션의 청산 위험과 주문 이후 변화를 빠르게 검토하는 브라우저 기반 계산 보조 도구입니다.',
@@ -24,6 +25,7 @@ export function SiteFooter() {
   const { t, locale } = useLanguage()
   const navigate = useNavigate()
   const { openPrivacySettings } = useGoogleConsent()
+  const showIntroduction = useShowWelcomeIntroduction()
   const footerColumns = buildFooterColumns(t.footer.columns, locale, {
     terms: t.legal.termsLink,
     privacy: t.legal.privacyLink,
@@ -97,6 +99,13 @@ export function SiteFooter() {
                     </li>
                     )
                   })}
+                  {columnIndex === 0 && showIntroduction && (
+                    <li>
+                      <button type="button" className="site-footer__link site-footer__link-button" onClick={showIntroduction}>
+                        {locale === 'ko' ? '서비스 둘러보기' : 'Quick introduction'}
+                      </button>
+                    </li>
+                  )}
                   {columnIndex === footerColumns.length - 1 && (
                     <li>
                       <button

@@ -2,6 +2,11 @@ import { expect, test, type Page } from '@playwright/test'
 
 const preferenceKey = 'liqguard-privacy-preferences-v2'
 
+test.beforeEach(async ({ page }) => {
+  // Isolate privacy choices from the separate first-visit introduction.
+  await page.addInitScript(() => localStorage.setItem('liqguard-welcome-intro-seen-v1', '1'))
+})
+
 async function expectWithinViewport(page: Page) {
   const bounds = await page.locator('.privacy-notice').evaluate((element) => {
     const rect = element.getBoundingClientRect()

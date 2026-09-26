@@ -18,6 +18,8 @@ import {
 } from './serviceDisclaimerLogic'
 import { shouldShowWelcome, writeWelcomeCompleted } from './welcomeFlowLogic'
 import { WelcomeFlow } from './WelcomeFlow'
+import { WelcomeIntroduction } from './WelcomeIntroduction'
+import { dismissWelcomeIntroduction, shouldShowWelcomeIntroduction } from './welcomeIntroductionLogic'
 import { isKitPath } from '../config/routes'
 import {
   FirstVisitFlowContext,
@@ -123,6 +125,9 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   // 컴포넌트 전시장(/kit, 개발·export 전용)에선 온보딩·면책 오버레이를 띄우지 않는다.
   const suppressOverlays = isKitPath(pathname)
+  const [introductionOpen, setIntroductionOpen] = useState(() =>
+    shouldShowWelcomeIntroduction(pathname, window.location.search, localStorage, sessionStorage),
+  )
   // Retain legacy welcome state, but only open dialogs gate privacy settings.
   const [welcomePending, setWelcomePending] = useState(() =>
     !suppressOverlays && shouldShowWelcome(pathname, localStorage, sessionStorage),
@@ -136,6 +141,16 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
   )
   const [mode, setMode] = useState<DisclaimerMode>('required')
   const [skipActive, setSkipActive] = useState(() => readDisclaimerSkip(localStorage))
+
+  const closeIntroduction = () => {
+    dismissWelcomeIntroduction(localStorage)
+    setIntroductionOpen(false)
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('welcome')) {
+      url.searchParams.delete('welcome')
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+    }
+  }
 
   const showWelcome = () => {
     if (!welcomePending) return
@@ -163,10 +178,16 @@ export function DisclaimerProvider({ children }: { children: ReactNode }) {
 
   return (
     <FirstVisitFlowContext.Provider
-      value={{ skipActive, showAgain, welcomePending, showWelcome, gateActive: welcomeOpen || open }}
+      value={{
+        skipActive, showAgain, welcomePending, showWelcome,
+        showIntroduction: () => setIntroductionOpen(true),
+        gateActive: introductionOpen || welcomeOpen || open,
+      }}
     >
       {children}
-      {welcomeOpen ? (
+      {introductionOpen ? (
+        <WelcomeIntroduction onClose={closeIntroduction} />
+      ) : welcomeOpen ? (
         <WelcomeFlow onComplete={handleWelcomeComplete} />
       ) : (
         open && (

@@ -6,9 +6,14 @@ export type FirstVisitFlowContextValue = {
   gateActive?: boolean
   welcomePending: boolean
   showWelcome: () => void
+  showIntroduction?: () => void
 }
 
 export const FirstVisitFlowContext = createContext<FirstVisitFlowContextValue | null>(null)
+
+export function useShowWelcomeIntroduction(): (() => void) | undefined {
+  return useContext(FirstVisitFlowContext)?.showIntroduction
+}
 
 export function useFirstVisitDisclaimer(): Pick<
   FirstVisitFlowContextValue,

@@ -38,12 +38,14 @@ for (const locale of ['ko', 'en'] as const) {
       const compactBounds = await expectWithinViewport(page)
       if (viewport.width >= 1024) {
         const expectedRightOffset = Math.max(24, (viewport.width - 860) / 2)
-        expect(compactBounds.noticeWidth).toBeGreaterThanOrEqual(418)
+        expect(compactBounds.noticeWidth).toBeGreaterThanOrEqual(858)
         expect(compactBounds.width - compactBounds.right).toBeGreaterThanOrEqual(expectedRightOffset - 1)
         expect(compactBounds.width - compactBounds.right).toBeLessThanOrEqual(expectedRightOffset + 1)
         expect(compactBounds.height - compactBounds.bottom).toBeGreaterThanOrEqual(23)
         expect(compactBounds.height - compactBounds.bottom).toBeLessThanOrEqual(25)
       }
+      await expect(notice.getByRole('button', { name: locale === 'ko' ? '모두 허용' : 'Allow all' }))
+        .toHaveClass(/btn-primary/)
       expect((await notice.boundingBox())!.height).toBeLessThan(230)
       expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).not.toBe('hidden')
       expect(await notice.evaluate((element) => element.contains(document.activeElement))).toBe(false)

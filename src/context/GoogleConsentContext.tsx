@@ -205,6 +205,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
         <PrivacyNotice
           title={copy.title}
           intro={copy.intro}
+          desktopIntro={copy.desktopIntro}
           closeLabel={copy.close}
           onRequestClose={closePrivacySettings}
           footer={detailsOpen ? (
@@ -228,7 +229,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
               </button>
               <button
                 type="button"
-                className="btn btn-ghost privacy-settings-action"
+                className="btn btn-primary privacy-settings-action privacy-settings-action--allow"
                 onClick={() => choosePrivacyPreferences({
                   analytics: true,
                   personalizedAds: true,

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 type PrivacyNoticeProps = {
   title: string
   intro: string
+  desktopIntro: string
   closeLabel: string
   onRequestClose: () => void
   children: ReactNode
@@ -12,7 +13,7 @@ type PrivacyNoticeProps = {
 
 // A non-modal region: opening it must not steal focus or block the calculator.
 export function PrivacyNotice({
-  title, intro, closeLabel, onRequestClose, children, footer,
+  title, intro, desktopIntro, closeLabel, onRequestClose, children, footer,
 }: PrivacyNoticeProps) {
   return createPortal(
     <section
@@ -41,6 +42,7 @@ export function PrivacyNotice({
       </header>
       <div className="privacy-notice__body">
         <p id="privacy-settings-intro">{intro}</p>
+        <p className="privacy-notice__desktop-intro">{desktopIntro}</p>
         {children}
       </div>
       <footer className="privacy-notice__footer">{footer}</footer>

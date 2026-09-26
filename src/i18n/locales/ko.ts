@@ -1113,6 +1113,7 @@ export const ko: Messages = {
     eyebrow: 'PRIVACY CONTROLS',
     title: '개인정보 및 쿠키 설정',
     intro: '분석·맞춤 광고 쿠키는 선택 사항입니다. 거부해도 계산기를 이용할 수 있습니다.',
+    desktopIntro: '모두 허용하면 방문·기능 이용 통계와 광고 재개 시 맞춤 광고 선택에 사용됩니다. 선택은 푸터의 쿠키 설정에서 언제든 바꿀 수 있습니다.',
     close: '닫기',
     coreTitle: '계산기·계정 기본 기능',
     coreBody: '계산, 언어, 로그인과 선택한 저장 기능',

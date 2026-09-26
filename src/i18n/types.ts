@@ -822,6 +822,7 @@ export interface Messages {
     eyebrow: string
     title: string
     intro: string
+    desktopIntro: string
     close: string
     coreTitle: string
     coreBody: string

@@ -1127,6 +1127,7 @@ export const en: Messages = {
     eyebrow: 'PRIVACY CONTROLS',
     title: 'Privacy and cookie settings',
     intro: 'Analytics and personalized ad cookies are optional. You can use the calculator without them.',
+    desktopIntro: 'Allow all to help improve LiqGuard with visit and feature stats, and to apply your personalized-ad choice if ads resume. You can change this anytime in footer cookie settings.',
     close: 'Close',
     coreTitle: 'Core calculator and account features',
     coreBody: 'Calculation, language, sign-in, and the storage options you choose',

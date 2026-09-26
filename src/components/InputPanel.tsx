@@ -40,6 +40,24 @@ const RATE_FIELDS = new Set<keyof CalculatorInputs>([
   'entrustedMarginRate',
 ])
 
+const ANALYTICS_FIELD_KEYS: Partial<Record<keyof CalculatorInputs, string>> = {
+  accountEval: 'account_equity',
+  contracts: 'contracts',
+  contractAmount: 'entry_price',
+  currentPrice: 'current_price',
+  contractMultiplier: 'contract_multiplier',
+  tickSize: 'tick_size',
+  maintenanceMarginRate: 'maintenance_margin_rate',
+  maintenanceMargin: 'maintenance_margin_total',
+  maintenanceMarginPerContract: 'maintenance_margin_per_contract',
+  entrustedMarginRate: 'entry_margin_rate',
+  entrustedMargin: 'entry_margin_total',
+  entrustedMarginPerContract: 'entry_margin_per_contract',
+  orderContracts: 'order_contracts',
+  orderPrice: 'order_price',
+  scenarioPrice: 'scenario_price',
+}
+
 function historyOptions(meta?: NumberInputChangeMeta): CalculatorHistoryOptions | undefined {
   return meta?.historyGroup
     ? {
@@ -59,6 +77,10 @@ function Field({
   tooltipGuideLinkLabel,
   labelId,
   className,
+  analyticsClick,
+  analyticsFocus,
+  analyticsInput,
+  analyticsKey,
   children,
 }: {
   label: string
@@ -69,10 +91,20 @@ function Field({
   tooltipGuideLinkLabel?: string
   labelId?: string
   className?: string
+  analyticsClick?: string
+  analyticsFocus?: string
+  analyticsInput?: string
+  analyticsKey?: string
   children: React.ReactNode
 }) {
   return (
-    <label className={`field${className ? ` ${className}` : ''}`}>
+    <label
+      className={`field${className ? ` ${className}` : ''}`}
+      data-analytics-click={analyticsClick}
+      data-analytics-focus={analyticsFocus}
+      data-analytics-input={analyticsInput}
+      data-analytics-key={analyticsKey}
+    >
       <span className="field-label-row" id={labelId}>
         <span className="field-label-text">
           {label}
@@ -145,6 +177,8 @@ function numField(
       tooltip={showTooltip ? field.hint : undefined}
       tooltipLabel={showTooltip ? tooltipLabel : undefined}
       className={inputProps?.className}
+      analyticsKey={ANALYTICS_FIELD_KEYS[key]}
+      analyticsInput={ANALYTICS_FIELD_KEYS[key] ? `input_${ANALYTICS_FIELD_KEYS[key]}` : undefined}
     >
       <NumberInput
         value={value}
@@ -217,6 +251,8 @@ function CurrentPriceField({
   const fieldProps = {
     label: field.label,
     labelId: currentPriceLabelId,
+    analyticsKey: 'current_price',
+    analyticsInput: 'input_current_price',
     tooltip: field.hint,
     tooltipLabel,
     tooltipGuideHref,
@@ -747,6 +783,10 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             tooltipGuideHref={GUIDE_PATH}
             tooltipGuideLinkLabel={t.tooltipGuideLink}
             className={`${frozenFieldClass} fh-equity`.trim()}
+            analyticsClick="click_account_equity"
+            analyticsFocus="focus_account_equity"
+            analyticsInput="input_account_equity"
+            analyticsKey="account_equity"
           >
             <NumberInput
               value={displayInputs.accountEval}
@@ -775,6 +815,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
             tooltip={f.contracts.hint}
             tooltipLabel={t.fieldTooltipLabel}
             className={`${frozenFieldClass} fh-contracts`.trim()}
+            analyticsKey="contracts"
+            analyticsInput="input_contracts"
           >
             <NumberStepper
               value={displayInputs.contracts}

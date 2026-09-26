@@ -201,6 +201,8 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
       <button
         type="button"
         className={isHeader ? 'auth-header-btn auth-header-btn--primary' : 'btn btn-primary'}
+        data-analytics-click="open_login_chip"
+        data-analytics-key="login_chip"
         onClick={() => setModalOpen(true)}
       >
         {isHeader && <UserIcon />}

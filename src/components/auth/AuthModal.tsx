@@ -51,6 +51,8 @@ export function AuthModal({ onClose }: AuthModalProps) {
         <button
           type="button"
           className="auth-modal-close"
+          data-analytics-click="click_login_modal_close"
+          data-analytics-key="login_modal_close"
           onClick={onClose}
           aria-label={t.close}
         >

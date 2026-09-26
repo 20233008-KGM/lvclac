@@ -26,6 +26,8 @@ export function GoogleButton() {
       <button
         type="button"
         className="google-btn"
+        data-analytics-click="click_google_login"
+        data-analytics-key="google_login"
         onClick={handleClick}
         disabled={submitting}
       >

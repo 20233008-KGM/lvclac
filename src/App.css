@@ -8134,24 +8134,6 @@ a.site-footer__link:hover {
   .privacy-notice__footer {
     padding: 0 18px 12px;
   }
-
-  .privacy-settings-actions {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-  }
-
-  .privacy-settings-action--allow {
-    grid-column: 3;
-    grid-row: 1;
-    align-self: auto;
-  }
-
-  .privacy-settings-details {
-    grid-column: 2;
-    grid-row: 1;
-    width: auto;
-    min-width: 0;
-  }
 }
 
 .privacy-notice .privacy-settings-action {
@@ -8161,6 +8143,17 @@ a.site-footer__link:hover {
   white-space: normal;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.privacy-notice .privacy-settings-action--deny {
+  border-color: color-mix(in srgb, var(--color-text) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  color: var(--color-text);
+}
+
+.privacy-notice .privacy-settings-action--deny:hover {
+  border-color: color-mix(in srgb, var(--color-text) 65%, var(--color-border));
+  background: color-mix(in srgb, var(--color-text) 9%, transparent);
 }
 
 .privacy-notice .privacy-settings-action--allow {
@@ -8235,18 +8228,31 @@ a.site-footer__link:hover {
 }
 
 @media (min-width: 1024px) {
-  .privacy-settings-actions .privacy-settings-details {
+  .privacy-settings-actions:not(.privacy-settings-actions--single) {
+    grid-template-columns: minmax(0, 1fr) repeat(2, 112px);
+    align-items: center;
+  }
+
+  .privacy-settings-action--deny {
     grid-column: 2;
     grid-row: 1;
   }
 
+  .privacy-settings-action--allow {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
   .privacy-notice .privacy-settings-details {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
     width: auto;
     min-height: 40px;
-    padding: 8px 12px;
+    padding: 8px;
     border-color: transparent;
     background: transparent;
-    color: var(--color-text-dim);
+    color: var(--color-text-muted);
     text-decoration: underline;
     text-underline-offset: 3px;
   }
@@ -8254,7 +8260,7 @@ a.site-footer__link:hover {
   .privacy-notice .privacy-settings-details:hover {
     border-color: transparent;
     background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-    color: var(--color-text-muted);
+    color: var(--color-text);
   }
 }
 

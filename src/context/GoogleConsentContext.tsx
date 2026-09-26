@@ -222,7 +222,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
             <div className="privacy-settings-actions">
               <button
                 type="button"
-                className="btn btn-ghost privacy-settings-action"
+                className="btn btn-ghost privacy-settings-action privacy-settings-action--deny"
                 onClick={() => choosePrivacyPreferences(DENIED_PREFERENCES)}
               >
                 {copy.deny}

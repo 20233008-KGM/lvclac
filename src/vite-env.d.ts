@@ -10,6 +10,9 @@ interface ImportMetaEnv {
   readonly VITE_AD_SLOT_RIGHT_SIDEBAR_BOTTOM?: string
   readonly VITE_AD_ENABLE_SIDEBAR_TALL?: string
   readonly VITE_GA4_MEASUREMENT_ID?: string
+  readonly VITE_CLARITY_PROJECT_ID?: string
+  readonly VITE_POSTHOG_KEY?: string
+  readonly VITE_POSTHOG_HOST?: string
   readonly VITE_PUBLIC_OPERATOR_LEGAL_NAME?: string
   readonly VITE_PUBLIC_OPERATOR_REPRESENTATIVE?: string
   readonly VITE_PUBLIC_OPERATOR_ADDRESS?: string
@@ -36,6 +39,7 @@ interface Window {
   })
   dataLayer?: unknown[]
   gtag?: (...args: unknown[]) => void
+  clarity?: ((...args: unknown[]) => void) & { q?: IArguments[] }
   googlefc?: {
     callbackQueue?: Array<Record<string, () => void>>
     getGoogleConsentModeValues?: () => {

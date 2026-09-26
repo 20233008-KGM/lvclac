@@ -3,13 +3,24 @@ import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 
 const trackMock = vi.hoisted(() => vi.fn())
+const posthogInitMock = vi.hoisted(() => vi.fn())
+const posthogCaptureMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@vercel/analytics', () => ({
   track: trackMock,
 }))
 
+vi.mock('posthog-js', () => ({
+  default: {
+    init: posthogInitMock,
+    capture: posthogCaptureMock,
+  },
+}))
+
 afterEach(() => {
   trackMock.mockClear()
+  posthogInitMock.mockClear()
+  posthogCaptureMock.mockClear()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
   vi.resetModules()
@@ -101,4 +112,70 @@ it('tracks anonymous calculator events through Vercel and configured GA4', async
       field_count: 7,
     },
   ])
+})
+
+
+it('loads Clarity and PostHog only when behavior analytics env vars are configured', async () => {
+  vi.stubEnv('VITE_CLARITY_PROJECT_ID', 'clarity-test')
+  vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test')
+  vi.stubEnv('VITE_POSTHOG_HOST', 'https://eu.i.posthog.com')
+  const appended: Array<{ id?: string, src?: string, async?: boolean }> = []
+  vi.stubGlobal('window', {})
+  vi.stubGlobal('document', {
+    getElementById: () => null,
+    createElement: () => ({}),
+    head: { appendChild: (node: { id?: string, src?: string, async?: boolean }) => appended.push(node) },
+  })
+
+  const { initAnalytics, trackLiqGuardEvent } = await import('./analytics')
+  initAnalytics()
+  initAnalytics()
+  trackLiqGuardEvent('calculator_active_time', { threshold_seconds: 5 })
+
+  expect(appended).toEqual([
+    expect.objectContaining({
+      id: 'ga4-script',
+      src: 'https://www.googletagmanager.com/gtag/js?id=AW-18471363418',
+    }),
+    expect.objectContaining({
+      id: 'microsoft-clarity-script',
+      src: 'https://www.clarity.ms/tag/clarity-test',
+    }),
+  ])
+  expect(posthogInitMock).toHaveBeenCalledTimes(1)
+  expect(posthogInitMock).toHaveBeenCalledWith('phc_test', expect.objectContaining({
+    api_host: 'https://eu.i.posthog.com',
+    autocapture: false,
+    capture_pageview: 'history_change',
+    disable_session_recording: false,
+    person_profiles: 'identified_only',
+    respect_dnt: true,
+    session_recording: expect.objectContaining({
+      maskAllInputs: true,
+      maskTextSelector: expect.stringContaining('input'),
+    }),
+  }))
+  expect(posthogCaptureMock).toHaveBeenCalledWith('calculator_active_time', {
+    threshold_seconds: 5,
+  })
+})
+
+it('skips behavior analytics vendors when their env vars are absent', async () => {
+  vi.stubEnv('VITE_CLARITY_PROJECT_ID', '')
+  vi.stubEnv('VITE_POSTHOG_KEY', '')
+  const appended: Array<{ id?: string }> = []
+  vi.stubGlobal('window', {})
+  vi.stubGlobal('document', {
+    getElementById: () => null,
+    createElement: () => ({}),
+    head: { appendChild: (node: { id?: string }) => appended.push(node) },
+  })
+
+  const { initAnalytics, trackLiqGuardEvent } = await import('./analytics')
+  initAnalytics()
+  trackLiqGuardEvent('calculator_active_time', { threshold_seconds: 5 })
+
+  expect(appended.map((node) => node.id)).toEqual(['ga4-script'])
+  expect(posthogInitMock).not.toHaveBeenCalled()
+  expect(posthogCaptureMock).not.toHaveBeenCalled()
 })

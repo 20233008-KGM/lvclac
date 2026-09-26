@@ -120,7 +120,17 @@ it('loads Clarity and PostHog only when behavior analytics env vars are configur
   vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test')
   vi.stubEnv('VITE_POSTHOG_HOST', 'https://eu.i.posthog.com')
   const appended: Array<{ id?: string, src?: string, async?: boolean }> = []
-  vi.stubGlobal('window', {})
+  const fetchMock = vi.fn(() => Promise.resolve())
+  const storage = new Map<string, string>()
+  vi.stubGlobal('window', {
+    fetch: fetchMock,
+    location: { href: 'https://liqguard.com/', host: 'liqguard.com', pathname: '/' },
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+    },
+    crypto: { randomUUID: () => 'anon-test-id' },
+  })
   vi.stubGlobal('document', {
     getElementById: () => null,
     createElement: () => ({}),
@@ -156,9 +166,27 @@ it('loads Clarity and PostHog only when behavior analytics env vars are configur
       maskTextSelector: expect.stringContaining('input'),
     }),
   }))
-  expect(posthogCaptureMock).toHaveBeenCalledWith('calculator_active_time', {
-    threshold_seconds: 5,
-  })
+  expect(posthogCaptureMock).not.toHaveBeenCalled()
+  expect(fetchMock).toHaveBeenCalledWith(
+    'https://eu.i.posthog.com/i/v0/e/',
+    expect.objectContaining({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        api_key: 'phc_test',
+        event: 'calculator_active_time',
+        distinct_id: 'anon-test-id',
+        properties: {
+          threshold_seconds: 5,
+          $current_url: 'https://liqguard.com/',
+          $host: 'liqguard.com',
+          $pathname: '/',
+          $process_person_profile: false,
+        },
+      }),
+    }),
+  )
 })
 
 it('skips behavior analytics vendors when their env vars are absent', async () => {

@@ -8,6 +8,7 @@ const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST?.trim() || 'https://us.i.
 const GOOGLE_ADS_ID = 'AW-18471363418'
 const GOOGLE_SCRIPT_ID = 'ga4-script'
 const CLARITY_SCRIPT_ID = 'microsoft-clarity-script'
+const POSTHOG_DISTINCT_ID_KEY = 'liqguard-posthog-distinct-id-v1'
 
 type AnalyticsValue = string | number | boolean | null | undefined
 type AnalyticsProperties = Record<string, AnalyticsValue>
@@ -80,6 +81,51 @@ function initPostHog(): void {
   posthogInitialized = true
 }
 
+
+function createFallbackId(): string {
+  if (typeof window.crypto?.randomUUID === 'function') return window.crypto.randomUUID()
+  return `anon-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+}
+
+function getPostHogDistinctId(): string {
+  try {
+    const stored = window.localStorage.getItem(POSTHOG_DISTINCT_ID_KEY)
+    if (stored) return stored
+    const next = createFallbackId()
+    window.localStorage.setItem(POSTHOG_DISTINCT_ID_KEY, next)
+    return next
+  } catch {
+    return createFallbackId()
+  }
+}
+
+function capturePostHogEvent(name: string, properties: AnalyticsProperties): void {
+  if (!POSTHOG_KEY || typeof window.fetch !== 'function') return
+
+  const endpoint = `${POSTHOG_HOST.replace(/\/$/, '')}/i/v0/e/`
+  const payload = {
+    api_key: POSTHOG_KEY,
+    event: name,
+    distinct_id: getPostHogDistinctId(),
+    properties: {
+      ...properties,
+      $current_url: window.location.href,
+      $host: window.location.host,
+      $pathname: window.location.pathname,
+      $process_person_profile: false,
+    },
+  }
+
+  void window.fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => {
+    // Analytics transport must never affect calculator behavior.
+  })
+}
+
 export function initAnalytics(): void {
   if (initialized || typeof window === 'undefined') return
 
@@ -111,6 +157,6 @@ export function trackLiqGuardEvent(
   }
 
   if (posthogInitialized) {
-    posthog.capture(name, clean)
+    capturePostHogEvent(name, clean)
   }
 }

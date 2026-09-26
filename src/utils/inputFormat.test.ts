@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   countIntegerDigits,
   formatRateForInput,
+  formatNumberForInput,
   formatRawRateInput,
   formatRawNumericInput,
   normalizeInputValue,
@@ -35,9 +36,18 @@ describe('rate input precision', () => {
     expect(formatRateForInput(Number('0.499500'))).toBe('0.4995')
   })
 
-  it('preserves existing non-rate rounding', () => {
-    expect(normalizeInputValue(12.3456, { allowDecimal: true })).toBe(12.35)
+  it('preserves decimal precision and keeps contract counts integral', () => {
+    expect(normalizeInputValue(12.3456, { allowDecimal: true })).toBe(12.3456)
     expect(normalizeInputValue(12.6, {})).toBe(13)
+  })
+
+  it.each([0.001, 0.0025, 1e-7, 75.25, -6000.5])('round trips decimal inputs including small ticks and signed cash: %s', (value) => {
+    expect(parseFormattedInput(formatNumberForInput(value, true, true))).toBe(value)
+  })
+
+  it('never concatenates the fractional digits of an integer-only count', () => {
+    expect(formatRawNumericInput('2.5')).toBe('2')
+    expect(formatRawNumericInput('-2.5', false, true)).toBe('-2')
   })
 })
 

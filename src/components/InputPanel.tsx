@@ -34,7 +34,11 @@ interface InputPanelProps {
   onChange: (patch: CalculatorInputPatch, options?: CalculatorHistoryOptions) => void
 }
 
-const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>(['contractMultiplier', 'tickSize'])
+const DECIMAL_FIELDS = new Set<keyof CalculatorInputs>([
+  'contractMultiplier', 'tickSize', 'contractAmount',
+  'maintenanceMargin', 'entrustedMargin',
+  'maintenanceMarginPerContract', 'entrustedMarginPerContract',
+])
 const RATE_FIELDS = new Set<keyof CalculatorInputs>([
   'maintenanceMarginRate',
   'entrustedMarginRate',
@@ -282,6 +286,7 @@ function CurrentPriceField({
       <Field {...fieldProps}>
         <NumberStepper
           value={inputs.currentPrice}
+          allowDecimal
           step={tickSize}
           allowNegative={false}
           placeholder={field.placeholder || undefined}
@@ -306,7 +311,7 @@ function CurrentPriceField({
       <div className="current-price-link-row">
         <NumberInput
           value={inputs.currentPrice}
-          allowDecimal={false}
+          allowDecimal
           placeholder={field.placeholder || undefined}
           aria-labelledby={currentPriceLabelId}
           className="current-price-link-row__input"
@@ -431,6 +436,7 @@ export function ScenarioPriceField({
         <NumberStepper
           ref={inputRef}
           value={draftPrice}
+          allowDecimal
           step={tickSize}
           allowNegative={false}
           placeholder={scenarioPlaceholder}
@@ -457,7 +463,7 @@ export function ScenarioPriceField({
         <NumberInput
           ref={inputRef}
           value={draftPrice}
-          allowDecimal={false}
+          allowDecimal
           placeholder={scenarioPlaceholder}
           aria-labelledby={scenarioPriceLabelId}
           className="input-commit-row__input"
@@ -790,7 +796,8 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
           >
             <NumberInput
               value={displayInputs.accountEval}
-              allowDecimal={false}
+              allowDecimal
+              allowNegative
               placeholder={f.accountEquity.placeholder || undefined}
               disabled={scenarioModeActive}
               guardLocked={guardLocked}

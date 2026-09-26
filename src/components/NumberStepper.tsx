@@ -30,6 +30,7 @@ interface NumberStepperProps {
   value: number | undefined
   onChange: (value: number | undefined, meta?: NumberStepperChangeMeta) => void
   step?: number
+  allowDecimal?: boolean
   allowNegative?: boolean
   placeholder?: string
   stepUpLabel: string
@@ -76,6 +77,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
     value,
     onChange,
     step = 1,
+    allowDecimal = false,
     allowNegative = false,
     placeholder,
     stepUpLabel,
@@ -438,7 +440,7 @@ export const NumberStepper = forwardRef<NumberInputHandle, NumberStepperProps>(f
         <NumberInput
           ref={inputHandleRef}
           value={value}
-          allowDecimal={false}
+          allowDecimal={allowDecimal}
           allowNegative={allowNegative}
           isRate={false}
           optional={false}

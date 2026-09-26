@@ -97,6 +97,8 @@ export interface CalculatorInputs {
   /** 주문 반영 직전 스냅샷 — Ctrl+Z */
   orderApplyUndoSnapshot?: {
     accountEval: number
+    maintenanceMargin?: number
+    entrustedMargin?: number
     contracts?: number
     contractAmount?: number
     contractAmountRole?: ContractAmountRole

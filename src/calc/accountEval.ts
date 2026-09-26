@@ -1,5 +1,4 @@
 import type { CalculatorInputs, PositionSide } from '../types.js'
-import { resolvePointValue } from './pointValue.js'
 
 /**
  * 계좌 평가금액에 포함된 미결제손익을 포지션 방향 전환에 맞게 보정.
@@ -26,7 +25,7 @@ export function resolveEffectiveAccountEval(
   // 숫자 크기만으로 약정가격의 역할을 추정하지 않는다. 명시적으로 진입가로
   // 저장된 값일 때만 방향 전환에 따른 미결제손익 보정을 적용한다.
   if (inputs.contractAmountRole !== 'entryPrice') return accountEval
-  const pointValue = resolvePointValue(inputs)
+  const pointValue = inputs.contractMultiplier ?? 1
   if (pointValue == null || pointValue <= 0) return accountEval
 
   const positionPnl = (currentPrice - contractAmount) * pointValue * contracts

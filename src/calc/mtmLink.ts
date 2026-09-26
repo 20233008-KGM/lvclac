@@ -1,6 +1,8 @@
 import type { CalculatorInputs, OrderScenarioBaseline, PositionSide } from '../types.js'
 import { buildAfterOrderInputs } from './leverage.js'
 import { calcTotalQuantity } from './liquidation/common.js'
+import { effectiveAccountEval } from './accountEval.js'
+import { needsOpeningMarginSpec } from './margins.js'
 
 export type CalculatorInputPatch = Partial<CalculatorInputs> & {
   /** 시나리오 가격 Enter — 시나리오 모드 진입 (손익·현재가 유지) */
@@ -64,7 +66,7 @@ export function applyPriceMove(
 
   const pnl = calcPnlDelta(prev, newPrice - currentPrice)
   return {
-    accountEval: accountEval + pnl,
+    accountEval: resolveMarginEquity(prev) + pnl,
     currentPrice: newPrice,
     evalSnapshotSide: prev.positionSide,
     mtmPriceAnchor: newPrice,
@@ -108,6 +110,20 @@ export function isPreviewModeActive(inputs: CalculatorInputs): boolean {
   return isScenarioModeActive(inputs) || isOrderScenarioModeActive(inputs)
 }
 
+/** Validate structural order constraints independently of margin warnings. */
+export function canApplyOrder(inputs: CalculatorInputs): boolean {
+  const base = orderInputsFromRevertSnapshot(inputs)
+  const held = base.contracts ?? 0
+  const order = base.orderContracts
+  const price = base.orderPrice
+  if (needsOpeningMarginSpec(base)) return false
+  return base.accountEval != null && Number.isFinite(base.accountEval) &&
+    Number.isSafeInteger(held) && held >= 0 &&
+    order != null && Number.isSafeInteger(order) && order !== 0 &&
+    Number.isSafeInteger(held + order) && held + order >= 0 &&
+    price != null && Number.isFinite(price) && price > 0
+}
+
 function orderInputsFromRevertSnapshot(inputs: CalculatorInputs): CalculatorInputs {
   const snap = inputs.orderScenarioRevertSnapshot
   if (!snap) return inputs
@@ -125,6 +141,7 @@ function orderInputsFromRevertSnapshot(inputs: CalculatorInputs): CalculatorInpu
 /** 주문 시나리오 미리보기용 post-order inputs — 저장 contracts/accountEval은 유지 */
 export function resolveOrderPreviewInputs(inputs: CalculatorInputs): CalculatorInputs {
   if (!isOrderScenarioModeActive(inputs)) return inputs
+  if (!canApplyOrder(inputs)) return orderInputsFromRevertSnapshot(inputs)
 
   const orderContracts = inputs.orderContracts
   const orderPrice = inputs.orderPrice
@@ -142,6 +159,8 @@ export function resolveOrderPreviewInputs(inputs: CalculatorInputs): CalculatorI
   return {
     ...inputs,
     contracts: afterInputs.contracts,
+    maintenanceMargin: afterInputs.maintenanceMargin,
+    entrustedMargin: afterInputs.entrustedMargin,
     contractAmount: afterInputs.contractAmount,
     contractAmountRole: afterInputs.contractAmountRole,
     accountEval: afterInputs.accountEval,
@@ -157,6 +176,7 @@ export function enterOrderScenarioPreview(
   const accountEval = prev.accountEval
   if (accountEval == null) return null
   if (isScenarioModeActive(prev)) return null
+  if (!canApplyOrder(prev)) return null
 
   return {
     orderScenarioRevertSnapshot: {
@@ -180,7 +200,7 @@ export function applyScenarioToMarkPrice(
   const accountEval = prev.accountEval
   if (currentPrice == null || accountEval == null) return null
 
-  let nextEquity = accountEval
+  let nextEquity = resolveMarginEquity(prev)
 
   if (targetPrice !== currentPrice) {
     nextEquity += calcPnlDelta(prev, targetPrice - currentPrice)
@@ -205,6 +225,7 @@ export function applyOrderScenarioToAccount(
   const orderContracts = prev.orderContracts
   const orderPrice = prev.orderPrice
   if (!snap || orderContracts == null || orderPrice == null) return null
+  if (!canApplyOrder(prev)) return null
 
   const base = orderInputsFromRevertSnapshot(prev)
   const heldContracts = base.contracts ?? 0
@@ -217,6 +238,8 @@ export function applyOrderScenarioToAccount(
 
   return {
     contracts: afterInputs.contracts,
+    maintenanceMargin: afterInputs.maintenanceMargin,
+    entrustedMargin: afterInputs.entrustedMargin,
     contractAmount: afterInputs.contractAmount,
     contractAmountRole: afterInputs.contractAmountRole,
     accountEval: afterInputs.accountEval,
@@ -258,6 +281,9 @@ export function revertOrderApply(prev: CalculatorInputs): Partial<CalculatorInpu
 
   return {
     accountEval: snap.accountEval,
+    // Older snapshots predate total-margin application; preserve their fields.
+    ...('maintenanceMargin' in snap ? { maintenanceMargin: snap.maintenanceMargin } : {}),
+    ...('entrustedMargin' in snap ? { entrustedMargin: snap.entrustedMargin } : {}),
     contracts: snap.contracts,
     contractAmount: snap.contractAmount,
     contractAmountRole: snap.contractAmountRole,
@@ -325,7 +351,7 @@ export function revertOrderScenarioState(prev: CalculatorInputs): Partial<Calcul
 
 /** 결과 증거금·레버리지에 쓸 계좌 평가금액 */
 export function resolveMarginEquity(inputs: CalculatorInputs): number {
-  return inputs.accountEval ?? 0
+  return inputs.accountEval == null ? 0 : effectiveAccountEval(inputs)
 }
 
 /** 시나리오 모드 미리보기 평가금액 — 스냅샷 + 미실현 손익 (저장값은 유지) */
@@ -337,8 +363,8 @@ export function resolveScenarioPreviewEquity(inputs: CalculatorInputs): number |
   const snap = inputs.scenarioRevertSnapshot
   if (scenarioMark == null || currentPrice == null || snap == null) return null
 
-  if (scenarioMark === currentPrice) return snap.accountEval
-  return snap.accountEval + calcPnlDelta(inputs, scenarioMark - currentPrice)
+  const equity = resolveMarginEquity({ ...inputs, accountEval: snap.accountEval, evalSnapshotSide: snap.evalSnapshotSide })
+  return equity + calcPnlDelta(inputs, scenarioMark - currentPrice)
 }
 
 /**
@@ -360,6 +386,7 @@ export function resolveEvaluationInputs(inputs: CalculatorInputs): CalculatorInp
             ...resolved,
             currentPrice: scenarioMark,
             accountEval: previewEquity,
+            evalSnapshotSide: resolved.positionSide,
           }
         }
       }
@@ -517,6 +544,8 @@ export function applyInputPatch(
           ? {
               accountEval: base.accountEval,
               contracts: base.contracts,
+              maintenanceMargin: base.maintenanceMargin,
+              entrustedMargin: base.entrustedMargin,
               contractAmount: base.contractAmount,
               contractAmountRole: base.contractAmountRole,
               mtmPriceAnchor: base.mtmPriceAnchor,
@@ -592,6 +621,11 @@ export function applyInputPatch(
   }
 
   const sanitizedPatch = sanitizePatchForScenarioLock(prev, inputPatch)
+
+  if (sanitizedPatch.positionSide != null && sanitizedPatch.positionSide !== prev.positionSide && prev.accountEval != null) {
+    const next = { ...prev, ...sanitizedPatch, evalSnapshotSide: prev.evalSnapshotSide ?? prev.positionSide }
+    return finish({ ...next, accountEval: resolveMarginEquity(next), evalSnapshotSide: next.positionSide })
+  }
 
   if (tickCurrentPrice != null) {
     const direction = tickCurrentPrice === 1 ? 1 : -1

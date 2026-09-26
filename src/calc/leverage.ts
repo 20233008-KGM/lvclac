@@ -19,6 +19,7 @@ import {
   inputsReadyForEvaluate,
   inputsReadyForOrderSim,
   maintenanceMarginMode,
+  needsOpeningMarginSpec,
   withReferencePrice,
   validateLiquidationInputs,
   validateMarginRates,
@@ -71,11 +72,28 @@ export function calcLeverageRatio(
 }
 
 /** 가용 증거금 = 계좌 평가금액 − 현재 위탁증거금 */
+function floorDecimalCapacity(equity: number, margin: number, perContract: number): number {
+  // Count contracts using the decimal values supplied to this boundary. Adding
+  // an epsilon admits underfunded orders; binary subtraction also turns
+  // (0.3 - 0.2) / 0.1 into a number just below one.
+  const parts = [equity, margin, perContract].map((value) => {
+    const [coefficient, exponent = '0'] = String(value).split('e')
+    const [integer, fraction = ''] = coefficient.split('.')
+    return { digits: BigInt(integer + fraction), power: Number(exponent) - fraction.length }
+  })
+  const scale = Math.min(...parts.map(({ power }) => power))
+  const [e, m, p] = parts.map(({ digits, power }) => digits * 10n ** BigInt(power - scale))
+  return Number((e - m) / p)
+}
+
 export function calcMaxBuyable(
   accountEval: number,
   entrustedMargin: number,
   perContractEntrusted: number,
 ): { value: number | null; message: CalcMessageCode | null } {
+  if (![accountEval, entrustedMargin, perContractEntrusted].every(Number.isFinite)) {
+    return { value: null, message: 'cannot_calc_per_contract_entrusted' }
+  }
   const available = accountEval - entrustedMargin
   if (available <= 0) {
     return { value: 0, message: 'no_available_margin' }
@@ -83,7 +101,7 @@ export function calcMaxBuyable(
   if (perContractEntrusted <= 0) {
     return { value: null, message: 'cannot_calc_per_contract_entrusted' }
   }
-  const count = Math.floor(available / perContractEntrusted + 1e-9)
+  const count = floorDecimalCapacity(accountEval, entrustedMargin, perContractEntrusted)
   if (!Number.isFinite(count)) {
     return { value: null, message: 'cannot_calc_per_contract_entrusted' }
   }
@@ -259,14 +277,16 @@ function withRescaledTotalMargins(
   newContracts: number,
 ): CalculatorInputs {
   const beforeContracts = base.contracts ?? 0
-  if (beforeContracts <= 0 || newContracts <= 0) return next
+  if (beforeContracts <= 0 || newContracts < 0) return next
 
   const maintenanceIsTotal = maintenanceMarginMode(base) === 'total'
   const entrustedIsTotal = entrustedMarginMode(base) === 'total'
   if (!maintenanceIsTotal && !entrustedIsTotal) return next
 
   let ratio: number
-  if (base.totalMarginKind === 'fixed') {
+  if (newContracts === 0) {
+    ratio = 0
+  } else if (base.totalMarginKind === 'fixed') {
     // 계약당 고정: 약정금액과 무관하게 계약수에만 비례
     ratio = newContracts / beforeContracts
   } else {
@@ -276,7 +296,7 @@ function withRescaledTotalMargins(
     if (beforeNotional <= 0 || afterNotional <= 0) return next
     ratio = afterNotional / beforeNotional
   }
-  if (!Number.isFinite(ratio) || ratio <= 0) return next
+  if (!Number.isFinite(ratio) || ratio < 0) return next
 
   const rescaled = { ...next }
   if (maintenanceIsTotal && base.maintenanceMargin != null) {
@@ -306,6 +326,10 @@ function calcAfterOrderLiquidation(
 
   if (newContracts < 0) {
     return { price: null, afterMargins: null, afterInputs: null, message: 'order_exceeds_position' }
+  }
+
+  if (needsOpeningMarginSpec(inputs)) {
+    return { price: null, afterMargins: null, afterInputs: null, message: 'cannot_calc_per_contract_entrusted' }
   }
 
   const afterInputs = buildAfterOrderInputs(inputs, newContracts, orderContracts)
@@ -506,13 +530,6 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
 
   const beforeMargins = withEffectiveAvailableMargin(orderCalcBase, beforeResult.margins)
 
-  const orderCapacityMessage = checkOrderExceedsMaxBuyable(
-    orderCalcBase.orderContracts,
-    marginEquity,
-    beforeMargins,
-    orderCalcBase.positionSide,
-  )
-
   const {
     price: afterLiquidation,
     afterMargins: rawAfterMargins,
@@ -522,6 +539,12 @@ export function calculateOrder(inputs: CalculatorInputs): OrderResult {
   const afterMargins = rawAfterMargins
     ? withEffectiveAvailableMargin(afterInputs ?? orderCalcBase, rawAfterMargins)
     : null
+  // Capacity applies to the requested fill, including its P&L. A favorable fill
+  // may fund an addition; reducing a position must remain possible in a deficit.
+  const orderCapacityMessage: CalcMessageCode | null =
+    (orderCalcBase.orderContracts ?? 0) > 0 && afterMargins != null && afterMargins.availableMargin < 0
+      ? positionSide === 'short' ? 'order_exceeds_max_sellable' : 'order_exceeds_max_buyable'
+      : null
   const beforeContractAmount = orderCalcBase.contractAmount ?? null
   const afterContractAmount = afterInputs?.contractAmount ?? null
 

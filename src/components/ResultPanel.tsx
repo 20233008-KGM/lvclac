@@ -13,6 +13,7 @@ import {
 import { calculateEvaluate, calculateOrder, captureOrderScenarioBaseline } from '../calc/leverage'
 import {
   applyInputPatch,
+  canApplyOrder,
   isOrderScenarioModeActive,
   resolveEvaluationInputs,
   type CalculatorInputPatch,
@@ -480,8 +481,7 @@ function OrderInputs({
     currentPrice != null
       ? formatNumberForInput(currentPrice)
       : priceField.placeholder || undefined
-  const orderReady =
-    inputs.orderContracts != null && inputs.orderPrice != null
+  const orderReady = canApplyOrder(inputs)
 
   function orderInputHistoryOptions(
     meta?: NumberInputChangeMeta & { gestureStart?: boolean },
@@ -500,6 +500,7 @@ function OrderInputs({
   }
 
   function applyOrderScenario() {
+    if (!orderReady) return
     const beforeInputs = applyInputPatch(inputs, { clearOrderScenario: true })
     const afterInputs = applyInputPatch(inputs, { applyOrderScenario: true })
     onChange(
@@ -635,6 +636,7 @@ function OrderInputs({
               <NumberStepper
                 ref={priceInputRef}
                 value={inputs.orderPrice}
+                allowDecimal
                 step={tickSize}
                 allowNegative={false}
                 placeholder={orderPricePlaceholder}
@@ -655,7 +657,7 @@ function OrderInputs({
                 <NumberInput
                   ref={priceInputRef}
                   value={inputs.orderPrice}
-                  allowDecimal={false}
+                  allowDecimal
                   placeholder={orderPricePlaceholder}
                   aria-labelledby={priceLabelId}
                   className="result-order-price-row__input"

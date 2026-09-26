@@ -55,12 +55,12 @@ describe('추가 매수/매도 한도 — 롱·숏 탭 전환', () => {
     evalSnapshotSide: 'long' as const,
   }
 
-  it('롱 입력 후 숏 탭: 가용증거금은 입력 평가금액 기준으로 동일', () => {
+  it('롱 입력 후 숏 탭: 동일 현금의 방향별 평가금액으로 가용증거금 산출', () => {
     const long = calculateEvaluate({ ...base, positionSide: 'long' })
     const short = calculateEvaluate({ ...base, positionSide: 'short' })
 
-    expect(long.margins?.availableMargin).toBe(short.margins?.availableMargin)
     expect(long.margins?.availableMargin).toBe(66_769 - 32_050)
+    expect(short.margins?.availableMargin).toBe(66_769 - 2 * 17_000 - 32_050)
   })
 
   it('숏 탭 전환 시 청산가는 현재가 위에 위치', () => {

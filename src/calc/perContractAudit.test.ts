@@ -1,17 +1,12 @@
-import { env } from 'node:process'
 import { describe, expect, it } from 'vitest'
 import type { CalculatorInputs, PositionSide } from '../types'
 import { resolveEffectiveAccountEval } from './accountEval'
 import { buildAfterOrderInputs, calculateEvaluate, calculateOrder, calcMaxBuyable, captureOrderScenarioBaseline } from './leverage'
-import { applyInputPatch, applyPriceMove, resolveEvaluationInputs } from './mtmLink'
+import { applyInputPatch, applyPriceMove, canApplyOrder, resolveEvaluationInputs } from './mtmLink'
 import { formatNumber } from '../utils/format'
 import { formatRawNumericInput, normalizeInputValue, parseFormattedInput } from '../utils/inputFormat'
 import { parseStoredCalculatorInputs } from '../utils/storedCalculatorInputs'
 
-// Audit only: application behavior is deliberately unchanged. Expected failures
-// assert the desired financial invariant, not the current defective output.
-// LIQGUARD_AUDIT_STRICT=1 exposes every known defect as a normal failing test.
-const knownIssue = env.LIQGUARD_AUDIT_STRICT === '1' ? it : it.fails
 
 const base: CalculatorInputs = {
   mode: 'evaluate', marginInputMode: 'perContract', positionSide: 'long',
@@ -196,56 +191,144 @@ it('retains explicit model boundaries: positive prices and both margin specifica
   expect(calculateEvaluate({ ...base, entrustedMarginPerContract: undefined }).liquidationPrice).toBeNull()
 })
 
-describe('open audit findings — expected failures, NOT fixes', () => {
-  knownIssue('F1: price input must preserve 75.25 instead of silently producing 7525', () => {
-    expect(parseFormattedInput(formatRawNumericInput('75.25', false))).toBe(75.25)
+describe('audit regression checks and intentional display policy', () => {
+  it('F1: decimal price input preserves 75.25', () => {
+    expect(parseFormattedInput(formatRawNumericInput('75.25', true))).toBe(75.25)
   })
-  knownIssue('F1: a valid 0.001 tick must survive the decimal input normalizer', () => {
+  it('F1: a valid 0.001 tick must survive the decimal input normalizer', () => {
     expect(normalizeInputValue(0.001, { allowDecimal: true })).toBe(0.001)
   })
-  knownIssue('F2: a liquidation threshold on a cent tick must remain visible', () => {
+  it('F2: intentionally rounds the display without changing the calculated threshold', () => {
     const result = calculateEvaluate({ ...base, accountEval: 27_320 })
     close(result.liquidationPrice, 67.34)
-    expect(formatNumber(result.liquidationPrice)).toBe('67.34')
+    expect(formatNumber(result.liquidationPrice)).toBe('67')
   })
-  knownIssue('F3: side-switch unrealized P&L must use the constant contract multiplier', () => {
+  it('F3: side-switch unrealized P&L must use the constant contract multiplier', () => {
     const input = { ...base, contractAmount: 70, positionSide: 'short' as const, evalSnapshotSide: 'long' as const }
     // Original cash = 27,000 - (75-70)*2*1,000 = 17,000.
     // The same cash with a short is worth 17,000 - 10,000 = 7,000.
     expect(resolveEffectiveAccountEval(input, 'long')).toBe(7_000)
   })
-  knownIssue('F3: liquidation and maintenance excess must use the same equity after switching side', () => {
+  it('F3: liquidation and maintenance excess must use the same equity after switching side', () => {
     const input = { ...base, contractAmount: 70, positionSide: 'short' as const, evalSnapshotSide: 'long' as const }
     const result = calculateEvaluate(input)
     // This consistency invariant holds regardless of the chosen side-switch policy.
     close(result.margins?.maintenanceExcess,
       (result.liquidationPrice! - input.currentPrice!) * input.contracts! * input.contractMultiplier!)
   })
-  knownIssue('F4: an adverse fill that exceeds initial margin must raise a capacity warning', () => {
+  it('F4: an adverse fill that exceeds initial margin must raise a capacity warning', () => {
     const result = calculateOrder({ ...base, orderContracts: 1, orderPrice: 76 })
     expect(result.afterMargins?.availableMargin).toBe(-1_000)
     expect(result.orderCapacityMessage).toBe('order_exceeds_max_buyable')
   })
-  knownIssue('F5: applying an over-reduction must not create negative held contracts', () => {
+  it('F5: applying an over-reduction must not create negative held contracts', () => {
     const input = { ...base, orderContracts: -3, orderPrice: 75 }
     expect(calculateOrder(input).orderMessage).toBe('order_exceeds_position')
     const preview = applyInputPatch(input, { commitOrderScenario: captureOrderScenarioBaseline(calculateOrder(input)) })
     const applied = applyInputPatch(preview, { applyOrderScenario: true })
     expect(applied.contracts).toBeGreaterThanOrEqual(0)
   })
-  knownIssue('F6: total explicitly declared fixed must have the same threshold as perContract', () => {
+  it('F6: total explicitly declared fixed must have the same threshold as perContract', () => {
     const total = { ...base, marginInputMode: 'total' as const, totalMarginKind: 'fixed' as const,
       maintenanceMargin: 12_000, entrustedMargin: 18_000 }
     close(calculateEvaluate(total).liquidationPrice, calculateEvaluate(base).liquidationPrice!)
   })
-  knownIssue('F7: entry-optional fixed mode must derive notional from current price and multiplier', () => {
+  it('F7: entry-optional fixed mode must derive notional from current price and multiplier', () => {
     const input = { ...base, contractAmount: undefined, contractAmountRole: undefined }
     const result = calculateEvaluate(input)
     close(result.liquidationPrice, 67.5)
     expect(result.margins?.contractNotional).toBe(150_000)
   })
-  knownIssue('F8: integer capacity must not admit a contract with one currency unit missing', () => {
+  it('F8: integer capacity must not admit a contract with one currency unit missing', () => {
     // All inputs are exact safe integers, so this is not unavoidable FP loss.
     expect(calcMaxBuyable(2_999_999_999, 2_000_000_000, 1_000_000_000).value).toBe(0)
+    expect(calcMaxBuyable(0.3, 0.2, 0.1).value).toBe(1)
+    expect(calcMaxBuyable(0.29999999999999993, 0.2, 0.1).value).toBe(0)
+    expect(calcMaxBuyable(3e-8, 2e-8, 1e-8).value).toBe(1)
+    expect(calcMaxBuyable(2e15 - 0.5, 1e15, 1e15).value).toBe(0)
   })
+})
+
+describe.each(['long', 'short'] as const)('stateful regression: %s', (side) => {
+  it('agrees with the independent ledger through add, reduce, re-add and full close', () => {
+    let state = { ...base, positionSide: side, accountEval: 60_000 }
+    for (const [order, fill] of [[2, 75.25], [-1, 76.125], [1, 74.625], [-4, 73.75]]) {
+      const expected = ledgerAfter(state, order, fill)
+      const entered = { ...state, orderContracts: order, orderPrice: fill }
+      const preview = applyInputPatch(entered, { commitOrderScenario: captureOrderScenarioBaseline(calculateOrder(entered)) })
+      close(resolveEvaluationInputs(preview).accountEval, expected.equity)
+      state = applyInputPatch(preview, { applyOrderScenario: true }) as typeof state
+      close(state.accountEval, expected.equity)
+      close(state.contracts, expected.contracts)
+      close(state.contractAmount, expected.entry)
+      close(calculateEvaluate(state).margins?.availableMargin, expected.equity - expected.contracts * 9_000)
+    }
+  })
+
+  it('uses the same equity after a direction switch, MTM move, order and reload', () => {
+    const input = { ...base, positionSide: side, contractAmount: 70 }
+    const opposite = side === 'long' ? 'short' : 'long'
+    const sign = side === 'long' ? 1 : -1
+    const switched = applyInputPatch(input, { positionSide: opposite })
+    close(switched.accountEval, 27_000 - sign * 20_000)
+    close(applyInputPatch(switched, { positionSide: side }).accountEval, 27_000)
+    const moved = applyInputPatch(switched, { commitCurrentPrice: 76 })
+    close(moved.accountEval, switched.accountEval! - sign * 2_000)
+    const orderInput = { ...moved, orderContracts: -1, orderPrice: 76.25 }
+    const expected = ledgerAfter(orderInput, -1, 76.25)
+    const preview = applyInputPatch(orderInput, { commitOrderScenario: captureOrderScenarioBaseline(calculateOrder(orderInput)) })
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+    close(applied.accountEval, expected.equity)
+    const restored = parseStoredCalculatorInputs(JSON.parse(JSON.stringify(applied)))!
+    expect(calculateEvaluate(restored)).toEqual(calculateEvaluate(applied))
+  })
+
+  it('warns only for additions whose actual fill leaves an initial-margin deficit', () => {
+    const input = { ...base, positionSide: side }
+    const adverse = side === 'long' ? 76 : 74
+    expect(calculateOrder({ ...input, orderContracts: 1, orderPrice: adverse }).isAtRiskAfter).toBe(true)
+    const favorable = side === 'long' ? 70 : 80
+    expect(calculateOrder({ ...input, orderContracts: 2, orderPrice: favorable }).orderCapacityMessage).toBeNull()
+    expect(calculateOrder({ ...input, accountEval: 1_000, orderContracts: -1, orderPrice: adverse }).orderCapacityMessage).toBeNull()
+    expect(calculateOrder({ ...input, orderContracts: 1, orderPrice: 75 }).orderCapacityMessage).toBeNull()
+  })
+
+  it('keeps fixed total margins equivalent through preview, apply, undo and full close', () => {
+    const total: CalculatorInputs = { ...base, positionSide: side, marginInputMode: 'total', totalMarginKind: 'fixed',
+      maintenanceMargin: 12_000, entrustedMargin: 18_000, orderContracts: 1, orderPrice: 75.25 }
+    const perContract = { ...total, marginInputMode: 'perContract' as const }
+    const preview = applyInputPatch(total, { commitOrderScenario: captureOrderScenarioBaseline(calculateOrder(total)) })
+    const applied = applyInputPatch(preview, { applyOrderScenario: true })
+    expect(applied.maintenanceMargin).toBe(18_000)
+    expect(applied.entrustedMargin).toBe(27_000)
+    close(calculateEvaluate(preview).liquidationPrice, calculateOrder(perContract).afterLiquidation!)
+    close(calculateEvaluate(applied).liquidationPrice, calculateOrder(perContract).afterLiquidation!)
+    const undone = applyInputPatch(applied, { undoOrderApply: true })
+    expect(undone.maintenanceMargin).toBe(12_000)
+    expect(undone.entrustedMargin).toBe(18_000)
+    close(calculateEvaluate(undone).liquidationPrice, calculateEvaluate(preview).liquidationPrice!)
+    const canceled = applyInputPatch(undone, { clearOrderScenario: true })
+    close(calculateEvaluate(canceled).liquidationPrice, calculateEvaluate(total).liquidationPrice!)
+    const fullClose = { ...total, orderContracts: -2 }
+    const flat = applyInputPatch(applyInputPatch(fullClose, { commitOrderScenario: captureOrderScenarioBaseline(calculateOrder(fullClose)) }), { applyOrderScenario: true })
+    expect(calculateEvaluate(flat).margins?.maintenanceMargin).toBe(0)
+    expect(calculateEvaluate(flat).margins?.entrustedMargin).toBe(0)
+    const reopen = { ...flat, orderContracts: 1, orderPrice: 75 }
+    expect(canApplyOrder(reopen)).toBe(false)
+    expect(calculateOrder(reopen).afterMargins).toBeNull()
+  })
+})
+
+it('rejects invalid orders even after editing an active preview or restoring it', () => {
+  const input = { ...base, orderContracts: 1, orderPrice: 75 }
+  const preview = applyInputPatch(input, { commitOrderScenario: captureOrderScenarioBaseline(calculateOrder(input)) })
+  for (const orderContracts of [-3, 0, 0.5, Infinity]) {
+    const invalid = { ...preview, orderContracts }
+    expect(canApplyOrder(invalid)).toBe(false)
+    expect(resolveEvaluationInputs(invalid).contracts).toBe(2)
+    expect(applyInputPatch(invalid, { applyOrderScenario: true }).contracts).toBe(2)
+    const restored = parseStoredCalculatorInputs(JSON.parse(JSON.stringify(invalid)))!
+    expect(applyInputPatch(restored, { applyOrderScenario: true }).contracts).toBe(2)
+  }
+  expect(calculateEvaluate({ ...base, contractAmountRole: 'fixedSpec', contractAmount: 250_000 }).margins?.contractNotional).toBe(500_000_000)
 })

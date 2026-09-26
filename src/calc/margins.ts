@@ -47,9 +47,10 @@ export function entrustedMarginMode(inputs: CalculatorInputs): MarginInputMode {
   return inputs.marginInputMode ?? (hasDirectEntrusted(inputs) ? 'total' : 'rate')
 }
 
-/** perContract 모드: 유지증거금이 가격과 무관한 고정금액 → 청산식 분기 신호 */
+/** 계약당 또는 명시적 고정 총액: 가격과 무관한 유지증거금 */
 export function isMaintenanceFixed(inputs: CalculatorInputs): boolean {
-  return maintenanceMarginMode(inputs) === 'perContract'
+  const mode = maintenanceMarginMode(inputs)
+  return mode === 'perContract' || (mode === 'total' && inputs.totalMarginKind === 'fixed')
 }
 
 function hasMaintenanceSpec(inputs: CalculatorInputs): boolean {
@@ -57,7 +58,7 @@ function hasMaintenanceSpec(inputs: CalculatorInputs): boolean {
     case 'perContract':
       return (inputs.maintenanceMarginPerContract ?? 0) > 0
     case 'total':
-      return hasDirectMaintenance(inputs)
+      return inputs.maintenanceMargin != null && inputs.maintenanceMargin >= 0
     default:
       return inputs.maintenanceMarginRate != null
   }
@@ -68,7 +69,7 @@ function hasEntrustedSpec(inputs: CalculatorInputs): boolean {
     case 'perContract':
       return (inputs.entrustedMarginPerContract ?? 0) > 0
     case 'total':
-      return hasDirectEntrusted(inputs)
+      return inputs.entrustedMargin != null && inputs.entrustedMargin >= 0
     default:
       return inputs.entrustedMarginRate != null
   }
@@ -76,6 +77,14 @@ function hasEntrustedSpec(inputs: CalculatorInputs): boolean {
 
 export function hasMarginSpec(inputs: CalculatorInputs): boolean {
   return hasMaintenanceSpec(inputs) && hasEntrustedSpec(inputs)
+}
+
+/** After closing a total-margin position, zero totals cannot price a new one. */
+export function needsOpeningMarginSpec(inputs: CalculatorInputs): boolean {
+  return (inputs.contracts ?? 0) === 0 && (
+    (maintenanceMarginMode(inputs) === 'total' && (inputs.maintenanceMargin ?? 0) <= 0) ||
+    (entrustedMarginMode(inputs) === 'total' && (inputs.entrustedMargin ?? 0) <= 0)
+  )
 }
 
 export function canUseRateBasedNotional(inputs: CalculatorInputs): boolean {
@@ -141,7 +150,8 @@ export function calcCurrentPositionNotional(
   contracts: number,
 ): number {
   const currentPrice = inputs.currentPrice
-  const usesEntryPrice = inputs.contractAmountRole === 'entryPrice'
+  const usesEntryPrice = inputs.contractAmountRole === 'entryPrice' ||
+    (inputs.contractAmount == null && inputs.contractAmountRole !== 'fixedSpec')
 
   if (usesEntryPrice && currentPrice != null && currentPrice > 0) {
     return calcRateBasedNotional(currentPrice, contracts, inputs.contractMultiplier)
@@ -286,11 +296,15 @@ export function calcMargins(
     resolveEntrustedMargin(inputs, heldContracts)
 
   const perContractMaintenance =
-    heldContracts > 0
+    maintenanceMarginMode(inputs) === 'perContract'
+      ? inputs.maintenanceMarginPerContract ?? 0
+      : heldContracts > 0
       ? maintenanceMargin / heldContracts
       : resolveMaintenanceMargin(inputs, 1).amount
   const perContractEntrusted =
-    heldContracts > 0
+    entrustedMarginMode(inputs) === 'perContract'
+      ? inputs.entrustedMarginPerContract ?? 0
+      : heldContracts > 0
       ? entrustedMargin / heldContracts
       : resolveEntrustedMargin(inputs, 1).amount
 

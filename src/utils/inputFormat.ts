@@ -1,4 +1,4 @@
-import { exceedsSafePrecision, roundTo } from './format.js'
+import { exceedsSafePrecision } from './format.js'
 
 /**
  * 정수부 최대 자릿수. 1000조(10^15)는 16자리이며,
@@ -17,7 +17,7 @@ export function countIntegerDigits(
   if (stripped === '' || stripped === '-') return 0
   const negative = allowNegative && stripped.startsWith('-')
   const unsigned = negative ? stripped.slice(1) : stripped
-  const intPart = allowDecimal ? unsigned.split('.')[0] ?? '' : unsigned.replace(/\D/g, '')
+  const intPart = allowDecimal ? unsigned.split('.')[0] ?? '' : unsigned.replace(/\..*$/, '')
   return intPart.replace(/\D/g, '').length
 }
 
@@ -73,7 +73,7 @@ export function formatRawNumericInput(
   const unsigned = negative ? stripped.slice(1) : stripped
 
   if (!allowDecimal) {
-    const digits = unsigned.replace(/\D/g, '').slice(0, MAX_INTEGER_DIGITS)
+    const digits = unsigned.split('.')[0].replace(/\D/g, '').slice(0, MAX_INTEGER_DIGITS)
     if (digits === '') return negative ? '-' : ''
     const formatted = groupThousands(digits)
     return negative ? `-${formatted}` : formatted
@@ -87,8 +87,7 @@ export function formatRawNumericInput(
   const formattedInt = groupThousands(intPart)
 
   if (hasTrailingDot || s.includes('.')) {
-    if (hasTrailingDot && decPart === '') return `${formattedInt}.`
-    return `${formattedInt}.${decPart}`
+    return `${negative ? '-' : ''}${formattedInt}.${decPart}`
   }
 
   return negative ? `-${formattedInt}` : formattedInt
@@ -111,10 +110,9 @@ export function formatNumberForInput(
   allowDecimal = false,
   allowNegative = false,
 ): string {
-  if (value === undefined || value === null || Number.isNaN(value)) return ''
-  const decimals = allowDecimal ? 2 : 0
-  const rounded = roundTo(value, decimals)
-  const raw = decimals > 0 ? String(rounded) : String(Math.round(rounded))
+  if (value == null || !Number.isFinite(value)) return ''
+  const magnitude = allowDecimal ? Math.abs(value) : Math.abs(Math.round(value))
+  const raw = `${value < 0 ? '-' : ''}${formatRateForInput(magnitude)}`
   return formatRawNumericInput(raw, allowDecimal, allowNegative)
 }
 
@@ -163,7 +161,7 @@ export function normalizeInputValue(
   options: { isRate?: boolean; allowDecimal?: boolean },
 ): number {
   if (options.isRate) return value
-  if (options.allowDecimal) return roundTo(value, 2)
+  if (options.allowDecimal) return value
   return Math.round(value)
 }
 

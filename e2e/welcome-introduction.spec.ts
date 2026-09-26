@@ -8,7 +8,7 @@ test('first visit, focus containment, dismissal and replay preserve calculator a
   await page.goto('/?lang=ko')
   const dialog = page.getByRole('dialog', { name: 'LiqGuard에 오신 것을 환영합니다', exact: true })
   await expect(dialog).toBeVisible()
-  const position = dialog.getByRole('table', { name: 'S&P 500 마이크로 선물 · 가상 포지션' })
+  const position = dialog.getByRole('table', { name: '가상 포지션 · S&P 500 마이크로 선물' })
   await expect(position).toBeVisible()
   await expect(position.getByRole('row')).toHaveCount(2)
   await expect(position.getByRole('columnheader')).toHaveText(['포지션', '평가금', '진입/현재 (pt)', '유지증거금'])
@@ -82,7 +82,7 @@ for (const locale of ['ko', 'en']) {
       const dialog = page.locator('.trust-modal--introduction')
       await expect(dialog).toBeVisible()
       await expect(dialog.locator('.result-hero-label')).toHaveText(locale === 'ko'
-        ? ['현재가 (pt)', '예상 청산가 (pt)', '청산 여유']
+        ? ['현재가 (pt)', '청산가 (pt)', '청산 여유']
         : ['Current price (pt)', 'Liquidation price (pt)', 'Liquidation buffer'])
       await expect(dialog.locator('.result-hero-value')).toHaveText(['6,000', '5,100', '-15%'])
       expect(await dialog.locator('.result-hero-label, .result-hero-value').evaluateAll((items) =>

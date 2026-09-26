@@ -259,6 +259,8 @@ function CalculatorApp() {
                     <span className="header-welcome-btn__meta">{t.welcome.headerCtaMeta}</span>
                   </a>}
                   <HowToUseButton />
+                </div>
+                <div className="header-auth">
                   <AuthButton variant="header" />
                 </div>
               </header>

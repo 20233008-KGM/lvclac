@@ -87,7 +87,7 @@ export function CalculatorExamples() {
     <div className="calculator-examples__margin">
       <div className="calculator-examples__margin-controls">
         <span id="example-margin-label">{t.marginMode.label}</span>
-        <div className="margin-mode-toggle" role="radiogroup" aria-labelledby="example-margin-label" aria-describedby="example-margin-description">
+        <div className="margin-mode-toggle" role="radiogroup" aria-labelledby="example-margin-label">
           {marginModes.map((mode, index) => <button key={mode} type="button" role="radio"
             className={`margin-mode-btn${marginMode === mode ? ' active' : ''}`}
             aria-checked={marginMode === mode} tabIndex={marginMode === mode ? 0 : -1}
@@ -97,8 +97,6 @@ export function CalculatorExamples() {
           </button>)}
         </div>
       </div>
-      <p id="example-margin-description">{copy.marginDescriptions[marginMode]}</p>
-      <p>{copy.marginComparison}</p>
     </div>
     <div id="calculator-example-panel" role="tabpanel" aria-labelledby={`example-tab-${example.id}`} tabIndex={0}>
       <div className="calculator-examples__context"><h3>{copy.names[example.id]}</h3><span>{copy.readOnly}</span></div>

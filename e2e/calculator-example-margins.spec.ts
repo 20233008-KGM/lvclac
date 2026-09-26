@@ -80,7 +80,6 @@ for (const locale of ['ko', 'en']) {
               : ['maintenance margin rate', 'maintenance margin per contract', 'total maintenance margin'][modeIndex],
           )
           if (mode === 'total') {
-            await expect(section.locator('#example-margin-description')).toContainText(locale === 'ko' ? '가격 비례형' : 'price-proportional')
             await expect(section.locator('caption')).toContainText(locale === 'ko' ? '최초 보유분' : 'starting position')
           }
           expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)

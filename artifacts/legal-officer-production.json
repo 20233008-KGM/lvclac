@@ -1,0 +1,30 @@
+[
+  {
+    "path": "/terms",
+    "status": 200,
+    "noOfficerRow": true,
+    "representative": true,
+    "disclosure": true
+  },
+  {
+    "path": "/privacy",
+    "status": 200,
+    "noOfficerRow": true,
+    "representative": true,
+    "disclosure": true
+  },
+  {
+    "path": "/en/terms",
+    "status": 200,
+    "noOfficerRow": true,
+    "representative": true,
+    "disclosure": true
+  },
+  {
+    "path": "/en/privacy",
+    "status": 200,
+    "noOfficerRow": true,
+    "representative": true,
+    "disclosure": true
+  }
+]

@@ -1,0 +1,32 @@
+fix: correct per-contract margin inputs, equity and order transitions
+
+Preserve decimal prices, cash, multipliers and small ticks across input,
+blur and storage while retaining intentional integer result formatting.
+Keep contract counts integral without concatenating fractional digits.
+
+Use the constant futures multiplier for side-switch P&L and share the
+same effective equity across liquidation, margins, leverage, MTM and
+orders. Warn on initial-margin deficits at the actual requested fill.
+Validate order quantities and prices at preview and account mutation
+boundaries so over-reductions cannot create negative positions.
+
+Honor explicitly fixed total margins in liquidation and carry total
+margins through preview, confirmation and undo. Clear totals on full
+close and require a new margin specification before reopening from zero.
+Derive current notional when entry is absent while preserving fixedSpec.
+Replace the capacity epsilon with decimal-scaled integer division.
+
+Convert the audit's expected failures to 33 passing regression checks.
+Retain 240 equilibrium, 720 MTM and 960 independent cash-ledger cases;
+add sequential orders, direction switches and fixed-total state checks.
+Add isolated Chromium UI coverage with actual inputs and independent
+expected values for both sides, local reload, tick/drag, blocked orders,
+fill warnings and total-margin undo/redo. Update the original audit and
+withdraw the F2 P1 classification after the display-policy discussion.
+
+Validation: 150 Vitest files / 1078 tests passed, no expected failures;
+7 browser scenarios verified (6 passed, final total-mode test selector
+corrected and rerun passed); changed-file ESLint; npm run build;
+git diff --check. No push, production deployment, authenticated cloud
+storage or real-broker execution validation. Existing artifacts and
+concurrent onboarding/privacy changes preserved.

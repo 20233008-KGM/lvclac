@@ -1,0 +1,90 @@
+[
+  {
+    "path": "/terms",
+    "width": 1440,
+    "status": 200,
+    "headings": 13,
+    "tables": 1,
+    "characters": 3991,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/privacy",
+    "width": 1440,
+    "status": 200,
+    "headings": 14,
+    "tables": 4,
+    "characters": 6348,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/en/terms",
+    "width": 1440,
+    "status": 200,
+    "headings": 13,
+    "tables": 1,
+    "characters": 7642,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/en/privacy",
+    "width": 1440,
+    "status": 200,
+    "headings": 14,
+    "tables": 4,
+    "characters": 12771,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/terms",
+    "width": 390,
+    "status": 200,
+    "headings": 13,
+    "tables": 1,
+    "characters": 3991,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/privacy",
+    "width": 390,
+    "status": 200,
+    "headings": 14,
+    "tables": 4,
+    "characters": 6348,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/en/terms",
+    "width": 390,
+    "status": 200,
+    "headings": 13,
+    "tables": 1,
+    "characters": 7642,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  },
+  {
+    "path": "/en/privacy",
+    "width": 390,
+    "status": 200,
+    "headings": 14,
+    "tables": 4,
+    "characters": 12771,
+    "overflow": false,
+    "errors": [],
+    "passed": true
+  }
+]

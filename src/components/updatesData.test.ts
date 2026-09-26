@@ -20,7 +20,7 @@ ${locale === 'ko' ? '첫 문단입니다.\n\n## 자세한 내용\n\n본문입니
 
 describe('update Markdown content', () => {
   it('loads the published bilingual update from Markdown files', () => {
-    expect(UPDATE_ENTRIES).toHaveLength(6)
+    expect(UPDATE_ENTRIES).toHaveLength(7)
     expect(UPDATE_ENTRIES[0]).toMatchObject({
       id: '2026-08-12-beta-experience',
       publishedAt: '2026-08-12',
@@ -52,6 +52,11 @@ describe('update Markdown content', () => {
       id: '2026-09-25-calculator-examples',
       publishedAt: '2026-09-25',
       content: { ko: { release: '1.2.3' }, en: { release: '1.2.3' } },
+    })
+    expect(UPDATE_ENTRIES.find((entry) => entry.id === '2026-09-27-privacy-notice-mobile-polish')).toMatchObject({
+      id: '2026-09-27-privacy-notice-mobile-polish',
+      publishedAt: '2026-09-27',
+      content: { ko: { release: '1.2.5' }, en: { release: '1.2.5' } },
     })
     expect(UPDATE_ENTRIES[2]).toMatchObject({
       id: '2026-09-10-saved-workflows-and-precision',

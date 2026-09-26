@@ -170,6 +170,34 @@
   .welcome-introduction__comparison .result-sheet td { padding-right: 7px; padding-left: 7px; }
 }
 
+@media (min-width: 1024px) {
+  .trust-modal.trust-modal--introduction { width: 460px; }
+  .trust-modal--introduction .trust-modal__header { padding: 24px 24px 16px; }
+  .trust-modal--introduction .trust-modal__title { font-size: 22px; }
+  .trust-modal--introduction .trust-modal__intro { font-size: 14px; }
+  .trust-modal--introduction .trust-modal__body { padding: 0 24px; }
+  .trust-modal--introduction .trust-modal__footer { padding: 20px 24px 24px; }
+
+  .welcome-introduction__example h3,
+  .welcome-introduction__position caption { font-size: 14px; }
+  .welcome-introduction__position { font-size: 12px; }
+  .welcome-introduction__position th,
+  .welcome-introduction__position td { padding: 6px; }
+
+  .welcome-introduction__result.result-hero { gap: 10px; margin-top: 12px; }
+  .welcome-introduction__result .result-hero-card { padding: 12px 14px; }
+  .welcome-introduction__result .result-hero-label { font-size: 12px; }
+  .welcome-introduction__result .result-hero-value { font-size: 28px; }
+
+  .welcome-introduction__comparison { margin-top: 18px; }
+  .welcome-introduction__comparison .result-sheet { font-size: 13px; }
+  .welcome-introduction__comparison .result-sheet th,
+  .welcome-introduction__comparison .result-sheet td { padding: 9px 12px; }
+  .welcome-introduction__comparison .result-sheet td { font-size: 16px; }
+  .welcome-introduction__takeaway { margin-top: 12px; font-size: 13px; }
+  .welcome-introduction__start { min-height: 48px; font-size: 15px; }
+}
+
 @media (max-height: 480px) {
   .trust-modal--introduction .trust-modal__header { padding-top: 16px; padding-bottom: 12px; }
   .trust-modal--introduction .trust-modal__footer { padding-top: 12px; padding-bottom: 12px; }

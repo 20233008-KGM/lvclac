@@ -180,7 +180,9 @@ export interface Messages {
     numberSetEmptyTitle: string
     numberSetEmptyBody: string
     numberSetEmptyCta: string
-    numberSetLimitHint: string
+    numberSetLimitScope: string
+    numberSetFreeLimit: string
+    numberSetProLimit: string
     numberSetGateGuestTitle: string
     numberSetGateGuestBody: string
     numberSetGateFreeTitle: string

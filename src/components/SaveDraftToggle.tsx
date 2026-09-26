@@ -230,15 +230,6 @@ function StorageGlyph({ mode }: { mode: SaveStorageMode }) {
   return mode === 'local' ? <LocalComputerIcon /> : <CloudIcon />
 }
 
-function LockGlyph() {
-  return (
-    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
-      <rect x="4.5" y="9" width="11" height="7.5" rx="1.6" fill="none" />
-      <path d="M6.75 9 V6.5 a3.25 3.25 0 0 1 6.5 0 V9" fill="none" />
-    </svg>
-  )
-}
-
 export function SaveDraftToggle() {
   const { t } = useLanguage()
   const {
@@ -973,10 +964,13 @@ export function SaveDraftToggle() {
                 {renderNumberSetGroup('cloud', t.draftSave.cloudMode)}
                 {!isPro && (
                   <div className="draft-number-set-menu__limit-hint">
-                    <span className="draft-number-set-menu__limit-glyph" aria-hidden="true">
-                      <LockGlyph />
+                    <span>{t.draftSave.numberSetLimitScope}</span>
+                    <span className="draft-number-set-menu__plan-limits">
+                      <span>{t.draftSave.numberSetFreeLimit}</span>
+                      <span className="draft-number-set-menu__pro-limit">
+                        {t.draftSave.numberSetProLimit}
+                      </span>
                     </span>
-                    <span>{t.draftSave.numberSetLimitHint}</span>
                   </div>
                 )}
                 <div className="draft-number-set-menu__actions">

@@ -163,7 +163,7 @@ export const en: Messages = {
     numberSetPickerLabel: 'Choose number set',
     localDataLossNote: 'Clearing this browser’s site data or storage also deletes device sets.',
     numberSetMenuTitle: 'Choose active number set',
-    numberSetAdd: 'Add set',
+    numberSetAdd: 'Add',
     numberSetManage: 'Manage all',
     numberSetActive: 'Active',
     numberSetLimitReached: 'Number set limit reached.',
@@ -171,7 +171,9 @@ export const en: Messages = {
     numberSetEmptyBody:
       'Save your go-to account and margin values as sets and switch between them fast.',
     numberSetEmptyCta: 'Add your first set',
-    numberSetLimitHint: 'Free plan: 1 per location. Pro manages up to 10 each.',
+    numberSetLimitScope: 'Per location',
+    numberSetFreeLimit: 'Free 1',
+    numberSetProLimit: 'Pro up to 10',
     numberSetGateGuestTitle: 'Log in to save sets',
     numberSetGateGuestBody:
       'Log in to save number sets on this device and the cloud, and manage up to 10 per location with Pro.',

@@ -445,10 +445,6 @@ html[data-zone='public-info'] body {
   padding: clamp(40px, 7vw, 68px) 0 clamp(32px, 5vw, 48px);
 }
 
-html[lang='en'] .public-info-hero {
-  min-height: 340px;
-}
-
 .public-info-eyebrow {
   margin: 0 0 12px;
   color: var(--public-info-accent);
@@ -1032,10 +1028,6 @@ html[lang='en'] .public-info-hero {
   .public-info-hero {
     min-height: 280px;
     padding: 36px 0 30px;
-  }
-
-  html[lang='en'] .public-info-hero {
-    min-height: 340px;
   }
 
   .public-info-content {

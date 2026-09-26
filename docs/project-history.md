@@ -404,3 +404,10 @@
 **2026-08-18 — DEV 클라우드 메모 20,000자 확장**
 - `dev` **fba5576**에서 숫자세트·계좌 스냅샷·주문 기록의 클라우드 메모 상한을 500자에서 20,000자로 통일했다. 에디터는 18,000자 전까지 글자 수를 숨겨 일반 기록에서는 제한을 의식하지 않게 했고, UI·저장·복원 경로는 하나의 공통 상수와 정규화 함수로 맞췄다.
 - 검증·배포: 20,000자 보존·초과 절단 단위 테스트 **2/2**, 전체 Vitest **881/881**, TypeScript 포함 production build, diff check 통과. Supabase `number_sets`·`account_snapshots`·`order_history` 제약을 운영 DB에서 모두 20,000자로 확인했고, `origin/dev` **fba5576**과 Vercel Production **dpl_7gj8dmobesqHYqcUM4Xx7gfgGVMC**를 `devpilgrm.liqguard.com`에 배포했다. 실제 로그인 화면에서 메모 입력창 `maxlength=20000`·빈 메모 카운터 숨김·콘솔 오류/경고 0을 확인했다. 기존 사용자 메모를 바꾸지 않기 위해 18,000자 이상의 실제 저장·삭제 라운드트립은 수행하지 않았다. 공개판은 클라우드 메모 기능이 없어 전파 대상이 아니다. Notion [Work Log](https://app.notion.com/p/3c026e6d586f81839f8fd4c4a02c8165) 기록 완료.
+
+
+**2026-08-18 — DEV 첫방문 계산기 우선 노출·헤더 온보딩 CTA 전파 및 배포**
+- `dev` **6d4eb9a**에서 신규 방문의 7단계 WelcomeFlow 자동 모달을 없애고 계산기 본체를 먼저 표시한다. 기존 `사용법` 위치에는 한영 `처음이신가요? · 1분 안내` CTA를 보여주며, 사용자가 누르면 기존 7단계를 열고 완료하면 `사용법`으로 되돌린다. DEV 로그인 버튼·로컬/클라우드 저장 UI와 `저장 안 함` 재방문 계약은 유지했다.
+- 검증·전파: 집중 **25/25**·전체 Vitest **879/879**, TypeScript 포함 production build와 신규 변경 파일 ESLint 통과. 1280px·375×812 신규 origin에서 초기 dialog 0·계산기/CTA/로그인/저장 안 함 노출·CTA 클릭 `01 / 07`·완료 후 `사용법` 복귀·가로 overflow 0·콘솔 경고/오류 0을 확인했다. `origin/dev` push와 Vercel Production **dpl_CT1hiQQ9wWGAjMXg6qDprZ3KkjrR** `READY`, `dev.liqguard.com`·`devpilgrm.liqguard.com`·`lvclac-dev.vercel.app` 동일 alias·HTTP 200을 확인했다. 실 iOS/Android는 미검증이며 기존 `ServiceDisclaimer.tsx` Fast Refresh 린트 1건은 HEAD에도 동일하다. Notion [Task](https://app.notion.com/p/3c026e6d586f811290fcc77bb7ff6698)·[QA](https://app.notion.com/p/3c026e6d586f81a9ac13f23754fb7eb6)·[Release](https://app.notion.com/p/3c026e6d586f81e7af6bd33c8347bee4)·[Work Log](https://app.notion.com/p/3c026e6d586f816a8de0f0bb7950dd75) 기록 완료.
+
+- 배포 경계: 같은 워크트리의 후속 **fba5576**(클라우드 메모 20,000자)은 배포 생성 뒤 커밋됐고 원격 DB 마이그레이션도 미적용이라 `origin/dev`와 이번 Production에서 제외했다. 실배포 `RecordsArchivePage` 번들에 기존 `slice(0,500)`이 남고 18,000·20,000 토큰이 없는 것을 확인했다.

@@ -7,7 +7,7 @@ import {
 } from 'react'
 import { ADS_ENABLED, ADSENSE_CLIENT } from '../config/ads'
 import { isAdFreePublicInfoPath } from '../config/routes'
-import { TrustModalFrame } from '../components/TrustModalFrame'
+import { PrivacyNotice } from '../components/PrivacyNotice'
 import { useFirstVisitGateActive } from './FirstVisitFlowContext'
 import { usePathname } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
@@ -49,18 +49,6 @@ function queueGoogleCallback(key: string, callback: () => void): void {
   window.googlefc = window.googlefc || {}
   window.googlefc.callbackQueue = window.googlefc.callbackQueue || []
   window.googlefc.callbackQueue.push({ [key]: callback })
-}
-
-function PrivacyControlsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 3.5 19 6v5.2c0 4.4-2.5 7.7-7 9.3-4.5-1.6-7-4.9-7-9.3V6z" />
-      <path d="M9 10h6" />
-      <path d="M9 14h6" />
-      <circle cx="11" cy="10" r="1" />
-      <circle cx="13" cy="14" r="1" />
-    </svg>
-  )
 }
 
 export function GoogleConsentProvider({ children }: { children: ReactNode }) {
@@ -196,15 +184,6 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
 
   const copy = t.privacySettings
   const customSettingsVisible = settingsOpen || (deferredAutoOpen && !firstVisitGateActive)
-  const optionalAllowedCount = Number(decision.analyticsAllowed) +
-    Number(decision.personalizedAdsAllowed)
-  const optionalStatus = !decision.adRequestsAllowed
-    ? copy.statusDefaultBlocked
-    : optionalAllowedCount === 2
-      ? copy.statusAllowed
-      : optionalAllowedCount === 1
-        ? copy.statusCustomized
-        : copy.statusDenied
   const closePrivacySettings = () => {
     setDeferredAutoOpen(false)
     setSettingsOpen(false)
@@ -223,14 +202,9 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
     <GoogleConsentContext.Provider value={value}>
       {children}
       {customSettingsVisible && (
-        <TrustModalFrame
-          variant="privacy"
-          titleId="privacy-settings-title"
-          descriptionId="privacy-settings-intro"
-          eyebrow={copy.eyebrow}
+        <PrivacyNotice
           title={copy.title}
           intro={copy.intro}
-          icon={<PrivacyControlsIcon />}
           closeLabel={copy.close}
           onRequestClose={closePrivacySettings}
           footer={detailsOpen ? (
@@ -272,81 +246,56 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
             </div>
           )}
         >
-          <div className="privacy-settings-facts">
-            <div className="privacy-settings-fact">
-              <span>
-                <strong>{copy.coreTitle}</strong>
-                <span>{copy.coreBody}</span>
-              </span>
-              <span className="privacy-settings-status privacy-settings-status--core">
-                {copy.coreStatus}
-              </span>
-            </div>
-            {detailsOpen ? (
-              <>
-                <div className="privacy-settings-fact">
-                  <span>
-                    <strong>{copy.analyticsTitle}</strong>
-                    <span>{copy.analyticsBody}</span>
-                  </span>
-                  <label className="privacy-settings-toggle">
-                    <input
-                      type="checkbox"
-                      role="switch"
-                      aria-label={copy.analyticsTitle}
-                      checked={draftPreferences.analytics}
-                      onChange={(event) => setDraftPreferences((current) => ({
-                        ...current,
-                        analytics: event.target.checked,
-                      }))}
-                    />
-                    <span className="privacy-settings-toggle-track" aria-hidden="true" />
-                    <span className="privacy-settings-toggle-label">
-                      {draftPreferences.analytics ? copy.statusAllowed : copy.statusDenied}
-                    </span>
-                  </label>
-                </div>
-                <div className="privacy-settings-fact">
-                  <span>
-                    <strong>{copy.personalizedAdsTitle}</strong>
-                    <span>{copy.personalizedAdsBody}</span>
-                  </span>
-                  <label className="privacy-settings-toggle">
-                    <input
-                      type="checkbox"
-                      role="switch"
-                      aria-label={copy.personalizedAdsTitle}
-                      checked={draftPreferences.personalizedAds}
-                      onChange={(event) => setDraftPreferences((current) => ({
-                        ...current,
-                        personalizedAds: event.target.checked,
-                      }))}
-                    />
-                    <span className="privacy-settings-toggle-track" aria-hidden="true" />
-                    <span className="privacy-settings-toggle-label">
-                      {draftPreferences.personalizedAds ? copy.statusAllowed : copy.statusDenied}
-                    </span>
-                  </label>
-                </div>
-              </>
-            ) : (
+          {detailsOpen && (
+            <div className="privacy-settings-facts">
               <div className="privacy-settings-fact">
                 <span>
-                  <strong>{copy.optionalTitle}</strong>
-                  <span>{copy.optionalBody}</span>
+                  <strong>{copy.analyticsTitle}</strong>
+                  <span>{copy.analyticsBody}</span>
                 </span>
-                <span
-                  className={`privacy-settings-status ${
-                    optionalAllowedCount > 0 ? 'privacy-settings-status--allowed' : ''
-                  }`}
-                >
-                  {optionalStatus}
-                </span>
+                <label className="privacy-settings-toggle">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    aria-label={copy.analyticsTitle}
+                    checked={draftPreferences.analytics}
+                    onChange={(event) => setDraftPreferences((current) => ({
+                      ...current,
+                      analytics: event.target.checked,
+                    }))}
+                  />
+                  <span className="privacy-settings-toggle-track" aria-hidden="true" />
+                  <span className="privacy-settings-toggle-label">
+                    {draftPreferences.analytics ? copy.statusAllowed : copy.statusDenied}
+                  </span>
+                </label>
               </div>
-            )}
-          </div>
-          <p className="privacy-settings-ad-notice">{copy.adNotice}</p>
-        </TrustModalFrame>
+              <div className="privacy-settings-fact">
+                <span>
+                  <strong>{copy.personalizedAdsTitle}</strong>
+                  <span>{copy.personalizedAdsBody}</span>
+                </span>
+                <label className="privacy-settings-toggle">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    aria-label={copy.personalizedAdsTitle}
+                    checked={draftPreferences.personalizedAds}
+                    onChange={(event) => setDraftPreferences((current) => ({
+                      ...current,
+                      personalizedAds: event.target.checked,
+                    }))}
+                  />
+                  <span className="privacy-settings-toggle-track" aria-hidden="true" />
+                  <span className="privacy-settings-toggle-label">
+                    {draftPreferences.personalizedAds ? copy.statusAllowed : copy.statusDenied}
+                  </span>
+                </label>
+              </div>
+              <p className="privacy-settings-ad-notice">{copy.adNotice}</p>
+            </div>
+          )}
+        </PrivacyNotice>
       )}
     </GoogleConsentContext.Provider>
   )

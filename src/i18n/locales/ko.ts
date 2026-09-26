@@ -1112,8 +1112,7 @@ export const ko: Messages = {
   privacySettings: {
     eyebrow: 'PRIVACY CONTROLS',
     title: '개인정보 및 쿠키 설정',
-    intro:
-      '계산기와 계정 기능은 항상 사용할 수 있습니다. Google 광고 태그는 동의 전에도 쿠키 없는 제한된 측정 요청을 보냅니다. 분석 쿠키와 개인화 권한은 기본 차단되며 선택에 따라 변경됩니다.',
+    intro: '분석·맞춤 광고 쿠키는 선택 사항입니다. 거부해도 계산기를 이용할 수 있습니다.',
     close: '닫기',
     coreTitle: '계산기·계정 기본 기능',
     coreBody: '계산, 언어, 로그인과 선택한 저장 기능',
@@ -1124,7 +1123,7 @@ export const ko: Messages = {
     statusDenied: '사용 안 함',
     statusAllowed: '사용',
     statusCustomized: '맞춤 설정',
-    deny: '동의하지 않고 계속',
+    deny: '모두 거부',
     allow: '모두 허용',
     details: '세부 설정',
     analyticsTitle: '서비스 이용 분석',

@@ -1126,8 +1126,7 @@ export const en: Messages = {
   privacySettings: {
     eyebrow: 'PRIVACY CONTROLS',
     title: 'Privacy and cookie settings',
-    intro:
-      'Calculator and account features are always available. Google Ads sends limited cookieless measurement requests before consent. Analytics cookies and personalization permissions default to denied and follow your choices.',
+    intro: 'Analytics and personalized ad cookies are optional. You can use the calculator without them.',
     close: 'Close',
     coreTitle: 'Core calculator and account features',
     coreBody: 'Calculation, language, sign-in, and the storage options you choose',
@@ -1138,7 +1137,7 @@ export const en: Messages = {
     statusDenied: 'Off',
     statusAllowed: 'On',
     statusCustomized: 'Customized',
-    deny: 'Continue without consent',
+    deny: 'Reject all',
     allow: 'Allow all',
     details: 'Manage options',
     analyticsTitle: 'Service analytics',

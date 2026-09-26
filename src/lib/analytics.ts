@@ -62,8 +62,9 @@ function initPostHog(): void {
     api_host: POSTHOG_HOST,
     person_profiles: 'identified_only',
     autocapture: false,
-    capture_pageview: 'history_change',
+    capture_pageview: true,
     capture_pageleave: 'if_capture_pageview',
+    request_batching: false,
     disable_session_recording: false,
     mask_personal_data_properties: true,
     custom_personal_data_properties: [

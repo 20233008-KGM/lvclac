@@ -146,8 +146,9 @@ it('loads Clarity and PostHog only when behavior analytics env vars are configur
   expect(posthogInitMock).toHaveBeenCalledWith('phc_test', expect.objectContaining({
     api_host: 'https://eu.i.posthog.com',
     autocapture: false,
-    capture_pageview: 'history_change',
+    capture_pageview: true,
     disable_session_recording: false,
+    request_batching: false,
     person_profiles: 'identified_only',
     respect_dnt: true,
     session_recording: expect.objectContaining({

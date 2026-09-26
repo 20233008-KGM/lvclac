@@ -12,10 +12,10 @@ const copy = {
     holding: '포지션', long: '롱', contracts: '계약',
     price: '진입/현재 (pt)', equity: '평가금',
     maintenance: '유지증거금',
-    current: '현재가 (pt)', tolerance: '청산 여유', liquidation: '청산가 (pt)',
+    current: '현재가', tolerance: '청산 여유', liquidation: '청산가',
     comparisonTitle: '같은 가격에 1계약을 더 매수하면?',
     comparisonLabel: 'S&P 500 마이크로 선물 추가 매수 전후 비교',
-    metric: '항목', before: '주문 전', after: '주문 후', liquidationRow: '청산가 (pt)',
+    metric: '항목', before: '주문 전', after: '주문 후', liquidationRow: '청산가',
     takeaway: '주문 전에, 줄어드는 청산 여유를 확인하세요.',
     start: '내 포지션 계산하기',
   },
@@ -26,10 +26,10 @@ const copy = {
     holding: 'Position', long: 'Long', contracts: '',
     price: 'Entry/current (pt)', equity: 'Equity',
     maintenance: 'Maint. margin',
-    current: 'Current price (pt)', tolerance: 'Liquidation buffer', liquidation: 'Liquidation price (pt)',
+    current: 'Current price', tolerance: 'Liquidation buffer', liquidation: 'Liquidation price',
     comparisonTitle: 'What if you buy 1 more at the same price?',
     comparisonLabel: 'S&P 500 Micro E-mini futures before and after buying one more contract',
-    metric: 'Metric', before: 'Before', after: 'After', liquidationRow: 'Liq. price (pt)',
+    metric: 'Metric', before: 'Before', after: 'After', liquidationRow: 'Liq. price',
     takeaway: 'See how an order changes your buffer before placing it.',
     start: 'Calculate my position',
   },
@@ -39,7 +39,7 @@ export function WelcomeIntroduction({ onClose }: { onClose: () => void }) {
   const { locale } = useLanguage()
   const c = copy[locale]
   const { before, after } = welcomeIntroductionExample
-  const number = (value: number | null) => value === null ? '—' : value.toLocaleString(locale, { maximumFractionDigits: 1 })
+  const number = (value: number | null, maximumFractionDigits = 1) => value === null ? '—' : value.toLocaleString(locale, { maximumFractionDigits })
   const buffer = (value: number | null) => {
     const formatted = formatTolerancePercent(value, 'long', 1)
     return formatted === '-' ? formatted : `${formatted}%`
@@ -125,8 +125,8 @@ export function WelcomeIntroduction({ onClose }: { onClose: () => void }) {
               </tr>
               <tr>
                 <th scope="row">{c.liquidationRow}</th>
-                <td aria-label={`${c.before}: ${number(before.liquidationPrice)}pt`}>{number(before.liquidationPrice)}</td>
-                <td className="welcome-introduction__after" aria-label={`${c.after}: ${number(after.liquidationPrice)}pt`}>{number(after.liquidationPrice)}</td>
+                <td aria-label={`${c.before}: ${number(before.liquidationPrice)}`}>{number(before.liquidationPrice)}</td>
+                <td className="welcome-introduction__after" aria-label={`${c.after}: ${number(after.liquidationPrice, 0)}`}>{number(after.liquidationPrice, 0)}</td>
               </tr>
             </tbody>
           </table>

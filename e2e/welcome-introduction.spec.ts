@@ -15,7 +15,7 @@ test('first visit, focus containment, dismissal and replay preserve calculator a
   await expect(position.getByRole('cell')).toHaveText(['롱 10계약', '$60,000', '6,000 / 6,000', '$15,000'])
   await expect(dialog.locator('.result-hero-value')).toHaveText(['6,000', '5,100', '-15%'])
   await expect(dialog.locator('.result-sheet').getByRole('columnheader')).toHaveText(['항목', '주문 전', '주문 후'])
-  await expect(dialog.locator('.welcome-introduction__after')).toHaveText(['-13.2%', '5,209.1'])
+  await expect(dialog.locator('.welcome-introduction__after')).toHaveText(['-13.2%', '5,209'])
   await expect(page.getByRole('dialog')).toHaveCount(1)
   await expect(page.locator('.privacy-notice')).toHaveCount(0)
   await expect(dialog.getByRole('heading', { level: 2 })).toBeFocused()
@@ -82,8 +82,8 @@ for (const locale of ['ko', 'en']) {
       const dialog = page.locator('.trust-modal--introduction')
       await expect(dialog).toBeVisible()
       await expect(dialog.locator('.result-hero-label')).toHaveText(locale === 'ko'
-        ? ['현재가 (pt)', '청산가 (pt)', '청산 여유']
-        : ['Current price (pt)', 'Liquidation price (pt)', 'Liquidation buffer'])
+        ? ['현재가', '청산가', '청산 여유']
+        : ['Current price', 'Liquidation price', 'Liquidation buffer'])
       await expect(dialog.locator('.result-hero-value')).toHaveText(['6,000', '5,100', '-15%'])
       expect(await dialog.locator('.result-hero-label, .result-hero-value').evaluateAll((items) =>
         items.every((item) => item.scrollWidth <= item.clientWidth),

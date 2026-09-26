@@ -8,6 +8,7 @@ async function expectWithinViewport(page: Page) {
     return {
       left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
       width: innerWidth, height: innerHeight,
+      noticeWidth: rect.width,
       overflow: element.scrollWidth - element.clientWidth,
     }
   })
@@ -16,6 +17,7 @@ async function expectWithinViewport(page: Page) {
   expect(bounds.right).toBeLessThanOrEqual(bounds.width)
   expect(bounds.bottom).toBeLessThanOrEqual(bounds.height)
   expect(bounds.overflow).toBe(0)
+  return bounds
 }
 
 for (const locale of ['ko', 'en'] as const) {
@@ -32,7 +34,14 @@ for (const locale of ['ko', 'en'] as const) {
       await expect(notice).toBeVisible()
       await expect(page.getByRole('dialog')).toHaveCount(0)
       await expect(page.getByRole('switch')).toHaveCount(0)
-      await expectWithinViewport(page)
+      const compactBounds = await expectWithinViewport(page)
+      if (viewport.width >= 1024) {
+        expect(compactBounds.noticeWidth).toBeGreaterThanOrEqual(418)
+        expect(compactBounds.width - compactBounds.right).toBeGreaterThanOrEqual(23)
+        expect(compactBounds.width - compactBounds.right).toBeLessThanOrEqual(25)
+        expect(compactBounds.height - compactBounds.bottom).toBeGreaterThanOrEqual(23)
+        expect(compactBounds.height - compactBounds.bottom).toBeLessThanOrEqual(25)
+      }
       expect((await notice.boundingBox())!.height).toBeLessThan(230)
       expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).not.toBe('hidden')
       expect(await notice.evaluate((element) => element.contains(document.activeElement))).toBe(false)

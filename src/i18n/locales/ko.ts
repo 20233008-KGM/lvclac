@@ -502,6 +502,9 @@ export const ko: Messages = {
       checkoutCanceled: '결제가 취소되었습니다.',
       checkoutSuccess:
         '결제가 완료되었습니다. 구독 상태를 반영하는 중입니다. 결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리합니다.',
+      checkoutPendingTitle: '결제 상태를 반영하는 중',
+      checkoutPendingBody:
+        'Paddle 결제 완료 알림이 서버에 도착하는 동안 잠시 기다려 주세요. 곧 Pro 상태로 자동 전환됩니다.',
       taxNote:
         '결제와 영수증 발송은 공식 결제 파트너 Paddle이 처리하며, 부가세는 지역에 따라 별도 부과될 수 있습니다.',
       compareHeadPrice: '$5 / 월 · 연 $48',

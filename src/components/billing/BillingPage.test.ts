@@ -42,6 +42,13 @@ describe('resolveBillingView', () => {
     ).toBe('success')
   })
 
+  it('keeps the checkout success view while webhook synchronization is pending', () => {
+    expect(source).toContain('CHECKOUT_REFRESH_DELAYS')
+    expect(source).toContain('checkoutPending')
+    expect(source).toContain('void refreshSubscription().then(() =>')
+    expect(source).toContain("checkoutSucceeded: checkoutParam === 'success' && (!leftSuccess || (checkoutPending && !isPro))")
+  })
+
   it('resolves settled subscription states without changing their existing behavior', () => {
     expect(
       resolveBillingView({

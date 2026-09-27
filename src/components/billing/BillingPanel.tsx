@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
-import { openBillingPortal, startCheckout, type BillingPlan } from '../../db/billing'
+import {
+  openBillingPortal,
+  startCheckout,
+  type BillingPlan,
+} from '../../db/billing'
 import { BILLING_PATH } from '../../config/routes'
 
 type BusyState = BillingPlan | 'portal' | null
+const CHECKOUT_REFRESH_DELAYS = [0, 750, 1500, 2500, 4000, 6000]
 
 /** 결제 에러 코드를 사용자 문구로 매핑. */
 function useCheckoutError() {
@@ -44,13 +49,13 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
     if (checkout === 'cancel') return copy.checkoutCanceled
     return null
   })
+  const [checkoutPending, setCheckoutPending] = useState(() => readCheckoutParam() === 'success')
   const mapError = useCheckoutError()
 
-  // 결제 복귀 시 구독 상태를 다시 읽고, URL의 ?checkout= 흔적을 정리한다(부수효과만).
+  // 결제 복귀 시 webhook/DB 반영이 늦을 수 있으므로 잠깐 재조회하며 Free 플랜 화면을 숨긴다.
   useEffect(() => {
     const checkout = readCheckoutParam()
     if (!checkout) return
-    if (checkout === 'success') void refreshSubscription()
     const params = new URLSearchParams(window.location.search)
     params.delete('checkout')
     const query = params.toString()
@@ -59,6 +64,25 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
       '',
       `${window.location.pathname}${query ? `?${query}` : ''}`,
     )
+
+    if (checkout !== 'success') return
+
+    let cancelled = false
+    const timers: number[] = []
+    CHECKOUT_REFRESH_DELAYS.forEach((delay, index) => {
+      const timer = window.setTimeout(() => {
+        void refreshSubscription().then(() => {
+          if (cancelled) return
+          if (index === CHECKOUT_REFRESH_DELAYS.length - 1) setCheckoutPending(false)
+        })
+      }, delay)
+      timers.push(timer)
+    })
+
+    return () => {
+      cancelled = true
+      timers.forEach((timer) => window.clearTimeout(timer))
+    }
   }, [refreshSubscription])
 
   const handleCheckout = useCallback(
@@ -86,7 +110,9 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
     }
   }, [mapError])
 
-  const billingContent = isPro ? (
+  const billingContent = checkoutPending && !isPro ? (
+    <CheckoutPendingCard copy={copy} />
+  ) : isPro ? (
     <div className="my-page-billing">
       <div className="my-page-billing-row">
         <div className="my-page-billing-row__copy">
@@ -147,6 +173,17 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
   ) : null
 
   if (embedded) {
+    if (checkoutPending && !isPro) {
+      return (
+        <CheckoutPendingCard
+          copy={copy}
+          id="my-page-plan"
+          message={messageNode}
+          compact
+        />
+      )
+    }
+
     if (isPro) {
       // Pro 상태는 계정 허브 프로필 행 오른쪽 끝의 조용한 클러스터로 —
       // 파란 강조 카드 대신 dim 결제일 + ghost 버튼(2026-07-13 마이페이지 v3 핸드오프).
@@ -192,6 +229,34 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
       {billingContent}
 
       {messageNode}
+    </section>
+  )
+}
+
+function CheckoutPendingCard({
+  copy,
+  id,
+  message,
+  compact = false,
+}: {
+  copy: ReturnType<typeof useLanguage>['t']['myPage']['billing']
+  id?: string
+  message?: ReactNode
+  compact?: boolean
+}) {
+  return (
+    <section
+      id={id}
+      className={`my-page-panel${compact ? ' my-page-upgrade' : ''}`}
+      aria-labelledby={id ? `${id}-checkout-pending-title` : undefined}
+    >
+      <div className="my-page-panel-head">
+        <h2 id={id ? `${id}-checkout-pending-title` : undefined}>
+          {copy.checkoutPendingTitle}
+        </h2>
+      </div>
+      <p className="my-page-field-help">{copy.checkoutPendingBody}</p>
+      {message}
     </section>
   )
 }

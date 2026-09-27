@@ -44,6 +44,13 @@ describe('my page copy', () => {
     expect(en.myPage.billing.taxNote).toContain('official payment partner')
   })
 
+  it('keeps checkout-return copy in an updating state instead of a Free-plan state', () => {
+    expect(ko.myPage.billing.checkoutPendingTitle).toBe('결제 상태를 반영하는 중')
+    expect(ko.myPage.billing.checkoutPendingBody).toContain('Pro 상태로 자동 전환')
+    expect(en.myPage.billing.checkoutPendingTitle).toBe('Updating subscription status')
+    expect(en.myPage.billing.checkoutPendingBody).toContain('switch to Pro automatically')
+  })
+
   it('explains monthly to yearly switching as a prorated credit flow', () => {
     expect(ko.myPage.billing.page.switchYearlyAction).toBe('연간으로 전환')
     expect(ko.myPage.billing.page.switchYearlySuccess).toContain('크레딧')

@@ -510,6 +510,8 @@ export interface Messages {
       checkoutError: string
       checkoutCanceled: string
       checkoutSuccess: string
+      checkoutPendingTitle: string
+      checkoutPendingBody: string
       taxNote: string
       /** Free 마이페이지 Free vs Pro 비교 카드 (embedded && !isPro) */
       compareHeadPrice: string

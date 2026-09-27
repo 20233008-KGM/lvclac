@@ -15,6 +15,7 @@ import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPr
 import '../../styles/pages.css'
 
 type BusyState = BillingPlan | 'portal' | 'switch-yearly' | 'sandbox-sync' | null
+const CHECKOUT_REFRESH_DELAYS = [0, 750, 1500, 2500, 4000, 6000]
 
 const AuthModal = lazy(() =>
   import('../auth/AuthModal').then((mod) => ({ default: mod.AuthModal })),
@@ -161,14 +162,14 @@ export function BillingPage() {
   // 배너 닫기(결제 실패에서 "다시 시도")와 결제 완료에서 "구독 관리 보기" 전환용 로컬 상태.
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [leftSuccess, setLeftSuccess] = useState(false)
+  const [checkoutPending, setCheckoutPending] = useState(() => readCheckoutParam() === 'success')
 
   // ?checkout= 값은 최초 렌더에서 한 번만 확정한다(아래 effect가 URL을 정리해도 뷰가 흔들리지 않도록).
   const checkoutParam = useMemo(() => readCheckoutParam(), [])
 
-  // 결제 복귀 시 구독 상태를 다시 읽고, URL의 ?checkout= 흔적을 정리한다(부수효과만).
+  // 결제 복귀 시 webhook/DB 반영이 늦을 수 있으므로 성공 화면을 유지한 채 재조회한다.
   useEffect(() => {
     if (!checkoutParam) return
-    if (checkoutParam === 'success') void refreshSubscription()
     const params = new URLSearchParams(window.location.search)
     params.delete('checkout')
     const query = params.toString()
@@ -177,11 +178,30 @@ export function BillingPage() {
       '',
       `${window.location.pathname}${query ? `?${query}` : ''}`,
     )
+
+    if (checkoutParam !== 'success') return
+
+    let cancelled = false
+    const timers: number[] = []
+    CHECKOUT_REFRESH_DELAYS.forEach((delay, index) => {
+      const timer = window.setTimeout(() => {
+        void refreshSubscription().then(() => {
+          if (cancelled) return
+          if (index === CHECKOUT_REFRESH_DELAYS.length - 1) setCheckoutPending(false)
+        })
+      }, delay)
+      timers.push(timer)
+    })
+
+    return () => {
+      cancelled = true
+      timers.forEach((timer) => window.clearTimeout(timer))
+    }
   }, [checkoutParam, refreshSubscription])
 
   const view = resolveBillingView({
     authLoading,
-    checkoutSucceeded: checkoutParam === 'success' && !leftSuccess,
+    checkoutSucceeded: checkoutParam === 'success' && (!leftSuccess || (checkoutPending && !isPro)),
     isPro,
     subscriptionStatus: subscription?.status,
   })

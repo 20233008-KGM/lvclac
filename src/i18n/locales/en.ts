@@ -513,6 +513,9 @@ export const en: Messages = {
       checkoutCanceled: 'Checkout was canceled.',
       checkoutSuccess:
         'Payment complete. Updating your subscription status… Payments and receipts are handled by Paddle, our official payment partner.',
+      checkoutPendingTitle: 'Updating subscription status',
+      checkoutPendingBody:
+        'Please wait while the Paddle payment notification reaches our server. This will switch to Pro automatically shortly.',
       taxNote:
         'Payments and receipts are handled by Paddle, our official payment partner. VAT may apply depending on your region.',
       compareHeadPrice: '$5 / mo · $48 / yr',

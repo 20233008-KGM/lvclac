@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { BillingConfig, BillingDeps } from './billingConfig'
 import {
   handleCheckout,
@@ -400,6 +400,50 @@ describe('handleSwitchYearly', () => {
       items: [{ price_id: CONFIG.prices.yearly, quantity: 1 }],
     })
     expect(state.updates).toHaveLength(0)
+  })
+
+  it('logs Paddle lookup failures with the response reason', async () => {
+    const state: SwitchYearlyState = {
+      fetches: [],
+      updates: [],
+      filters: [],
+      currentPriceId: CONFIG.prices.monthly,
+    }
+    const deps = makeSwitchYearlyDeps(state)
+    deps.fetch = async (input, init) => {
+      state.fetches.push({ input, init })
+      return {
+        ok: false,
+        status: 403,
+        async json() {
+          return { error: { code: 'forbidden' }, meta: { request_id: 'req_1' } }
+        },
+        async text() {
+          return ''
+        },
+      }
+    }
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = await handleSwitchYearlyPreview(CONFIG, { accessToken: 'jwt' }, deps)
+
+    expect(result.status).toBe(502)
+    expect(result.body).toMatchObject({
+      ok: false,
+      error: 'subscription_lookup_failed',
+      reason: 'forbidden',
+    })
+    expect(errorSpy).toHaveBeenCalledWith(
+      'paddle_subscription_change_failed',
+      expect.objectContaining({
+        phase: 'subscription_lookup',
+        status: 403,
+        reason: 'forbidden',
+        requestId: 'req_1',
+        subscriptionId: 'sub_1',
+      }),
+    )
+    errorSpy.mockRestore()
   })
 
   it('does not create another charge when the subscription is already yearly', async () => {

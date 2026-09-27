@@ -596,9 +596,9 @@ export const en: Messages = {
         switchYearlyUnsupportedPlan:
           'This subscription is not recognized as the monthly plan, so it cannot be switched automatically. Check the plan in the management portal.',
         switchYearlyLookupFailed:
-          'Could not check the Paddle subscription status. Please try again shortly.',
+          'The app found your billing record, but the Paddle Live subscription lookup failed. If retrying does not help, the operator needs to check the billing API settings.',
         switchYearlyPreviewFailed:
-          'Could not preview the Paddle switch amount. Please try again shortly.',
+          'Could not preview the Paddle switch amount. If retrying does not help, the operator needs to check the billing API settings.',
         switchYearlyUpdateFailed:
           'Paddle could not complete the yearly switch. Check the payment method or subscription status.',
         switchYearlySyncFailed:

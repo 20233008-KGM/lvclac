@@ -1,5 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import type { BillingConfig, BillingDeps, BillingPlan } from './billingConfig.js'
+import type {
+  BillingConfig,
+  BillingDeps,
+  BillingPlan,
+  FetchResponseLike,
+} from './billingConfig.js'
 import {
   isBillingPlan,
   paddleApiBaseUrl,
@@ -14,6 +19,7 @@ import {
 } from './subscriptionSync.js'
 
 type JsonObject = Record<string, unknown>
+type PaddleFailurePhase = 'subscription_lookup' | 'subscription_preview' | 'subscription_update'
 
 export interface BillingResult {
   status: number
@@ -27,12 +33,49 @@ export interface BillingResult {
     received?: boolean
     action?: string
     error?: string
+    reason?: string
     preview?: SubscriptionSwitchPreview
   }
 }
 
-function fail(status: number, error: string): BillingResult {
-  return { status, body: { ok: false, error } }
+function fail(status: number, error: string, reason?: string): BillingResult {
+  return { status, body: { ok: false, error, ...(reason ? { reason } : {}) } }
+}
+
+function paddleFailureReason(status: number, payload: unknown): string {
+  const root = asRecord(payload)
+  const error = asRecord(root?.error)
+  return (
+    stringValue(error?.code) ??
+    stringValue(error?.type) ??
+    stringValue(root?.code) ??
+    stringValue(root?.type) ??
+    `http_${status}`
+  )
+}
+
+function logPaddleFailure(
+  phase: PaddleFailurePhase,
+  response: FetchResponseLike,
+  payload: unknown,
+  subscriptionId: string,
+): string {
+  const reason = paddleFailureReason(response.status, payload)
+  const requestId =
+    stringValue(asRecord(asRecord(payload)?.meta)?.request_id) ??
+    stringValue(asRecord(payload)?.request_id)
+  const maskedSubscriptionId =
+    subscriptionId.length > 12
+      ? `${subscriptionId.slice(0, 7)}...${subscriptionId.slice(-5)}`
+      : subscriptionId
+  console.error('paddle_subscription_change_failed', {
+    phase,
+    status: response.status,
+    reason,
+    requestId,
+    subscriptionId: maskedSubscriptionId,
+  })
+  return reason
 }
 
 async function requireUser(
@@ -318,7 +361,15 @@ export async function handleSwitchYearly(
     },
   })
   const currentPayload = await currentResponse.json().catch(() => null)
-  if (!currentResponse.ok) return fail(502, 'subscription_lookup_failed')
+  if (!currentResponse.ok) {
+    const reason = logPaddleFailure(
+      'subscription_lookup',
+      currentResponse,
+      currentPayload,
+      owned.subscriptionId,
+    )
+    return fail(502, 'subscription_lookup_failed', reason)
+  }
 
   const currentSubscription = asRecord(asRecord(currentPayload)?.data)
   const currentStatus = paddleSubscriptionStatus(currentSubscription)
@@ -343,7 +394,15 @@ export async function handleSwitchYearly(
     body: JSON.stringify(switchYearlyRequestBody(config)),
   })
   const updatePayload = await updateResponse.json().catch(() => null)
-  if (!updateResponse.ok) return fail(502, 'subscription_update_failed')
+  if (!updateResponse.ok) {
+    const reason = logPaddleFailure(
+      'subscription_update',
+      updateResponse,
+      updatePayload,
+      owned.subscriptionId,
+    )
+    return fail(502, 'subscription_update_failed', reason)
+  }
 
   const updatedSubscription = asRecord(asRecord(updatePayload)?.data) as PaddleSubscription | null
   if (!updatedSubscription) return fail(502, 'subscription_payload_missing')
@@ -379,7 +438,15 @@ export async function handleSwitchYearlyPreview(
     },
   })
   const currentPayload = await currentResponse.json().catch(() => null)
-  if (!currentResponse.ok) return fail(502, 'subscription_lookup_failed')
+  if (!currentResponse.ok) {
+    const reason = logPaddleFailure(
+      'subscription_lookup',
+      currentResponse,
+      currentPayload,
+      owned.subscriptionId,
+    )
+    return fail(502, 'subscription_lookup_failed', reason)
+  }
 
   const currentSubscription = asRecord(asRecord(currentPayload)?.data)
   const currentStatus = paddleSubscriptionStatus(currentSubscription)
@@ -417,7 +484,15 @@ export async function handleSwitchYearlyPreview(
     body: JSON.stringify(switchYearlyRequestBody(config)),
   })
   const previewPayload = await previewResponse.json().catch(() => null)
-  if (!previewResponse.ok) return fail(502, 'subscription_preview_failed')
+  if (!previewResponse.ok) {
+    const reason = logPaddleFailure(
+      'subscription_preview',
+      previewResponse,
+      previewPayload,
+      owned.subscriptionId,
+    )
+    return fail(502, 'subscription_preview_failed', reason)
+  }
 
   return {
     status: 200,

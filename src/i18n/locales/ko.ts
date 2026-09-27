@@ -584,9 +584,9 @@ export const ko: Messages = {
         switchYearlyUnsupportedPlan:
           '현재 구독이 월간 플랜으로 확인되지 않아 자동 전환할 수 없습니다. 구독 관리 포털에서 플랜을 확인해 주세요.',
         switchYearlyLookupFailed:
-          'Paddle 구독 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+          '앱의 결제 기록은 확인됐지만 Paddle Live 구독 조회가 실패했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
         switchYearlyPreviewFailed:
-          'Paddle 전환 금액을 미리 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+          'Paddle 전환 금액을 미리 확인하지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
         switchYearlyUpdateFailed:
           'Paddle에서 연간 전환 요청을 완료하지 못했습니다. 결제 수단 또는 구독 상태를 확인해 주세요.',
         switchYearlySyncFailed:

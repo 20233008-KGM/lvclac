@@ -128,7 +128,7 @@ export async function handleCheckout(
       priceId,
       customData: { user_id: auth.user.id, plan, provider: paddleProvider(config.paddleEnv) },
       customerEmail: auth.user.email,
-      successUrl: `${baseUrl}/my?checkout=success`,
+      successUrl: `${baseUrl}/my?checkout=success&plan=${plan}`,
     },
   }
 }

@@ -79,7 +79,7 @@ describe('handleCheckout validation', () => {
     expect(result.body).toMatchObject({
       priceId: 'pri_y',
       customerEmail: 'u@example.com',
-      successUrl: 'https://a.com/my?checkout=success',
+      successUrl: 'https://a.com/my?checkout=success&plan=yearly',
       customData: { user_id: 'user-1', plan: 'yearly', provider: 'paddle_sandbox' },
     })
   })

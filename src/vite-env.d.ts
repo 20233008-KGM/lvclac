@@ -10,6 +10,10 @@ interface ImportMetaEnv {
   readonly VITE_AD_SLOT_RIGHT_SIDEBAR_BOTTOM?: string
   readonly VITE_AD_ENABLE_SIDEBAR_TALL?: string
   readonly VITE_GA4_MEASUREMENT_ID?: string
+  readonly VITE_GOOGLE_ADS_QUALIFIED_CALCULATION_LABEL?: string
+  readonly VITE_GOOGLE_ADS_SIGNUP_LABEL?: string
+  readonly VITE_GOOGLE_ADS_CHECKOUT_START_LABEL?: string
+  readonly VITE_GOOGLE_ADS_PURCHASE_LABEL?: string
   readonly VITE_CLARITY_PROJECT_ID?: string
   readonly VITE_POSTHOG_KEY?: string
   readonly VITE_POSTHOG_HOST?: string

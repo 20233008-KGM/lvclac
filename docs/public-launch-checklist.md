@@ -16,6 +16,10 @@ Vercel `lvclac` 프로젝트의 Production 환경에 아래 값을 입력한다.
 | `VITE_PUBLIC_OPERATOR_PRIVACY_OFFICER` | 개인정보 보호책임자 성명 또는 직책 | 미입력 |
 | `VITE_PUBLIC_OPERATOR_COMMERCE_REGISTRATION_NUMBER` | 실제 발급된 경우에만 통신판매업 신고번호 | 선택 |
 | `VITE_GA4_MEASUREMENT_ID` | GA4 웹 데이터 스트림의 `G-...` ID | 미입력 |
+| `VITE_GOOGLE_ADS_PURCHASE_LABEL` | Google Ads `purchase` 전환 액션의 라벨 | 미입력 |
+| `VITE_GOOGLE_ADS_CHECKOUT_START_LABEL` | Google Ads `checkout_start` 보조 전환 액션의 라벨 | 미입력 |
+| `VITE_GOOGLE_ADS_SIGNUP_LABEL` | Google Ads `signup` 보조 전환 액션의 라벨 | 미입력 |
+| `VITE_GOOGLE_ADS_QUALIFIED_CALCULATION_LABEL` | Google Ads `qualified_calculation` 보조 전환 액션의 라벨 | 미입력 |
 | `VITE_ADSENSE_CLIENT` | AdSense `ca-pub-...` client ID | 미입력 |
 | `VITE_AD_SLOT_*` | 각 광고 단위 숫자 ID | 미입력 |
 | `VITE_SITE_URL` | `https://liqguard.com` | 확인 필요 |
@@ -45,14 +49,22 @@ Vercel `lvclac` 프로젝트의 Production 환경에 아래 값을 입력한다.
 - 허용 후 DebugView에서 첫 페이지뷰와 공개 6경로 이동을 확인한다.
 - 광고 기능을 실제 사용하는 범위에 맞춰 Google Signals·광고 개인 최적화 설정을 최종 검토한다.
 
-## 4. Vercel·국외 이전 법무 확인
+## 4. Google Ads 전환
+
+- 최종 성과는 `purchase`로 정의하고 Google Ads 최적화에 쓰는 기본 전환으로 둔다.
+- `checkout_start`, `signup`, `qualified_calculation`은 보조 전환으로 두어 광고 클릭 품질과 퍼널 누수를 진단한다.
+- `qualified_calculation`은 계산 결과가 표시된 첫 사용을 뜻하며, 실제 구매·매출로 해석하지 않는다.
+- Google Ads에서 각 전환 액션을 만든 뒤 `AW-18471363418/<라벨>` 중 `<라벨>` 값만 Production 환경변수에 입력한다.
+- 배포 후 Tag Assistant 또는 Google Ads 진단에서 페이지뷰가 전환으로 잡히지 않고, 설정된 액션에서만 전환 요청이 나가는지 확인한다.
+
+## 5. Vercel·국외 이전 법무 확인
 
 - Vercel 호스팅 로그와 Web Analytics의 실제 처리 국가, 보유기간, 계약상 수탁 관계를 확인한다.
 - Google GA4·AdSense·CMP의 실제 처리 국가, 이전 시점·방법, 보유기간을 확인한다.
 - 확인 결과가 개인정보처리방침의 국외 이전 표와 다르면 공개 전에 문구를 수정한다.
 - 법인명·대표자·주소·사업자등록번호·개인정보 보호책임자 표시를 전문가 또는 관할기관 기준으로 최종 검토한다.
 
-## 5. 검색 개방·공개일 검증
+## 6. 검색 개방·공개일 검증
 
 검색 개방은 2026-07-31에 먼저 수행한다. 정식 공개 공지와 나머지 런칭 검증은
 2026-08-07 일정을 유지한다.

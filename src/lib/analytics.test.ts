@@ -39,10 +39,7 @@ it('sets denied consent before configuring the discoverable head tag', () => {
   }])
   expect(commands[1]).toEqual(['set', 'ads_data_redaction', true])
   expect(commands[3]).toEqual(['config', 'AW-18471363418'])
-  expect(commands[4]).toEqual(['event', 'conversion', {
-    send_to: 'AW-18471363418/OqVBCLahlYMdENrG6udE', value: 1.0, currency: 'KRW',
-  }])
-  expect(commands.filter((command) => command[0] === 'event')).toHaveLength(1)
+  expect(commands.filter((command) => command[0] === 'event')).toHaveLength(0)
   expect(html.indexOf('id="google-consent-defaults"')).toBeLessThan(html.indexOf('id="google-ads-tag"'))
 })
 
@@ -111,6 +108,30 @@ it('tracks anonymous calculator events through Vercel and configured GA4', async
       mode: 'evaluate',
       field_count: 7,
     },
+  ])
+})
+
+it('sends Google Ads conversions only when the matching label is configured', async () => {
+  vi.stubEnv('VITE_GOOGLE_ADS_PURCHASE_LABEL', 'purchase_label')
+  const queue: unknown[] = []
+  const gtag = (...args: unknown[]) => queue.push(args)
+  vi.stubGlobal('window', { gtag })
+
+  const { trackGoogleAdsConversion } = await import('./analytics')
+  trackGoogleAdsConversion('qualifiedCalculation', { value: 1, currency: 'KRW' })
+  trackGoogleAdsConversion('purchase', { value: 48, currency: 'USD', transactionId: 'txn_1' })
+
+  expect(queue).toEqual([
+    [
+      'event',
+      'conversion',
+      {
+        send_to: 'AW-18471363418/purchase_label',
+        value: 48,
+        currency: 'USD',
+        transaction_id: 'txn_1',
+      },
+    ],
   ])
 })
 

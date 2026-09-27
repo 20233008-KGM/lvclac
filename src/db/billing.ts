@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { trackGoogleAdsConversion, trackLiqGuardEvent } from '../lib/analytics'
 
 export type BillingPlan = 'monthly' | 'yearly'
 
@@ -269,6 +270,8 @@ export function startCheckout(plan: BillingPlan): Promise<string | null> {
     }
     paddle.Checkout.open(checkout)
     markCheckoutOpened()
+    trackLiqGuardEvent('checkout_started', { plan })
+    trackGoogleAdsConversion('checkoutStart', { value: plan === 'yearly' ? 48 : 5, currency: 'USD' })
     return null
   })()
 }

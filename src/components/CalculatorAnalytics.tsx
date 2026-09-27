@@ -3,7 +3,7 @@ import { calculateEvaluate, calculateOrder } from '../calc/leverage'
 import { useCalculator } from '../context/CalculatorContext'
 import { usePathname } from '../hooks/usePathname'
 import { useLanguage } from '../i18n'
-import { trackLiqGuardEvent } from '../lib/analytics'
+import { trackGoogleAdsConversion, trackLiqGuardEvent } from '../lib/analytics'
 import type { CalculatorInputs } from '../types'
 
 type InputGroup = 'account' | 'position' | 'instrument' | 'margin' | 'scenario' | 'order'
@@ -365,6 +365,10 @@ export function CalculatorAnalytics() {
       side: inputs.positionSide,
       margin_mode: inputs.marginInputMode ?? 'rate',
       field_count: filledFieldCount(inputs),
+    })
+    trackGoogleAdsConversion('qualifiedCalculation', {
+      value: 1,
+      currency: 'KRW',
     })
   }, [commonProperties, inputs])
 

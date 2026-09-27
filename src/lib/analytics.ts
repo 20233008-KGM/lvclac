@@ -6,12 +6,24 @@ const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID?.trim() || un
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY?.trim() || undefined
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST?.trim() || 'https://us.i.posthog.com'
 const GOOGLE_ADS_ID = 'AW-18471363418'
+const GOOGLE_ADS_CONVERSION_LABELS = {
+  qualifiedCalculation: import.meta.env.VITE_GOOGLE_ADS_QUALIFIED_CALCULATION_LABEL?.trim() || undefined,
+  signup: import.meta.env.VITE_GOOGLE_ADS_SIGNUP_LABEL?.trim() || undefined,
+  checkoutStart: import.meta.env.VITE_GOOGLE_ADS_CHECKOUT_START_LABEL?.trim() || undefined,
+  purchase: import.meta.env.VITE_GOOGLE_ADS_PURCHASE_LABEL?.trim() || undefined,
+} as const
 const GOOGLE_SCRIPT_ID = 'ga4-script'
 const CLARITY_SCRIPT_ID = 'microsoft-clarity-script'
 const POSTHOG_DISTINCT_ID_KEY = 'liqguard-posthog-distinct-id-v1'
 
 type AnalyticsValue = string | number | boolean | null | undefined
 type AnalyticsProperties = Record<string, AnalyticsValue>
+type GoogleAdsConversionName = keyof typeof GOOGLE_ADS_CONVERSION_LABELS
+type GoogleAdsConversionOptions = {
+  value?: number
+  currency?: string
+  transactionId?: string
+}
 
 let initialized = false
 let posthogInitialized = false
@@ -159,4 +171,21 @@ export function trackLiqGuardEvent(
   if (posthogInitialized) {
     capturePostHogEvent(name, clean)
   }
+}
+
+export function trackGoogleAdsConversion(
+  name: GoogleAdsConversionName,
+  options: GoogleAdsConversionOptions = {},
+): void {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
+
+  const label = GOOGLE_ADS_CONVERSION_LABELS[name]
+  if (!label) return
+
+  window.gtag('event', 'conversion', {
+    send_to: `${GOOGLE_ADS_ID}/${label}`,
+    ...(options.value != null ? { value: options.value } : {}),
+    ...(options.currency ? { currency: options.currency } : {}),
+    ...(options.transactionId ? { transaction_id: options.transactionId } : {}),
+  })
 }

@@ -8,6 +8,7 @@ import {
 } from '../../auth/validation'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
+import { trackGoogleAdsConversion, trackLiqGuardEvent } from '../../lib/analytics'
 import { authErrorMessage } from './authMessages'
 import { PasswordField } from './PasswordField'
 import { PasswordStrengthMeter } from './PasswordStrengthMeter'
@@ -41,10 +42,15 @@ export function RegisterForm() {
     setNotice(null)
     const err = await signUpWithPassword(email, password, nickname)
     if (err === 'confirm_email') {
+      trackLiqGuardEvent('signup_submitted', { method: 'email', state: 'email_confirmation_required' })
+      trackGoogleAdsConversion('signup', { value: 1, currency: 'KRW' })
       setNotice(t.auth.confirmEmailSent)
     } else if (err) {
       // email_taken 포함 — "이미 가입된 이메일입니다" 등 authMessages의 코드별 안내 표시
       setError(authErrorMessage(err, t))
+    } else {
+      trackLiqGuardEvent('signup_completed', { method: 'email' })
+      trackGoogleAdsConversion('signup', { value: 1, currency: 'KRW' })
     }
     // err === null 이면 AuthProvider가 세션을 받아 모달이 자동으로 닫힘
     setSubmitting(false)

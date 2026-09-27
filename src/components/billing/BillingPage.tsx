@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
 import { BILLING_YEARLY_SWITCH_PATH, localizedPublicPath } from '../../config/routes'
+import { trackGoogleAdsConversion, trackLiqGuardEvent } from '../../lib/analytics'
 import {
   controlSandboxSubscription,
   openBillingPortal,
@@ -33,6 +34,12 @@ function readCheckoutParam(): 'success' | 'cancel' | null {
   if (typeof window === 'undefined') return null
   const value = new URLSearchParams(window.location.search).get('checkout')
   return value === 'success' || value === 'cancel' ? value : null
+}
+
+function readCheckoutPlanParam(): BillingPlan | null {
+  if (typeof window === 'undefined') return null
+  const value = new URLSearchParams(window.location.search).get('plan')
+  return value === 'monthly' || value === 'yearly' ? value : null
 }
 
 /** 결제 에러 코드를 사용자 문구로 매핑. BillingPanel과 동일 규칙. */
@@ -150,12 +157,14 @@ export function BillingPage() {
 
   // ?checkout= 값은 최초 렌더에서 한 번만 확정한다(아래 effect가 URL을 정리해도 뷰가 흔들리지 않도록).
   const checkoutParam = useMemo(() => readCheckoutParam(), [])
+  const checkoutPlan = useMemo(() => readCheckoutPlanParam(), [])
 
   // 결제 복귀 시 webhook/DB 반영이 늦을 수 있으므로 성공 화면을 유지한 채 재조회한다.
   useEffect(() => {
     if (!checkoutParam) return
     const params = new URLSearchParams(window.location.search)
     params.delete('checkout')
+    params.delete('plan')
     const query = params.toString()
     window.history.replaceState(
       {},
@@ -164,6 +173,16 @@ export function BillingPage() {
     )
 
     if (checkoutParam !== 'success') return
+
+    const purchaseValue = checkoutPlan === 'yearly' ? 48 : checkoutPlan === 'monthly' ? 5 : undefined
+    trackLiqGuardEvent('purchase_completed', {
+      plan: checkoutPlan,
+      provider: 'paddle',
+    })
+    trackGoogleAdsConversion('purchase', {
+      value: purchaseValue,
+      currency: purchaseValue == null ? undefined : 'USD',
+    })
 
     let cancelled = false
     const timers: number[] = []
@@ -181,7 +200,7 @@ export function BillingPage() {
       cancelled = true
       timers.forEach((timer) => window.clearTimeout(timer))
     }
-  }, [checkoutParam, refreshSubscription])
+  }, [checkoutParam, checkoutPlan, refreshSubscription])
 
   const view = resolveBillingView({
     authLoading,

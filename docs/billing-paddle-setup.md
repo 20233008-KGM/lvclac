@@ -87,7 +87,11 @@ provider; an absent value intentionally does not guess Live from existing rows.
 
 Checkout, plan changes, cancellation, portal creation, and webhooks are **not**
 proxied. Testing those locally requires the complete matching server environment
-listed above, preferably Sandbox. Native local checkout returns to the requesting
+listed above, preferably Sandbox. The local summary explicitly reports cancellation
+as unavailable until matching native server credentials are configured, so the
+cancellation page does not offer an action that the local server cannot execute.
+Mismatched Paddle environments or Supabase projects disable native billing while
+read forwarding is enabled. Native local checkout returns to the requesting
 host/port instead of the deployed `APP_URL`. For fully local Sandbox testing, remove
 `BILLING_DEV_READ_ORIGIN` and set both client/server Paddle environments to Sandbox.
 

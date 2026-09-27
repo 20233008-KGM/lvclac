@@ -643,6 +643,7 @@ export interface Messages {
           retry: string
           loginRequired: string
           unavailable: string
+          configurationRequired: string
           inactive: string
           failed: string
           syncPending: string

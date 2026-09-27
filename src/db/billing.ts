@@ -287,6 +287,8 @@ export function openBillingPortal(): Promise<string | null> {
 }
 
 export interface SubscriptionSummary extends SubscriptionRecord {
+  // Local read proxies explicitly report when native cancellation is unavailable.
+  cancellationAvailable?: boolean
   plan: BillingPlan | null
   recurringAmount: string | null
   currencyCode: string | null

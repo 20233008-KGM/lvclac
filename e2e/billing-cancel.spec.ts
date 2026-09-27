@@ -34,6 +34,20 @@ async function setup(page: Page, options: {
 }
 
 for (const locale of ['ko', 'en'] as const) {
+  test(`${locale} read-only local billing never offers a cancellation action`, async ({ page }) => {
+    const f = await setup(page, { locale, summary: { ...summary, cancellationAvailable: false } })
+    await expect(page.getByRole('alert')).toContainText(locale === 'ko' ? '구독 조회는 가능하지만' : 'You can view your subscription here')
+    await expect(page.getByRole('button', { name: locale === 'ko' ? '구독 취소' : 'Cancel subscription', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: locale === 'ko' ? '상태 다시 확인' : 'Check status again' })).toHaveCount(0)
+    await expect(page.locator('.billing-cancel-summary')).toContainText(locale === 'ko' ? '연간' : 'Yearly')
+    expect(f.calls()).toBe(0)
+    for (const width of [1280, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      await page.screenshot({ path: `test-results/billing-cancel-read-only-${locale}-${width}.png`, fullPage: true })
+    }
+  })
+
   test(`${locale} receipt explains cancellation and stays readable at desktop and mobile widths`, async ({ page }) => {
     const f = await setup(page, { locale })
     const action = page.getByRole('button', { name: locale === 'ko' ? '구독 취소' : 'Cancel subscription', exact: true })
@@ -98,6 +112,24 @@ test('a failed request requires checking current status before retrying', async 
   await page.getByRole('button', { name: '상태 다시 확인' }).click()
   await expect(page.getByRole('heading', { name: '구독 취소가 예약되었습니다' })).toBeVisible()
   expect(f.calls()).toBe(1)
+})
+
+test('missing server configuration is not described as a subscription lookup failure', async ({ page }) => {
+  const f = await setup(page, { cancelError: 'billing_not_configured' })
+  await page.getByRole('button', { name: '구독 취소', exact: true }).click()
+  await expect.poll(f.calls).toBe(1)
+  f.release()
+  await expect(page.getByRole('alert')).toContainText('현재 서버에 구독 취소 기능이 연결되지 않았습니다')
+  await expect(page.getByRole('button', { name: '상태 다시 확인' })).toHaveCount(0)
+})
+
+test('cancellation network errors describe an uncertain cancellation rather than failed reads', async ({ page }) => {
+  const f = await setup(page, { cancelError: 'network_error' })
+  await page.getByRole('button', { name: '구독 취소', exact: true }).click()
+  await expect.poll(f.calls).toBe(1)
+  f.release()
+  await expect(page.getByRole('alert')).toContainText('취소 완료 여부를 확인하지 못했습니다')
+  await expect(page.getByRole('button', { name: '상태 다시 확인' })).toBeVisible()
 })
 
 test('missing dates, lookup failure, ended subscriptions and signed-out users cannot cancel', async ({ page }) => {

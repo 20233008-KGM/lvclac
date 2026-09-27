@@ -52,7 +52,9 @@ describe('Vite billing route wiring', () => {
     for (const origin of [first, second]) {
       for (const path of ['/api/billing/summary', '/api/billing/switch-yearly-preview']) {
         expect(await post(origin + path, 'user-token')).toEqual({
-          status: 200, body: { ok: true, summary: { amount: '4800' } },
+          status: 200, body: { ok: true, summary: {
+            amount: '4800', ...(path === '/api/billing/summary' ? { cancellationAvailable: false } : {}),
+          } },
         })
       }
     }
@@ -78,6 +80,22 @@ describe('Vite billing route wiring', () => {
         status: 401, body: { ok: false, error: 'missing_access_token' },
       })
     }
+  })
+
+  it('blocks cancellation when local credentials target a different billing environment', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ok: true, summary: { status: 'active' } })))
+    const origin = await start({
+      BILLING_DEV_READ_ORIGIN: 'https://liqguard.com', VITE_PADDLE_ENV: 'live',
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      PADDLE_ENV: 'sandbox', PADDLE_API_KEY: 'test-key', PADDLE_WEBHOOK_SECRET: 'test-secret',
+      PADDLE_PRICE_MONTHLY: 'pri_month', PADDLE_PRICE_YEARLY: 'pri_year',
+      SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
+    })
+    expect((await post(origin + '/api/billing/summary', 'user-token')).body)
+      .toMatchObject({ summary: { cancellationAvailable: false } })
+    expect(await post(origin + '/api/billing/cancel-subscription', 'user-token')).toEqual({
+      status: 500, body: { ok: false, error: 'billing_not_configured' },
+    })
   })
 
   it('keeps native checkout return URLs on the requesting local port', async () => {

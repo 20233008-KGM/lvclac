@@ -19,6 +19,7 @@ export function BillingCancelPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cancelAttempted, setCancelAttempted] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const submitting = useRef(false)
   const userId = user?.id
@@ -43,20 +44,24 @@ export function BillingCancelPage() {
   const effectiveAt = receipt?.effectiveAt ?? subscriptionAccessEnd(summary)
   const endDate = effectiveAt && !Number.isNaN(Date.parse(effectiveAt))
     ? new Date(effectiveAt).toLocaleDateString(t.lang, { year: 'numeric', month: 'long', day: 'numeric' }) : null
+  const configurationMissing = summary?.cancellationAvailable === false || error === 'billing_not_configured'
   const ready = !!user && !authLoading && !loading && !error && !!summary && !!endDate
+    && !configurationMissing
     && (summary.status === 'active' || summary.status === 'trialing')
     && !summary.scheduledChangeAction && !complete
   const signedOut = !authLoading && !user
   const waiting = !signedOut && (authLoading || loading)
   const errorText = signedOut ? copy.loginRequired
-    : error ? (error === 'subscription_cancel_failed' || error === 'subscription_payload_missing' ? copy.failed
-      : error === 'subscription_not_active' || error === 'subscription_change_scheduled' ? copy.inactive : copy.unavailable)
+    : !waiting && !complete && configurationMissing ? copy.configurationRequired
+    : error ? (error === 'subscription_not_active' || error === 'subscription_change_scheduled' ? copy.inactive
+      : cancelAttempted ? copy.failed : copy.unavailable)
     : !waiting && !complete && !ready ? copy.inactive : null
 
   async function confirmCancellation() {
     if (!ready || submitting.current) return
     submitting.current = true
     setBusy(true)
+    setCancelAttempted(true)
     try {
       const result = await cancelSubscription()
       if (result.error !== null) { setError(result.error); return }
@@ -74,6 +79,7 @@ export function BillingCancelPage() {
   function reload() {
     setLoading(true)
     setError(null)
+    setCancelAttempted(false)
     setAttempt(value => value + 1)
   }
 
@@ -111,7 +117,7 @@ export function BillingCancelPage() {
           <div className="billing-switch-actions">
             {ready && <button type="button" className="billing-switch-actions__primary billing-cancel-confirm"
               disabled={busy} onClick={() => void confirmCancellation()}>{busy ? copy.busy : copy.confirm}</button>}
-            {!signedOut && error && !waiting && <button type="button" className="billing-switch-actions__primary" onClick={reload}>{copy.retry}</button>}
+            {!signedOut && error && !waiting && !configurationMissing && <button type="button" className="billing-switch-actions__primary" onClick={reload}>{copy.retry}</button>}
             <button type="button" className={complete ? 'billing-switch-actions__primary' : 'billing-switch-actions__secondary'}
               disabled={busy} onClick={() => navigate(localizedPublicPath(BILLING_PATH, locale))}>
               {ready ? copy.keep : copy.back}

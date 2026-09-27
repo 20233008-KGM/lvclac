@@ -34,8 +34,10 @@ import { writePublicRouteHtmlAssets } from './scripts/publicSeoAssets'
 export function billingDevPlugin(env: Record<string, string>): Plugin {
   const readOrigin = localBillingReadOrigin(env)
   const configured = readBillingConfig(env)
+  const matchesReadEnvironment = !readOrigin || (configured?.paddleEnv === env.VITE_PADDLE_ENV
+    && configured?.supabaseUrl === env.VITE_SUPABASE_URL)
   // Local checkout must return to the requesting port, not the production site URL.
-  const config = configured ? { ...configured, appUrl: undefined } : null
+  const config = configured && matchesReadEnvironment ? { ...configured, appUrl: undefined } : null
   return {
     name: 'paddle-billing-dev',
     apply: 'serve',
@@ -69,7 +71,7 @@ export function billingDevPlugin(env: Record<string, string>): Plugin {
       })
 
       server.middlewares.use('/api/billing/summary', (req, res) => {
-        if (readOrigin) { void proxyBillingRead(readOrigin, '/api/billing/summary', req, res); return }
+        if (readOrigin) { void proxyBillingRead(readOrigin, '/api/billing/summary', req, res, !!config); return }
         if (req.method !== 'POST') return sendBillingJson(res, 405, { ok: false, error: 'method_not_allowed' })
         res.setHeader('cache-control', 'private, no-store')
         void (async () => {

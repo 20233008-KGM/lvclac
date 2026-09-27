@@ -41,7 +41,16 @@ describe('read-only proxy', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.setHeader).toHaveBeenCalledWith('cache-control', 'private, no-store')
-    expect(res.end).toHaveBeenCalledWith(JSON.stringify({ ok: true, summary: { amount: '4800' } }))
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify({ ok: true, summary: {
+      amount: '4800', ...(path === '/api/billing/summary' ? { cancellationAvailable: false } : {}),
+    } }))
+  })
+
+  it('reports cancellation available only when the native server is configured', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ ok: true, summary: { status: 'active' } })))
+    const res = response()
+    await proxyBillingRead('https://liqguard.com', '/api/billing/summary', request(), res, true)
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify({ ok: true, summary: { status: 'active', cancellationAvailable: true } }))
   })
 
   it.each(['/api/billing/cancel-subscription', '/api/billing/switch-yearly', '/api/billing/checkout', '/api/billing/portal'])(

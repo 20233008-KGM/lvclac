@@ -17,6 +17,7 @@ export async function proxyBillingRead(
   path: string,
   req: IncomingMessage,
   res: ServerResponse,
+  cancellationAvailable = false,
 ): Promise<void> {
   res.setHeader('cache-control', 'private, no-store')
   if (!READ_PATHS.has(path)) return sendJson(res, 404, { ok: false, error: 'not_found' })
@@ -31,6 +32,12 @@ export async function proxyBillingRead(
       body: '{}',
     })
     const body = await response.json()
+    if (response.ok && path === '/api/billing/summary' && body && typeof body === 'object'
+      && 'summary' in body && body.summary
+      && typeof body.summary === 'object' && !Array.isArray(body.summary)) {
+      // Remote reads do not imply that this local server can execute cancellation.
+      body.summary = { ...body.summary, cancellationAvailable }
+    }
     sendJson(res, response.status, body)
   } catch {
     sendJson(res, 502, { ok: false, error: 'subscription_lookup_failed' })

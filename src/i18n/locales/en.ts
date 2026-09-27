@@ -662,6 +662,7 @@ export const en: Messages = {
           retry: 'Check status again',
           loginRequired: 'Please sign in to cancel your subscription.',
           unavailable: 'Could not load your subscription details. Please check again shortly.',
+          configurationRequired: 'Subscription cancellation is not configured on this server. You can view your subscription here, but cannot cancel it.',
           inactive: 'Cancellation cannot be scheduled for this subscription in its current state. Check subscription management for details.',
           failed: 'We could not confirm the cancellation. Check the current status before trying again.',
           syncPending: 'Your cancellation was accepted. It may take a moment to appear in the app.',

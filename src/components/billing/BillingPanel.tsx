@@ -52,6 +52,26 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
   const [checkoutPending, setCheckoutPending] = useState(() => readCheckoutParam() === 'success')
   const mapError = useCheckoutError()
 
+  // Paddle Customer Portal에서 브라우저 뒤로가기로 돌아오면 bfcache가 busy 상태를 복원할 수 있다.
+  useEffect(() => {
+    const clearPortalBusy = () => {
+      setBusy((current) => (current === 'portal' ? null : current))
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') clearPortalBusy()
+    }
+
+    window.addEventListener('pageshow', clearPortalBusy)
+    window.addEventListener('focus', clearPortalBusy)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('pageshow', clearPortalBusy)
+      window.removeEventListener('focus', clearPortalBusy)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+
   // 결제 복귀 시 webhook/DB 반영이 늦을 수 있으므로 잠깐 재조회하며 Free 플랜 화면을 숨긴다.
   useEffect(() => {
     const checkout = readCheckoutParam()

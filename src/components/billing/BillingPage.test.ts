@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { resolveBillingView } from './billingView'
 
 const source = readFileSync(resolve('src/components/billing/BillingPage.tsx'), 'utf8')
+const panelSource = readFileSync(resolve('src/components/billing/BillingPanel.tsx'), 'utf8')
 
 describe('resolveBillingView', () => {
   it('opens authentication before attempting checkout for a signed-out visitor', () => {
@@ -18,6 +19,15 @@ describe('resolveBillingView', () => {
     expect(source).toContain("busy === 'switch-yearly'")
     expect(source).toContain('page.switchYearlyAction')
     expect(source).toContain('page.switchYearlySuccess')
+  })
+
+  it('clears only the customer portal busy state after returning from Paddle', () => {
+    expect(source).toContain("window.addEventListener('pageshow', clearPortalBusy)")
+    expect(source).toContain("document.addEventListener('visibilitychange', handleVisibilityChange)")
+    expect(source).toContain("current === 'portal' ? null : current")
+    expect(panelSource).toContain("window.addEventListener('pageshow', clearPortalBusy)")
+    expect(panelSource).toContain("document.addEventListener('visibilitychange', handleVisibilityChange)")
+    expect(panelSource).toContain("current === 'portal' ? null : current")
   })
 
   it('keeps the billing page neutral while subscription state is loading', () => {

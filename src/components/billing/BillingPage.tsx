@@ -164,6 +164,26 @@ export function BillingPage() {
   const [leftSuccess, setLeftSuccess] = useState(false)
   const [checkoutPending, setCheckoutPending] = useState(() => readCheckoutParam() === 'success')
 
+  // Paddle Customer Portal에서 브라우저 뒤로가기로 돌아오면 bfcache가 busy 상태를 복원할 수 있다.
+  useEffect(() => {
+    const clearPortalBusy = () => {
+      setBusy((current) => (current === 'portal' ? null : current))
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') clearPortalBusy()
+    }
+
+    window.addEventListener('pageshow', clearPortalBusy)
+    window.addEventListener('focus', clearPortalBusy)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('pageshow', clearPortalBusy)
+      window.removeEventListener('focus', clearPortalBusy)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+
   // ?checkout= 값은 최초 렌더에서 한 번만 확정한다(아래 effect가 URL을 정리해도 뷰가 흔들리지 않도록).
   const checkoutParam = useMemo(() => readCheckoutParam(), [])
 

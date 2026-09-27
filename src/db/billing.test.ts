@@ -3,6 +3,7 @@ import {
   clientSubscriptionProviders,
   fetchSubscription,
   isActiveSubscription,
+  startCheckout,
   switchSubscriptionToYearly,
 } from './billing'
 
@@ -94,5 +95,88 @@ describe('switchSubscriptionToYearly', () => {
       body: JSON.stringify({}),
     })
     expect(result).toEqual({ action: 'switched_to_yearly', error: null })
+  })
+})
+
+describe('Paddle overlay checkout history', () => {
+  let checkoutRun = 0
+
+  function installCheckoutWindow() {
+    const listeners: Record<string, Array<(event: unknown) => void>> = {}
+    const paddle = {
+      Initialize: vi.fn(),
+      Checkout: { open: vi.fn(), close: vi.fn() },
+    }
+    const fakeWindow = {
+      Paddle: paddle,
+      location: { pathname: '/billing', search: '', hash: '' },
+      history: {
+        state: null as Record<string, unknown> | null,
+        pushState: vi.fn((state: Record<string, unknown> | null) => {
+          fakeWindow.history.state = state
+        }),
+        back: vi.fn(() => {
+          for (const listener of listeners.popstate ?? []) listener({ state: null })
+        }),
+      },
+      addEventListener: vi.fn((type: string, listener: (event: unknown) => void) => {
+        listeners[type] = [...(listeners[type] ?? []), listener]
+      }),
+      removeEventListener: vi.fn(),
+    }
+    vi.stubGlobal('window', fakeWindow)
+    return { fakeWindow, listeners, paddle }
+  }
+
+  async function openCheckout() {
+    checkoutRun += 1
+    vi.stubEnv('VITE_PADDLE_CLIENT_TOKEN', `client-token-${checkoutRun}`)
+    vi.stubEnv('VITE_PADDLE_ENV', 'live')
+    query.auth.getSession.mockResolvedValue({
+      data: { session: { access_token: 'jwt-token' } },
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        async json() {
+          return {
+            ok: true,
+            priceId: 'pri_monthly',
+            successUrl: 'https://liqguard.com/my?checkout=success',
+          }
+        },
+      }),
+    )
+
+    return startCheckout('monthly')
+  }
+
+  it('closes the Paddle overlay when the browser back button pops the checkout marker', async () => {
+    const { fakeWindow, listeners, paddle } = installCheckoutWindow()
+
+    await expect(openCheckout()).resolves.toBeNull()
+    expect(fakeWindow.history.pushState).toHaveBeenCalledWith(
+      { paddleCheckoutOverlay: true },
+      '',
+      '/billing',
+    )
+
+    listeners.popstate?.[0]?.({ state: null })
+
+    expect(paddle.Checkout.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('removes the checkout history marker when Paddle is closed with its own close button', async () => {
+    const { fakeWindow, paddle } = installCheckoutWindow()
+
+    await expect(openCheckout()).resolves.toBeNull()
+    const initializeOptions = paddle.Initialize.mock.calls[0]?.[0] as {
+      eventCallback?: (event: { name: string }) => void
+    }
+    initializeOptions.eventCallback?.({ name: 'checkout.closed' })
+
+    expect(fakeWindow.history.back).toHaveBeenCalledTimes(1)
+    expect(paddle.Checkout.close).not.toHaveBeenCalled()
   })
 })

@@ -99,10 +99,14 @@ interface PaddleCheckoutOptions {
   customer?: { email: string }
 }
 
+interface PaddleEvent {
+  name?: string
+}
+
 interface PaddleGlobal {
   Environment?: { set(environment: PaddleEnvironment): void }
-  Initialize(options: { token: string }): void
-  Checkout: { open(options: PaddleCheckoutOptions): void }
+  Initialize(options: { token: string; eventCallback?: (event: PaddleEvent) => void }): void
+  Checkout: { open(options: PaddleCheckoutOptions): void; close(): void }
 }
 
 declare global {
@@ -114,6 +118,53 @@ declare global {
 const PADDLE_JS_URL = 'https://cdn.paddle.com/paddle/v2/paddle.js'
 let paddleLoadPromise: Promise<PaddleGlobal> | null = null
 let initializedPaddleKey: string | null = null
+let checkoutOverlayOpen = false
+let checkoutHistoryArmed = false
+let closingCheckoutFromHistory = false
+let suppressNextCheckoutPop = false
+let checkoutPopstateBound = false
+
+function bindCheckoutBackButton(): void {
+  if (typeof window === 'undefined' || checkoutPopstateBound) return
+  checkoutPopstateBound = true
+  window.addEventListener('popstate', () => {
+    if (suppressNextCheckoutPop) {
+      suppressNextCheckoutPop = false
+      return
+    }
+    if (!checkoutOverlayOpen) return
+
+    closingCheckoutFromHistory = true
+    checkoutOverlayOpen = false
+    checkoutHistoryArmed = false
+    window.Paddle?.Checkout.close()
+    closingCheckoutFromHistory = false
+  })
+}
+
+function markCheckoutOpened(): void {
+  if (typeof window === 'undefined') return
+  bindCheckoutBackButton()
+  checkoutOverlayOpen = true
+  checkoutHistoryArmed = true
+  window.history.pushState(
+    { ...(window.history.state ?? {}), paddleCheckoutOverlay: true },
+    '',
+    `${window.location.pathname}${window.location.search}${window.location.hash}`,
+  )
+}
+
+function markCheckoutClosed(): void {
+  if (!checkoutOverlayOpen && !checkoutHistoryArmed) return
+  checkoutOverlayOpen = false
+  if (checkoutHistoryArmed && !closingCheckoutFromHistory) {
+    checkoutHistoryArmed = false
+    suppressNextCheckoutPop = true
+    window.history.back()
+    return
+  }
+  checkoutHistoryArmed = false
+}
 
 function paddleClientConfig(): { token: string; environment: PaddleEnvironment } | null {
   const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN
@@ -160,7 +211,12 @@ async function initializedPaddle(): Promise<{ paddle: PaddleGlobal } | { error: 
   const key = `${config.environment}:${config.token}`
   if (initializedPaddleKey !== key) {
     if (config.environment === 'sandbox') paddle.Environment?.set('sandbox')
-    paddle.Initialize({ token: config.token })
+    paddle.Initialize({
+      token: config.token,
+      eventCallback(event) {
+        if (event.name === 'checkout.closed') markCheckoutClosed()
+      },
+    })
     initializedPaddleKey = key
   }
 
@@ -209,6 +265,7 @@ export function startCheckout(plan: BillingPlan): Promise<string | null> {
       ...(customerEmail ? { customer: { email: customerEmail } } : {}),
     }
     paddle.Checkout.open(checkout)
+    markCheckoutOpened()
     return null
   })()
 }

@@ -15,24 +15,22 @@ describe('resolveBillingView', () => {
   })
 
   it('offers a first-party yearly switch action for active subscribers', () => {
-    expect(source).toContain('openYearlySwitchPortal')
+    expect(source).toContain('BILLING_YEARLY_SWITCH_PATH')
     expect(source).not.toContain('previewSubscriptionToYearly')
     expect(source).not.toContain('switchSubscriptionToYearly')
-    expect(source).toContain("busy === 'switch-yearly'")
     expect(source).toContain('page.switchYearlyAction')
   })
 
-  it('opens Paddle customer portal for the yearly switch instead of changing the subscription directly', () => {
-    expect(source).toContain('const error = await openYearlySwitchPortal()')
-    expect(source).not.toContain('confirmSwitchYearly')
-    expect(source).not.toContain('setSwitchYearlyPreview')
+  it('routes active subscribers to the in-app yearly switch payment page', () => {
+    expect(source).toContain('navigate(yearlySwitchHref)')
+    expect(source).not.toContain('openYearlySwitchPortal')
+    expect(source).not.toContain('const error = await openYearlySwitchPortal()')
   })
 
-  it('shows yearly switch results near the action buttons with specific server errors', () => {
-    expect(source).toContain('switchYearlyMessage')
-    expect(source).toContain('setSwitchYearlyMessage(mapSwitchYearlyError(error))')
-    expect(source).toContain('page.switchYearlyUnsupportedPlan')
-    expect(source).toContain('page.switchYearlyUpdateFailed')
+  it('keeps yearly switch preview and update work out of the management page', () => {
+    expect(source).not.toContain('switchYearlyMessage')
+    expect(source).not.toContain('setSwitchYearlyMessage')
+    expect(source).not.toContain('switchSubscriptionToYearly')
   })
 
   it('clears only the customer portal busy state after returning from Paddle', () => {

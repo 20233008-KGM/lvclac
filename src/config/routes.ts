@@ -6,6 +6,7 @@ export const CONTACT_PATH = '/contact'
 export const UPDATES_PATH = '/updates'
 export const MY_PAGE_PATH = '/my'
 export const BILLING_PATH = '/billing'
+export const BILLING_YEARLY_SWITCH_PATH = '/billing/switch-yearly'
 export const RECORDS_PATH = '/records'
 export const ADMIN_FEEDBACK_PATH = '/admin/feedback'
 export const PRODUCT_PATH = '/product'
@@ -117,6 +118,7 @@ export function isLocalizablePublicPath(pathname: string): boolean {
     || isPricingPath(pathname)
     || isLegalPath(pathname) !== null
     || isBillingPath(pathname)
+    || isBillingYearlySwitchPath(pathname)
     || /^\/boards\/[^/]+\/?$/.test(basePath)
   )
 }
@@ -127,6 +129,10 @@ export function isMyPagePath(pathname: string): boolean {
 
 export function isBillingPath(pathname: string): boolean {
   return matchesLocalizedPublicPath(pathname, BILLING_PATH)
+}
+
+export function isBillingYearlySwitchPath(pathname: string): boolean {
+  return matchesLocalizedPublicPath(pathname, BILLING_YEARLY_SWITCH_PATH)
 }
 
 export function isRecordsPath(pathname: string): boolean {

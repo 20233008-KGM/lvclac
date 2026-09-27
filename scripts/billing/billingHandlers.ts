@@ -134,14 +134,7 @@ export async function handleCheckout(
 
 export interface PortalRequest {
   accessToken?: unknown
-  intent?: unknown
   origin?: unknown
-}
-
-type PortalIntent = 'overview' | 'switch_yearly'
-
-function portalIntent(value: unknown): PortalIntent {
-  return value === 'switch_yearly' ? 'switch_yearly' : 'overview'
 }
 
 export async function handlePortal(
@@ -150,7 +143,6 @@ export async function handlePortal(
   deps: BillingDeps,
 ): Promise<BillingResult> {
   if (!config) return fail(500, 'billing_not_configured')
-  const intent = portalIntent(request.intent)
 
   const auth = await requireUser(deps, request.accessToken)
   if ('error' in auth) return auth.error
@@ -199,7 +191,7 @@ export async function handlePortal(
 
   const url = portalSessionUrl(payload)
   if (!url) return fail(502, 'portal_url_missing')
-  return { status: 200, body: { ok: true, action: intent, url } }
+  return { status: 200, body: { ok: true, action: 'overview', url } }
 }
 
 export type SandboxSubscriptionAction = 'sync' | 'cancel_now'

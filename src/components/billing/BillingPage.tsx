@@ -2,11 +2,10 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
-import { localizedPublicPath } from '../../config/routes'
+import { BILLING_YEARLY_SWITCH_PATH, localizedPublicPath } from '../../config/routes'
 import {
   controlSandboxSubscription,
   openBillingPortal,
-  openYearlySwitchPortal,
   startCheckout,
   type BillingPlan,
 } from '../../db/billing'
@@ -15,7 +14,7 @@ import { resolveBillingView } from './billingView'
 import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
 import '../../styles/pages.css'
 
-type BusyState = BillingPlan | 'portal' | 'switch-yearly' | 'sandbox-sync' | null
+type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | null
 const CHECKOUT_REFRESH_DELAYS = [0, 750, 1500, 2500, 4000, 6000]
 
 const AuthModal = lazy(() =>
@@ -41,43 +40,6 @@ function useCheckoutError() {
   const { t } = useLanguage()
   const copy = t.myPage.billing
   return (error: string) => (error === 'not_configured' ? copy.notConfigured : copy.checkoutError)
-}
-
-/** 월간 -> 연간 구독 전환 실패 코드를 버튼 근처 안내 문구로 매핑. */
-function useSwitchYearlyError() {
-  const { t } = useLanguage()
-  const copy = t.myPage.billing
-  const page = copy.page
-  return (error: string) => {
-    switch (error) {
-      case 'billing_not_configured':
-      case 'not_configured':
-        return copy.notConfigured
-      case 'missing_access_token':
-      case 'invalid_access_token':
-        return page.switchYearlyLoginRequired
-      case 'no_subscription':
-        return page.switchYearlyNoSubscription
-      case 'subscription_not_active':
-        return page.switchYearlyInactive
-      case 'unsupported_current_plan':
-        return page.switchYearlyUnsupportedPlan
-      case 'subscription_lookup_failed':
-        return page.switchYearlyLookupFailed
-      case 'subscription_preview_failed':
-        return page.switchYearlyPreviewFailed
-      case 'subscription_update_failed':
-        return page.switchYearlyUpdateFailed
-      case 'subscription_payload_missing':
-      case 'sync_failed':
-        return page.switchYearlySyncFailed
-      case 'network_error':
-      case 'request_failed':
-        return page.switchYearlyNetworkError
-      default:
-        return copy.checkoutError
-    }
-  }
 }
 
 function CheckIcon() {
@@ -189,17 +151,16 @@ export function BillingPage() {
   const copy = t.myPage.billing
   const page = copy.page
   const homeHref = localizedPublicPath('/', locale)
+  const yearlySwitchHref = localizedPublicPath(BILLING_YEARLY_SWITCH_PATH, locale)
   const { user, loading: authLoading, isPro, subscription, refreshSubscription } = useAuth()
   const navigate = useNavigate()
   const mapError = useCheckoutError()
-  const mapSwitchYearlyError = useSwitchYearlyError()
 
   const [busy, setBusy] = useState<BusyState>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [message, setMessage] = useState<string | null>(() =>
     readCheckoutParam() === 'cancel' ? copy.checkoutCanceled : null,
   )
-  const [switchYearlyMessage, setSwitchYearlyMessage] = useState<string | null>(null)
   // 배너 닫기(결제 실패에서 "다시 시도")와 결제 완료에서 "구독 관리 보기" 전환용 로컬 상태.
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [leftSuccess, setLeftSuccess] = useState(false)
@@ -275,7 +236,6 @@ export function BillingPage() {
       }
       setBusy(plan)
       setMessage(null)
-      setSwitchYearlyMessage(null)
       const error = await startCheckout(plan)
       if (error) {
         setBusy(null)
@@ -290,7 +250,6 @@ export function BillingPage() {
   const handleManage = useCallback(async () => {
     setBusy('portal')
     setMessage(null)
-    setSwitchYearlyMessage(null)
     const error = await openBillingPortal()
     if (error) {
       setBusy(null)
@@ -299,21 +258,13 @@ export function BillingPage() {
   }, [mapError])
 
   const handleSwitchYearly = useCallback(async () => {
-    setBusy('switch-yearly')
     setMessage(null)
-    setSwitchYearlyMessage(null)
-    const error = await openYearlySwitchPortal()
-    if (error) {
-      setBusy(null)
-      setSwitchYearlyMessage(mapSwitchYearlyError(error))
-      return
-    }
-  }, [mapSwitchYearlyError])
+    navigate(yearlySwitchHref)
+  }, [navigate, yearlySwitchHref])
 
   const handleSandboxSync = useCallback(async () => {
     setBusy('sandbox-sync')
     setMessage(null)
-    setSwitchYearlyMessage(null)
     const error = await controlSandboxSubscription('sync')
     if (error) {
       setBusy(null)
@@ -498,18 +449,10 @@ export function BillingPage() {
             <CardIcon />
           </span>
           <span>
-            {busy === 'switch-yearly'
-              ? page.switchYearlyPreviewBusy
-              : page.switchYearlyAction}
+            {page.switchYearlyAction}
           </span>
         </button>
       </div>
-
-      {switchYearlyMessage && (
-        <p className="my-page-form-message billing-message" role="status">
-          {switchYearlyMessage}
-        </p>
-      )}
 
       {benefits(page.benefitsTitleActive)}
 

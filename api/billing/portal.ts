@@ -5,7 +5,6 @@ import { createBillingDeps, readBillingConfig } from '../../scripts/billing/bill
 import { handlePortal } from '../../scripts/billing/billingHandlers.js'
 import {
   bearerToken,
-  readJsonBody,
   requestOrigin,
   sendJson,
 } from '../../scripts/billing/nodeAdapter.js'
@@ -15,12 +14,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return sendJson(res, 405, { ok: false, error: 'method_not_allowed' })
   }
   try {
-    const body = await readJsonBody(req)
     const config = readBillingConfig(process.env)
     const deps = config ? createBillingDeps(config) : null
     const result = await handlePortal(
       config,
-      { accessToken: bearerToken(req), intent: body.intent, origin: requestOrigin(req) },
+      { accessToken: bearerToken(req), origin: requestOrigin(req) },
       deps as never,
     )
     sendJson(res, result.status, result.body)

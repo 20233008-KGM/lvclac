@@ -574,14 +574,14 @@ export const en: Messages = {
         receiptsAction: 'Receipts · Billing history',
         paymentMethodAction: 'Change payment method',
         switchYearlyAction: 'Switch to yearly',
-        switchYearlyPreviewBusy: 'Opening Paddle payment screen…',
-        switchYearlyBusy: 'Opening Paddle payment screen…',
+        switchYearlyPreviewBusy: 'Checking payment amount…',
+        switchYearlyBusy: 'Switching to yearly…',
         switchYearlySuccess:
           'Your subscription switched to yearly. Paddle calculates the unused monthly time as credit and applies it to this annual charge.',
         switchYearlyAlready: 'You are already on the yearly subscription.',
         switchYearlyPreviewTitle: 'Switch to yearly?',
         switchYearlyPreviewBody:
-          'A new Paddle checkout window does not open for this subscription change. Paddle applies the unused monthly time as credit, then charges the amount below to the saved payment method and switches this subscription to yearly.',
+          'Paddle calculated credit for your unused monthly time. Confirm the amount below to charge the saved payment method now and switch this subscription to yearly.',
         switchYearlyPreviewNoAmount: 'Paddle calculated no immediate charge for this switch.',
         switchYearlyPreviewImmediateAmount: 'Additional charge today',
         switchYearlyPreviewRecurringAmount: 'Yearly charge after this',
@@ -596,15 +596,15 @@ export const en: Messages = {
         switchYearlyUnsupportedPlan:
           'This subscription is not recognized as the monthly plan, so it cannot be switched automatically. Check the plan in the management portal.',
         switchYearlyLookupFailed:
-          'The app found your billing record, but could not open the Paddle subscription management screen. If retrying does not help, the operator needs to check the billing API settings.',
+          'The app found your billing record, but could not look up the Paddle subscription. If retrying does not help, the operator needs to check the billing API settings.',
         switchYearlyPreviewFailed:
-          'Could not open the Paddle payment screen. If retrying does not help, the operator needs to check the billing API settings.',
+          'Could not calculate the Paddle payment amount. If retrying does not help, the operator needs to check the billing API settings.',
         switchYearlyUpdateFailed:
-          'Could not open the Paddle payment screen. Check the payment method or subscription status in the management portal.',
+          'Could not complete the Paddle yearly-switch payment. Check the payment method or subscription status in the management portal.',
         switchYearlySyncFailed:
           'Paddle processed the change, but the app could not refresh the subscription state. Refresh the page, then contact support if it still looks wrong.',
         switchYearlyNetworkError:
-          'A network problem prevented opening the Paddle payment screen. Please try again shortly.',
+          'A network problem prevented loading the Paddle payment guidance. Please try again shortly.',
         cancelNote: 'If you cancel, you keep Pro features until the end of the current billing period.',
         cancelAction: 'Cancel subscription',
         manageCancellationAction: 'Manage cancellation',

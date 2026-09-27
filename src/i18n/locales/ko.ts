@@ -563,14 +563,14 @@ export const ko: Messages = {
         receiptsAction: '영수증 · 결제 내역',
         paymentMethodAction: '결제 수단 변경',
         switchYearlyAction: '연간으로 전환',
-        switchYearlyPreviewBusy: 'Paddle 결제 화면 여는 중…',
-        switchYearlyBusy: 'Paddle 결제 화면 여는 중…',
+        switchYearlyPreviewBusy: '결제 금액 확인 중…',
+        switchYearlyBusy: '연간 전환 처리 중…',
         switchYearlySuccess:
           '연간 구독으로 전환했습니다. 남은 월간 결제분은 Paddle이 크레딧으로 계산해 이번 연간 결제에 반영합니다.',
         switchYearlyAlready: '이미 연간 구독을 이용 중입니다.',
         switchYearlyPreviewTitle: '연간 구독으로 전환할까요?',
         switchYearlyPreviewBody:
-          'Paddle checkout 창이 새로 열리지는 않습니다. Paddle이 남은 월간 결제분을 크레딧으로 계산한 뒤, 저장된 결제 수단으로 아래 금액을 즉시 청구하고 구독을 연간으로 바꿉니다.',
+          'Paddle이 남은 월간 결제분을 크레딧으로 계산했습니다. 아래 금액을 확인한 뒤 진행하면 저장된 결제 수단으로 즉시 청구하고 구독을 연간으로 바꿉니다.',
         switchYearlyPreviewNoAmount: 'Paddle이 즉시 청구 금액을 0으로 계산했습니다.',
         switchYearlyPreviewImmediateAmount: '오늘 추가 결제',
         switchYearlyPreviewRecurringAmount: '이후 연간 결제',
@@ -584,14 +584,14 @@ export const ko: Messages = {
         switchYearlyUnsupportedPlan:
           '현재 구독이 월간 플랜으로 확인되지 않아 자동 전환할 수 없습니다. 구독 관리 포털에서 플랜을 확인해 주세요.',
         switchYearlyLookupFailed:
-          '앱의 결제 기록은 확인됐지만 Paddle 구독 관리 화면을 열지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
+          '앱의 결제 기록은 확인됐지만 Paddle 구독 상태를 조회하지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
         switchYearlyPreviewFailed:
-          'Paddle 결제 화면을 열지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
+          'Paddle 결제 금액을 계산하지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
         switchYearlyUpdateFailed:
-          'Paddle 결제 화면을 열지 못했습니다. 결제 수단 또는 구독 상태를 구독 관리 포털에서 확인해 주세요.',
+          'Paddle 연간 전환 결제를 완료하지 못했습니다. 결제 수단 또는 구독 상태를 구독 관리 포털에서 확인해 주세요.',
         switchYearlySyncFailed:
           'Paddle 전환은 처리됐지만 앱 구독 상태를 반영하지 못했습니다. 새로고침 후에도 그대로면 문의해 주세요.',
-        switchYearlyNetworkError: '네트워크 문제로 Paddle 결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        switchYearlyNetworkError: '네트워크 문제로 Paddle 결제 안내를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
         cancelNote: '해지해도 현재 결제 주기가 끝날 때까지 Pro 기능을 계속 사용할 수 있습니다.',
         cancelAction: '구독 해지',
         manageCancellationAction: '해지 예약 관리',

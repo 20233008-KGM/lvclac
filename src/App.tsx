@@ -30,6 +30,7 @@ import {
   isAboutPath,
   isAdminFeedbackPath,
   isBillingPath,
+  isBillingYearlySwitchPath,
   isCompanyPath,
   isContactPath,
   isFormulasPath,
@@ -87,6 +88,11 @@ const MyPage = lazy(() =>
 )
 const BillingPage = lazy(() =>
   import('./components/billing/BillingPage').then((mod) => ({ default: mod.BillingPage })),
+)
+const BillingYearlySwitchPage = lazy(() =>
+  import('./components/billing/BillingYearlySwitchPage').then((mod) => ({
+    default: mod.BillingYearlySwitchPage,
+  })),
 )
 const RecordsArchivePage = lazy(() =>
   import('./components/RecordsArchivePage').then((mod) => ({ default: mod.RecordsArchivePage })),
@@ -407,6 +413,15 @@ function AppRouter() {
       <Suspense fallback={null}>
         <div key={pathname} className="route-enter">
           <BillingPage />
+        </div>
+      </Suspense>
+    )
+  }
+  if (isBillingYearlySwitchPath(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <div key={pathname} className="route-enter">
+          <BillingYearlySwitchPage />
         </div>
       </Suspense>
     )

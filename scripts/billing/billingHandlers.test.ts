@@ -86,7 +86,7 @@ describe('handleCheckout validation', () => {
 })
 
 describe('handlePortal', () => {
-  it('creates a Paddle customer portal session for yearly switch intent', async () => {
+  it('creates a Paddle customer portal session for subscription management', async () => {
     const fetches: Array<{ input: string; init?: { method?: string; body?: string } }> = []
     const filters: Array<{ table: string; column: string; value: unknown }> = []
     const deps = {
@@ -152,16 +152,12 @@ describe('handlePortal', () => {
       },
     } as unknown as BillingDeps
 
-    const result = await handlePortal(
-      CONFIG,
-      { accessToken: 'jwt', intent: 'switch_yearly' },
-      deps,
-    )
+    const result = await handlePortal(CONFIG, { accessToken: 'jwt' }, deps)
 
     expect(result.status).toBe(200)
     expect(result.body).toMatchObject({
       ok: true,
-      action: 'switch_yearly',
+      action: 'overview',
       url: 'https://customer-portal.paddle.com/session',
     })
     expect(filters).toContainEqual({

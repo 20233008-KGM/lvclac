@@ -6,7 +6,7 @@ import {
   startCheckout,
   type BillingPlan,
 } from '../../db/billing'
-import { BILLING_PATH } from '../../config/routes'
+import { BILLING_PATH, localizedPublicPath } from '../../config/routes'
 
 type BusyState = BillingPlan | 'portal' | null
 const CHECKOUT_REFRESH_DELAYS = [0, 750, 1500, 2500, 4000, 6000]
@@ -37,9 +37,10 @@ function readCheckoutParam(): 'success' | 'cancel' | null {
  * MyPageView(순수 뷰)에는 노드로 주입된다(devResetPanel과 동일 패턴).
  */
 export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const copy = t.myPage.billing
   const planLabel = t.myPage.planTitle
+  const billingHref = localizedPublicPath(BILLING_PATH, locale)
   const { isPro, subscription, refreshSubscription } = useAuth()
   const [busy, setBusy] = useState<BusyState>(null)
   // 리다이렉트 복귀 메시지는 최초 렌더에서 URL로부터 초기화(effect 내 setState 회피).
@@ -220,7 +221,7 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
             )}
             {/* 마이페이지 "구독 관리"는 포털을 직접 열지 않고 전용 결제 페이지(/billing)로 이동한다.
                 실제 Paddle 고객 포털 열기는 그 페이지의 "구독 관리 포털 열기" 버튼이 담당한다. */}
-            <a className="btn btn-ghost my-page-billing-cluster__manage" href={BILLING_PATH}>
+            <a className="btn btn-ghost my-page-billing-cluster__manage" href={billingHref}>
               {copy.manageAction}
             </a>
           </div>
@@ -232,7 +233,7 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
     // Free 유저: Pro 전용 기능을 "노출 후 차단"하지 않는다. 월간/연간 나열 대신
     // Free vs Pro 비교 카드 하나로 지금 상태와 업그레이드 이득을 나란히 보여준다.
     return (
-      <ComparePlansCard copy={copy} upgradeHref={BILLING_PATH} message={messageNode} />
+      <ComparePlansCard copy={copy} upgradeHref={billingHref} message={messageNode} />
     )
   }
 

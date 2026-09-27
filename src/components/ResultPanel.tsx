@@ -1153,7 +1153,7 @@ export function ResultPanel({ inputs, onChange }: ResultPanelProps) {
             }}
             onUpgrade={() => {
               setSnapshotGateMode(null)
-              navigate(BILLING_PATH)
+              navigate(localizedPublicPath(BILLING_PATH, locale))
             }}
           />
         </Suspense>

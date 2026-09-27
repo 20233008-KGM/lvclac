@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import type { AuthUser } from '../../db/profile'
 import { useLanguage } from '../../i18n'
-import { BILLING_PATH, MY_PAGE_PATH } from '../../config/routes'
+import { BILLING_PATH, MY_PAGE_PATH, localizedPublicPath } from '../../config/routes'
 import { useNavigate } from '../../hooks/usePathname'
 import { prefetchMyPage } from '../../routes/lazyPages'
 import { onAccountMenuNavigate } from './accountMenuNavigation'
@@ -51,12 +51,20 @@ interface AccountMenuProps {
     logout: string
   }
   user: AuthUser
+  billingHref?: string
   onClose: () => void
   onMyPageClick: (event: ReactMouseEvent<HTMLAnchorElement>) => void
   onSignOut: () => void
 }
 
-export function AccountMenu({ copy, user, onClose, onMyPageClick, onSignOut }: AccountMenuProps) {
+export function AccountMenu({
+  copy,
+  user,
+  billingHref = BILLING_PATH,
+  onClose,
+  onMyPageClick,
+  onSignOut,
+}: AccountMenuProps) {
   const initial = initialOf(user.nickname)
 
   return (
@@ -72,7 +80,7 @@ export function AccountMenu({ copy, user, onClose, onMyPageClick, onSignOut }: A
       <a role="menuitem" className="auth-menu__item" href={MY_PAGE_PATH} onClick={onMyPageClick}>
         {copy.myPage}
       </a>
-      <a role="menuitem" className="auth-menu__item" href={BILLING_PATH} onClick={onClose}>
+      <a role="menuitem" className="auth-menu__item" href={billingHref} onClick={onClose}>
         {copy.billing}
       </a>
       <button
@@ -91,7 +99,7 @@ export function AccountMenu({ copy, user, onClose, onMyPageClick, onSignOut }: A
 }
 
 export function AuthButton({ variant = 'default' }: AuthButtonProps) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { user, loading, signOut } = useAuth()
   const navigate = useNavigate()
   const [modalOpen, setModalOpen] = useState(false)
@@ -187,6 +195,7 @@ export function AuthButton({ variant = 'default' }: AuthButtonProps) {
           <AccountMenu
             copy={{ myPage: t.myPage.title, billing: t.myPage.billing.page.pageTitle, logout: t.logout }}
             user={user}
+            billingHref={localizedPublicPath(BILLING_PATH, locale)}
             onClose={() => setMenuOpen(false)}
             onMyPageClick={handleMyPageClick}
             onSignOut={() => void signOut()}

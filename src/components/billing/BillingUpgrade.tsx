@@ -101,11 +101,13 @@ export function BillingUpgrade({
   copy,
   busy,
   message,
+  homeHref = '/',
   onCheckout,
 }: {
   copy: BillingCopy
   busy: BusyState
   message?: string | null
+  homeHref?: string
   onCheckout: (plan: BillingPlan) => void
 }) {
   const page = copy.page
@@ -245,7 +247,7 @@ export function BillingUpgrade({
       <section data-snap className="billing-up__section billing-up__section--hero">
         <div className="billing-up__col billing-up__col--header">
           <header className="billing-up__header">
-            <a className="billing-up__back" href="/">
+            <a className="billing-up__back" href={homeHref}>
               {page.backToCalculator}
             </a>
             <span className="billing-up__status">

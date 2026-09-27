@@ -12,7 +12,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { calculateEvaluate } from '../calc/leverage'
-import { BILLING_PATH, MY_PAGE_PATH } from '../config/routes'
+import { BILLING_PATH, MY_PAGE_PATH, localizedPublicPath } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import { useCalculator, type SaveStorageMode } from '../context/CalculatorContext'
 import { useFloatingTooltip } from '../hooks/useFloatingTooltip'
@@ -231,7 +231,7 @@ function StorageGlyph({ mode }: { mode: SaveStorageMode }) {
 }
 
 export function SaveDraftToggle() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const {
     saveEnabled,
     storageMode,
@@ -498,10 +498,12 @@ export function SaveDraftToggle() {
   }
 
   useEffect(() => {
-    if (!numberSetMenuOpen) {
+    if (numberSetMenuOpen) return
+    const timer = window.setTimeout(() => {
       setEditingNumberSet(null)
       setNumberSetTitleDraft('')
-    }
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [numberSetMenuOpen])
 
   useEffect(() => {
@@ -1224,7 +1226,7 @@ export function SaveDraftToggle() {
             }}
             onUpgrade={() => {
               setGateMode(null)
-              navigate(BILLING_PATH)
+              navigate(localizedPublicPath(BILLING_PATH, locale))
             }}
           />
         </Suspense>

@@ -116,6 +116,7 @@ export function isLocalizablePublicPath(pathname: string): boolean {
     || updateIdFromPath(pathname) !== null
     || isPricingPath(pathname)
     || isLegalPath(pathname) !== null
+    || isBillingPath(pathname)
     || /^\/boards\/[^/]+\/?$/.test(basePath)
   )
 }
@@ -125,7 +126,7 @@ export function isMyPagePath(pathname: string): boolean {
 }
 
 export function isBillingPath(pathname: string): boolean {
-  return matchesPath(pathname, BILLING_PATH)
+  return matchesLocalizedPublicPath(pathname, BILLING_PATH)
 }
 
 export function isRecordsPath(pathname: string): boolean {

@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n'
 import { useNavigate } from '../../hooks/usePathname'
+import { localizedPublicPath } from '../../config/routes'
 import {
   controlSandboxSubscription,
   openBillingPortal,
@@ -218,10 +219,11 @@ function SuccessCheck() {
  * 결제 로직은 코드베이스의 startCheckout / openBillingPortal을 그대로 재사용한다.
  */
 export function BillingPage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const loadingLabel = t.myPage.loadingBody
   const copy = t.myPage.billing
   const page = copy.page
+  const homeHref = localizedPublicPath('/', locale)
   const { user, loading: authLoading, isPro, subscription, refreshSubscription } = useAuth()
   const navigate = useNavigate()
   const mapError = useCheckoutError()
@@ -716,7 +718,11 @@ export function BillingPage() {
       </div>
 
       <div className="billing-cta">
-        <button type="button" className="btn btn-primary billing-cta__primary" onClick={() => navigate('/')}>
+        <button
+          type="button"
+          className="btn btn-primary billing-cta__primary"
+          onClick={() => navigate(homeHref)}
+        >
           {page.goToCalculator}
         </button>
         <button
@@ -742,6 +748,7 @@ export function BillingPage() {
           copy={copy}
           busy={checkoutBusy}
           message={message}
+          homeHref={homeHref}
           onCheckout={(plan) => void handleCheckout(plan)}
         />
         {authModalOpen && (
@@ -757,7 +764,7 @@ export function BillingPage() {
     <div className="my-page-shell billing-shell">
       <div className="my-page billing-page">
         <header className="my-page-header billing-page-header">
-          <a className="my-page-back" href="/">
+          <a className="my-page-back" href={homeHref}>
             {page.backToCalculator}
           </a>
           <div className="billing-hero">

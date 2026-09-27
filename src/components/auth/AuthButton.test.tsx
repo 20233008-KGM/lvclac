@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { en } from '../../i18n/locales/en'
-import { BILLING_PATH, MY_PAGE_PATH } from '../../config/routes'
+import { BILLING_PATH, MY_PAGE_PATH, localizedPublicPath } from '../../config/routes'
 import { AccountMenu } from './AuthButton'
 import { onAccountMenuNavigate } from './accountMenuNavigation'
 
@@ -27,13 +27,14 @@ describe('AccountMenu', () => {
       <AccountMenu
         copy={{ myPage: en.myPage.title, billing: en.myPage.billing.page.pageTitle, logout: en.logout }}
         user={{ id: 'user-1', email: 'user@example.com', nickname: 'Trader Kim', autoSaveOrderHistory: true, isAdmin: false }}
+        billingHref={localizedPublicPath(BILLING_PATH, 'en')}
         onSignOut={vi.fn()}
         onClose={vi.fn()}
         onMyPageClick={vi.fn()}
       />,
     )
 
-    expect(html).toContain(`href="${BILLING_PATH}"`)
+    expect(html).toContain(`href="${localizedPublicPath(BILLING_PATH, 'en')}"`)
     expect(html).toContain(en.myPage.billing.page.pageTitle)
   })
 

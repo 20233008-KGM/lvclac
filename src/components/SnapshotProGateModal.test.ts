@@ -60,6 +60,6 @@ describe('ResultPanel snapshot Pro gating', () => {
 
   it('login CTA opens the auth modal; upgrade CTA navigates to billing', () => {
     expect(resultPanelSource).toContain('setAuthModalOpen(true)')
-    expect(resultPanelSource).toContain('navigate(BILLING_PATH)')
+    expect(resultPanelSource).toContain('navigate(localizedPublicPath(BILLING_PATH, locale))')
   })
 })

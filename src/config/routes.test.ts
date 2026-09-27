@@ -7,6 +7,7 @@ import {
   isEnglishPublicPath,
   isGuidePath,
   isLocalizablePublicPath,
+  isBillingPath,
   isMyPagePath,
   isPricingPath,
   isProductPath,
@@ -35,8 +36,12 @@ describe('routes', () => {
     expect(publicPathWithoutLocale('/en/guide')).toBe('/guide')
     expect(localizedPublicPath('/guide', 'en')).toBe('/en/guide')
     expect(localizedPublicPath('/en/guide', 'ko')).toBe('/guide')
+    expect(localizedPublicPath('/billing', 'en')).toBe('/en/billing')
+    expect(localizedPublicPath('/en/billing', 'ko')).toBe('/billing')
     expect(isGuidePath('/en/guide')).toBe(true)
     expect(isLocalizablePublicPath('/en/guide')).toBe(true)
+    expect(isBillingPath('/en/billing')).toBe(true)
+    expect(isLocalizablePublicPath('/en/billing')).toBe(true)
     expect(isLocalizablePublicPath('/my')).toBe(false)
     expect(isMyPagePath('/en/my')).toBe(false)
   })

@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import type { BillingConfig, BillingDeps } from './billingConfig'
 import {
   handleCheckout,
+  handlePortal,
   handleSandboxSubscription,
   handleSwitchYearly,
   handleSwitchYearlyPreview,
@@ -80,6 +81,100 @@ describe('handleCheckout validation', () => {
       customerEmail: 'u@example.com',
       successUrl: 'https://a.com/my?checkout=success',
       customData: { user_id: 'user-1', plan: 'yearly', provider: 'paddle_sandbox' },
+    })
+  })
+})
+
+describe('handlePortal', () => {
+  it('creates a Paddle customer portal session for yearly switch intent', async () => {
+    const fetches: Array<{ input: string; init?: { method?: string; body?: string } }> = []
+    const filters: Array<{ table: string; column: string; value: unknown }> = []
+    const deps = {
+      admin: {
+        auth: {
+          async getUser() {
+            return { data: { user: { id: 'user-1', email: 'u@example.com' } }, error: null }
+          },
+        },
+        from(table: string) {
+          const chain = {
+            select() {
+              return chain
+            },
+            eq(column: string, value: unknown) {
+              filters.push({ table, column, value })
+              return chain
+            },
+            in(column: string, value: unknown) {
+              filters.push({ table, column, value })
+              return chain
+            },
+            order() {
+              return chain
+            },
+            limit() {
+              return chain
+            },
+            async maybeSingle() {
+              return {
+                data: {
+                  provider_customer_id: 'ctm_1',
+                  provider_subscription_id: 'sub_1',
+                },
+                error: null,
+              }
+            },
+          }
+          return chain
+        },
+      },
+      async fetch(input: string, init?: { method?: string; body?: string }) {
+        fetches.push({ input, init })
+        return {
+          ok: true,
+          status: 201,
+          async json() {
+            return {
+              data: {
+                urls: {
+                  general: {
+                    overview: 'https://customer-portal.paddle.com/session',
+                  },
+                  subscriptions: [{ id: 'sub_1' }],
+                },
+              },
+            }
+          },
+          async text() {
+            return ''
+          },
+        }
+      },
+    } as unknown as BillingDeps
+
+    const result = await handlePortal(
+      CONFIG,
+      { accessToken: 'jwt', intent: 'switch_yearly' },
+      deps,
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.body).toMatchObject({
+      ok: true,
+      action: 'switch_yearly',
+      url: 'https://customer-portal.paddle.com/session',
+    })
+    expect(filters).toContainEqual({
+      table: 'subscriptions',
+      column: 'user_id',
+      value: 'user-1',
+    })
+    expect(fetches[0]).toMatchObject({
+      input: 'https://sandbox-api.paddle.com/customers/ctm_1/portal-sessions',
+      init: {
+        method: 'POST',
+        body: JSON.stringify({ subscription_ids: ['sub_1'] }),
+      },
     })
   })
 })

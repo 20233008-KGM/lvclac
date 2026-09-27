@@ -563,8 +563,8 @@ export const ko: Messages = {
         receiptsAction: '영수증 · 결제 내역',
         paymentMethodAction: '결제 수단 변경',
         switchYearlyAction: '연간으로 전환',
-        switchYearlyPreviewBusy: '전환 금액 확인 중…',
-        switchYearlyBusy: '연간 전환 중…',
+        switchYearlyPreviewBusy: 'Paddle 결제 화면 여는 중…',
+        switchYearlyBusy: 'Paddle 결제 화면 여는 중…',
         switchYearlySuccess:
           '연간 구독으로 전환했습니다. 남은 월간 결제분은 Paddle이 크레딧으로 계산해 이번 연간 결제에 반영합니다.',
         switchYearlyAlready: '이미 연간 구독을 이용 중입니다.',
@@ -584,14 +584,14 @@ export const ko: Messages = {
         switchYearlyUnsupportedPlan:
           '현재 구독이 월간 플랜으로 확인되지 않아 자동 전환할 수 없습니다. 구독 관리 포털에서 플랜을 확인해 주세요.',
         switchYearlyLookupFailed:
-          '앱의 결제 기록은 확인됐지만 Paddle Live 구독 조회가 실패했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
+          '앱의 결제 기록은 확인됐지만 Paddle 구독 관리 화면을 열지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
         switchYearlyPreviewFailed:
-          'Paddle 전환 금액을 미리 확인하지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
+          'Paddle 결제 화면을 열지 못했습니다. 잠시 후 다시 시도해도 같으면 운영자가 결제 API 설정을 확인해야 합니다.',
         switchYearlyUpdateFailed:
-          'Paddle에서 연간 전환 요청을 완료하지 못했습니다. 결제 수단 또는 구독 상태를 확인해 주세요.',
+          'Paddle 결제 화면을 열지 못했습니다. 결제 수단 또는 구독 상태를 구독 관리 포털에서 확인해 주세요.',
         switchYearlySyncFailed:
           'Paddle 전환은 처리됐지만 앱 구독 상태를 반영하지 못했습니다. 새로고침 후에도 그대로면 문의해 주세요.',
-        switchYearlyNetworkError: '네트워크 문제로 연간 전환 요청을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        switchYearlyNetworkError: '네트워크 문제로 Paddle 결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.',
         cancelNote: '해지해도 현재 결제 주기가 끝날 때까지 Pro 기능을 계속 사용할 수 있습니다.',
         cancelAction: '구독 해지',
         manageCancellationAction: '해지 예약 관리',

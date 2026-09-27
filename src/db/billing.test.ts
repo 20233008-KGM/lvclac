@@ -3,6 +3,7 @@ import {
   clientSubscriptionProviders,
   fetchSubscription,
   isActiveSubscription,
+  openYearlySwitchPortal,
   previewSubscriptionToYearly,
   startCheckout,
   switchSubscriptionToYearly,
@@ -73,6 +74,34 @@ describe('isActiveSubscription', () => {
 })
 
 describe('switchSubscriptionToYearly', () => {
+  it('opens a Paddle customer portal session for the yearly switch intent', async () => {
+    query.auth.getSession.mockResolvedValue({
+      data: { session: { access_token: 'jwt-token' } },
+    })
+    const fakeWindow = { location: { href: '' } }
+    vi.stubGlobal('window', fakeWindow)
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      async json() {
+        return { ok: true, url: 'https://customer-portal.paddle.com/session' }
+      },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await openYearlySwitchPortal()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/billing/portal', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: 'Bearer jwt-token',
+      },
+      body: JSON.stringify({ intent: 'switch_yearly' }),
+    })
+    expect(result).toBeNull()
+    expect(fakeWindow.location.href).toBe('https://customer-portal.paddle.com/session')
+  })
+
   it('previews the yearly switch before the app commits the subscription update', async () => {
     query.auth.getSession.mockResolvedValue({
       data: { session: { access_token: 'jwt-token' } },

@@ -6,11 +6,9 @@ import { localizedPublicPath } from '../../config/routes'
 import {
   controlSandboxSubscription,
   openBillingPortal,
-  previewSubscriptionToYearly,
+  openYearlySwitchPortal,
   startCheckout,
-  switchSubscriptionToYearly,
   type BillingPlan,
-  type SubscriptionSwitchPreview,
 } from '../../db/billing'
 import { BillingUpgrade } from './BillingUpgrade'
 import { resolveBillingView } from './billingView'
@@ -29,39 +27,6 @@ function formatDate(iso: string, lang: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso
   return date.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' })
-}
-
-function formatBillingAmount(
-  amount: string | null,
-  currencyCode: string | null,
-  lang: string,
-): string | null {
-  if (!amount || !currencyCode) return null
-  const value = Number.parseInt(amount, 10)
-  if (!Number.isFinite(value)) return null
-  const zeroDecimal = new Set([
-    'BIF',
-    'CLP',
-    'DJF',
-    'GNF',
-    'JPY',
-    'KMF',
-    'KRW',
-    'MGA',
-    'PYG',
-    'RWF',
-    'UGX',
-    'VND',
-    'VUV',
-    'XAF',
-    'XOF',
-    'XPF',
-  ])
-  const divisor = zeroDecimal.has(currencyCode.toUpperCase()) ? 1 : 100
-  return new Intl.NumberFormat(lang, {
-    style: 'currency',
-    currency: currencyCode,
-  }).format(value / divisor)
 }
 
 /** 결제 리다이렉트 복귀 파라미터(?checkout=)를 읽는다. */
@@ -235,8 +200,6 @@ export function BillingPage() {
     readCheckoutParam() === 'cancel' ? copy.checkoutCanceled : null,
   )
   const [switchYearlyMessage, setSwitchYearlyMessage] = useState<string | null>(null)
-  const [switchYearlyPreview, setSwitchYearlyPreview] =
-    useState<SubscriptionSwitchPreview | null>(null)
   // 배너 닫기(결제 실패에서 "다시 시도")와 결제 완료에서 "구독 관리 보기" 전환용 로컬 상태.
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [leftSuccess, setLeftSuccess] = useState(false)
@@ -313,7 +276,6 @@ export function BillingPage() {
       setBusy(plan)
       setMessage(null)
       setSwitchYearlyMessage(null)
-      setSwitchYearlyPreview(null)
       const error = await startCheckout(plan)
       if (error) {
         setBusy(null)
@@ -329,7 +291,6 @@ export function BillingPage() {
     setBusy('portal')
     setMessage(null)
     setSwitchYearlyMessage(null)
-    setSwitchYearlyPreview(null)
     const error = await openBillingPortal()
     if (error) {
       setBusy(null)
@@ -341,57 +302,18 @@ export function BillingPage() {
     setBusy('switch-yearly')
     setMessage(null)
     setSwitchYearlyMessage(null)
-    setSwitchYearlyPreview(null)
-    const result = await previewSubscriptionToYearly()
-    if (result.error) {
+    const error = await openYearlySwitchPortal()
+    if (error) {
       setBusy(null)
-      setSwitchYearlyMessage(mapSwitchYearlyError(result.error))
+      setSwitchYearlyMessage(mapSwitchYearlyError(error))
       return
     }
-    if (!result.preview) {
-      setBusy(null)
-      setSwitchYearlyMessage(page.switchYearlyPreviewFailed)
-      return
-    }
-    if (result.preview.action === 'already_yearly') {
-      setBusy(null)
-      setSwitchYearlyMessage(page.switchYearlyAlready)
-      return
-    }
-    setBusy(null)
-    setSwitchYearlyPreview(result.preview)
-  }, [mapSwitchYearlyError, page.switchYearlyAlready, page.switchYearlyPreviewFailed])
-
-  const confirmSwitchYearly = useCallback(async () => {
-    setBusy('switch-yearly')
-    setMessage(null)
-    setSwitchYearlyMessage(null)
-    const result = await switchSubscriptionToYearly()
-    if (result.error) {
-      setBusy(null)
-      setSwitchYearlyMessage(mapSwitchYearlyError(result.error))
-      return
-    }
-    await refreshSubscription()
-    setBusy(null)
-    setSwitchYearlyPreview(null)
-    setSwitchYearlyMessage(
-      result.action === 'already_yearly'
-        ? page.switchYearlyAlready
-        : page.switchYearlySuccess,
-    )
-  }, [
-    mapSwitchYearlyError,
-    page.switchYearlyAlready,
-    page.switchYearlySuccess,
-    refreshSubscription,
-  ])
+  }, [mapSwitchYearlyError])
 
   const handleSandboxSync = useCallback(async () => {
     setBusy('sandbox-sync')
     setMessage(null)
     setSwitchYearlyMessage(null)
-    setSwitchYearlyPreview(null)
     const error = await controlSandboxSubscription('sync')
     if (error) {
       setBusy(null)
@@ -423,19 +345,6 @@ export function BillingPage() {
       )
     : null
   const showSandboxTools = user?.isAdmin === true && import.meta.env.VITE_PADDLE_ENV === 'sandbox'
-  const switchYearlyAmount = formatBillingAmount(
-    switchYearlyPreview?.amount ?? null,
-    switchYearlyPreview?.currencyCode ?? null,
-    t.lang,
-  )
-  const switchYearlyRecurringAmount = formatBillingAmount(
-    switchYearlyPreview?.recurringAmount ?? null,
-    switchYearlyPreview?.currencyCode ?? null,
-    t.lang,
-  )
-  const switchYearlyNextBilling = switchYearlyPreview?.nextBilledAt
-    ? formatDate(switchYearlyPreview.nextBilledAt, t.lang)
-    : null
 
   // 상태 배지: 상태에 따라 라벨·색을 달리한다.
   const statusVariant = view === 'failed' ? 'failed' : view === 'pro' || view === 'success' ? 'pro' : 'free'
@@ -590,62 +499,11 @@ export function BillingPage() {
           </span>
           <span>
             {busy === 'switch-yearly'
-              ? switchYearlyPreview
-                ? page.switchYearlyBusy
-                : page.switchYearlyPreviewBusy
+              ? page.switchYearlyPreviewBusy
               : page.switchYearlyAction}
           </span>
         </button>
       </div>
-
-      {switchYearlyPreview && (
-        <section className="billing-switch-preview" aria-labelledby="billing-switch-preview-title">
-          <div className="billing-switch-preview__copy">
-            <p id="billing-switch-preview-title" className="billing-switch-preview__title">
-              {page.switchYearlyPreviewTitle}
-            </p>
-            <p className="billing-switch-preview__body">{page.switchYearlyPreviewBody}</p>
-          </div>
-          <dl className="billing-switch-preview__amounts">
-            <div>
-              <dt>{page.switchYearlyPreviewImmediateAmount}</dt>
-              <dd>{switchYearlyAmount ?? page.switchYearlyPreviewNoAmount}</dd>
-            </div>
-            {switchYearlyRecurringAmount && (
-              <div>
-                <dt>{page.switchYearlyPreviewRecurringAmount}</dt>
-                <dd>{switchYearlyRecurringAmount}</dd>
-              </div>
-            )}
-            {switchYearlyNextBilling && (
-              <div>
-                <dt>{page.switchYearlyPreviewNextBilling}</dt>
-                <dd>{switchYearlyNextBilling}</dd>
-              </div>
-            )}
-          </dl>
-          <div className="billing-switch-preview__actions">
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={busyAny}
-              onClick={() => void confirmSwitchYearly()}
-            >
-              {busy === 'switch-yearly'
-                ? page.switchYearlyBusy
-                : page.switchYearlyPreviewConfirm}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={busyAny}
-              onClick={() => setSwitchYearlyPreview(null)}
-            >
-              {page.switchYearlyPreviewCancel}
-            </button>
-          </div>
-        </section>
-      )}
 
       {switchYearlyMessage && (
         <p className="my-page-form-message billing-message" role="status">

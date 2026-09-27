@@ -280,6 +280,18 @@ export function openBillingPortal(): Promise<string | null> {
   })()
 }
 
+export function openYearlySwitchPortal(): Promise<string | null> {
+  return (async () => {
+    const result = await postBilling<PortalPayload>('/api/billing/portal', {
+      intent: 'switch_yearly',
+    })
+    if (result.error !== null) return result.error
+    if (!result.data.url) return 'request_failed'
+    window.location.href = result.data.url
+    return null
+  })()
+}
+
 export type SubscriptionSwitchAction = 'switched_to_yearly' | 'already_yearly'
 
 export interface SubscriptionSwitchPreview {

@@ -19,7 +19,11 @@ import {
 } from './subscriptionSync.js'
 
 type JsonObject = Record<string, unknown>
-type PaddleFailurePhase = 'subscription_lookup' | 'subscription_preview' | 'subscription_update'
+type PaddleFailurePhase =
+  | 'portal_session'
+  | 'subscription_lookup'
+  | 'subscription_preview'
+  | 'subscription_update'
 
 export interface BillingResult {
   status: number
@@ -130,7 +134,14 @@ export async function handleCheckout(
 
 export interface PortalRequest {
   accessToken?: unknown
+  intent?: unknown
   origin?: unknown
+}
+
+type PortalIntent = 'overview' | 'switch_yearly'
+
+function portalIntent(value: unknown): PortalIntent {
+  return value === 'switch_yearly' ? 'switch_yearly' : 'overview'
 }
 
 export async function handlePortal(
@@ -139,6 +150,7 @@ export async function handlePortal(
   deps: BillingDeps,
 ): Promise<BillingResult> {
   if (!config) return fail(500, 'billing_not_configured')
+  const intent = portalIntent(request.intent)
 
   const auth = await requireUser(deps, request.accessToken)
   if ('error' in auth) return auth.error
@@ -175,11 +187,19 @@ export async function handlePortal(
   )
 
   const payload = await response.json().catch(() => null)
-  if (!response.ok) return fail(502, 'portal_request_failed')
+  if (!response.ok) {
+    const reason = logPaddleFailure(
+      'portal_session',
+      response,
+      payload,
+      subscriptionId ?? customerId,
+    )
+    return fail(502, 'portal_request_failed', reason)
+  }
 
   const url = portalSessionUrl(payload)
   if (!url) return fail(502, 'portal_url_missing')
-  return { status: 200, body: { ok: true, url } }
+  return { status: 200, body: { ok: true, action: intent, url } }
 }
 
 export type SandboxSubscriptionAction = 'sync' | 'cancel_now'

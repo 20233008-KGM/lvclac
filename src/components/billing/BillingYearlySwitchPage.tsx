@@ -158,7 +158,7 @@ export function BillingYearlySwitchPage() {
     <main className="billing-switch-page" aria-labelledby="billing-switch-title">
       <section className="billing-switch-card">
         <div className="billing-switch-card__brand">
-          <img src="/footer-brand-mark.svg" width="22" height="22" alt="" />
+          <img src="/favicon.svg" width="22" height="22" alt="" />
           <span>LiqGuard</span>
         </div>
 
@@ -196,74 +196,78 @@ export function BillingYearlySwitchPage() {
           </div>
         )}
 
-        {visibleState === 'ready' && (
-          <div className="billing-switch-confirmation">
-            <div className="billing-switch-confirmation__notice" id="billing-switch-payment-notice">
-              <p>{page.switchYearlyPreviewBody}</p>
-              <p>{page.switchYearlyRenewalNote}</p>
-            </div>
-            <label className="billing-switch-consent">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                disabled={busy}
-                onChange={(event) => setAcceptedPreview(event.target.checked ? preview : null)}
-                aria-describedby="billing-switch-payment-notice"
-              />
-              <span>{page.switchYearlyConsent}</span>
-            </label>
-            <div className="billing-switch-policy-links">
-              <a href={localizedPublicPath(TERMS_PATH, locale)} target="_blank" rel="noopener noreferrer">
-                {page.switchYearlyTermsLink}
-              </a>
-              <a href={localizedPublicPath(REFUND_POLICY_PATH, locale)} target="_blank" rel="noopener noreferrer">
-                {page.switchYearlyRefundLink}
-              </a>
-              <a href="https://www.paddle.com/legal/buyer-terms" target="_blank" rel="noopener noreferrer">
-                {page.switchYearlyBuyerTermsLink}
-              </a>
-            </div>
-          </div>
-        )}
-
-        {visibleMessage && (
-          <p className={`billing-switch-message billing-switch-message--${visibleState}`} role="status">
-            {visibleMessage}
-          </p>
-        )}
-
-        <div className="billing-switch-actions">
+        <div className="billing-switch-checkout">
           {visibleState === 'ready' && (
-            <button
-              type="button"
-              className="billing-switch-actions__primary"
-              disabled={!canConfirm}
-              onClick={() => void confirmSwitch()}
-            >
-              {busy ? page.switchYearlyBusy : immediateAmount && Number(preview?.amount) > 0
-                ? page.switchYearlyPayConfirm.replace('{amount}', immediateAmount)
-                : page.switchYearlyPreviewConfirm}
-            </button>
+            <div className="billing-switch-confirmation">
+              <div className="billing-switch-confirmation__notice" id="billing-switch-payment-notice">
+                <p>{page.switchYearlyPreviewBody}</p>
+                <p>{page.switchYearlyRenewalNote}</p>
+              </div>
+              <div className="billing-switch-consent-group">
+                <label className="billing-switch-consent">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    disabled={busy}
+                    onChange={(event) => setAcceptedPreview(event.target.checked ? preview : null)}
+                    aria-describedby="billing-switch-payment-notice"
+                  />
+                  <span>{page.switchYearlyConsent}</span>
+                </label>
+                <div className="billing-switch-policy-links">
+                  <a href={localizedPublicPath(TERMS_PATH, locale)} target="_blank" rel="noopener noreferrer">
+                    {page.switchYearlyTermsLink}
+                  </a>
+                  <a href={localizedPublicPath(REFUND_POLICY_PATH, locale)} target="_blank" rel="noopener noreferrer">
+                    {page.switchYearlyRefundLink}
+                  </a>
+                  <a href="https://www.paddle.com/legal/buyer-terms" target="_blank" rel="noopener noreferrer">
+                    {page.switchYearlyBuyerTermsLink}
+                  </a>
+                </div>
+              </div>
+            </div>
           )}
-          {visibleState === 'success' && (
-            <button
-              type="button"
-              className="billing-switch-actions__primary"
-              onClick={() => navigate(billingHref)}
-            >
-              {page.viewSubscription}
-            </button>
+
+          {visibleMessage && (
+            <p className={`billing-switch-message billing-switch-message--${visibleState}`} role="status">
+              {visibleMessage}
+            </p>
           )}
-          {visibleState !== 'success' && (
-            <button
-              type="button"
-              className="billing-switch-actions__secondary"
-              disabled={busy}
-              onClick={() => navigate(billingHref)}
-            >
-              {page.switchYearlyPreviewCancel}
-            </button>
-          )}
+
+          <div className="billing-switch-actions">
+            {visibleState === 'ready' && (
+              <button
+                type="button"
+                className="billing-switch-actions__primary"
+                disabled={!canConfirm}
+                onClick={() => void confirmSwitch()}
+              >
+                {busy ? page.switchYearlyBusy : immediateAmount && Number(preview?.amount) > 0
+                  ? page.switchYearlyPayConfirm.replace('{amount}', immediateAmount)
+                  : page.switchYearlyPreviewConfirm}
+              </button>
+            )}
+            {visibleState === 'success' && (
+              <button
+                type="button"
+                className="billing-switch-actions__primary"
+                onClick={() => navigate(billingHref)}
+              >
+                {page.viewSubscription}
+              </button>
+            )}
+            {visibleState !== 'success' && (
+              <button
+                type="button"
+                className="billing-switch-actions__secondary"
+                disabled={busy}
+                onClick={() => navigate(billingHref)}
+              >
+                {page.switchYearlyPreviewCancel}
+              </button>
+            )}
+          </div>
         </div>
         <p className="billing-switch-card__processor">{page.switchYearlyPaymentProvider}</p>
       </section>

@@ -5859,6 +5859,11 @@ a.my-page-compare-card__action {
   color: #68717d;
 }
 
+.billing-switch-checkout {
+  display: grid;
+  gap: 16px;
+}
+
 .billing-switch-confirmation {
   display: grid;
   gap: 14px;
@@ -5878,12 +5883,17 @@ a.my-page-compare-card__action {
   margin: 0;
 }
 
+.billing-switch-consent-group {
+  display: grid;
+  gap: 0;
+}
+
 .billing-switch-consent {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   min-height: 44px;
-  padding-block: 8px;
+  padding-block: 0;
   color: #343d49;
   font-size: 13px;
   line-height: 1.65;
@@ -5894,7 +5904,7 @@ a.my-page-compare-card__action {
   flex: 0 0 17px;
   width: 17px;
   height: 17px;
-  margin: 2px 0 0;
+  margin: 0;
   accent-color: #245bd4;
   cursor: pointer;
 }
@@ -5909,7 +5919,6 @@ a.my-page-compare-card__action {
   flex-wrap: wrap;
   column-gap: 16px;
   row-gap: 4px;
-  margin-top: -12px;
   padding-left: 27px;
 }
 

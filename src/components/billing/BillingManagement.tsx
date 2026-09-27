@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { REFUND_POLICY_PATH, localizedPublicPath } from '../../config/routes'
+import { BILLING_CANCEL_PATH, REFUND_POLICY_PATH, localizedPublicPath } from '../../config/routes'
 import { fetchSubscriptionSummary, type SubscriptionRecord, type SubscriptionSummary } from '../../db/billing'
 import { useLanguage } from '../../i18n'
 import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
@@ -133,11 +133,11 @@ export function BillingManagement({ subscription, homeHref, busy, portalBusy, me
             </button>
           </section>
           {!ended && <section className="billing-management-row billing-management-row--cancel" aria-labelledby="billing-cancel-title">
-            <div><h2 id="billing-cancel-title">{cancelScheduled ? page.manageCancellationAction : labels.cancelTitle}</h2>
+            <div><h2 id="billing-cancel-title">{cancelScheduled ? page.cancelScheduledBadge : labels.cancelTitle}</h2>
               <p>{cancelScheduled ? page.noFurtherBilling : page.cancelNote}</p></div>
-            <button type="button" className="billing-management-link" disabled={busy} onClick={onManage}>
-              {cancelScheduled ? page.manageCancellationAction : page.cancelAction}<span aria-hidden="true">↗</span>
-            </button>
+            <a className="billing-management-link" href={localizedPublicPath(BILLING_CANCEL_PATH, locale)}>
+              {cancelScheduled ? page.cancellation.detailsAction : page.cancelAction}
+            </a>
           </section>}
         </>}
         {message && <p className="billing-management-message" role="status">{message}</p>}

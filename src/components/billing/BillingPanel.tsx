@@ -7,6 +7,7 @@ import {
   type BillingPlan,
 } from '../../db/billing'
 import { BILLING_PATH, localizedPublicPath } from '../../config/routes'
+import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
 
 type BusyState = BillingPlan | 'portal' | null
 const CHECKOUT_REFRESH_DELAYS = [0, 750, 1500, 2500, 4000, 6000]
@@ -42,6 +43,9 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
   const planLabel = t.myPage.planTitle
   const billingHref = localizedPublicPath(BILLING_PATH, locale)
   const { isPro, subscription, refreshSubscription } = useAuth()
+  const accessEnd = subscriptionAccessEnd(subscription)
+  const periodLabel = accessEnd ? (isCancellationScheduled(subscription)
+    ? copy.page.accessEndsOn : copy.renewsOn).replace('{date}', formatDate(accessEnd, t.lang)) : null
   const [busy, setBusy] = useState<BusyState>(null)
   // 리다이렉트 복귀 메시지는 최초 렌더에서 URL로부터 초기화(effect 내 setState 회피).
   const [message, setMessage] = useState<string | null>(() => {
@@ -139,9 +143,9 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
         <div className="my-page-billing-row__copy">
           <p className="my-page-billing-headline">{copy.proHeadline}</p>
           <p>{copy.proBody}</p>
-          {subscription?.currentPeriodEnd && (
+          {periodLabel && (
             <p className="my-page-field-help">
-              {copy.renewsOn.replace('{date}', formatDate(subscription.currentPeriodEnd, t.lang))}
+              {periodLabel}
             </p>
           )}
         </div>
@@ -211,12 +215,9 @@ export function BillingPanel({ embedded = false }: { embedded?: boolean }) {
       return (
         <div id="my-page-plan" className="my-page-billing-cluster" aria-label={copy.proHeadline}>
           <div className="my-page-billing-cluster__row">
-            {subscription?.currentPeriodEnd && (
+            {periodLabel && (
               <p className="my-page-billing-cluster__renews">
-                {copy.renewsOn.replace(
-                  '{date}',
-                  formatDate(subscription.currentPeriodEnd, t.lang),
-                )}
+                {periodLabel}
               </p>
             )}
             {/* 마이페이지 "구독 관리"는 포털을 직접 열지 않고 전용 결제 페이지(/billing)로 이동한다.

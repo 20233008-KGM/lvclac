@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 import { createBillingDeps, readBillingConfig } from './scripts/billing/billingConfig'
 import {
   handleCheckout,
+  handleCancelSubscription,
   handlePortal,
   handleSandboxSubscription,
   handleSubscriptionSummary,
@@ -66,6 +67,20 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
             sendBillingJson(res, result.status, result.body)
           } catch {
             sendBillingJson(res, 502, { ok: false, error: 'subscription_lookup_failed' })
+          }
+        })()
+      })
+
+      server.middlewares.use('/api/billing/cancel-subscription', (req, res) => {
+        res.setHeader('cache-control', 'private, no-store')
+        if (req.method !== 'POST') return sendBillingJson(res, 405, { ok: false, error: 'method_not_allowed' })
+        if (!bearerToken(req)) return sendBillingJson(res, 401, { ok: false, error: 'missing_access_token' })
+        void (async () => {
+          try {
+            const result = await handleCancelSubscription(config, { accessToken: bearerToken(req) }, deps as never)
+            sendBillingJson(res, result.status, result.body)
+          } catch {
+            sendBillingJson(res, 500, { ok: false, error: 'request_failed' })
           }
         })()
       })

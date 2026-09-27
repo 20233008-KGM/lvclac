@@ -58,8 +58,9 @@ test('keeps one billing portal action and a visible cancellation entry with reco
   await expect.poll(calls.portalCalls).toBe(1)
   await expect(page.locator('.billing-management-message')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Open billing portal' })).toBeEnabled()
-  await page.getByRole('button', { name: 'Cancel subscription' }).click()
-  await expect.poll(calls.portalCalls).toBe(2)
+  await page.getByRole('link', { name: 'Cancel subscription' }).click()
+  await expect(page).toHaveURL(/\/en\/billing\/cancel$/)
+  expect(calls.portalCalls()).toBe(1)
 })
 
 test('yearly plan and scheduled cancellation show the correct amount, end date and actions', async ({ page }) => {
@@ -70,7 +71,7 @@ test('yearly plan and scheduled cancellation show the correct amount, end date a
   await expect(page.locator('.billing-management-facts')).toContainText('2027')
   await expect(page.locator('.billing-management-facts')).not.toContainText('Next billing date')
   await expect(page.getByRole('button', { name: 'Switch to yearly' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Manage cancellation' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View cancellation' })).toHaveAttribute('href', '/en/billing/cancel')
 })
 
 test('manual Pro has no invented charge, renewal, or Paddle actions', async ({ page }) => {

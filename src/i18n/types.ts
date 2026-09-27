@@ -623,6 +623,30 @@ export interface Messages {
         switchYearlyNetworkError: string
         cancelNote: string
         cancelAction: string
+        cancellation: {
+          subtitle: string
+          planLabel: string
+          renewalLabel: string
+          renewalOff: string
+          endsLabel: string
+          noRefund: string
+          afterEnd: string
+          confirm: string
+          keep: string
+          busy: string
+          loading: string
+          successTitle: string
+          successBody: string
+          endedBody: string
+          detailsAction: string
+          back: string
+          retry: string
+          loginRequired: string
+          unavailable: string
+          inactive: string
+          failed: string
+          syncPending: string
+        }
         manageCancellationAction: string
         sandboxTitle: string
         sandboxBody: string

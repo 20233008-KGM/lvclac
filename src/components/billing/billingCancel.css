@@ -1,0 +1,57 @@
+.billing-cancel-card {
+  border-radius: 8px;
+}
+
+.billing-cancel-card .billing-switch-card__brand,
+.billing-cancel-card .billing-switch-card__header h1,
+.billing-cancel-card .billing-switch-summary__primary dd {
+  letter-spacing: 0;
+}
+
+.billing-cancel-summary > div {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  align-items: start;
+}
+
+.billing-cancel-summary dt,
+.billing-cancel-summary dd {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.billing-cancel-summary .billing-switch-summary__primary {
+  border-top-style: dashed;
+}
+
+.billing-cancel-summary .billing-switch-summary__primary dd {
+  font-size: 18px;
+}
+
+.billing-cancel-notice {
+  color: #606975;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.billing-cancel-notice p {
+  margin: 0;
+}
+
+.billing-cancel-confirm {
+  background: #b3342b;
+}
+
+.billing-cancel-confirm:hover:not(:disabled) {
+  background: #922a23;
+}
+
+@media (max-width: 380px) {
+  .billing-cancel-summary > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .billing-cancel-summary dd {
+    text-align: left;
+  }
+}

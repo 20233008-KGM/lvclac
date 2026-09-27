@@ -304,6 +304,22 @@ export async function fetchSubscriptionSummary(): Promise<BillingResult<Subscrip
 
 export type SubscriptionSwitchAction = 'switched_to_yearly' | 'already_yearly'
 
+export interface SubscriptionCancellation {
+  status: string
+  effectiveAt: string | null
+  syncPending: boolean
+}
+
+export async function cancelSubscription(): Promise<BillingResult<SubscriptionCancellation>> {
+  const result = await postBilling<{ cancellation?: SubscriptionCancellation }>('/api/billing/cancel-subscription')
+  if (result.error !== null) return result
+  const cancellation = result.data.cancellation
+  return cancellation && (cancellation.status === 'canceled'
+    || (cancellation.effectiveAt && !Number.isNaN(Date.parse(cancellation.effectiveAt))))
+    ? { data: cancellation, error: null }
+    : { data: null, error: 'subscription_payload_missing' }
+}
+
 export interface SubscriptionSwitchPreview {
   action: 'preview_yearly' | 'already_yearly'
   amount: string | null

@@ -24,6 +24,7 @@ type PaddleFailurePhase =
   | 'subscription_lookup'
   | 'subscription_preview'
   | 'subscription_update'
+  | 'subscription_cancel'
 
 export interface BillingResult {
   status: number
@@ -40,6 +41,7 @@ export interface BillingResult {
     reason?: string
     preview?: SubscriptionSwitchPreview
     summary?: SubscriptionSummary
+    cancellation?: { status: string; effectiveAt: string | null; syncPending: boolean }
   }
 }
 
@@ -408,6 +410,60 @@ export async function handleSubscriptionSummary(
       canSwitchYearly: plan === 'monthly' && (status === 'active' || status === 'trialing') && !scheduled,
     } },
   }
+}
+
+export async function handleCancelSubscription(
+  config: BillingConfig | null,
+  request: { accessToken?: unknown },
+  deps: BillingDeps,
+): Promise<BillingResult> {
+  if (!config) return fail(500, 'billing_not_configured')
+  const owned = await fetchOwnedSubscriptionId(config, request, deps)
+  if ('error' in owned) return owned.error
+
+  const endpoint = `${paddleApiBaseUrl(config.paddleEnv)}/subscriptions/${encodeURIComponent(owned.subscriptionId)}`
+  const headers = { authorization: `Bearer ${config.paddleApiKey}`, 'content-type': 'application/json' }
+  const currentResponse = await deps.fetch(endpoint, { method: 'GET', headers })
+  const currentPayload = await currentResponse.json().catch(() => null)
+  if (!currentResponse.ok) {
+    return fail(502, 'subscription_lookup_failed', logPaddleFailure('subscription_lookup', currentResponse, currentPayload, owned.subscriptionId))
+  }
+  let sub = asRecord(asRecord(currentPayload)?.data)
+  if (sub?.id !== owned.subscriptionId) return fail(502, 'subscription_payload_missing')
+  const alreadyCanceled = sub.status === 'canceled'
+  const alreadyScheduled = asRecord(sub.scheduled_change)?.action === 'cancel'
+  if (!alreadyCanceled && !alreadyScheduled) {
+    if (sub.status !== 'active' && sub.status !== 'trialing') return fail(409, 'subscription_not_active')
+    if (sub.scheduled_change) return fail(409, 'subscription_change_scheduled')
+    const response = await deps.fetch(`${endpoint}/cancel`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ effective_from: 'next_billing_period' }),
+    })
+    const payload = await response.json().catch(() => null)
+    if (!response.ok) {
+      return fail(502, 'subscription_cancel_failed', logPaddleFailure('subscription_cancel', response, payload, owned.subscriptionId))
+    }
+    sub = asRecord(asRecord(payload)?.data)
+  }
+  const status = stringValue(sub?.status)
+  const scheduled = asRecord(sub?.scheduled_change)
+  const effectiveAt = stringValue(scheduled?.effective_at)
+  if (sub?.id !== owned.subscriptionId || !status || (status !== 'canceled'
+    && (scheduled?.action !== 'cancel' || !effectiveAt || Number.isNaN(Date.parse(effectiveAt))))) {
+    return fail(502, 'subscription_payload_missing')
+  }
+
+  // Paddle has accepted cancellation. A mirror failure must not report that it failed.
+  let syncPending: boolean
+  try {
+    const sync = await syncSubscription(deps, sub as PaddleSubscription, owned.userId, config.paddleEnv, stringValue(sub.updated_at))
+    syncPending = !sync.ok
+  } catch {
+    syncPending = true
+  }
+  return { status: 200, body: { ok: true, cancellation: {
+    status, effectiveAt: status === 'canceled' ? null : effectiveAt, syncPending,
+  } } }
 }
 
 export async function handleSwitchYearly(

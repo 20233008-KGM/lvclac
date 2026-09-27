@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   clientSubscriptionProviders,
+  cancelSubscription,
   fetchSubscription,
   isActiveSubscription,
   previewSubscriptionToYearly,
@@ -69,6 +70,25 @@ describe('isActiveSubscription', () => {
     expect(isActiveSubscription('trialing')).toBe(true)
     expect(isActiveSubscription('canceled')).toBe(false)
     expect(isActiveSubscription(null)).toBe(false)
+  })
+})
+
+describe('cancelSubscription', () => {
+  it('authenticates without accepting a client-selected subscription or cancellation mode', async () => {
+    query.auth.getSession.mockResolvedValue({ data: { session: { access_token: 'jwt-token' } } })
+    const cancellation = { status: 'active', effectiveAt: '2027-09-28T09:00:00Z', syncPending: false }
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ cancellation }) })
+    vi.stubGlobal('fetch', fetchMock)
+    expect(await cancelSubscription()).toEqual({ data: cancellation, error: null })
+    expect(fetchMock).toHaveBeenCalledWith('/api/billing/cancel-subscription', {
+      method: 'POST', headers: { 'content-type': 'application/json', Authorization: 'Bearer jwt-token' }, body: '{}',
+    })
+  })
+
+  it('rejects incomplete success responses', async () => {
+    query.auth.getSession.mockResolvedValue({ data: { session: null } })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ cancellation: { status: 'active', effectiveAt: null } }) }))
+    expect((await cancelSubscription()).error).toBe('subscription_payload_missing')
   })
 })
 

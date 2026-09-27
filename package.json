@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "billing:setup": "node scripts/billing/setupLocal.ts",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:geo-consent": "npm run test:geo-consent:unit && npm run test:geo-consent:e2e",

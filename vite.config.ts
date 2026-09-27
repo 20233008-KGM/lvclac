@@ -3,12 +3,15 @@ import { configDefaults, defineConfig } from 'vitest/config'
 import type { ServerResponse } from 'node:http'
 import react from '@vitejs/plugin-react'
 import { createBillingDeps, readBillingConfig } from './scripts/billing/billingConfig'
+import { localBillingReadOrigin, proxyBillingRead } from './scripts/billing/devReadProxy'
 import {
   handleCheckout,
   handleCancelSubscription,
   handlePortal,
   handleSandboxSubscription,
   handleSubscriptionSummary,
+  handleSwitchYearly,
+  handleSwitchYearlyPreview,
   handleWebhook,
 } from './scripts/billing/billingHandlers'
 import {
@@ -28,12 +31,20 @@ import { writePublicRouteHtmlAssets } from './scripts/publicSeoAssets'
  * `apply: 'serve'`라 프로덕션 빌드에는 포함되지 않으며, 실제 배포는 Vercel Function이 처리한다.
  * PADDLE_API_KEY 등 비밀은 비-VITE 접두사라 클라이언트 번들에 노출되지 않는다.
  */
-function billingDevPlugin(env: Record<string, string>): Plugin {
-  const config = readBillingConfig(env)
+export function billingDevPlugin(env: Record<string, string>): Plugin {
+  const readOrigin = localBillingReadOrigin(env)
+  const configured = readBillingConfig(env)
+  // Local checkout must return to the requesting port, not the production site URL.
+  const config = configured ? { ...configured, appUrl: undefined } : null
   return {
     name: 'paddle-billing-dev',
     apply: 'serve',
     configureServer(server) {
+      if (readOrigin) {
+        server.config.logger.info(`[billing] Subscription reads: ${readOrigin}`)
+      } else if (!config || env.VITE_PADDLE_ENV !== config.paddleEnv || !env.VITE_PADDLE_CLIENT_TOKEN) {
+        server.config.logger.warn('[billing] Local billing is not configured or its environments differ. Run npm run billing:setup -- --environment production for Live reads, or configure Sandbox in .env.development.local.')
+      }
       const deps = config ? createBillingDeps(config) : null
       const guard = (res: ServerResponse, error: unknown) => {
         const message = error instanceof Error ? error.message : 'server_error'
@@ -47,7 +58,7 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
             const body = await readBillingJson(req)
             const result = await handleCheckout(
               config,
-              { accessToken: bearerToken(req), plan: body.plan, origin: requestOrigin(req) },
+              { accessToken: bearerToken(req), plan: body.plan, origin: req.headers.origin ?? `${server.config.server.https ? 'https' : 'http'}://${req.headers.host}` },
               deps as never,
             )
             sendBillingJson(res, result.status, result.body)
@@ -57,8 +68,9 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
         })()
       })
 
-      server.middlewares.use('/api/billing/summary', (req, res, next) => {
-        if (req.method !== 'POST') return next()
+      server.middlewares.use('/api/billing/summary', (req, res) => {
+        if (readOrigin) { void proxyBillingRead(readOrigin, '/api/billing/summary', req, res); return }
+        if (req.method !== 'POST') return sendBillingJson(res, 405, { ok: false, error: 'method_not_allowed' })
         res.setHeader('cache-control', 'private, no-store')
         void (async () => {
           try {
@@ -70,6 +82,30 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
           }
         })()
       })
+
+      // Connect both yearly endpoints: Vite does not auto-register api/ files.
+      for (const [path, handle] of [
+        ['/api/billing/switch-yearly-preview', handleSwitchYearlyPreview],
+        ['/api/billing/switch-yearly', handleSwitchYearly],
+      ] as const) {
+        server.middlewares.use(path, (req, res) => {
+          if (readOrigin && path === '/api/billing/switch-yearly-preview') {
+            void proxyBillingRead(readOrigin, path, req, res)
+            return
+          }
+          res.setHeader('cache-control', 'private, no-store')
+          if (req.method !== 'POST') return sendBillingJson(res, 405, { ok: false, error: 'method_not_allowed' })
+          if (!bearerToken(req)) return sendBillingJson(res, 401, { ok: false, error: 'missing_access_token' })
+          void (async () => {
+            try {
+              const result = await handle(config, { accessToken: bearerToken(req) }, deps as never)
+              sendBillingJson(res, result.status, result.body)
+            } catch {
+              sendBillingJson(res, 500, { ok: false, error: 'request_failed' })
+            }
+          })()
+        })
+      }
 
       server.middlewares.use('/api/billing/cancel-subscription', (req, res) => {
         res.setHeader('cache-control', 'private, no-store')

@@ -6,6 +6,7 @@ import {
   controlSandboxSubscription,
   openBillingPortal,
   startCheckout,
+  switchSubscriptionToYearly,
   type BillingPlan,
 } from '../../db/billing'
 import { BillingUpgrade } from './BillingUpgrade'
@@ -13,7 +14,7 @@ import { resolveBillingView } from './billingView'
 import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
 import '../../styles/pages.css'
 
-type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | null
+type BusyState = BillingPlan | 'portal' | 'switch-yearly' | 'sandbox-sync' | null
 
 const AuthModal = lazy(() =>
   import('../auth/AuthModal').then((mod) => ({ default: mod.AuthModal })),
@@ -214,6 +215,24 @@ export function BillingPage() {
     }
   }, [mapError])
 
+  const handleSwitchYearly = useCallback(async () => {
+    setBusy('switch-yearly')
+    setMessage(null)
+    const result = await switchSubscriptionToYearly()
+    if (result.error) {
+      setBusy(null)
+      setMessage(mapError(result.error))
+      return
+    }
+    await refreshSubscription()
+    setBusy(null)
+    setMessage(
+      result.action === 'already_yearly'
+        ? page.switchYearlyAlready
+        : page.switchYearlySuccess,
+    )
+  }, [mapError, page.switchYearlyAlready, page.switchYearlySuccess, refreshSubscription])
+
   const handleSandboxSync = useCallback(async () => {
     setBusy('sandbox-sync')
     setMessage(null)
@@ -390,6 +409,19 @@ export function BillingPage() {
             <CardIcon />
           </span>
           <span>{page.paymentMethodAction}</span>
+        </button>
+        <button
+          type="button"
+          className="billing-action"
+          disabled={busyAny}
+          onClick={() => void handleSwitchYearly()}
+        >
+          <span className="billing-action__icon" aria-hidden="true">
+            <CardIcon />
+          </span>
+          <span>
+            {busy === 'switch-yearly' ? page.switchYearlyBusy : page.switchYearlyAction}
+          </span>
         </button>
       </div>
 

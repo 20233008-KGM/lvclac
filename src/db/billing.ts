@@ -223,6 +223,20 @@ export function openBillingPortal(): Promise<string | null> {
   })()
 }
 
+export type SubscriptionSwitchAction = 'switched_to_yearly' | 'already_yearly'
+
+export async function switchSubscriptionToYearly(): Promise<
+  { action: SubscriptionSwitchAction | null; error: null } | { action: null; error: string }
+> {
+  const result = await postBilling<{ action?: string }>('/api/billing/switch-yearly')
+  if (result.error !== null) return { action: null, error: result.error }
+  const action =
+    result.data.action === 'switched_to_yearly' || result.data.action === 'already_yearly'
+      ? result.data.action
+      : null
+  return { action, error: null }
+}
+
 export type SandboxSubscriptionAction = 'sync' | 'cancel_now'
 
 export async function controlSandboxSubscription(

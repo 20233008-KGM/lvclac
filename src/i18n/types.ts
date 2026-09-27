@@ -562,6 +562,10 @@ export interface Messages {
         portalAction: string
         receiptsAction: string
         paymentMethodAction: string
+        switchYearlyAction: string
+        switchYearlyBusy: string
+        switchYearlySuccess: string
+        switchYearlyAlready: string
         cancelNote: string
         cancelAction: string
         manageCancellationAction: string

@@ -205,6 +205,115 @@ export async function handleSandboxSubscription(
   return { status: 200, body: { ok: true, action: request.action } }
 }
 
+export interface SwitchYearlyRequest {
+  accessToken?: unknown
+}
+
+function paddleSubscriptionPriceId(subscription: JsonObject | null): string | null {
+  const items = Array.isArray(subscription?.items) ? subscription.items : []
+  for (const item of items) {
+    const price = asRecord(asRecord(item)?.price)
+    const id = stringValue(price?.id)
+    if (id) return id
+  }
+  return null
+}
+
+function paddleSubscriptionStatus(subscription: JsonObject | null): string | null {
+  return stringValue(subscription?.status)
+}
+
+async function fetchOwnedSubscriptionId(
+  config: BillingConfig,
+  request: { accessToken?: unknown },
+  deps: BillingDeps,
+): Promise<
+  | { userId: string; subscriptionId: string }
+  | { error: BillingResult }
+> {
+  const auth = await requireUser(deps, request.accessToken)
+  if ('error' in auth) return auth
+
+  const subscriptionRow = await deps.admin
+    .from('subscriptions')
+    .select('provider_subscription_id')
+    .eq('user_id', auth.user.id)
+    .in('provider', paddleProviderAliases(config.paddleEnv))
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<{ provider_subscription_id: string | null }>()
+  if (subscriptionRow.error) return { error: fail(500, subscriptionRow.error.message) }
+
+  const subscriptionId = subscriptionRow.data?.provider_subscription_id
+  if (!subscriptionId) return { error: fail(400, 'no_subscription') }
+  return { userId: auth.user.id, subscriptionId }
+}
+
+export async function handleSwitchYearly(
+  config: BillingConfig | null,
+  request: SwitchYearlyRequest,
+  deps: BillingDeps,
+): Promise<BillingResult> {
+  if (!config) return fail(500, 'billing_not_configured')
+
+  const owned = await fetchOwnedSubscriptionId(config, request, deps)
+  if ('error' in owned) return owned.error
+
+  const endpoint = `${paddleApiBaseUrl(config.paddleEnv)}/subscriptions/${encodeURIComponent(
+    owned.subscriptionId,
+  )}`
+  const currentResponse = await deps.fetch(endpoint, {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${config.paddleApiKey}`,
+      'content-type': 'application/json',
+    },
+  })
+  const currentPayload = await currentResponse.json().catch(() => null)
+  if (!currentResponse.ok) return fail(502, 'subscription_lookup_failed')
+
+  const currentSubscription = asRecord(asRecord(currentPayload)?.data)
+  const currentStatus = paddleSubscriptionStatus(currentSubscription)
+  if (currentStatus !== 'active' && currentStatus !== 'trialing') {
+    return fail(400, 'subscription_not_active')
+  }
+
+  const currentPriceId = paddleSubscriptionPriceId(currentSubscription)
+  if (currentPriceId === config.prices.yearly) {
+    return { status: 200, body: { ok: true, action: 'already_yearly' } }
+  }
+  if (currentPriceId !== config.prices.monthly) {
+    return fail(400, 'unsupported_current_plan')
+  }
+
+  const updateResponse = await deps.fetch(endpoint, {
+    method: 'PATCH',
+    headers: {
+      authorization: `Bearer ${config.paddleApiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      proration_billing_mode: 'prorated_immediately',
+      on_payment_failure: 'prevent_change',
+      items: [{ price_id: config.prices.yearly, quantity: 1 }],
+    }),
+  })
+  const updatePayload = await updateResponse.json().catch(() => null)
+  if (!updateResponse.ok) return fail(502, 'subscription_update_failed')
+
+  const updatedSubscription = asRecord(asRecord(updatePayload)?.data) as PaddleSubscription | null
+  if (!updatedSubscription) return fail(502, 'subscription_payload_missing')
+
+  const syncResult = await syncSubscription(
+    deps,
+    updatedSubscription,
+    owned.userId,
+    config.paddleEnv,
+  )
+  if (!syncResult.ok) return fail(500, syncResult.error ?? 'sync_failed')
+  return { status: 200, body: { ok: true, action: 'switched_to_yearly' } }
+}
+
 export interface WebhookRequest {
   rawBody?: unknown
   signature?: unknown

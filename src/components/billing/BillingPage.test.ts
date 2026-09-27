@@ -13,6 +13,13 @@ describe('resolveBillingView', () => {
     expect(source).toContain('<AuthModal onClose={() => setAuthModalOpen(false)} />')
   })
 
+  it('offers a first-party yearly switch action for active subscribers', () => {
+    expect(source).toContain('switchSubscriptionToYearly')
+    expect(source).toContain("busy === 'switch-yearly'")
+    expect(source).toContain('page.switchYearlyAction')
+    expect(source).toContain('page.switchYearlySuccess')
+  })
+
   it('keeps the billing page neutral while subscription state is loading', () => {
     expect(
       resolveBillingView({

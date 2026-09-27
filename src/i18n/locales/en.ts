@@ -570,6 +570,11 @@ export const en: Messages = {
         portalAction: 'Open management portal',
         receiptsAction: 'Receipts · Billing history',
         paymentMethodAction: 'Change payment method',
+        switchYearlyAction: 'Switch to yearly',
+        switchYearlyBusy: 'Switching to yearly…',
+        switchYearlySuccess:
+          'Your subscription switched to yearly. Paddle calculates the unused monthly time as credit and applies it to this annual charge.',
+        switchYearlyAlready: 'You are already on the yearly subscription.',
         cancelNote: 'If you cancel, you keep Pro features until the end of the current billing period.',
         cancelAction: 'Cancel subscription',
         manageCancellationAction: 'Manage cancellation',
@@ -681,7 +686,7 @@ export const en: Messages = {
             },
             {
               q: 'Can I switch monthly · yearly?',
-              a: 'After subscribing, you can switch between monthly and yearly anytime from the management portal.',
+              a: 'When you switch from monthly to yearly, Paddle calculates unused monthly time as credit and applies it to the annual charge.',
             },
           ],
           finalTitle: 'Start Pro now',

@@ -1,14 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clientSubscriptionProviders, fetchSubscription, isActiveSubscription } from './billing'
+import {
+  clientSubscriptionProviders,
+  fetchSubscription,
+  isActiveSubscription,
+  switchSubscriptionToYearly,
+} from './billing'
 
 const query = vi.hoisted(() => ({
   from: vi.fn(), select: vi.fn(), eq: vi.fn(), in: vi.fn(),
   order: vi.fn(), limit: vi.fn(), maybeSingle: vi.fn(),
+  auth: { getSession: vi.fn() },
 }))
 vi.mock('./supabaseClient', () => ({ supabase: query }))
 
 afterEach(() => {
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
   vi.resetAllMocks()
 })
 
@@ -60,5 +67,32 @@ describe('isActiveSubscription', () => {
     expect(isActiveSubscription('trialing')).toBe(true)
     expect(isActiveSubscription('canceled')).toBe(false)
     expect(isActiveSubscription(null)).toBe(false)
+  })
+})
+
+describe('switchSubscriptionToYearly', () => {
+  it('posts to the yearly switch endpoint with the signed-in session token', async () => {
+    query.auth.getSession.mockResolvedValue({
+      data: { session: { access_token: 'jwt-token' } },
+    })
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      async json() {
+        return { ok: true, action: 'switched_to_yearly' }
+      },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await switchSubscriptionToYearly()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/billing/switch-yearly', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: 'Bearer jwt-token',
+      },
+      body: JSON.stringify({}),
+    })
+    expect(result).toEqual({ action: 'switched_to_yearly', error: null })
   })
 })

@@ -559,6 +559,11 @@ export const ko: Messages = {
         portalAction: '구독 관리 포털 열기',
         receiptsAction: '영수증 · 결제 내역',
         paymentMethodAction: '결제 수단 변경',
+        switchYearlyAction: '연간으로 전환',
+        switchYearlyBusy: '연간 전환 중…',
+        switchYearlySuccess:
+          '연간 구독으로 전환했습니다. 남은 월간 결제분은 Paddle이 크레딧으로 계산해 이번 연간 결제에 반영합니다.',
+        switchYearlyAlready: '이미 연간 구독을 이용 중입니다.',
         cancelNote: '해지해도 현재 결제 주기가 끝날 때까지 Pro 기능을 계속 사용할 수 있습니다.',
         cancelAction: '구독 해지',
         manageCancellationAction: '해지 예약 관리',
@@ -670,7 +675,7 @@ export const ko: Messages = {
             },
             {
               q: '월간 · 연간을 바꿀 수 있나요?',
-              a: '구독 후 관리 포털에서 언제든 월간과 연간을 전환할 수 있습니다.',
+              a: '월간에서 연간으로 바꾸면 남은 월간 결제분을 Paddle이 크레딧으로 계산해 연간 결제에 반영합니다.',
             },
           ],
           finalTitle: '지금 Pro로 시작하세요',

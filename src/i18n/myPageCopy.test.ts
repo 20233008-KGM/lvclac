@@ -44,6 +44,20 @@ describe('my page copy', () => {
     expect(en.myPage.billing.taxNote).toContain('official payment partner')
   })
 
+  it('explains monthly to yearly switching as a prorated credit flow', () => {
+    expect(ko.myPage.billing.page.switchYearlyAction).toBe('연간으로 전환')
+    expect(ko.myPage.billing.page.switchYearlySuccess).toContain('크레딧')
+    expect(
+      ko.myPage.billing.page.upgrade.faq.find((item) => item.q.includes('월간'))?.a,
+    ).toContain('연간 결제에 반영')
+
+    expect(en.myPage.billing.page.switchYearlyAction).toBe('Switch to yearly')
+    expect(en.myPage.billing.page.switchYearlySuccess).toContain('credit')
+    expect(
+      en.myPage.billing.page.upgrade.faq.find((item) => item.q.includes('monthly'))?.a,
+    ).toContain('annual charge')
+  })
+
   it('provides the order-history auto-save toggle copy in both languages', () => {
     expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 저장')
     expect(ko.myPage.autoSaveOrderHistoryHint).toContain('주문 적용 시')

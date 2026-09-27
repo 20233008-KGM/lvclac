@@ -1,7 +1,12 @@
 import { createHmac } from 'node:crypto'
 import { describe, it, expect } from 'vitest'
 import type { BillingConfig, BillingDeps } from './billingConfig'
-import { handleCheckout, handleSandboxSubscription, handleWebhook } from './billingHandlers'
+import {
+  handleCheckout,
+  handleSandboxSubscription,
+  handleSwitchYearly,
+  handleWebhook,
+} from './billingHandlers'
 
 const CONFIG: BillingConfig = {
   paddleApiKey: 'pdl_api',
@@ -226,6 +231,165 @@ describe('handleSandboxSubscription', () => {
       input: 'https://sandbox-api.paddle.com/subscriptions/sub_1',
       init: { method: 'GET' },
     })
+  })
+})
+
+interface SwitchYearlyState {
+  fetches: Array<{ input: string; init?: { method?: string; body?: string } }>
+  updates: Record<string, unknown>[]
+  filters: Array<{ table: string; column: string; value: unknown }>
+  currentPriceId: string
+  currentStatus?: string
+}
+
+function makeSwitchYearlyDeps(state: SwitchYearlyState): BillingDeps {
+  const admin = {
+    auth: {
+      async getUser() {
+        return { data: { user: { id: 'user-1', email: 'u@example.com' } }, error: null }
+      },
+    },
+    from(table: string) {
+      let selected = ''
+      let update: Record<string, unknown> | null = null
+      const chain = {
+        select(columns: string) {
+          selected = columns
+          return chain
+        },
+        update(patch: Record<string, unknown>) {
+          update = patch
+          state.updates.push(patch)
+          return chain
+        },
+        eq(column: string, value: unknown) {
+          state.filters.push({ table, column, value })
+          return chain
+        },
+        in(column: string, value: unknown) {
+          state.filters.push({ table, column, value })
+          return chain
+        },
+        order() {
+          return chain
+        },
+        limit() {
+          return chain
+        },
+        async maybeSingle() {
+          if (selected === 'provider_subscription_id') {
+            return { data: { provider_subscription_id: 'sub_1' }, error: null }
+          }
+          if (selected === 'id,provider_event_time') {
+            return { data: { id: 'row_1', provider_event_time: null }, error: null }
+          }
+          return { data: null, error: null }
+        },
+        get error() {
+          return update ? null : undefined
+        },
+      }
+      return chain
+    },
+  }
+  return {
+    admin,
+    async fetch(input: string, init?: { method?: string; body?: string }) {
+      state.fetches.push({ input, init })
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          const isPatch = init?.method === 'PATCH'
+          return {
+            data: {
+              id: 'sub_1',
+              customer_id: 'ctm_1',
+              status: 'active',
+              current_billing_period: { ends_at: '2027-01-15T00:00:00.000Z' },
+              scheduled_change: null,
+              items: [
+                {
+                  price: { id: isPatch ? CONFIG.prices.yearly : state.currentPriceId },
+                  quantity: 1,
+                },
+              ],
+            },
+          }
+        },
+        async text() {
+          return ''
+        },
+      }
+    },
+  } as unknown as BillingDeps
+}
+
+describe('handleSwitchYearly', () => {
+  it('requires a signed-in user', async () => {
+    const result = await handleSwitchYearly(CONFIG, {}, NOOP_DEPS)
+
+    expect(result.status).toBe(401)
+    expect(result.body.error).toBe('missing_access_token')
+  })
+
+  it('switches a monthly subscription to yearly with immediate proration credit', async () => {
+    const state: SwitchYearlyState = {
+      fetches: [],
+      updates: [],
+      filters: [],
+      currentPriceId: CONFIG.prices.monthly,
+    }
+    const result = await handleSwitchYearly(
+      CONFIG,
+      { accessToken: 'jwt' },
+      makeSwitchYearlyDeps(state),
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.body.action).toBe('switched_to_yearly')
+    expect(state.filters).toContainEqual({
+      table: 'subscriptions',
+      column: 'user_id',
+      value: 'user-1',
+    })
+    expect(state.fetches).toHaveLength(2)
+    expect(state.fetches[0]).toMatchObject({
+      input: 'https://sandbox-api.paddle.com/subscriptions/sub_1',
+      init: { method: 'GET' },
+    })
+    expect(state.fetches[1]).toMatchObject({
+      input: 'https://sandbox-api.paddle.com/subscriptions/sub_1',
+      init: { method: 'PATCH' },
+    })
+    expect(JSON.parse(state.fetches[1].init?.body ?? '{}')).toEqual({
+      proration_billing_mode: 'prorated_immediately',
+      on_payment_failure: 'prevent_change',
+      items: [{ price_id: CONFIG.prices.yearly, quantity: 1 }],
+    })
+    expect(state.updates[0]).toMatchObject({
+      provider_subscription_id: 'sub_1',
+      status: 'active',
+    })
+  })
+
+  it('does not create another charge when the subscription is already yearly', async () => {
+    const state: SwitchYearlyState = {
+      fetches: [],
+      updates: [],
+      filters: [],
+      currentPriceId: CONFIG.prices.yearly,
+    }
+    const result = await handleSwitchYearly(
+      CONFIG,
+      { accessToken: 'jwt' },
+      makeSwitchYearlyDeps(state),
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.body.action).toBe('already_yearly')
+    expect(state.fetches).toHaveLength(1)
+    expect(state.updates).toHaveLength(0)
   })
 })
 

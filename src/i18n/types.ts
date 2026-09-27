@@ -568,6 +568,14 @@ export interface Messages {
         switchYearlyBusy: string
         switchYearlySuccess: string
         switchYearlyAlready: string
+        switchYearlyLoginRequired: string
+        switchYearlyNoSubscription: string
+        switchYearlyInactive: string
+        switchYearlyUnsupportedPlan: string
+        switchYearlyLookupFailed: string
+        switchYearlyUpdateFailed: string
+        switchYearlySyncFailed: string
+        switchYearlyNetworkError: string
         cancelNote: string
         cancelAction: string
         manageCancellationAction: string

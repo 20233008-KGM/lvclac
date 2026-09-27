@@ -65,6 +65,16 @@ describe('my page copy', () => {
     ).toContain('annual charge')
   })
 
+  it('explains yearly switch failure cases without a generic dead-button message', () => {
+    expect(ko.myPage.billing.page.switchYearlyUnsupportedPlan).toContain('월간 플랜')
+    expect(ko.myPage.billing.page.switchYearlyUpdateFailed).toContain('Paddle')
+    expect(ko.myPage.billing.page.switchYearlyNoSubscription).toContain('구독 정보')
+
+    expect(en.myPage.billing.page.switchYearlyUnsupportedPlan).toContain('monthly plan')
+    expect(en.myPage.billing.page.switchYearlyUpdateFailed).toContain('Paddle')
+    expect(en.myPage.billing.page.switchYearlyNoSubscription).toContain('subscription')
+  })
+
   it('provides the order-history auto-save toggle copy in both languages', () => {
     expect(ko.myPage.autoSaveOrderHistoryLabel).toBe('주문 기록 저장')
     expect(ko.myPage.autoSaveOrderHistoryHint).toContain('주문 적용 시')

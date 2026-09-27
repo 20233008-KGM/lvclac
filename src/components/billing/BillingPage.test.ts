@@ -21,6 +21,13 @@ describe('resolveBillingView', () => {
     expect(source).toContain('page.switchYearlySuccess')
   })
 
+  it('shows yearly switch results near the action buttons with specific server errors', () => {
+    expect(source).toContain('switchYearlyMessage')
+    expect(source).toContain('setSwitchYearlyMessage(mapSwitchYearlyError(result.error))')
+    expect(source).toContain('page.switchYearlyUnsupportedPlan')
+    expect(source).toContain('page.switchYearlyUpdateFailed')
+  })
+
   it('clears only the customer portal busy state after returning from Paddle', () => {
     expect(source).toContain("window.addEventListener('pageshow', clearPortalBusy)")
     expect(source).toContain("document.addEventListener('visibilitychange', handleVisibilityChange)")

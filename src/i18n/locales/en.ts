@@ -578,6 +578,21 @@ export const en: Messages = {
         switchYearlySuccess:
           'Your subscription switched to yearly. Paddle calculates the unused monthly time as credit and applies it to this annual charge.',
         switchYearlyAlready: 'You are already on the yearly subscription.',
+        switchYearlyLoginRequired:
+          'Could not confirm your login session. Refresh the page and try again.',
+        switchYearlyNoSubscription:
+          'Could not find the Paddle subscription for this account. Check the management portal for the current status.',
+        switchYearlyInactive: 'Only an active subscription can be switched to yearly.',
+        switchYearlyUnsupportedPlan:
+          'This subscription is not recognized as the monthly plan, so it cannot be switched automatically. Check the plan in the management portal.',
+        switchYearlyLookupFailed:
+          'Could not check the Paddle subscription status. Please try again shortly.',
+        switchYearlyUpdateFailed:
+          'Paddle could not complete the yearly switch. Check the payment method or subscription status.',
+        switchYearlySyncFailed:
+          'Paddle processed the change, but the app could not refresh the subscription state. Refresh the page, then contact support if it still looks wrong.',
+        switchYearlyNetworkError:
+          'A network problem prevented the yearly switch request. Please try again shortly.',
         cancelNote: 'If you cancel, you keep Pro features until the end of the current billing period.',
         cancelAction: 'Cancel subscription',
         manageCancellationAction: 'Manage cancellation',

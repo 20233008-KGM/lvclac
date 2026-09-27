@@ -3,7 +3,7 @@ import { configDefaults, defineConfig } from 'vitest/config'
 import type { ServerResponse } from 'node:http'
 import react from '@vitejs/plugin-react'
 import { createBillingDeps, readBillingConfig } from './scripts/billing/billingConfig'
-import { localBillingReadOrigin, proxyBillingRead } from './scripts/billing/devReadProxy'
+import { localBillingReadOrigin, proxyBillingCancellation, proxyBillingRead } from './scripts/billing/devReadProxy'
 import {
   handleCheckout,
   handleCancelSubscription,
@@ -33,6 +33,7 @@ import { writePublicRouteHtmlAssets } from './scripts/publicSeoAssets'
  */
 export function billingDevPlugin(env: Record<string, string>): Plugin {
   const readOrigin = localBillingReadOrigin(env)
+  const cancellationOrigin = env.BILLING_DEV_ALLOW_CANCELLATION === 'true' ? readOrigin : null
   const configured = readBillingConfig(env)
   const matchesReadEnvironment = !readOrigin || (configured?.paddleEnv === env.VITE_PADDLE_ENV
     && configured?.supabaseUrl === env.VITE_SUPABASE_URL)
@@ -44,6 +45,7 @@ export function billingDevPlugin(env: Record<string, string>): Plugin {
     configureServer(server) {
       if (readOrigin) {
         server.config.logger.info(`[billing] Subscription reads: ${readOrigin}`)
+        if (cancellationOrigin) server.config.logger.warn(`[billing] Cancellation forwarding enabled: ${cancellationOrigin}. Live requests affect real subscriptions.`)
       } else if (!config || env.VITE_PADDLE_ENV !== config.paddleEnv || !env.VITE_PADDLE_CLIENT_TOKEN) {
         server.config.logger.warn('[billing] Local billing is not configured or its environments differ. Run npm run billing:setup -- --environment production for Live reads, or configure Sandbox in .env.development.local.')
       }
@@ -71,7 +73,7 @@ export function billingDevPlugin(env: Record<string, string>): Plugin {
       })
 
       server.middlewares.use('/api/billing/summary', (req, res) => {
-        if (readOrigin) { void proxyBillingRead(readOrigin, '/api/billing/summary', req, res, !!config); return }
+        if (readOrigin) { void proxyBillingRead(readOrigin, '/api/billing/summary', req, res, !!config || !!cancellationOrigin); return }
         if (req.method !== 'POST') return sendBillingJson(res, 405, { ok: false, error: 'method_not_allowed' })
         res.setHeader('cache-control', 'private, no-store')
         void (async () => {
@@ -110,6 +112,7 @@ export function billingDevPlugin(env: Record<string, string>): Plugin {
       }
 
       server.middlewares.use('/api/billing/cancel-subscription', (req, res) => {
+        if (cancellationOrigin) { void proxyBillingCancellation(cancellationOrigin, req, res); return }
         res.setHeader('cache-control', 'private, no-store')
         if (req.method !== 'POST') return sendBillingJson(res, 405, { ok: false, error: 'method_not_allowed' })
         if (!bearerToken(req)) return sendBillingJson(res, 401, { ok: false, error: 'missing_access_token' })

@@ -85,15 +85,37 @@ origin (host and port) has its own login session, so sign in on a new port befor
 expecting account data. Client `VITE_PADDLE_ENV` also selects the matching subscription
 provider; an absent value intentionally does not guess Live from existing rows.
 
-Checkout, plan changes, cancellation, portal creation, and webhooks are **not**
-proxied. Testing those locally requires the complete matching server environment
-listed above, preferably Sandbox. The local summary explicitly reports cancellation
-as unavailable until matching native server credentials are configured, so the
-cancellation page does not offer an action that the local server cannot execute.
+Checkout, plan changes, portal creation, and webhooks are **not** proxied. Testing
+those locally requires the complete matching server environment listed above,
+preferably Sandbox. Cancellation is also local-only by default. The local summary
+explicitly reports cancellation as unavailable until matching native server
+credentials or the explicit cancellation forwarding option below are configured.
 Mismatched Paddle environments or Supabase projects disable native billing while
 read forwarding is enabled. Native local checkout returns to the requesting
 host/port instead of the deployed `APP_URL`. For fully local Sandbox testing, remove
 `BILLING_DEV_READ_ORIGIN` and set both client/server Paddle environments to Sandbox.
+
+### Optional Cancellation Forwarding
+
+After deploying `/api/billing/cancel-subscription`, explicitly opt in per checkout:
+
+```bash
+npm run billing:setup -- --environment production --allow-cancellation
+```
+
+This sets the server-only `BILLING_DEV_ALLOW_CANCELLATION=true`. With the existing
+trusted `BILLING_DEV_READ_ORIGIN`, Vite forwards only the cancellation endpoint in
+addition to reads. It sends the user's bearer token and an empty body: caller-supplied
+subscription IDs, immediate cancellation options, cookies, and secrets are discarded.
+The deployed API authenticates the user, selects their own subscription in the
+correct environment, and always uses `next_billing_period`. Refunds are not requested.
+There is no automatic retry of a cancellation request; after a transport failure,
+the page checks the current subscription state before another explicit attempt.
+
+**Live mode affects real subscriptions.** Opening the page or checking status is
+read-only; pressing the final cancellation button schedules the actual cancellation.
+Returning to setup without `--allow-cancellation` resets the option to `false`.
+Neither local environment files nor this opt-in are uploaded in Vercel deployments.
 
 ## Flow
 

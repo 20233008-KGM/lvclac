@@ -21,11 +21,29 @@ export async function proxyBillingRead(
 ): Promise<void> {
   res.setHeader('cache-control', 'private, no-store')
   if (!READ_PATHS.has(path)) return sendJson(res, 404, { ok: false, error: 'not_found' })
+  return forwardBillingRequest(origin, path, req, res, 'subscription_lookup_failed', cancellationAvailable)
+}
+
+/** Called only when cancellation forwarding is explicitly enabled in the dev server. */
+export async function proxyBillingCancellation(origin: string, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  return forwardBillingRequest(origin, '/api/billing/cancel-subscription', req, res, 'subscription_cancel_failed')
+}
+
+async function forwardBillingRequest(
+  origin: string,
+  path: string,
+  req: IncomingMessage,
+  res: ServerResponse,
+  failureCode: string,
+  cancellationAvailable = false,
+): Promise<void> {
+  res.setHeader('cache-control', 'private, no-store')
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' })
   const token = bearerToken(req)
   if (!token) return sendJson(res, 401, { ok: false, error: 'missing_access_token' })
   try {
-    // Only forward the user's bearer token, never local secrets, cookies, or arbitrary paths.
+    // The deployed API selects the user's subscription and cancellation timing.
+    // Never forward caller-supplied IDs, effective_from, cookies, or local secrets.
     const response = await fetch(`${origin}${path}`, {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15_000),
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
@@ -40,6 +58,6 @@ export async function proxyBillingRead(
     }
     sendJson(res, response.status, body)
   } catch {
-    sendJson(res, 502, { ok: false, error: 'subscription_lookup_failed' })
+    sendJson(res, 502, { ok: false, error: failureCode })
   }
 }

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { localBillingReadOrigin, proxyBillingRead } from './devReadProxy'
+import { localBillingReadOrigin, proxyBillingCancellation, proxyBillingRead } from './devReadProxy'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -88,5 +88,42 @@ describe('read-only proxy', () => {
     await proxyBillingRead('https://liqguard.com', '/api/billing/summary', request(), res)
     expect(res.statusCode).toBe(502)
     expect(res.end).toHaveBeenCalledWith(JSON.stringify({ ok: false, error: 'subscription_lookup_failed' }))
+  })
+})
+
+describe('explicit cancellation forwarding', () => {
+  it('forwards one authenticated request to the fixed endpoint with no caller data', async () => {
+    const cancellation = { status: 'active', effectiveAt: '2027-09-28T09:00:00Z', syncPending: false }
+    const fetch = vi.fn().mockResolvedValue(Response.json({ ok: true, cancellation }))
+    vi.stubGlobal('fetch', fetch)
+    const req = Object.assign(request(), { body: { subscription_id: 'sub_other', effective_from: 'immediately' } })
+    const res = response()
+    await proxyBillingCancellation('https://liqguard.com', req, res)
+    expect(fetch).toHaveBeenCalledExactlyOnceWith('https://liqguard.com/api/billing/cancel-subscription', {
+      method: 'POST', redirect: 'error', signal: expect.any(AbortSignal),
+      headers: { authorization: 'Bearer user-token', 'content-type': 'application/json' }, body: '{}',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.setHeader).toHaveBeenCalledWith('cache-control', 'private, no-store')
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify({ ok: true, cancellation }))
+  })
+
+  it.each([['GET', 'Bearer token', 405], ['POST', '', 401]])('rejects %s with invalid method/auth locally', async (method, token, status) => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const res = response()
+    await proxyBillingCancellation('https://liqguard.com', request(method, token), res)
+    expect(res.statusCode).toBe(status)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('never retries or reports a lookup error after an uncertain cancellation response', async () => {
+    const fetch = vi.fn().mockRejectedValue(new Error('connection interrupted'))
+    vi.stubGlobal('fetch', fetch)
+    const res = response()
+    await proxyBillingCancellation('https://liqguard.com', request(), res)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(res.statusCode).toBe(502)
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify({ ok: false, error: 'subscription_cancel_failed' }))
   })
 })

@@ -73,6 +73,25 @@ describe('Vite billing route wiring', () => {
     expect(upstream).not.toHaveBeenCalled()
   })
 
+  it('enables only cancellation forwarding after explicit opt-in on different local ports', async () => {
+    const cancellation = { status: 'active', effectiveAt: '2027-09-28T09:00:00Z', syncPending: false }
+    const upstream = vi.fn(async (url: string) => Response.json(url.endsWith('/summary')
+      ? { ok: true, summary: { status: 'active' } } : { ok: true, cancellation }))
+    vi.stubGlobal('fetch', upstream)
+    const env = { VITE_PADDLE_ENV: 'live', BILLING_DEV_READ_ORIGIN: 'https://liqguard.com', BILLING_DEV_ALLOW_CANCELLATION: 'true' }
+    for (const origin of [await start(env), await start(env)]) {
+      expect((await post(origin + '/api/billing/summary', 'user-token')).body)
+        .toMatchObject({ summary: { cancellationAvailable: true } })
+      expect(await post(origin + '/api/billing/cancel-subscription', 'user-token', JSON.stringify({ effective_from: 'immediately' })))
+        .toEqual({ status: 200, body: { ok: true, cancellation } })
+      expect(await post(origin + '/api/billing/switch-yearly', 'user-token')).toEqual({
+        status: 500, body: { ok: false, error: 'billing_not_configured' },
+      })
+    }
+    expect(upstream).toHaveBeenCalledTimes(4)
+    expect(upstream).toHaveBeenLastCalledWith('https://liqguard.com/api/billing/cancel-subscription', expect.objectContaining({ body: '{}' }))
+  })
+
   it('registers the native yearly routes and rejects missing authentication instead of 404', async () => {
     const origin = await start({})
     for (const path of ['/api/billing/summary', '/api/billing/switch-yearly-preview', '/api/billing/switch-yearly']) {

@@ -606,7 +606,7 @@ export const ko: Messages = {
         switchYearlyPlanChange: 'LiqGuard Pro · 월간 → 연간',
         switchYearlyCreditNote: '남은 월간 구독의 크레딧이 반영된 금액입니다.',
         switchYearlyRenewalNote: '해지 전까지 매년 자동 갱신됩니다. 다음 결제 전에 구독 관리에서 해지할 수 있습니다.',
-        switchYearlyConsent: '이용약관 및 결제·자동 갱신·환불 규정을 확인하고 동의합니다.',
+        switchYearlyConsent: '{terms}, {refund}, {buyerTerms} 및 결제·자동 갱신 내용을 확인하고 동의합니다.',
         switchYearlyTermsLink: '이용약관',
         switchYearlyRefundLink: '환불 정책',
         switchYearlyBuyerTermsLink: 'Paddle 구매자 약관',

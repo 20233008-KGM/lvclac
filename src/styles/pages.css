@@ -5770,58 +5770,47 @@ a.my-page-compare-card__action {
   margin: 0;
 }
 
-.billing-switch-consent-group {
-  display: grid;
-  gap: 0;
-}
-
 .billing-switch-consent {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   min-height: 44px;
   padding-block: 0;
   color: #343d49;
   font-size: 13px;
   line-height: 1.65;
-  cursor: pointer;
 }
 
 .billing-switch-consent input {
   flex: 0 0 17px;
   width: 17px;
   height: 17px;
-  margin: 0;
+  margin: 3px 0 0;
   accent-color: #245bd4;
   cursor: pointer;
 }
 
-.billing-switch-consent:has(input:disabled),
+.billing-switch-consent__text label {
+  cursor: pointer;
+}
+
+.billing-switch-consent:has(input:disabled) label,
 .billing-switch-consent input:disabled {
   cursor: default;
 }
 
-.billing-switch-policy-links {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 16px;
-  row-gap: 4px;
-  padding-left: 27px;
+.billing-switch-consent__text {
+  min-width: 0;
 }
 
-.billing-switch-policy-links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #606975;
+.billing-switch-consent__text a {
+  color: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.billing-switch-policy-links a:hover {
-  color: #202631;
+.billing-switch-consent__text a:hover {
+  color: #245bd4;
 }
 
 .billing-switch-message {

@@ -40,6 +40,11 @@ export function BillingYearlySwitchPage() {
   const copy = t.myPage.billing
   const page = copy.page
   const billingHref = localizedPublicPath(BILLING_PATH, locale)
+  const consentLinks: Record<string, { href: string; label: string }> = {
+    '{terms}': { href: localizedPublicPath(TERMS_PATH, locale), label: page.switchYearlyTermsLink },
+    '{refund}': { href: localizedPublicPath(REFUND_POLICY_PATH, locale), label: page.switchYearlyRefundLink },
+    '{buyerTerms}': { href: 'https://www.paddle.com/legal/buyer-terms', label: page.switchYearlyBuyerTermsLink },
+  }
   const [state, setState] = useState<SwitchState>('loading')
   const [preview, setPreview] = useState<SubscriptionSwitchPreview | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -203,28 +208,28 @@ export function BillingYearlySwitchPage() {
                 <p>{page.switchYearlyPreviewBody}</p>
                 <p>{page.switchYearlyRenewalNote}</p>
               </div>
-              <div className="billing-switch-consent-group">
-                <label className="billing-switch-consent">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    disabled={busy}
-                    onChange={(event) => setAcceptedPreview(event.target.checked ? preview : null)}
-                    aria-describedby="billing-switch-payment-notice"
-                  />
-                  <span>{page.switchYearlyConsent}</span>
-                </label>
-                <div className="billing-switch-policy-links">
-                  <a href={localizedPublicPath(TERMS_PATH, locale)} target="_blank" rel="noopener noreferrer">
-                    {page.switchYearlyTermsLink}
-                  </a>
-                  <a href={localizedPublicPath(REFUND_POLICY_PATH, locale)} target="_blank" rel="noopener noreferrer">
-                    {page.switchYearlyRefundLink}
-                  </a>
-                  <a href="https://www.paddle.com/legal/buyer-terms" target="_blank" rel="noopener noreferrer">
-                    {page.switchYearlyBuyerTermsLink}
-                  </a>
-                </div>
+              <div className="billing-switch-consent">
+                <input
+                  id="billing-switch-consent"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  disabled={busy}
+                  onChange={(event) => setAcceptedPreview(event.target.checked ? preview : null)}
+                  aria-labelledby="billing-switch-consent-text"
+                  aria-describedby="billing-switch-payment-notice"
+                />
+                <span className="billing-switch-consent__text" id="billing-switch-consent-text">
+                  {page.switchYearlyConsent.split(/(\{(?:terms|refund|buyerTerms)\})/g).map((part, index) => {
+                    const link = consentLinks[part]
+                    return link ? (
+                      <a key={part} href={link.href} target="_blank" rel="noopener noreferrer">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <label key={index} htmlFor="billing-switch-consent">{part}</label>
+                    )
+                  })}
+                </span>
               </div>
             </div>
           )}

@@ -617,7 +617,7 @@ export const en: Messages = {
         switchYearlyPlanChange: 'LiqGuard Pro · Monthly → Yearly',
         switchYearlyCreditNote: 'Includes credit for the unused time on your monthly plan.',
         switchYearlyRenewalNote: 'Renews automatically each year until canceled. You can cancel in subscription management before the next payment.',
-        switchYearlyConsent: 'I have read and agree to the terms of service, payment, automatic renewal and refund policies.',
+        switchYearlyConsent: 'I have read and agree to the {terms}, {refund} and {buyerTerms}, including payment and automatic renewal.',
         switchYearlyTermsLink: 'Terms of service',
         switchYearlyRefundLink: 'Refund policy',
         switchYearlyBuyerTermsLink: 'Paddle Buyer Terms',

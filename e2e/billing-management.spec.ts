@@ -65,7 +65,7 @@ test('keeps one billing portal action and a visible cancellation entry with reco
 
 test('yearly plan and scheduled cancellation show the correct amount, end date and actions', async ({ page }) => {
   await setup(page, { summary: { ...summary, plan: 'yearly', recurringAmount: '4800', canSwitchYearly: false, scheduledChangeAction: 'cancel', scheduledChangeEffectiveAt: '2027-09-27T00:00:00Z', nextBilledAt: null } })
-  await expect(page.locator('.billing-management-status')).toContainText('Cancellation scheduled')
+  await expect(page.locator('.billing-management-status')).toContainText('Subscription canceled')
   await expect(page.locator('.billing-management-facts')).toContainText('$48.00')
   await expect(page.locator('.billing-management-facts')).toContainText('Access ends on')
   await expect(page.locator('.billing-management-facts')).toContainText('2027')

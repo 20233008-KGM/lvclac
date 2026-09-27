@@ -3,6 +3,17 @@ import { en } from './locales/en'
 import { ko } from './locales/ko'
 
 describe('my page copy', () => {
+  it('confirms cancellation in both languages while keeping the remaining Pro period clear', () => {
+    expect(ko.myPage.billing.page.cancellation.successTitle).toBe('구독이 취소되었습니다')
+    expect(ko.myPage.billing.page.cancelScheduledBody).toBe('구독이 취소되었습니다. 종료일까지 Pro 기능은 그대로 유지됩니다.')
+    expect(ko.myPage.billing.page.cancelScheduledBadge).toBe('구독 취소됨')
+    expect(ko.myPage.billing.page.cancellation.successBody).toContain('자동갱신이 중단되었습니다')
+    expect(en.myPage.billing.page.cancellation.successTitle).toBe('Your subscription has been canceled')
+    expect(en.myPage.billing.page.cancelScheduledBody).toBe('Your subscription has been canceled. Pro remains available until the end date.')
+    expect(en.myPage.billing.page.cancelScheduledBadge).toBe('Subscription canceled')
+    expect(en.myPage.billing.page.cancellation.successBody).toContain('Automatic renewal is off')
+  })
+
   it('provides Korean account-hub copy for live billing without promising instant deletion', () => {
     expect(ko.myPage.title).toBe('마이페이지')
     expect(ko.myPage.profileTitle).toBe('프로필')

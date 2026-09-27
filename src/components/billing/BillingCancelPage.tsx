@@ -14,6 +14,7 @@ export function BillingCancelPage() {
   const navigate = useNavigate()
   const page = t.myPage.billing.page
   const copy = page.cancellation
+  const homeHref = localizedPublicPath('/', locale)
   const [summary, setSummary] = useState<SubscriptionSummary | null>(null)
   const [receipt, setReceipt] = useState<SubscriptionCancellation | null>(null)
   const [loading, setLoading] = useState(true)
@@ -86,11 +87,17 @@ export function BillingCancelPage() {
   return (
     <main className="billing-switch-page billing-cancel-page" aria-labelledby="billing-cancel-heading">
       <section className="billing-switch-card billing-cancel-card">
-        <div className="billing-switch-card__brand">
+        <a className="billing-switch-card__brand" href={homeHref} aria-disabled={busy || undefined}
+          onClick={event => {
+            if (busy) { event.preventDefault(); return }
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+            event.preventDefault()
+            navigate(homeHref)
+          }}>
           <img src="/favicon.svg" width="22" height="22" alt="" /><span>LiqGuard</span>
-        </div>
+        </a>
         <header className="billing-switch-card__header">
-          <h1 id="billing-cancel-heading">{scheduled ? copy.successTitle : page.cancelAction}</h1>
+          <h1 id="billing-cancel-heading">{complete ? copy.successTitle : page.cancelAction}</h1>
           <p>{ended ? copy.endedBody : scheduled ? copy.successBody : copy.subtitle}</p>
         </header>
         {waiting && <div className="billing-switch-loading" role="status">

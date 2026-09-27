@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 
 const END = '2027-09-28T09:00:00Z'
 const summary = { status: 'active', plan: 'yearly', currentPeriodEnd: END,
@@ -34,6 +35,34 @@ async function setup(page: Page, options: {
 }
 
 for (const locale of ['ko', 'en'] as const) {
+  test(`${locale} brand returns to the localized calculator without canceling`, async ({ page }) => {
+    const f = await setup(page, { locale })
+    const brand = page.getByRole('link', { name: 'LiqGuard', exact: true })
+    await expect(brand).toHaveAttribute('href', locale === 'ko' ? '/' : '/en')
+    await brand.focus()
+    await expect(brand).toHaveCSS('outline-style', 'solid')
+    await brand.press('Enter')
+    await expect(page).toHaveURL(locale === 'ko' ? /\/$/ : /\/en$/)
+    expect(f.calls()).toBe(0)
+  })
+
+  test(`${locale} canceled receipt keeps the paid access date after reload`, async ({ page }) => {
+    const f = await setup(page, { locale, summary: { ...summary, scheduledChangeAction: 'cancel', scheduledChangeEffectiveAt: END } })
+    const title = locale === 'ko' ? '구독이 취소되었습니다' : 'Your subscription has been canceled'
+    await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible()
+    await expect(page.locator('.billing-switch-card__header')).toContainText(locale === 'ko' ? '자동갱신이 중단되었습니다' : 'Automatic renewal is off')
+    await expect(page.locator('.billing-cancel-summary')).toContainText(locale === 'ko' ? '2027년 9월 28일' : 'September 28, 2027')
+    await page.reload()
+    await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible()
+    await expect(page.locator('.billing-cancel-confirm')).toHaveCount(0)
+    for (const width of [1280, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      await page.screenshot({ path: `test-results/billing-canceled-${locale}-${width}.png`, fullPage: true })
+    }
+    expect(f.calls()).toBe(0)
+  })
+
   test(`${locale} read-only local billing never offers a cancellation action`, async ({ page }) => {
     const f = await setup(page, { locale, summary: { ...summary, cancellationAvailable: false } })
     await expect(page.getByRole('alert')).toContainText(locale === 'ko' ? '구독 조회는 가능하지만' : 'You can view your subscription here')
@@ -74,6 +103,30 @@ for (const locale of ['ko', 'en'] as const) {
   })
 }
 
+test('cancel stays red when shared styles load later, but processing stays disabled gray', async ({ page }) => {
+  const f = await setup(page)
+  const action = page.getByRole('button', { name: '구독 취소', exact: true })
+  await expect(action).toBeEnabled()
+  // Production can append the shared lazy-page stylesheet after cancellation styles.
+  await page.addStyleTag({ content: await readFile(new URL('../src/styles/pages.css', import.meta.url), 'utf8') })
+  await expect(action).toHaveCSS('background-color', 'rgb(179, 52, 43)')
+  await action.focus()
+  await expect(action).toHaveCSS('background-color', 'rgb(179, 52, 43)')
+  await action.hover()
+  await expect(action).toHaveCSS('background-color', 'rgb(146, 42, 35)')
+  await action.click()
+  await expect.poll(f.calls).toBe(1)
+  const processing = page.locator('.billing-cancel-confirm')
+  await expect(processing).toBeDisabled()
+  await expect(processing).toHaveCSS('background-color', 'rgb(233, 236, 240)')
+  const brand = page.getByRole('link', { name: 'LiqGuard', exact: true })
+  await expect(brand).toHaveAttribute('aria-disabled', 'true')
+  await brand.dispatchEvent('click')
+  await expect(page).toHaveURL(/\/e2e\/fixtures\/billing-cancel.html$/)
+  f.release()
+  await expect(page.getByRole('button', { name: '구독 관리로 돌아가기' })).toHaveCSS('background-color', 'rgb(36, 91, 212)')
+})
+
 test('confirmation sends one request, keeps Pro through the end date, and survives reload', async ({ page }) => {
   const f = await setup(page, { refreshFails: true })
   const action = page.getByRole('button', { name: '구독 취소', exact: true })
@@ -84,11 +137,11 @@ test('confirmation sends one request, keeps Pro through the end date, and surviv
   await processing.dispatchEvent('click')
   expect(f.calls()).toBe(1)
   f.release()
-  await expect(page.getByRole('heading', { name: '구독 취소가 예약되었습니다' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '구독이 취소되었습니다' })).toBeVisible()
   await expect(page.getByRole('status')).toContainText('Pro 기능은 그대로 유지')
   await expect(action).toHaveCount(0)
   await page.reload()
-  await expect(page.getByRole('heading', { name: '구독 취소가 예약되었습니다' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '구독이 취소되었습니다' })).toBeVisible()
   await expect(action).toHaveCount(0)
 })
 
@@ -110,7 +163,7 @@ test('a failed request requires checking current status before retrying', async 
   await expect(page.getByRole('button', { name: '구독 취소', exact: true })).toHaveCount(0)
   f.setSummary({ ...summary, scheduledChangeAction: 'cancel', scheduledChangeEffectiveAt: END })
   await page.getByRole('button', { name: '상태 다시 확인' }).click()
-  await expect(page.getByRole('heading', { name: '구독 취소가 예약되었습니다' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '구독이 취소되었습니다' })).toBeVisible()
   expect(f.calls()).toBe(1)
 })
 

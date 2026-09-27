@@ -4,6 +4,7 @@ export type BillingPlan = 'monthly' | 'yearly'
 
 export interface SubscriptionRecord {
   status: string
+  provider?: string | null
   currentPeriodEnd: string | null
   scheduledChangeAction: string | null
   scheduledChangeEffectiveAt: string | null
@@ -17,6 +18,7 @@ export function isActiveSubscription(status: string | null | undefined): boolean
 
 interface SubscriptionRow {
   status: string
+  provider: string | null
   current_period_end: string | null
   scheduled_change_action: string | null
   scheduled_change_effective_at: string | null
@@ -45,7 +47,7 @@ export async function fetchSubscription(
   const { data, error } = await supabase
     .from('subscriptions')
     .select(
-      'status,current_period_end,scheduled_change_action,scheduled_change_effective_at',
+      'status,provider,current_period_end,scheduled_change_action,scheduled_change_effective_at',
     )
     .eq('user_id', userId)
     .in('provider', clientSubscriptionProviders(environment))
@@ -58,6 +60,7 @@ export async function fetchSubscription(
     data: data
       ? {
           status: data.status,
+          provider: data.provider,
           currentPeriodEnd: data.current_period_end,
           scheduledChangeAction: data.scheduled_change_action,
           scheduledChangeEffectiveAt: data.scheduled_change_effective_at,
@@ -278,6 +281,22 @@ export function openBillingPortal(): Promise<string | null> {
     window.location.href = result.data.url
     return null
   })()
+}
+
+export interface SubscriptionSummary extends SubscriptionRecord {
+  plan: BillingPlan | null
+  recurringAmount: string | null
+  currencyCode: string | null
+  nextBilledAt: string | null
+  canSwitchYearly: boolean
+}
+
+export async function fetchSubscriptionSummary(): Promise<BillingResult<SubscriptionSummary>> {
+  const result = await postBilling<{ summary?: SubscriptionSummary }>('/api/billing/summary')
+  if (result.error !== null) return result
+  return result.data.summary
+    ? { data: result.data.summary, error: null }
+    : { data: null, error: 'subscription_payload_missing' }
 }
 
 export type SubscriptionSwitchAction = 'switched_to_yearly' | 'already_yearly'

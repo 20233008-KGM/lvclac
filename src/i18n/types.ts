@@ -554,6 +554,32 @@ export interface Messages {
         benefitsTitleActive: string
         benefits: readonly string[]
         /** 구독 관리(Pro) */
+        management: {
+          title: string
+          subtitle: string
+          priceLabel: string
+          cycleLabel: string
+          renewsLabel: string
+          endsLabel: string
+          monthly: string
+          yearly: string
+          trial: string
+          ended: string
+          paused: string
+          manual: string
+          noRenewal: string
+          manualBody: string
+          unavailable: string
+          unavailableBody: string
+          loading: string
+          amountNote: string
+          benefits: string
+          paymentsTitle: string
+          paymentsBody: string
+          portalAction: string
+          cancelTitle: string
+          provider: string
+        }
         manageTitle: string
         proPlanName: string
         activeBadge: string

@@ -7,6 +7,7 @@ import {
   handleCheckout,
   handlePortal,
   handleSandboxSubscription,
+  handleSubscriptionSummary,
   handleWebhook,
 } from './scripts/billing/billingHandlers'
 import {
@@ -51,6 +52,20 @@ function billingDevPlugin(env: Record<string, string>): Plugin {
             sendBillingJson(res, result.status, result.body)
           } catch (error) {
             guard(res, error)
+          }
+        })()
+      })
+
+      server.middlewares.use('/api/billing/summary', (req, res, next) => {
+        if (req.method !== 'POST') return next()
+        res.setHeader('cache-control', 'private, no-store')
+        void (async () => {
+          try {
+            if (!bearerToken(req)) return sendBillingJson(res, 401, { ok: false, error: 'missing_access_token' })
+            const result = await handleSubscriptionSummary(config, { accessToken: bearerToken(req) }, deps as never)
+            sendBillingJson(res, result.status, result.body)
+          } catch {
+            sendBillingJson(res, 502, { ok: false, error: 'subscription_lookup_failed' })
           }
         })()
       })

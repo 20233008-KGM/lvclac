@@ -39,6 +39,7 @@ export interface BillingResult {
     error?: string
     reason?: string
     preview?: SubscriptionSwitchPreview
+    summary?: SubscriptionSummary
   }
 }
 
@@ -350,6 +351,63 @@ async function fetchOwnedSubscriptionId(
   const subscriptionId = subscriptionRow.data?.provider_subscription_id
   if (!subscriptionId) return { error: fail(400, 'no_subscription') }
   return { userId: auth.user.id, subscriptionId }
+}
+
+interface SubscriptionSummary {
+  status: string
+  plan: BillingPlan | null
+  recurringAmount: string | null
+  currencyCode: string | null
+  nextBilledAt: string | null
+  currentPeriodEnd: string | null
+  scheduledChangeAction: string | null
+  scheduledChangeEffectiveAt: string | null
+  canSwitchYearly: boolean
+}
+
+/** Read-only billing details. The subscription ID always comes from the authenticated owner. */
+export async function handleSubscriptionSummary(
+  config: BillingConfig | null,
+  request: { accessToken?: unknown },
+  deps: BillingDeps,
+): Promise<BillingResult> {
+  if (!config) return fail(500, 'billing_not_configured')
+  const owned = await fetchOwnedSubscriptionId(config, request, deps)
+  if ('error' in owned) return owned.error
+
+  const response = await deps.fetch(
+    `${paddleApiBaseUrl(config.paddleEnv)}/subscriptions/${encodeURIComponent(owned.subscriptionId)}?include=recurring_transaction_details`,
+    { method: 'GET', headers: { authorization: `Bearer ${config.paddleApiKey}` } },
+  )
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) return fail(502, 'subscription_lookup_failed')
+  const sub = asRecord(asRecord(payload)?.data)
+  const status = stringValue(sub?.status)
+  if (!sub || !status) return fail(502, 'subscription_payload_missing')
+
+  const priceId = paddleSubscriptionPriceId(sub)
+  const items = Array.isArray(sub.items) ? sub.items : []
+  const plan = items.length !== 1 ? null : priceId === config.prices.monthly ? 'monthly'
+    : priceId === config.prices.yearly ? 'yearly' : null
+  const recurring = asRecord(sub.recurring_transaction_details)
+  const totals = asRecord(recurring?.totals)
+  // Recurring total includes discounts and tax, without one-off or prorated charges.
+  const amount = stringValue(totals?.total)
+  const scheduled = asRecord(sub.scheduled_change)
+  return {
+    status: 200,
+    body: { ok: true, summary: {
+      status,
+      plan,
+      recurringAmount: amount && /^\d+$/.test(amount) ? amount : null,
+      currencyCode: stringValue(totals?.currency_code) ?? stringValue(sub.currency_code),
+      nextBilledAt: stringValue(sub.next_billed_at),
+      currentPeriodEnd: stringValue(asRecord(sub.current_billing_period)?.ends_at),
+      scheduledChangeAction: stringValue(scheduled?.action),
+      scheduledChangeEffectiveAt: stringValue(scheduled?.effective_at),
+      canSwitchYearly: plan === 'monthly' && (status === 'active' || status === 'trialing') && !scheduled,
+    } },
+  }
 }
 
 export async function handleSwitchYearly(

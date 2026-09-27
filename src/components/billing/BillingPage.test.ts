@@ -5,6 +5,7 @@ import { resolveBillingView } from './billingView'
 
 const source = readFileSync(resolve('src/components/billing/BillingPage.tsx'), 'utf8')
 const panelSource = readFileSync(resolve('src/components/billing/BillingPanel.tsx'), 'utf8')
+const managementSource = readFileSync(resolve('src/components/billing/BillingManagement.tsx'), 'utf8')
 
 describe('resolveBillingView', () => {
   it('opens authentication before attempting checkout for a signed-out visitor', () => {
@@ -18,7 +19,7 @@ describe('resolveBillingView', () => {
     expect(source).toContain('BILLING_YEARLY_SWITCH_PATH')
     expect(source).not.toContain('previewSubscriptionToYearly')
     expect(source).not.toContain('switchSubscriptionToYearly')
-    expect(source).toContain('page.switchYearlyAction')
+    expect(managementSource).toContain('page.switchYearlyAction')
   })
 
   it('routes active subscribers to the in-app yearly switch payment page', () => {

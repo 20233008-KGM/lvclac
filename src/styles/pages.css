@@ -5563,119 +5563,6 @@ a.my-page-compare-card__action {
   margin-top: var(--space-md);
 }
 
-/* 구독 관리(Pro): 현재 플랜 하이라이트 행 */
-.billing-current {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  flex-wrap: wrap;
-  padding: 20px;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius);
-  background: var(--color-primary-muted);
-}
-
-.billing-current__info {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.billing-current__name-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.billing-current__name {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--color-text);
-}
-
-.billing-current__badge {
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--color-long-muted);
-  color: var(--color-success);
-  border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
-}
-
-.billing-current__badge--scheduled {
-  background: var(--color-warning-muted);
-  color: var(--color-warning);
-  border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
-}
-
-.billing-current__body {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.billing-current__renews {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-dim);
-}
-
-.billing-current__billing-stop {
-  margin: 0;
-  font-size: 12px;
-  color: var(--color-warning);
-}
-
-.billing-current__manage {
-  flex: none;
-  width: auto;
-  white-space: nowrap;
-}
-
-/* 보조 액션(영수증 / 결제 수단) */
-.billing-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: var(--space-md);
-}
-
-.billing-action {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px var(--space-md);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius);
-  background: var(--color-bg-elevated);
-  color: var(--color-text);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
-}
-
-.billing-action:hover:not(:disabled) {
-  border-color: var(--color-border);
-  background: var(--color-surface-2);
-}
-
-.billing-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.billing-action__icon {
-  display: inline-flex;
-  flex: none;
-  color: var(--color-text-muted);
-}
-
 .billing-switch-preview {
   margin-top: var(--space-sm);
   padding: var(--space-md);
@@ -6041,51 +5928,6 @@ a.my-page-compare-card__action {
   }
 }
 
-/* 해지 안내 행 */
-.billing-cancel-row {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-}
-
-.billing-cancel-note {
-  margin: 0;
-  max-width: 60ch;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-dim);
-  line-height: 1.5;
-}
-
-.billing-cancel-btn {
-  padding: 0 18px;
-  min-height: 38px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
-}
-
-.billing-cancel-btn:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
-  color: var(--color-danger);
-}
-
-.billing-cancel-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* 관리자에게만 보이는 Paddle Sandbox 테스트 도구. */
 .billing-sandbox {
   display: grid;
@@ -6204,8 +6046,7 @@ a.my-page-compare-card__action {
 }
 
 @media (max-width: 620px) {
-  .billing-benefits,
-  .billing-actions {
+  .billing-benefits {
     grid-template-columns: 1fr;
   }
 
@@ -6213,14 +6054,10 @@ a.my-page-compare-card__action {
     padding-inline: 12px;
   }
 
-  .billing-panel,
-  .billing-current {
+  .billing-panel {
     padding: var(--space-md);
   }
 
-  .billing-current__manage {
-    width: 100%;
-  }
 
   .billing-sandbox {
     grid-template-columns: 1fr;

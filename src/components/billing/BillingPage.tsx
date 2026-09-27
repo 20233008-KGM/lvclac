@@ -10,8 +10,8 @@ import {
   type BillingPlan,
 } from '../../db/billing'
 import { BillingUpgrade } from './BillingUpgrade'
+import { BillingManagement } from './BillingManagement'
 import { resolveBillingView } from './billingView'
-import { isCancellationScheduled, subscriptionAccessEnd } from './subscriptionPresentation'
 import '../../styles/pages.css'
 
 type BusyState = BillingPlan | 'portal' | 'sandbox-sync' | null
@@ -57,44 +57,6 @@ function CheckIcon() {
       strokeLinejoin="round"
     >
       <path d="M4 12.5l5 5 11-11" />
-    </svg>
-  )
-}
-
-function ReceiptIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
-      <path d="M9 8h6M9 12h6" />
-    </svg>
-  )
-}
-
-function CardIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="2.5" y="5" width="19" height="14" rx="2" />
-      <path d="M2.5 9.5h19" />
     </svg>
   )
 }
@@ -287,14 +249,6 @@ export function BillingPage() {
     )
   }
 
-  const cancelScheduled = isCancellationScheduled(subscription)
-  const accessEnd = subscriptionAccessEnd(subscription)
-  const subscriptionDateLabel = accessEnd
-    ? (cancelScheduled ? page.accessEndsOn : copy.renewsOn).replace(
-        '{date}',
-        formatDate(accessEnd, t.lang),
-      )
-    : null
   const showSandboxTools = user?.isAdmin === true && import.meta.env.VITE_PADDLE_ENV === 'sandbox'
 
   // 상태 배지: 상태에 따라 라벨·색을 달리한다.
@@ -378,121 +332,6 @@ export function BillingPage() {
     </section>
   )
 
-  const proManage = (
-    <section className="my-page-panel billing-panel" aria-labelledby="billing-manage-title">
-      <div className="billing-panel-head">
-        <h2 id="billing-manage-title">{page.manageTitle}</h2>
-      </div>
-
-      <div className="billing-current">
-        <div className="billing-current__info">
-          <div className="billing-current__name-row">
-            <span className="billing-current__name">{page.proPlanName}</span>
-            <span
-              className={`billing-current__badge${
-                cancelScheduled ? ' billing-current__badge--scheduled' : ''
-              }`}
-            >
-              {cancelScheduled ? page.cancelScheduledBadge : page.activeBadge}
-            </span>
-          </div>
-          <p className="billing-current__body">
-            {cancelScheduled ? page.cancelScheduledBody : copy.proBody}
-          </p>
-          {subscriptionDateLabel && (
-            <p className="billing-current__renews">{subscriptionDateLabel}</p>
-          )}
-          {cancelScheduled && (
-            <p className="billing-current__billing-stop">{page.noFurtherBilling}</p>
-          )}
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary billing-current__manage"
-          disabled={busyAny}
-          onClick={() => void handleManage()}
-        >
-          {busy === 'portal' ? copy.redirecting : page.portalAction}
-        </button>
-      </div>
-
-      <div className="billing-actions">
-        <button
-          type="button"
-          className="billing-action"
-          disabled={busyAny}
-          onClick={() => void handleManage()}
-        >
-          <span className="billing-action__icon" aria-hidden="true">
-            <ReceiptIcon />
-          </span>
-          <span>{page.receiptsAction}</span>
-        </button>
-        <button
-          type="button"
-          className="billing-action"
-          disabled={busyAny}
-          onClick={() => void handleManage()}
-        >
-          <span className="billing-action__icon" aria-hidden="true">
-            <CardIcon />
-          </span>
-          <span>{page.paymentMethodAction}</span>
-        </button>
-        <button
-          type="button"
-          className="billing-action"
-          disabled={busyAny}
-          onClick={() => void handleSwitchYearly()}
-        >
-          <span className="billing-action__icon" aria-hidden="true">
-            <CardIcon />
-          </span>
-          <span>
-            {page.switchYearlyAction}
-          </span>
-        </button>
-      </div>
-
-      {benefits(page.benefitsTitleActive)}
-
-      <div className="billing-cancel-row">
-        <p className="billing-cancel-note">
-          {cancelScheduled ? page.noFurtherBilling : page.cancelNote}
-        </p>
-        <button
-          type="button"
-          className="billing-cancel-btn"
-          disabled={busyAny}
-          onClick={() => void handleManage()}
-        >
-          {cancelScheduled ? page.manageCancellationAction : page.cancelAction}
-        </button>
-      </div>
-
-      {showSandboxTools && (
-        <section className="billing-sandbox" aria-labelledby="billing-sandbox-title">
-          <div className="billing-sandbox__copy">
-            <p id="billing-sandbox-title" className="billing-sandbox__title">
-              {page.sandboxTitle}
-            </p>
-            <p className="billing-sandbox__body">{page.sandboxBody}</p>
-          </div>
-          <div className="billing-sandbox__actions">
-            <button
-              type="button"
-              className="btn btn-ghost billing-sandbox__button"
-              disabled={busyAny}
-              onClick={() => void handleSandboxSync()}
-            >
-              {busy === 'sandbox-sync' ? page.sandboxBusy : page.sandboxSyncAction}
-            </button>
-          </div>
-        </section>
-      )}
-    </section>
-  )
-
   const success = (
     <section className="my-page-panel billing-panel billing-success" aria-labelledby="billing-success-title">
       <div className="billing-success__icon" aria-hidden="true">
@@ -540,7 +379,7 @@ export function BillingPage() {
   const showBanner = view === 'failed' && !bannerDismissed
 
   // free(업그레이드) 화면은 세로 스크롤 스냅 리디자인을 전폭으로 렌더한다.
-  // pro/failed/success는 아래 기존 셸을 그대로 유지한다.
+  // 결제 실패·완료 화면은 기존 셸을 유지한다.
   if (view === 'free') {
     const checkoutBusy = busy === 'monthly' || busy === 'yearly' || busy === 'portal' ? busy : null
     return (
@@ -561,6 +400,35 @@ export function BillingPage() {
     )
   }
 
+  if (view === 'pro') {
+    return (
+      <BillingManagement
+        key={`${user?.id}:${subscription?.provider}:${subscription?.status}:${subscription?.currentPeriodEnd}:${subscription?.scheduledChangeAction}:${subscription?.scheduledChangeEffectiveAt}`}
+        subscription={subscription}
+        homeHref={homeHref}
+        busy={busyAny}
+        portalBusy={busy === 'portal'}
+        message={message}
+        onManage={() => void handleManage()}
+        onSwitchYearly={() => void handleSwitchYearly()}
+      >
+        {showSandboxTools && (
+          <section className="billing-sandbox" aria-labelledby="billing-sandbox-title">
+            <div className="billing-sandbox__copy">
+              <p id="billing-sandbox-title" className="billing-sandbox__title">{page.sandboxTitle}</p>
+              <p className="billing-sandbox__body">{page.sandboxBody}</p>
+            </div>
+            <div className="billing-sandbox__actions">
+              <button type="button" className="btn btn-ghost billing-sandbox__button" disabled={busyAny} onClick={() => void handleSandboxSync()}>
+                {busy === 'sandbox-sync' ? page.sandboxBusy : page.sandboxSyncAction}
+              </button>
+            </div>
+          </section>
+        )}
+      </BillingManagement>
+    )
+  }
+
   return (
     <div className="my-page-shell billing-shell">
       <div className="my-page billing-page">
@@ -573,13 +441,13 @@ export function BillingPage() {
               <h1>{page.pageTitle}</h1>
               <p>{page.pageSubtitle}</p>
             </div>
-            {view !== 'pro' && <div className="billing-hero__status">
+            <div className="billing-hero__status">
               <span className="billing-hero__status-label">{page.statusLabel}</span>
               <span className={`billing-status billing-status--${statusVariant}`}>
                 <span className="billing-status__dot" aria-hidden="true" />
                 {statusLabel}
               </span>
-            </div>}
+            </div>
           </div>
         </header>
 
@@ -602,7 +470,7 @@ export function BillingPage() {
           </div>
         )}
 
-        {view === 'success' ? success : view === 'pro' ? proManage : planSelect}
+        {view === 'success' ? success : planSelect}
 
         {message && (
           <p className="my-page-form-message billing-message" role="status">

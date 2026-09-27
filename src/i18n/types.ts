@@ -577,6 +577,15 @@ export interface Messages {
         switchYearlyPreviewNextBilling: string
         switchYearlyPreviewConfirm: string
         switchYearlyPreviewCancel: string
+        switchYearlyPlanChange: string
+        switchYearlyCreditNote: string
+        switchYearlyRenewalNote: string
+        switchYearlyConsent: string
+        switchYearlyTermsLink: string
+        switchYearlyRefundLink: string
+        switchYearlyBuyerTermsLink: string
+        switchYearlyPayConfirm: string
+        switchYearlyPaymentProvider: string
         switchYearlyLoginRequired: string
         switchYearlyNoSubscription: string
         switchYearlyInactive: string

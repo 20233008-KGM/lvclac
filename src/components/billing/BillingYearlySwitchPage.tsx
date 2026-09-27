@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { BILLING_PATH, localizedPublicPath } from '../../config/routes'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BILLING_PATH, REFUND_POLICY_PATH, TERMS_PATH, localizedPublicPath } from '../../config/routes'
 import { useAuth } from '../../context/AuthContext'
 import {
   previewSubscriptionToYearly,
@@ -33,25 +33,6 @@ function formatBillingAmount(amount: string | null, currencyCode: string | null,
   }).format(numeric / divisor)
 }
 
-function ShieldIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 3 5 6v5c0 4.2 2.7 7.9 7 10 4.3-2.1 7-5.8 7-10V6l-7-3Z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  )
-}
-
 export function BillingYearlySwitchPage() {
   const { t, locale } = useLanguage()
   const { user, loading: authLoading, refreshSubscription } = useAuth()
@@ -63,6 +44,8 @@ export function BillingYearlySwitchPage() {
   const [preview, setPreview] = useState<SubscriptionSwitchPreview | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [acceptedPreview, setAcceptedPreview] = useState<SubscriptionSwitchPreview | null>(null)
+  const submitting = useRef(false)
 
   const mapSwitchYearlyError = useCallback((error: string) => {
     switch (error) {
@@ -134,18 +117,26 @@ export function BillingYearlySwitchPage() {
   const signedOut = !authLoading && !user
   const visibleState: SwitchState = signedOut ? 'error' : state
   const visibleMessage = signedOut ? page.switchYearlyLoginRequired : message
+  const termsAccepted = preview !== null && acceptedPreview === preview
+  const canConfirm = visibleState === 'ready' && !authLoading && !!user
+    && immediateAmount !== null && recurringAmount !== null && nextBilling !== null
+    && termsAccepted && !busy
 
   const confirmSwitch = useCallback(async () => {
+    if (!canConfirm || submitting.current) return
+    submitting.current = true
     setBusy(true)
     setMessage(null)
     const result = await switchSubscriptionToYearly()
     if (result.error) {
+      submitting.current = false
       setBusy(false)
       setState('error')
       setMessage(mapSwitchYearlyError(result.error))
       return
     }
     await refreshSubscription()
+    submitting.current = false
     setBusy(false)
     setState(result.action === 'already_yearly' ? 'already' : 'success')
     setMessage(
@@ -154,6 +145,7 @@ export function BillingYearlySwitchPage() {
         : page.switchYearlySuccess,
     )
   }, [
+    canConfirm,
     mapSwitchYearlyError,
     page.switchYearlyAlready,
     page.switchYearlySuccess,
@@ -166,19 +158,13 @@ export function BillingYearlySwitchPage() {
     <main className="billing-switch-page" aria-labelledby="billing-switch-title">
       <section className="billing-switch-card">
         <div className="billing-switch-card__brand">
-          <span className="billing-switch-card__logo" aria-hidden="true">L</span>
-          <span>LiqGuard Pro</span>
-        </div>
-
-        <div className="billing-switch-card__secure">
-          <ShieldIcon />
-          <span>Paddle</span>
+          <img src="/footer-brand-mark.svg" width="22" height="22" alt="" />
+          <span>LiqGuard</span>
         </div>
 
         <header className="billing-switch-card__header">
-          <p className="billing-switch-card__eyebrow">{page.switchYearlyAction}</p>
           <h1 id="billing-switch-title">{page.switchYearlyPreviewTitle}</h1>
-          <p>{page.switchYearlyPreviewBody}</p>
+          <p>{page.switchYearlyPlanChange}</p>
         </header>
 
         {visibleState === 'loading' && (
@@ -189,20 +175,55 @@ export function BillingYearlySwitchPage() {
         )}
 
         {showAmounts && (
-          <dl className="billing-switch-summary">
-            <div className="billing-switch-summary__primary">
-              <dt>{page.switchYearlyPreviewImmediateAmount}</dt>
-              <dd>{immediateAmount ?? page.switchYearlyPreviewNoAmount}</dd>
+          <div className="billing-switch-receipt">
+            <dl className="billing-switch-summary">
+              <div>
+                <dt>{page.switchYearlyPreviewRecurringAmount}</dt>
+                <dd>{recurringAmount ?? page.summaryPending}</dd>
+              </div>
+              <div>
+                <dt>{page.switchYearlyPreviewNextBilling}</dt>
+                <dd>{nextBilling ?? page.summaryPending}</dd>
+              </div>
+              <div className="billing-switch-summary__primary">
+                <dt>{page.switchYearlyPreviewImmediateAmount}</dt>
+                <dd>{immediateAmount ?? page.summaryPending}</dd>
+              </div>
+            </dl>
+            <p className="billing-switch-receipt__note">
+              {immediateAmount === null ? page.switchYearlyPreviewNoAmount : page.switchYearlyCreditNote}
+            </p>
+          </div>
+        )}
+
+        {visibleState === 'ready' && (
+          <div className="billing-switch-confirmation">
+            <div className="billing-switch-confirmation__notice" id="billing-switch-payment-notice">
+              <p>{page.switchYearlyPreviewBody}</p>
+              <p>{page.switchYearlyRenewalNote}</p>
             </div>
-            <div>
-              <dt>{page.switchYearlyPreviewRecurringAmount}</dt>
-              <dd>{recurringAmount ?? page.yearlyAmount}</dd>
+            <label className="billing-switch-consent">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                disabled={busy}
+                onChange={(event) => setAcceptedPreview(event.target.checked ? preview : null)}
+                aria-describedby="billing-switch-payment-notice"
+              />
+              <span>{page.switchYearlyConsent}</span>
+            </label>
+            <div className="billing-switch-policy-links">
+              <a href={localizedPublicPath(TERMS_PATH, locale)} target="_blank" rel="noopener noreferrer">
+                {page.switchYearlyTermsLink}
+              </a>
+              <a href={localizedPublicPath(REFUND_POLICY_PATH, locale)} target="_blank" rel="noopener noreferrer">
+                {page.switchYearlyRefundLink}
+              </a>
+              <a href="https://www.paddle.com/legal/buyer-terms" target="_blank" rel="noopener noreferrer">
+                {page.switchYearlyBuyerTermsLink}
+              </a>
             </div>
-            <div>
-              <dt>{page.switchYearlyPreviewNextBilling}</dt>
-              <dd>{nextBilling ?? page.summaryPending}</dd>
-            </div>
-          </dl>
+          </div>
         )}
 
         {visibleMessage && (
@@ -215,17 +236,19 @@ export function BillingYearlySwitchPage() {
           {visibleState === 'ready' && (
             <button
               type="button"
-              className="btn btn-primary billing-switch-actions__primary"
-              disabled={busy}
+              className="billing-switch-actions__primary"
+              disabled={!canConfirm}
               onClick={() => void confirmSwitch()}
             >
-              {busy ? page.switchYearlyBusy : page.switchYearlyPreviewConfirm}
+              {busy ? page.switchYearlyBusy : immediateAmount && Number(preview?.amount) > 0
+                ? page.switchYearlyPayConfirm.replace('{amount}', immediateAmount)
+                : page.switchYearlyPreviewConfirm}
             </button>
           )}
           {visibleState === 'success' && (
             <button
               type="button"
-              className="btn btn-primary billing-switch-actions__primary"
+              className="billing-switch-actions__primary"
               onClick={() => navigate(billingHref)}
             >
               {page.viewSubscription}
@@ -234,7 +257,7 @@ export function BillingYearlySwitchPage() {
           {visibleState !== 'success' && (
             <button
               type="button"
-              className="btn btn-ghost billing-switch-actions__secondary"
+              className="billing-switch-actions__secondary"
               disabled={busy}
               onClick={() => navigate(billingHref)}
             >
@@ -242,6 +265,7 @@ export function BillingYearlySwitchPage() {
             </button>
           )}
         </div>
+        <p className="billing-switch-card__processor">{page.switchYearlyPaymentProvider}</p>
       </section>
     </main>
   )

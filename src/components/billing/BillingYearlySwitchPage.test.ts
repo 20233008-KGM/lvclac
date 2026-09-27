@@ -26,7 +26,7 @@ describe('BillingYearlySwitchPage', () => {
   it('renders a first-party white payment guidance surface instead of opening the portal', () => {
     expect(source).toContain('billing-switch-page')
     expect(source).toContain('billing-switch-card')
-    expect(source).toContain('Paddle')
+    expect(source).toContain('page.switchYearlyPaymentProvider')
     expect(source).not.toContain('openYearlySwitchPortal')
     expect(source).not.toContain('/api/billing/portal')
   })

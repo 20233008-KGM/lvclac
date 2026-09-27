@@ -563,10 +563,20 @@ export const ko: Messages = {
         receiptsAction: '영수증 · 결제 내역',
         paymentMethodAction: '결제 수단 변경',
         switchYearlyAction: '연간으로 전환',
+        switchYearlyPreviewBusy: '전환 금액 확인 중…',
         switchYearlyBusy: '연간 전환 중…',
         switchYearlySuccess:
           '연간 구독으로 전환했습니다. 남은 월간 결제분은 Paddle이 크레딧으로 계산해 이번 연간 결제에 반영합니다.',
         switchYearlyAlready: '이미 연간 구독을 이용 중입니다.',
+        switchYearlyPreviewTitle: '연간 구독으로 전환할까요?',
+        switchYearlyPreviewBody:
+          'Paddle checkout 창이 새로 열리지는 않습니다. Paddle이 남은 월간 결제분을 크레딧으로 계산한 뒤, 저장된 결제 수단으로 아래 금액을 즉시 청구하고 구독을 연간으로 바꿉니다.',
+        switchYearlyPreviewNoAmount: 'Paddle이 즉시 청구 금액을 0으로 계산했습니다.',
+        switchYearlyPreviewImmediateAmount: '오늘 추가 결제',
+        switchYearlyPreviewRecurringAmount: '이후 연간 결제',
+        switchYearlyPreviewNextBilling: '다음 결제 예정일',
+        switchYearlyPreviewConfirm: '확인하고 연간으로 전환',
+        switchYearlyPreviewCancel: '취소',
         switchYearlyLoginRequired: '로그인 세션을 확인하지 못했습니다. 새로고침 후 다시 시도해 주세요.',
         switchYearlyNoSubscription:
           '현재 계정의 Paddle 구독 정보를 찾지 못했습니다. 구독 관리 포털에서 상태를 확인해 주세요.',
@@ -575,6 +585,8 @@ export const ko: Messages = {
           '현재 구독이 월간 플랜으로 확인되지 않아 자동 전환할 수 없습니다. 구독 관리 포털에서 플랜을 확인해 주세요.',
         switchYearlyLookupFailed:
           'Paddle 구독 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        switchYearlyPreviewFailed:
+          'Paddle 전환 금액을 미리 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
         switchYearlyUpdateFailed:
           'Paddle에서 연간 전환 요청을 완료하지 못했습니다. 결제 수단 또는 구독 상태를 확인해 주세요.',
         switchYearlySyncFailed:

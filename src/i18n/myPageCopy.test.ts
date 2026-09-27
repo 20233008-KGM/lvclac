@@ -54,12 +54,16 @@ describe('my page copy', () => {
   it('explains monthly to yearly switching as a prorated credit flow', () => {
     expect(ko.myPage.billing.page.switchYearlyAction).toBe('연간으로 전환')
     expect(ko.myPage.billing.page.switchYearlySuccess).toContain('크레딧')
+    expect(ko.myPage.billing.page.switchYearlyPreviewBody).toContain('checkout 창')
+    expect(ko.myPage.billing.page.switchYearlyPreviewBody).toContain('저장된 결제 수단')
     expect(
       ko.myPage.billing.page.upgrade.faq.find((item) => item.q.includes('월간'))?.a,
     ).toContain('연간 결제에 반영')
 
     expect(en.myPage.billing.page.switchYearlyAction).toBe('Switch to yearly')
     expect(en.myPage.billing.page.switchYearlySuccess).toContain('credit')
+    expect(en.myPage.billing.page.switchYearlyPreviewBody).toContain('checkout window')
+    expect(en.myPage.billing.page.switchYearlyPreviewBody).toContain('saved payment method')
     expect(
       en.myPage.billing.page.upgrade.faq.find((item) => item.q.includes('monthly'))?.a,
     ).toContain('annual charge')

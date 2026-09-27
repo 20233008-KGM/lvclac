@@ -574,10 +574,20 @@ export const en: Messages = {
         receiptsAction: 'Receipts · Billing history',
         paymentMethodAction: 'Change payment method',
         switchYearlyAction: 'Switch to yearly',
+        switchYearlyPreviewBusy: 'Checking switch amount…',
         switchYearlyBusy: 'Switching to yearly…',
         switchYearlySuccess:
           'Your subscription switched to yearly. Paddle calculates the unused monthly time as credit and applies it to this annual charge.',
         switchYearlyAlready: 'You are already on the yearly subscription.',
+        switchYearlyPreviewTitle: 'Switch to yearly?',
+        switchYearlyPreviewBody:
+          'A new Paddle checkout window does not open for this subscription change. Paddle applies the unused monthly time as credit, then charges the amount below to the saved payment method and switches this subscription to yearly.',
+        switchYearlyPreviewNoAmount: 'Paddle calculated no immediate charge for this switch.',
+        switchYearlyPreviewImmediateAmount: 'Additional charge today',
+        switchYearlyPreviewRecurringAmount: 'Yearly charge after this',
+        switchYearlyPreviewNextBilling: 'Next billing date',
+        switchYearlyPreviewConfirm: 'Confirm and switch to yearly',
+        switchYearlyPreviewCancel: 'Cancel',
         switchYearlyLoginRequired:
           'Could not confirm your login session. Refresh the page and try again.',
         switchYearlyNoSubscription:
@@ -587,6 +597,8 @@ export const en: Messages = {
           'This subscription is not recognized as the monthly plan, so it cannot be switched automatically. Check the plan in the management portal.',
         switchYearlyLookupFailed:
           'Could not check the Paddle subscription status. Please try again shortly.',
+        switchYearlyPreviewFailed:
+          'Could not preview the Paddle switch amount. Please try again shortly.',
         switchYearlyUpdateFailed:
           'Paddle could not complete the yearly switch. Check the payment method or subscription status.',
         switchYearlySyncFailed:

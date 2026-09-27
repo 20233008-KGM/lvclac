@@ -5,6 +5,7 @@ import {
   handleCheckout,
   handleSandboxSubscription,
   handleSwitchYearly,
+  handleSwitchYearlyPreview,
   handleWebhook,
 } from './billingHandlers'
 
@@ -371,6 +372,34 @@ describe('handleSwitchYearly', () => {
       provider_subscription_id: 'sub_1',
       status: 'active',
     })
+  })
+
+  it('previews the prorated yearly switch before charging the saved payment method', async () => {
+    const state: SwitchYearlyState = {
+      fetches: [],
+      updates: [],
+      filters: [],
+      currentPriceId: CONFIG.prices.monthly,
+    }
+    const result = await handleSwitchYearlyPreview(
+      CONFIG,
+      { accessToken: 'jwt' },
+      makeSwitchYearlyDeps(state),
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.body.action).toBe('preview_yearly')
+    expect(state.fetches).toHaveLength(2)
+    expect(state.fetches[1]).toMatchObject({
+      input: 'https://sandbox-api.paddle.com/subscriptions/sub_1/preview',
+      init: { method: 'PATCH' },
+    })
+    expect(JSON.parse(state.fetches[1].init?.body ?? '{}')).toEqual({
+      proration_billing_mode: 'prorated_immediately',
+      on_payment_failure: 'prevent_change',
+      items: [{ price_id: CONFIG.prices.yearly, quantity: 1 }],
+    })
+    expect(state.updates).toHaveLength(0)
   })
 
   it('does not create another charge when the subscription is already yearly', async () => {

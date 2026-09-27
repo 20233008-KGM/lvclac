@@ -565,14 +565,24 @@ export interface Messages {
         receiptsAction: string
         paymentMethodAction: string
         switchYearlyAction: string
+        switchYearlyPreviewBusy: string
         switchYearlyBusy: string
         switchYearlySuccess: string
         switchYearlyAlready: string
+        switchYearlyPreviewTitle: string
+        switchYearlyPreviewBody: string
+        switchYearlyPreviewNoAmount: string
+        switchYearlyPreviewImmediateAmount: string
+        switchYearlyPreviewRecurringAmount: string
+        switchYearlyPreviewNextBilling: string
+        switchYearlyPreviewConfirm: string
+        switchYearlyPreviewCancel: string
         switchYearlyLoginRequired: string
         switchYearlyNoSubscription: string
         switchYearlyInactive: string
         switchYearlyUnsupportedPlan: string
         switchYearlyLookupFailed: string
+        switchYearlyPreviewFailed: string
         switchYearlyUpdateFailed: string
         switchYearlySyncFailed: string
         switchYearlyNetworkError: string

@@ -282,6 +282,24 @@ export function openBillingPortal(): Promise<string | null> {
 
 export type SubscriptionSwitchAction = 'switched_to_yearly' | 'already_yearly'
 
+export interface SubscriptionSwitchPreview {
+  action: 'preview_yearly' | 'already_yearly'
+  amount: string | null
+  currencyCode: string | null
+  recurringAmount: string | null
+  nextBilledAt: string | null
+}
+
+export async function previewSubscriptionToYearly(): Promise<
+  { preview: SubscriptionSwitchPreview | null; error: null } | { preview: null; error: string }
+> {
+  const result = await postBilling<{ preview?: SubscriptionSwitchPreview }>(
+    '/api/billing/switch-yearly-preview',
+  )
+  if (result.error !== null) return { preview: null, error: result.error }
+  return { preview: result.data.preview ?? null, error: null }
+}
+
 export async function switchSubscriptionToYearly(): Promise<
   { action: SubscriptionSwitchAction | null; error: null } | { action: null; error: string }
 > {

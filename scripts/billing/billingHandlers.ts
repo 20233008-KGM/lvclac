@@ -27,6 +27,7 @@ export interface BillingResult {
     received?: boolean
     action?: string
     error?: string
+    preview?: SubscriptionSwitchPreview
   }
 }
 
@@ -209,6 +210,14 @@ export interface SwitchYearlyRequest {
   accessToken?: unknown
 }
 
+export interface SubscriptionSwitchPreview {
+  action: 'preview_yearly' | 'already_yearly'
+  amount: string | null
+  currencyCode: string | null
+  recurringAmount: string | null
+  nextBilledAt: string | null
+}
+
 function paddleSubscriptionPriceId(subscription: JsonObject | null): string | null {
   const items = Array.isArray(subscription?.items) ? subscription.items : []
   for (const item of items) {
@@ -221,6 +230,45 @@ function paddleSubscriptionPriceId(subscription: JsonObject | null): string | nu
 
 function paddleSubscriptionStatus(subscription: JsonObject | null): string | null {
   return stringValue(subscription?.status)
+}
+
+function switchYearlyRequestBody(config: BillingConfig): JsonObject {
+  return {
+    proration_billing_mode: 'prorated_immediately',
+    on_payment_failure: 'prevent_change',
+    items: [{ price_id: config.prices.yearly, quantity: 1 }],
+  }
+}
+
+function totalsAmount(value: unknown): string | null {
+  const totals = asRecord(value)
+  return (
+    stringValue(totals?.grand_total) ??
+    stringValue(totals?.balance) ??
+    stringValue(totals?.total)
+  )
+}
+
+function previewFromPaddlePayload(payload: unknown): SubscriptionSwitchPreview {
+  const data = asRecord(asRecord(payload)?.data)
+  const immediateTransaction = asRecord(data?.immediate_transaction)
+  const immediateDetails = asRecord(immediateTransaction?.details)
+  const immediateTotals = asRecord(immediateDetails?.totals)
+  const recurringDetails = asRecord(data?.recurring_transaction_details)
+  const recurringTotals = asRecord(recurringDetails?.totals)
+
+  return {
+    action: 'preview_yearly',
+    amount: totalsAmount(immediateTotals),
+    currencyCode:
+      stringValue(immediateTransaction?.currency_code) ??
+      stringValue(recurringDetails?.currency_code) ??
+      stringValue(data?.currency_code),
+    recurringAmount: totalsAmount(recurringTotals),
+    nextBilledAt:
+      stringValue(data?.next_billed_at) ??
+      stringValue(asRecord(data?.next_transaction)?.billed_at),
+  }
 }
 
 async function fetchOwnedSubscriptionId(
@@ -292,11 +340,7 @@ export async function handleSwitchYearly(
       authorization: `Bearer ${config.paddleApiKey}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({
-      proration_billing_mode: 'prorated_immediately',
-      on_payment_failure: 'prevent_change',
-      items: [{ price_id: config.prices.yearly, quantity: 1 }],
-    }),
+    body: JSON.stringify(switchYearlyRequestBody(config)),
   })
   const updatePayload = await updateResponse.json().catch(() => null)
   if (!updateResponse.ok) return fail(502, 'subscription_update_failed')
@@ -312,6 +356,77 @@ export async function handleSwitchYearly(
   )
   if (!syncResult.ok) return fail(500, syncResult.error ?? 'sync_failed')
   return { status: 200, body: { ok: true, action: 'switched_to_yearly' } }
+}
+
+export async function handleSwitchYearlyPreview(
+  config: BillingConfig | null,
+  request: SwitchYearlyRequest,
+  deps: BillingDeps,
+): Promise<BillingResult> {
+  if (!config) return fail(500, 'billing_not_configured')
+
+  const owned = await fetchOwnedSubscriptionId(config, request, deps)
+  if ('error' in owned) return owned.error
+
+  const endpoint = `${paddleApiBaseUrl(config.paddleEnv)}/subscriptions/${encodeURIComponent(
+    owned.subscriptionId,
+  )}`
+  const currentResponse = await deps.fetch(endpoint, {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${config.paddleApiKey}`,
+      'content-type': 'application/json',
+    },
+  })
+  const currentPayload = await currentResponse.json().catch(() => null)
+  if (!currentResponse.ok) return fail(502, 'subscription_lookup_failed')
+
+  const currentSubscription = asRecord(asRecord(currentPayload)?.data)
+  const currentStatus = paddleSubscriptionStatus(currentSubscription)
+  if (currentStatus !== 'active' && currentStatus !== 'trialing') {
+    return fail(400, 'subscription_not_active')
+  }
+
+  const currentPriceId = paddleSubscriptionPriceId(currentSubscription)
+  if (currentPriceId === config.prices.yearly) {
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        action: 'already_yearly',
+        preview: {
+          action: 'already_yearly',
+          amount: null,
+          currencyCode: null,
+          recurringAmount: null,
+          nextBilledAt: null,
+        },
+      },
+    }
+  }
+  if (currentPriceId !== config.prices.monthly) {
+    return fail(400, 'unsupported_current_plan')
+  }
+
+  const previewResponse = await deps.fetch(`${endpoint}/preview`, {
+    method: 'PATCH',
+    headers: {
+      authorization: `Bearer ${config.paddleApiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(switchYearlyRequestBody(config)),
+  })
+  const previewPayload = await previewResponse.json().catch(() => null)
+  if (!previewResponse.ok) return fail(502, 'subscription_preview_failed')
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      action: 'preview_yearly',
+      preview: previewFromPaddlePayload(previewPayload),
+    },
+  }
 }
 
 export interface WebhookRequest {

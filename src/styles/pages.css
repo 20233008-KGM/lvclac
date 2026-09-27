@@ -5676,6 +5676,72 @@ a.my-page-compare-card__action {
   color: var(--color-text-muted);
 }
 
+.billing-switch-preview {
+  margin-top: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface-1);
+}
+
+.billing-switch-preview__copy {
+  display: grid;
+  gap: 6px;
+}
+
+.billing-switch-preview__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.billing-switch-preview__body {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  line-height: 1.55;
+}
+
+.billing-switch-preview__amounts {
+  display: grid;
+  gap: 8px;
+  margin: var(--space-md) 0 0;
+}
+
+.billing-switch-preview__amounts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.billing-switch-preview__amounts div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.billing-switch-preview__amounts dt {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.billing-switch-preview__amounts dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.billing-switch-preview__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: var(--space-md);
+  flex-wrap: wrap;
+}
+
 /* 해지 안내 행 */
 .billing-cancel-row {
   margin-top: var(--space-lg);

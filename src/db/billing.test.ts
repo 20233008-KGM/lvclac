@@ -3,6 +3,7 @@ import {
   clientSubscriptionProviders,
   fetchSubscription,
   isActiveSubscription,
+  previewSubscriptionToYearly,
   startCheckout,
   switchSubscriptionToYearly,
 } from './billing'
@@ -72,6 +73,41 @@ describe('isActiveSubscription', () => {
 })
 
 describe('switchSubscriptionToYearly', () => {
+  it('previews the yearly switch before the app commits the subscription update', async () => {
+    query.auth.getSession.mockResolvedValue({
+      data: { session: { access_token: 'jwt-token' } },
+    })
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      async json() {
+        return {
+          ok: true,
+          preview: {
+            action: 'preview_yearly',
+            amount: '3300',
+            currencyCode: 'USD',
+            recurringAmount: '4800',
+            nextBilledAt: '2027-01-15T00:00:00.000Z',
+          },
+        }
+      },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await previewSubscriptionToYearly()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/billing/switch-yearly-preview', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: 'Bearer jwt-token',
+      },
+      body: JSON.stringify({}),
+    })
+    expect(result.preview?.amount).toBe('3300')
+    expect(result.error).toBeNull()
+  })
+
   it('posts to the yearly switch endpoint with the signed-in session token', async () => {
     query.auth.getSession.mockResolvedValue({
       data: { session: { access_token: 'jwt-token' } },

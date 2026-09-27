@@ -15,10 +15,19 @@ describe('resolveBillingView', () => {
   })
 
   it('offers a first-party yearly switch action for active subscribers', () => {
+    expect(source).toContain('previewSubscriptionToYearly')
     expect(source).toContain('switchSubscriptionToYearly')
     expect(source).toContain("busy === 'switch-yearly'")
     expect(source).toContain('page.switchYearlyAction')
     expect(source).toContain('page.switchYearlySuccess')
+  })
+
+  it('previews the yearly switch before the charge-changing subscription update', () => {
+    expect(source).toContain('switchYearlyPreview')
+    expect(source).toContain('setSwitchYearlyPreview(result.preview)')
+    expect(source).toContain('confirmSwitchYearly')
+    expect(source).toContain('page.switchYearlyPreviewBody')
+    expect(source).toContain('page.switchYearlyPreviewConfirm')
   })
 
   it('shows yearly switch results near the action buttons with specific server errors', () => {

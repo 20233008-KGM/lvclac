@@ -70,7 +70,7 @@ describe('short welcome introduction', () => {
     const css = readFileSync(resolve('src/styles/welcomeIntroduction.css'), 'utf8')
 
     expect(css).toMatch(
-      /\.trust-modal-overlay\.trust-modal-overlay--introduction \{[\s\S]*?background: rgb\(3 7 18 \/ 24%\);[\s\S]*?backdrop-filter: blur\(0\.5px\);/,
+      /\.trust-modal-overlay\.trust-modal-overlay--introduction \{[\s\S]*?background: rgb\(3 7 18 \/ 16%\);[\s\S]*?backdrop-filter: blur\(0\.5px\);/,
     )
     expect(css).not.toContain('@media (max-width: 520px) {\n  .trust-modal-overlay.trust-modal-overlay--introduction')
   })

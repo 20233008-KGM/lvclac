@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { welcomeIntroductionExample } from './welcomeIntroductionExample'
 import { dismissWelcomeIntroduction, shouldShowWelcomeIntroduction, WELCOME_INTRO_SEEN_KEY } from './welcomeIntroductionLogic'
@@ -62,5 +64,13 @@ describe('short welcome introduction', () => {
     expect(welcomeIntroductionExample.before).toEqual({ liquidationPrice: 5_100, toleranceRate: 15 })
     expect(welcomeIntroductionExample.after.liquidationPrice).toBeCloseTo(5_209.09090909, 8)
     expect(welcomeIntroductionExample.after.toleranceRate).toBeCloseTo(13.18181818, 8)
+  })
+
+  it('keeps the mobile introduction overlay light enough to reveal the calculator', () => {
+    const css = readFileSync(resolve('src/styles/welcomeIntroduction.css'), 'utf8')
+
+    expect(css).toMatch(
+      /@media \(max-width: 520px\)[\s\S]*?\.trust-modal-overlay\.trust-modal-overlay--introduction \{[\s\S]*?background: rgb\(3 7 18 \/ 34%\);[\s\S]*?backdrop-filter: blur\(1\.5px\);/,
+    )
   })
 })

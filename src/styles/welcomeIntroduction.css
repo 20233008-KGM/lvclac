@@ -170,6 +170,13 @@
   .trust-modal--introduction .trust-modal__intro { margin-top: 6px; }
 }
 
+@media (max-width: 520px) {
+  .trust-modal-overlay.trust-modal-overlay--introduction {
+    background: rgb(3 7 18 / 34%);
+    backdrop-filter: blur(1.5px);
+  }
+}
+
 @media (max-width: 359px) {
   .welcome-introduction__result .result-hero-card { padding-inline: 6px; }
   .welcome-introduction__result .result-hero-value { font-size: 20px; }

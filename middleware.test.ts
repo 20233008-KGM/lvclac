@@ -1,6 +1,39 @@
 import { describe, expect, it } from 'vitest'
-import { isPrivateAppPath, robotsBody, shouldNoIndexPath, sitemapBody } from './middleware'
+import middleware, { isPrivateAppPath, paidLandingRedirect, robotsBody, shouldNoIndexPath, sitemapBody } from './middleware'
 import { UPDATE_ENTRIES } from './src/components/updatesData'
+
+describe('paid landing locale routing', () => {
+  it.each(['KR', 'US', 'JP', 'DE', 'GB', 'SG', ''])('routes %s without losing attribution', (country) => {
+    const result = paidLandingRedirect(new Request('https://liqguard.com/?gclid=test&utm_campaign=example'), country)
+    const url = new URL(result!)
+    expect(url.pathname).toBe(country === 'KR' ? '/' : '/en')
+    expect(url.searchParams.get('lang')).toBe(country === 'KR' ? 'ko' : 'en')
+    expect(url.searchParams.get('gclid')).toBe('test')
+    expect(url.searchParams.get('utm_campaign')).toBe('example')
+    expect(paidLandingRedirect(new Request(url), country)).toBeNull()
+  })
+
+  it.each(['gbraid=test', 'wbraid=test', 'utm_medium=cpc', 'utm_medium=PPC'])('handles %s and nested landing pages', (query) => {
+    expect(paidLandingRedirect(new Request(`https://liqguard.com/guide?${query}`), 'US'))
+      .toBe(`https://liqguard.com/en/guide?${query}&lang=en`)
+  })
+
+  it('honors explicit languages and leaves normal visits and API requests alone', () => {
+    for (const path of ['/?gclid=test&lang=ko', '/en?gclid=test&lang=en', '/', '/en', '/api/billing/checkout?gclid=test']) {
+      expect(paidLandingRedirect(new Request(`https://liqguard.com${path}`), 'US')).toBeNull()
+    }
+    expect(paidLandingRedirect(new Request('https://liqguard.com/?gclid=test', { method: 'POST' }), 'US')).toBeNull()
+  })
+
+  it('uses a temporary non-cacheable redirect based on the current edge country', () => {
+    const response = middleware(new Request('https://liqguard.com/en?gclid=test', {
+      headers: { 'x-vercel-ip-country': 'KR', Cookie: 'leverage_geo_country=US' },
+    }))
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://liqguard.com/?gclid=test&lang=ko')
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+  })
+})
 
 describe('public indexing boundary', () => {
   it('blocks every route when indexing is disabled for Preview', () => {

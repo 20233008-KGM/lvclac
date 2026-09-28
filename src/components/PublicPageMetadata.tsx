@@ -3,6 +3,7 @@ import { publicPageMetadata, publicPageVariant } from '../config/publicPageMetad
 import { localizedPublicPath } from '../config/routes'
 import { resolveUpdateRouteMetadata } from './updateRouteMetadata'
 import { UPDATE_ENTRIES } from './updatesData'
+import { useLanguage } from '../i18n'
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL?.trim() || 'https://liqguard.com').replace(
   /\/$/,
@@ -20,11 +21,12 @@ function ensureMeta(selector: string, attributes: Record<string, string>): HTMLE
 }
 
 export function PublicPageMetadata({ pathname }: { pathname: string }) {
+  const { locale } = useLanguage()
   useEffect(() => {
-    const updateRoute = resolveUpdateRouteMetadata(pathname, UPDATE_ENTRIES)
-    const variant = publicPageVariant(pathname)
+    const localizedPath = localizedPublicPath(pathname, locale)
+    const updateRoute = resolveUpdateRouteMetadata(localizedPath, UPDATE_ENTRIES)
+    const variant = publicPageVariant(localizedPath)
     const metadata = updateRoute ?? publicPageMetadata(variant.locale, variant.basePath)
-    const locale = updateRoute?.locale ?? variant.locale
     const canonicalPath = updateRoute?.path ?? variant.path
     const canonicalUrl = canonicalPath === '/' ? SITE_URL : `${SITE_URL}${canonicalPath}`
     const koreanPath = updateRoute?.koreanPath ?? localizedPublicPath(variant.basePath, 'ko')
@@ -77,7 +79,7 @@ export function PublicPageMetadata({ pathname }: { pathname: string }) {
       property: 'og:locale:alternate',
       content: locale === 'ko' ? 'en_US' : 'ko_KR',
     })
-  }, [pathname])
+  }, [pathname, locale])
 
   return null
 }

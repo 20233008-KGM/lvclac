@@ -1,4 +1,5 @@
 import type { Locale } from './types'
+import { isPaidLanding } from './adLanding'
 
 export const STORAGE_KEY = 'leverage_locale'
 export const SESSION_DETECTED_KEY = 'leverage_locale_detected'
@@ -7,11 +8,12 @@ export const GEO_COOKIE = 'leverage_geo_country'
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : null
+  if (!match) return null
+  try { return decodeURIComponent(match[1]) } catch { return null }
 }
 
 export function localeFromCountry(country: string): Locale {
-  return country === 'KR' ? 'ko' : 'en'
+  return country.trim().toUpperCase() === 'KR' ? 'ko' : 'en'
 }
 
 export function localeFromBrowserLanguage(language: string): Locale {
@@ -39,6 +41,11 @@ export function detectInitialLocale(): Locale {
   const fromUrl = localeFromUrlParam()
   if (fromUrl) return fromUrl
 
+  // Paid arrivals must not inherit an old visit's language.
+  if (isPaidLanding(window.location.search)) {
+    return localeFromCountry(getCookie(GEO_COOKIE) ?? '')
+  }
+
   const fromPath = localeFromPathname(window.location.pathname)
   if (fromPath) return fromPath
 
@@ -61,6 +68,7 @@ export function detectInitialLocale(): Locale {
 export function shouldFetchGeo(): boolean {
   if (typeof window === 'undefined') return false
   if (localeFromUrlParam()) return false // ?lang 명시 시 geo 자동감지가 덮어쓰지 않도록
+  if (isPaidLanding(window.location.search)) return false
   if (localeFromPathname(window.location.pathname)) return false
   if (localStorage.getItem(STORAGE_KEY)) return false
   if (getCookie(GEO_COOKIE)) return false

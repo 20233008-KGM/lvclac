@@ -42,7 +42,15 @@
     <meta property="og:locale:alternate" content="en_US" />
     <script>
       ;(function () {
-        var locale = new URLSearchParams(window.location.search).get('lang')
+        var params = new URLSearchParams(window.location.search)
+        var locale = params.get('lang')
+        if (locale !== 'en' && locale !== 'ko') locale = null
+        var paidLanding = ['gclid', 'gbraid', 'wbraid'].some(function (key) { return params.has(key) }) ||
+          ['cpc', 'ppc', 'paidsearch', 'paid_search'].indexOf((params.get('utm_medium') || '').toLowerCase()) !== -1
+        if (!locale && paidLanding) {
+          var paidCountry = document.cookie.match(/(?:^|;\s*)leverage_geo_country=([^;]*)/)
+          locale = paidCountry && paidCountry[1].trim().toUpperCase() === 'KR' ? 'ko' : 'en'
+        }
         if (locale !== 'en' && locale !== 'ko') {
           var pathname = window.location.pathname
           locale =

@@ -14,7 +14,9 @@ describe('boot locale shell', () => {
       'leverage_geo_country=',
       'navigator.language',
     ]
-    const positions = signals.map((signal) => indexHtml.indexOf(signal))
+    const positions = signals.map((signal) => signal === 'leverage_geo_country='
+      ? indexHtml.lastIndexOf(signal)
+      : indexHtml.indexOf(signal))
 
     expect(positions.every((position) => position >= 0)).toBe(true)
     expect(positions).toEqual([...positions].sort((a, b) => a - b))

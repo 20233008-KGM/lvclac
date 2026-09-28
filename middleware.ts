@@ -1,6 +1,7 @@
 /// <reference types="node" />
 
 import { next } from '@vercel/functions'
+import { isPaidLanding } from './src/i18n/adLanding.js'
 import {
   ABOUT_PATH,
   COMPANY_PATH,
@@ -13,6 +14,7 @@ import {
   TERMS_PATH,
   UPDATES_PATH,
   localizedPublicPath,
+  isLocalizablePublicPath,
 } from './src/config/routes.js'
 
 const NO_INDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
@@ -107,10 +109,31 @@ export default function middleware(request: Request) {
   }
 
   const country = request.headers.get('x-vercel-ip-country') ?? ''
+  const landing = paidLandingRedirect(request, country)
+  if (landing) {
+    return new Response(null, {
+      status: 307,
+      headers: { Location: landing, 'Cache-Control': 'private, no-store' },
+    })
+  }
   const extraHeaders: Record<string, string> = {}
   if (shouldNoIndexPath(pathname)) Object.assign(extraHeaders, NO_INDEX_HEADERS)
   if (country) {
     extraHeaders['Set-Cookie'] = `leverage_geo_country=${encodeURIComponent(country)}; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`
   }
   return Object.keys(extraHeaders).length ? next({ headers: extraHeaders }) : next()
+}
+
+export function paidLandingRedirect(request: Request, country: string): string | null {
+  const url = new URL(request.url)
+  const lang = url.searchParams.get('lang')
+  if (!['GET', 'HEAD'].includes(request.method)
+    || !isLocalizablePublicPath(url.pathname)
+    || !isPaidLanding(url.search)
+    || lang === 'en' || lang === 'ko') return null
+
+  const locale = country.trim().toUpperCase() === 'KR' ? 'ko' : 'en'
+  url.pathname = localizedPublicPath(url.pathname, locale)
+  url.searchParams.set('lang', locale)
+  return url.toString()
 }

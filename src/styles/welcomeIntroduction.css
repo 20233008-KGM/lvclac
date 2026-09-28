@@ -1,6 +1,8 @@
 .trust-modal-overlay.trust-modal-overlay--introduction {
   align-items: center;
   padding: 16px;
+  background: rgb(3 7 18 / 24%);
+  backdrop-filter: blur(0.75px);
 }
 
 .trust-modal.trust-modal--introduction {
@@ -168,13 +170,6 @@
 
 @media (max-width: 620px) {
   .trust-modal--introduction .trust-modal__intro { margin-top: 6px; }
-}
-
-@media (max-width: 520px) {
-  .trust-modal-overlay.trust-modal-overlay--introduction {
-    background: rgb(3 7 18 / 24%);
-    backdrop-filter: blur(0.75px);
-  }
 }
 
 @media (max-width: 359px) {

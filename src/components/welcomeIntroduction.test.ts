@@ -66,11 +66,12 @@ describe('short welcome introduction', () => {
     expect(welcomeIntroductionExample.after.toleranceRate).toBeCloseTo(13.18181818, 8)
   })
 
-  it('keeps the mobile introduction overlay light enough to reveal the calculator', () => {
+  it('keeps the introduction overlay light enough to reveal the calculator', () => {
     const css = readFileSync(resolve('src/styles/welcomeIntroduction.css'), 'utf8')
 
     expect(css).toMatch(
-      /@media \(max-width: 520px\)[\s\S]*?\.trust-modal-overlay\.trust-modal-overlay--introduction \{[\s\S]*?background: rgb\(3 7 18 \/ 24%\);[\s\S]*?backdrop-filter: blur\(0\.75px\);/,
+      /\.trust-modal-overlay\.trust-modal-overlay--introduction \{[\s\S]*?background: rgb\(3 7 18 \/ 24%\);[\s\S]*?backdrop-filter: blur\(0\.75px\);/,
     )
+    expect(css).not.toContain('@media (max-width: 520px) {\n  .trust-modal-overlay.trust-modal-overlay--introduction')
   })
 })

@@ -172,8 +172,8 @@
 
 @media (max-width: 520px) {
   .trust-modal-overlay.trust-modal-overlay--introduction {
-    background: rgb(3 7 18 / 34%);
-    backdrop-filter: blur(1.5px);
+    background: rgb(3 7 18 / 24%);
+    backdrop-filter: blur(0.75px);
   }
 }
 

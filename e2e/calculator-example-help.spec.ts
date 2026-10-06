@@ -33,7 +33,15 @@ for (const locale of ['ko', 'en'] as const) {
       await expect(dialog).toHaveCount(0)
       for (let step = 0; step < 4; step++) {
         const preview = previews.nth(step)
-        const trigger = preview.locator('.calc-example__help-trigger')
+        // Panel padding and result headings must remain ordinary reading/scrolling areas.
+        for (const panel of ['.input-panel', '.result-panel']) {
+          const area = preview.locator(panel).first()
+          await area.scrollIntoViewIfNeeded()
+          const box = (await area.boundingBox())!
+          if (width === 360) await page.touchscreen.tap(box.x + 8, box.y + 8)
+          else await page.mouse.click(box.x + 8, box.y + 8)
+          await expect(dialog).toHaveCount(0)
+        }
         const field = preview.locator(step < 2 ? '.fh-equity input' : '.result-order-fields input').first()
         await field.scrollIntoViewIfNeeded()
         const bounds = (await field.boundingBox())!
@@ -51,11 +59,11 @@ for (const locale of ['ko', 'en'] as const) {
         await expect(preview.locator('fieldset')).toHaveAttribute('inert', '')
         await dialog.getByRole('button', { name: keepReading }).click()
         await expect(dialog).toHaveCount(0)
-        await expect(trigger).toBeFocused()
+        await expect(preview.locator('.calc-example__help-trigger:focus')).toHaveCount(1)
         await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scrollY, 0)
       }
 
-      const trigger = previews.first().locator('.calc-example__help-trigger')
+      const trigger = previews.first().locator('.calc-example__help-trigger').first()
       await trigger.focus()
       await trigger.press('Enter')
       await expect(dialog).toBeVisible()

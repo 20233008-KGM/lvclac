@@ -69,9 +69,6 @@
 .calc-example__interactive-preview { position: relative; }
 .calc-example__help-trigger {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   padding: 0;
   border: 0;
   border-radius: var(--radius-md);

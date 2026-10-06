@@ -3,6 +3,7 @@ import { useLanguage } from '../i18n'
 import { formatNumber } from '../utils/format'
 import { buildExampleStages, calculatorExamples } from './calculatorExampleScenarios'
 import { ReadOnlyCalculator } from './ReadOnlyCalculator'
+import { ExampleInputPreview } from './ExampleInputPreview'
 import { TrustModalFrame } from './TrustModalFrame'
 import type { CalculatorInputs, MarginInputMode } from '../types'
 import { calculatorExamplesCopy } from './calculatorExamplesCopy'
@@ -142,21 +143,16 @@ export function CalculatorExamples() {
             {index !== 1 && <p className="calc-example__focus-note"><span aria-hidden="true">◆</span> {copy.focusNotes[index].replaceAll('{count}', String(example.reduce)).replace('{margins}', marginFields)}</p>}
           </div>
           <figure className="calc-example__preview">
-            <div className="calc-example__interactive-preview">
+            <ExampleInputPreview label={`${copy.steps[index]} · ${copy.interaction.trigger}`}
+              onHelp={(event) => {
+                exampleScrollY.current = window.scrollY
+                event.currentTarget.focus({ preventScroll: true })
+                setShowExampleHelp(true)
+              }}>
               <ReadOnlyCalculator key={`${locale}-${example.id}-${marginMode}-${index}`} inputs={screen}
                 label={`${copy.products[example.id]} · ${copy.steps[index]}. ${summaries[index]}`}
                 showOrderInputs={index >= 2} />
-              {/* A real button outside the inert panel catches taps and keyboard activation.
-                  Native touch scrolling is preserved: only a completed click opens help. */}
-              <button type="button" className="calc-example__help-trigger"
-                aria-label={`${copy.steps[index]} · ${copy.interaction.trigger}`}
-                aria-haspopup="dialog"
-                onClick={(event) => {
-                  exampleScrollY.current = window.scrollY
-                  event.currentTarget.focus({ preventScroll: true })
-                  setShowExampleHelp(true)
-                }} />
-            </div>
+            </ExampleInputPreview>
             <figcaption>{summaries[index]}</figcaption>
           </figure>
         </li>)}

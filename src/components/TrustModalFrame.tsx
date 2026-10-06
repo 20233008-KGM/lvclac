@@ -6,7 +6,7 @@ import {
 import { createPortal } from 'react-dom'
 import { useModalFocusRestore } from '../hooks/useModalFocusRestore'
 
-type TrustModalVariant = 'service' | 'storage' | 'privacy' | 'introduction'
+type TrustModalVariant = 'service' | 'storage' | 'privacy' | 'introduction' | 'example'
 
 type TrustModalFrameProps = {
   variant: TrustModalVariant

@@ -16,7 +16,8 @@ import {
   setAdRequestsPaused,
   setPersonalizedAdRequestsAllowed,
 } from '../lib/adsense'
-import { initAnalytics } from '../lib/analytics'
+import { initAnalytics, stopOptionalAnalytics } from '../lib/analytics'
+import { restrictEarlyAnalyticsRoute, trackEarlyEvent } from '../lib/earlyAnalytics'
 import {
   applyGoogleConsentMode,
   decideGoogleConsent,
@@ -54,6 +55,7 @@ function queueGoogleCallback(key: string, callback: () => void): void {
 export function GoogleConsentProvider({ children }: { children: ReactNode }) {
   const { t } = useLanguage()
   const pathname = usePathname()
+  useEffect(() => { restrictEarlyAnalyticsRoute() }, [pathname])
   const firstVisitGateActive = useFirstVisitGateActive()
   const adFreePath = isAdFreePublicInfoPath(pathname)
   const [decision, setDecision] = useState<GoogleConsentDecision>(INITIAL_DECISION)
@@ -70,6 +72,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
     setPersonalizedAdRequestsAllowed(next.personalizedAdsAllowed)
     setAdRequestsPaused(!ADS_ENABLED || adFreePath || !next.adRequestsAllowed)
     if (next.analyticsAllowed) initAnalytics()
+    else if (next.ready) stopOptionalAnalytics()
   }, [adFreePath])
 
   useEffect(() => {
@@ -131,6 +134,7 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
 
   const choosePrivacyPreferences = useCallback(
     (preferences: PrivacyPreferences) => {
+      trackEarlyEvent('privacy_choice', { kind: preferences.analytics ? 'allow' : 'reject' })
       writePrivacyPreferences(localStorage, preferences)
       applyDecision({
         ready: true,
@@ -184,7 +188,14 @@ export function GoogleConsentProvider({ children }: { children: ReactNode }) {
 
   const copy = t.privacySettings
   const customSettingsVisible = settingsOpen || (deferredAutoOpen && !firstVisitGateActive)
+  useEffect(() => {
+    trackEarlyEvent('first_visit_gate', { visible: firstVisitGateActive })
+  }, [firstVisitGateActive])
+  useEffect(() => {
+    if (customSettingsVisible) trackEarlyEvent('privacy_notice_shown')
+  }, [customSettingsVisible])
   const closePrivacySettings = () => {
+    trackEarlyEvent('privacy_notice_dismissed')
     setDeferredAutoOpen(false)
     setSettingsOpen(false)
     setDetailsOpen(false)

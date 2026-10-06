@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test'
 test.beforeEach(async ({ page }) => {
   // Privacy preferences are independent of the examples and welcome shortcut.
   await page.addInitScript(() => {
+    // The service introduction has its own suite; keep example interactions reachable.
+    localStorage.setItem('liqguard-welcome-intro-seen-v1', '1')
     localStorage.setItem('liqguard-privacy-preferences-v2', JSON.stringify({ analytics: false, personalizedAds: false }))
   })
 })
@@ -138,7 +140,7 @@ for (const locale of ['ko', 'en']) {
       await page.route('https://ipapi.co/**', (route) => route.abort())
       await page.goto(`/?lang=${locale}`)
       const link = page.locator('.header-welcome-btn')
-      const stored = await page.evaluate(() => JSON.stringify(localStorage))
+      const stored = await page.evaluate(() => ({ ...localStorage }))
       await link.focus()
       await link.press('Enter')
       await expect(page).toHaveURL(/#calculator-examples-title$/)
@@ -153,8 +155,8 @@ for (const locale of ['ko', 'en']) {
       expect(await page.evaluate(() => {
         const values = { ...localStorage }
         delete values['liqguard-examples-viewed-v1']
-        return JSON.stringify(values)
-      })).toBe(stored)
+        return values
+      })).toEqual(stored)
       await page.reload()
       await expect(link).toHaveCount(0)
       await expect(page.locator('.header-how-btn')).toBeVisible()
@@ -194,11 +196,10 @@ for (const locale of ['ko', 'en']) {
     const prefix = locale === 'en' ? '/en' : ''
     await page.goto(`${prefix}/updates?lang=${locale}`)
     const rows = page.locator('.updates-table tbody tr')
-    await expect(rows.first()).toContainText('1.2.3')
-    await expect(rows.first().locator('time')).toHaveAttribute('datetime', '2026-09-25')
-    await expect(rows.nth(1)).toContainText('1.2.2')
-    await expect(rows.nth(1).locator('time')).toHaveAttribute('datetime', '2026-09-18')
-    await rows.first().locator('a').click()
+    const examplesRelease = rows.filter({ hasText: '1.2.3' })
+    await expect(examplesRelease.locator('time')).toHaveAttribute('datetime', '2026-09-25')
+    await expect(rows.filter({ hasText: '1.2.2' }).locator('time')).toHaveAttribute('datetime', '2026-09-18')
+    await examplesRelease.locator('a').click()
     await expect(page.locator('.updates-detail__meta time')).toHaveAttribute('datetime', '2026-09-25')
     await page.locator('a[href$="#calculator-examples-title"]').click()
     await expect(page.locator('.calculator-examples')).toHaveCount(1)

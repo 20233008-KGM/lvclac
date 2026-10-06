@@ -218,7 +218,7 @@ function CalculatorApp() {
               <header className="app-header">
                 <div className="header-left">
                   <div className="site-title-row">
-                    <h1>{t.siteTitle}</h1>
+                    <h1 id="calculator-title" tabIndex={-1}>{t.siteTitle}</h1>
                     {isDevDeployment && <span className="deployment-badge">DEV</span>}
                     <SiteTitleTooltip />
                   </div>

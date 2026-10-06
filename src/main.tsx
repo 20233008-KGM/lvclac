@@ -5,6 +5,9 @@ import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { CalculatorProvider } from './context/CalculatorContext.tsx'
 import { LanguageProvider } from './i18n'
+import { analyticsExcluded, startEarlyAnalytics } from './lib/earlyAnalytics'
+
+try { startEarlyAnalytics() } catch { /* Analytics failure must never block the calculator. */ }
 
 const Analytics = lazy(() =>
   import('@vercel/analytics/react').then((mod) => ({ default: mod.Analytics })),
@@ -17,7 +20,7 @@ createRoot(document.getElementById('root')!).render(
         <CalculatorProvider>
           <App />
           <Suspense fallback={null}>
-            <Analytics />
+            <Analytics beforeSend={event => analyticsExcluded() ? null : event} />
           </Suspense>
         </CalculatorProvider>
       </AuthProvider>

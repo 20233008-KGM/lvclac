@@ -18,7 +18,7 @@ export const calculatorExamplesCopy = {
     readOnly: '보기 전용 계산기',
     interaction: {
       eyebrow: '보기 전용 예제',
-      title: '직접 계산해 보세요',
+      title: '내 숫자로 계산하기',
       body: '이 화면은 계산 과정을 보여주는 예제예요.\n내 숫자는 계산기에서 입력할 수 있어요.',
       openCalculator: '계산기로 이동',
       keepReading: '예제 계속 보기',
@@ -62,7 +62,7 @@ export const calculatorExamplesCopy = {
     readOnly: 'Read-only calculator',
     interaction: {
       eyebrow: 'Read-only example',
-      title: 'Try your own numbers',
+      title: 'Calculating with your own numbers',
       body: 'This example shows how the calculation works.\nEnter your own numbers in the calculator.',
       openCalculator: 'Go to calculator',
       keepReading: 'Keep viewing examples',

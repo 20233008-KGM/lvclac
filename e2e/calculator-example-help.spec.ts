@@ -24,7 +24,7 @@ for (const locale of ['ko', 'en'] as const) {
       const liveEquity = page.locator('#calculator .fh-equity input')
       await expect(liveEquity).toHaveValue('123,456')
       const stored = await page.evaluate(() => localStorage.getItem('leverage_calculator_draft'))
-      const title = locale === 'ko' ? '직접 계산해 보세요' : 'Try your own numbers'
+      const title = locale === 'ko' ? '내 숫자로 계산하기' : 'Calculating with your own numbers'
       const dialog = page.getByRole('dialog', { name: title, exact: true })
       const keepReading = locale === 'ko' ? '예제 계속 보기' : 'Keep viewing examples'
       const openCalculator = locale === 'ko' ? '계산기로 이동' : 'Go to calculator'

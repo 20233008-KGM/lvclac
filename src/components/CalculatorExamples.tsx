@@ -87,9 +87,9 @@ export function CalculatorExamples() {
     }
     // Let the dialog restore focus and release its scroll lock before moving away.
     requestAnimationFrame(() => {
-      const input = document.querySelector<HTMLInputElement>('#calculator .fh-equity input')
-      input?.focus({ preventScroll: true })
-      const target = input?.closest('.input-panel') ?? document.getElementById('calculator')
+      // Navigation must not activate protected fields or open the mobile keyboard.
+      document.getElementById('calculator-title')?.focus({ preventScroll: true })
+      const target = document.getElementById('calculator')
       target?.scrollIntoView({
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
         block: 'start',

@@ -14,7 +14,7 @@ for (const locale of ['ko', 'en'] as const) {
         localStorage.setItem('leverage_save_enabled', '1')
         localStorage.setItem('leverage_calculator_draft', JSON.stringify({
           mode: 'evaluate', positionSide: 'long', accountEval: 123456,
-          contracts: 3, currentPrice: 120, contractMultiplier: 10,
+          contracts: 3, currentPrice: 120, contractMultiplier: 10, contractAmount: 1200,
           marginInputMode: 'rate', maintenanceMarginRate: 0.1, entrustedMarginRate: 0.2,
         }))
       })
@@ -71,13 +71,14 @@ for (const locale of ['ko', 'en'] as const) {
       await dialog.getByRole('button', { name: openCalculator }).click()
       await expect(dialog).toHaveCount(0)
       await expect(page).toHaveURL(/#calculator$/)
-      await expect(liveEquity).toBeFocused()
-      await expect(liveEquity).toBeInViewport()
+      await expect(page.locator('#calculator-title')).toBeFocused()
+      await expect(page.locator('#calculator-title')).toBeInViewport()
+      await expect(page.locator('#account-setting-guard-title')).toHaveCount(0)
       await expect(liveEquity).toHaveValue('123,456')
       expect(await page.evaluate(() => localStorage.getItem('leverage_calculator_draft'))).toBe(stored)
-      await liveEquity.fill('234567')
-      await liveEquity.press('Tab')
-      await expect(liveEquity).toHaveValue('234,567')
+      // A saved, complete account remains protected until the user explicitly edits it.
+      await liveEquity.focus()
+      await expect(page.locator('#account-setting-guard-title')).toBeVisible()
       expect(errors).toEqual([])
     })
   }

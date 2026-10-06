@@ -84,7 +84,7 @@ it('shares one loader with an optional GA4 destination', async () => {
   ])
 })
 
-it('tracks anonymous calculator events through Vercel and configured GA4', async () => {
+it('keeps GA4 blocked before analytics consent while retaining aggregate Vercel events', async () => {
   vi.stubEnv('VITE_GA4_MEASUREMENT_ID', 'G-TEST123456')
   const queue: unknown[] = []
   const gtag = (...args: unknown[]) => queue.push(args)
@@ -101,14 +101,7 @@ it('tracks anonymous calculator events through Vercel and configured GA4', async
     mode: 'evaluate',
     field_count: 7,
   })
-  expect(queue).toContainEqual([
-    'event',
-    'calculation_result_viewed',
-    {
-      mode: 'evaluate',
-      field_count: 7,
-    },
-  ])
+  expect(queue).toEqual([])
 })
 
 it('sends Google Ads conversions only when the matching label is configured', async () => {

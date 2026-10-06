@@ -1,5 +1,6 @@
 import posthog from 'posthog-js'
 import { track } from '@vercel/analytics'
+import { analyticsExcluded, setEarlyAnalyticsConsent } from './earlyAnalytics'
 
 const GA4_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID?.trim() || undefined
 const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID?.trim() || undefined
@@ -27,6 +28,7 @@ type GoogleAdsConversionOptions = {
 
 let initialized = false
 let posthogInitialized = false
+let analyticsAllowed = false
 
 function initGoogleMeasurement(): void {
   window.dataLayer = window.dataLayer || []
@@ -61,6 +63,8 @@ function initMicrosoftClarity(): void {
     ;(window.clarity!.q = window.clarity!.q || []).push(arguments)
   }
 
+  window.clarity('consentv2', { analytics_Storage: 'granted', ad_Storage: 'denied' })
+
   const script = document.createElement('script')
   script.id = CLARITY_SCRIPT_ID
   script.async = true
@@ -85,7 +89,7 @@ function initPostHog(): void {
     ],
     session_recording: {
       maskAllInputs: true,
-      maskTextSelector: 'input, textarea, select, [contenteditable="true"], .ph-mask',
+      maskTextSelector: 'input, textarea, select, [contenteditable="true"], .ph-mask, [data-clarity-mask]',
       blockSelector: '[data-ph-no-capture], .ph-no-capture',
     },
     respect_dnt: true,
@@ -139,12 +143,31 @@ function capturePostHogEvent(name: string, properties: AnalyticsProperties): voi
 }
 
 export function initAnalytics(): void {
-  if (initialized || typeof window === 'undefined') return
+  if (analyticsExcluded()) return
+  const wasAllowed = analyticsAllowed
+  analyticsAllowed = true
+  setEarlyAnalyticsConsent('granted')
+  if (initialized) {
+    if (!wasAllowed && posthogInitialized) {
+      posthog.opt_in_capturing()
+      posthog.startSessionRecording()
+    }
+    return
+  }
 
   initialized = true
   initGoogleMeasurement()
   initMicrosoftClarity()
   initPostHog()
+}
+
+export function stopOptionalAnalytics(): void {
+  analyticsAllowed = false
+  setEarlyAnalyticsConsent('denied')
+  if (posthogInitialized) {
+    posthog.stopSessionRecording()
+    posthog.opt_out_capturing()
+  }
 }
 
 function cleanProperties(properties: AnalyticsProperties = {}): AnalyticsProperties {
@@ -159,16 +182,16 @@ export function trackLiqGuardEvent(
   name: string,
   properties: AnalyticsProperties = {},
 ): void {
-  if (typeof window === 'undefined') return
+  if (analyticsExcluded()) return
 
   const clean = cleanProperties(properties)
   track(name, clean)
 
-  if (GA4_ID && typeof window.gtag === 'function') {
+  if (analyticsAllowed && GA4_ID && typeof window.gtag === 'function') {
     window.gtag('event', name, clean)
   }
 
-  if (posthogInitialized) {
+  if (analyticsAllowed && posthogInitialized) {
     capturePostHogEvent(name, clean)
   }
 }
@@ -177,7 +200,7 @@ export function trackGoogleAdsConversion(
   name: GoogleAdsConversionName,
   options: GoogleAdsConversionOptions = {},
 ): void {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
+  if (analyticsExcluded() || typeof window.gtag !== 'function') return
 
   const label = GOOGLE_ADS_CONVERSION_LABELS[name]
   if (!label) return

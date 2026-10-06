@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test'
 test.beforeEach(async ({ page }) => {
   // Privacy preferences are independent of the examples and welcome shortcut.
   await page.addInitScript(() => {
+    // The service introduction has its own suite; keep example interactions reachable.
+    localStorage.setItem('liqguard-welcome-intro-seen-v1', '1')
     localStorage.setItem('liqguard-privacy-preferences-v2', JSON.stringify({ analytics: false, personalizedAds: false }))
   })
 })

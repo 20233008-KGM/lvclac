@@ -65,3 +65,26 @@
 
 /* Leave room for the eyebrow above the heading, including direct hash navigation. */
 #calculator-examples-title { scroll-margin-top: 72px; }
+
+.calc-example__interactive-preview { position: relative; }
+.calc-example__help-trigger {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+}
+.trust-modal--example { max-width: 440px; }
+.trust-modal--example .trust-modal__body { display: none; }
+.trust-modal--example .trust-modal__header { grid-template-columns: minmax(0, 1fr); padding-right: 48px; border-bottom: 0; }
+.example-help__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.example-help__actions .btn { width: 100%; min-height: 44px; white-space: normal; }
+#calculator .input-panel { scroll-margin-top: 24px; }
+@media (max-width: 480px) {
+  .example-help__actions { grid-template-columns: minmax(0, 1fr); }
+  .example-help__actions .btn-primary { order: -1; }
+}

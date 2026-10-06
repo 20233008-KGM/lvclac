@@ -12,6 +12,7 @@ for (const locale of ['ko', 'en']) {
       await page.setViewportSize({ width, height: 900 })
       await page.route('https://ipapi.co/**', (route) => route.abort())
       await page.addInitScript(() => {
+        localStorage.setItem('liqguard-welcome-intro-seen-v1', '1')
         localStorage.setItem('liqguard-privacy-preferences-v2', JSON.stringify({ analytics: false, personalizedAds: false }))
         localStorage.setItem('leverage_public_draft_migrated_v1', '1')
         localStorage.setItem('leverage_save_enabled', '1')

@@ -3,6 +3,7 @@ import { useLanguage } from '../i18n'
 import { formatNumber } from '../utils/format'
 import { buildExampleStages, calculatorExamples } from './calculatorExampleScenarios'
 import { ReadOnlyCalculator } from './ReadOnlyCalculator'
+import { TrustModalFrame } from './TrustModalFrame'
 import type { CalculatorInputs, MarginInputMode } from '../types'
 import { calculatorExamplesCopy } from './calculatorExamplesCopy'
 import '../styles/calculatorExamples.css'
@@ -14,6 +15,8 @@ export function CalculatorExamples() {
   const copy = calculatorExamplesCopy[locale]
   const [selected, setSelected] = useState(0)
   const [marginMode, setMarginMode] = useState<MarginInputMode>('rate')
+  const [showExampleHelp, setShowExampleHelp] = useState(false)
+  const exampleScrollY = useRef(0)
   const marginButtons = useRef<(HTMLButtonElement | null)[]>([])
   const tabs = useRef<(HTMLButtonElement | null)[]>([])
   const example = calculatorExamples[selected]
@@ -71,6 +74,29 @@ export function CalculatorExamples() {
     marginButtons.current[next]?.focus()
   }
 
+  function closeExampleHelp() {
+    setShowExampleHelp(false)
+    // Restoring focus to a tall preview must not move the reader to its middle.
+    requestAnimationFrame(() => window.scrollTo({ top: exampleScrollY.current, behavior: 'instant' }))
+  }
+
+  function openLiveCalculator() {
+    setShowExampleHelp(false)
+    if (window.location.hash !== '#calculator') {
+      window.history.pushState(null, '', '#calculator')
+    }
+    // Let the dialog restore focus and release its scroll lock before moving away.
+    requestAnimationFrame(() => {
+      const input = document.querySelector<HTMLInputElement>('#calculator .fh-equity input')
+      input?.focus({ preventScroll: true })
+      const target = input?.closest('.input-panel') ?? document.getElementById('calculator')
+      target?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+        block: 'start',
+      })
+    })
+  }
+
   return <section className="calculator-examples" aria-labelledby="calculator-examples-title">
     <header className="calculator-examples__header">
       <span className="calculator-examples__eyebrow">LiqGuard · EXAMPLES</span>
@@ -116,14 +142,43 @@ export function CalculatorExamples() {
             {index !== 1 && <p className="calc-example__focus-note"><span aria-hidden="true">◆</span> {copy.focusNotes[index].replaceAll('{count}', String(example.reduce)).replace('{margins}', marginFields)}</p>}
           </div>
           <figure className="calc-example__preview">
-            <ReadOnlyCalculator key={`${locale}-${example.id}-${marginMode}-${index}`} inputs={screen}
-              label={`${copy.products[example.id]} · ${copy.steps[index]}. ${summaries[index]}`}
-              showOrderInputs={index >= 2} />
+            <div className="calc-example__interactive-preview">
+              <ReadOnlyCalculator key={`${locale}-${example.id}-${marginMode}-${index}`} inputs={screen}
+                label={`${copy.products[example.id]} · ${copy.steps[index]}. ${summaries[index]}`}
+                showOrderInputs={index >= 2} />
+              {/* A real button outside the inert panel catches taps and keyboard activation.
+                  Native touch scrolling is preserved: only a completed click opens help. */}
+              <button type="button" className="calc-example__help-trigger"
+                aria-label={`${copy.steps[index]} · ${copy.interaction.trigger}`}
+                aria-haspopup="dialog"
+                onClick={(event) => {
+                  exampleScrollY.current = window.scrollY
+                  event.currentTarget.focus({ preventScroll: true })
+                  setShowExampleHelp(true)
+                }} />
+            </div>
             <figcaption>{summaries[index]}</figcaption>
           </figure>
         </li>)}
       </ol>
       <p className="calculator-examples__assumptions">{copy.rounding}</p>
     </div>
+    {showExampleHelp && <TrustModalFrame
+      variant="example"
+      titleId="example-help-title"
+      descriptionId="example-help-description"
+      title={copy.interaction.title}
+      intro={copy.interaction.body}
+      closeLabel={copy.interaction.close}
+      onRequestClose={closeExampleHelp}
+      footer={<div className="example-help__actions">
+        <button type="button" className="btn btn-ghost" onClick={closeExampleHelp}>
+          {copy.interaction.keepReading}
+        </button>
+        <button type="button" className="btn btn-primary" onClick={openLiveCalculator}>
+          {copy.interaction.openCalculator} <span aria-hidden="true">→</span>
+        </button>
+      </div>}
+    >{null}</TrustModalFrame>}
   </section>
 }

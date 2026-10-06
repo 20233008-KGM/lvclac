@@ -75,11 +75,30 @@
   background: transparent;
   cursor: pointer;
 }
-.trust-modal--example { max-width: 440px; }
+.trust-modal-overlay.trust-modal-overlay--example {
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  background: rgb(3 7 18 / 28%);
+  backdrop-filter: blur(2px);
+}
+.trust-modal.trust-modal--example {
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 24px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-primary) 7%, var(--color-bg-elevated)), var(--color-bg-elevated) 65%);
+  box-shadow: 0 24px 64px -20px rgb(0 0 0 / 55%);
+}
 .trust-modal--example .trust-modal__body { display: none; }
-.trust-modal--example .trust-modal__header { grid-template-columns: minmax(0, 1fr); padding-right: 48px; border-bottom: 0; }
+.trust-modal--example .trust-modal__header { display: block; flex-shrink: 0; padding: 28px 24px 20px; border-bottom: 0; }
+.trust-modal--example .trust-modal__icon { width: 44px; height: 44px; margin-bottom: 16px; border-radius: 14px; }
+.trust-modal--example .trust-modal__icon svg { width: 24px; height: 24px; }
+.trust-modal--example .trust-modal__title { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -.035em; line-height: 1.4; }
+.trust-modal--example .trust-modal__intro { margin-top: 10px; font-size: 14px; line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere; }
+.trust-modal--example .trust-modal__close { width: 44px; height: 44px; top: 10px; right: 10px; border-radius: 50%; }
+.trust-modal--example .trust-modal__footer { flex-shrink: 0; padding: 0 24px 24px; border-top: 0; }
 .example-help__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.example-help__actions .btn { width: 100%; min-height: 44px; white-space: normal; }
+.example-help__actions .btn { width: 100%; min-height: 48px; border-radius: 12px; white-space: normal; }
 #calculator .input-panel { scroll-margin-top: 24px; }
 @media (max-width: 480px) {
   .example-help__actions { grid-template-columns: minmax(0, 1fr); }

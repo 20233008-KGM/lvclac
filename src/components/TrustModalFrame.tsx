@@ -102,7 +102,7 @@ export function TrustModalFrame({
 
   const modal = (
     <div
-      className={`disclaimer-overlay trust-modal-overlay${variant === 'introduction' ? ' trust-modal-overlay--introduction' : ''}`}
+      className={`disclaimer-overlay trust-modal-overlay trust-modal-overlay--${variant}`}
       role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget) closeHandlerRef.current?.()

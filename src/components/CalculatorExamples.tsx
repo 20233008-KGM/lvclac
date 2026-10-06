@@ -164,6 +164,7 @@ export function CalculatorExamples() {
       titleId="example-help-title"
       descriptionId="example-help-description"
       title={copy.interaction.title}
+      icon={<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="3" /><path d="M8 7h8M8 11h2m4 0h2m-8 4h2m4 0h2m-8 3h2m4 0h2" /></svg>}
       intro={copy.interaction.body}
       closeLabel={copy.interaction.close}
       onRequestClose={closeExampleHelp}

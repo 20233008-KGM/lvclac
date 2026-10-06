@@ -3,9 +3,9 @@ import { expect, test } from '@playwright/test'
 test.use({ hasTouch: true })
 
 for (const locale of ['ko', 'en'] as const) {
-  for (const width of [360, 1440]) {
+  for (const width of [320, 360, 390, 844, 1440]) {
     test(`${locale} ${width}: example taps explain read-only mode and reach the live calculator`, async ({ page }, testInfo) => {
-      await page.setViewportSize({ width, height: width === 360 ? 656 : 900 })
+      await page.setViewportSize({ width, height: width === 844 ? 390 : width <= 390 ? 656 : 900 })
       await page.route('https://ipapi.co/**', route => route.abort())
       await page.addInitScript(() => {
         localStorage.setItem('liqguard-welcome-intro-seen-v1', '1')
@@ -55,6 +55,13 @@ for (const locale of ['ko', 'en'] as const) {
         await expect(dialog.getByRole('heading', { name: title })).toBeFocused()
         await expect(dialog.getByRole('button', { name: openCalculator })).toBeInViewport()
         expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+        const card = (await dialog.boundingBox())!
+        const viewport = page.viewportSize()!
+        expect(card.x).toBeGreaterThanOrEqual(20)
+        expect(viewport.width - card.x - card.width).toBeGreaterThanOrEqual(20)
+        expect(card.y).toBeGreaterThanOrEqual(20)
+        expect(viewport.height - card.y - card.height).toBeGreaterThanOrEqual(19)
+        expect(await dialog.evaluate(el => getComputedStyle(el).borderBottomLeftRadius)).toBe('24px')
         if (step === 0) await page.screenshot({ path: testInfo.outputPath('example-help.png') })
         await expect(preview.locator('fieldset')).toHaveAttribute('inert', '')
         await dialog.getByRole('button', { name: keepReading }).click()

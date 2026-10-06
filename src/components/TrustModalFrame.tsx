@@ -11,7 +11,7 @@ type TrustModalVariant = 'service' | 'storage' | 'privacy' | 'introduction' | 'e
 type TrustModalFrameProps = {
   variant: TrustModalVariant
   titleId: string
-  eyebrow?: string
+  eyebrow?: ReactNode
   title: string
   intro: string
   icon?: ReactNode

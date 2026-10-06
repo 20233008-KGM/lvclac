@@ -164,16 +164,20 @@ export function CalculatorExamples() {
       titleId="example-help-title"
       descriptionId="example-help-description"
       title={copy.interaction.title}
-      icon={<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="3" /><path d="M8 7h8M8 11h2m4 0h2m-8 4h2m4 0h2m-8 3h2m4 0h2" /></svg>}
+      eyebrow={<span className="example-help__label">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+        {copy.interaction.eyebrow}
+      </span>}
       intro={copy.interaction.body}
       closeLabel={copy.interaction.close}
       onRequestClose={closeExampleHelp}
       footer={<div className="example-help__actions">
+        <button type="button" className="btn btn-primary" onClick={openLiveCalculator}>
+          {copy.interaction.openCalculator}
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 17 10-10M7 7h10v10" /></svg>
+        </button>
         <button type="button" className="btn btn-ghost" onClick={closeExampleHelp}>
           {copy.interaction.keepReading}
-        </button>
-        <button type="button" className="btn btn-primary" onClick={openLiveCalculator}>
-          {copy.interaction.openCalculator} <span aria-hidden="true">→</span>
         </button>
       </div>}
     >{null}</TrustModalFrame>}

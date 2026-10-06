@@ -24,10 +24,10 @@ for (const locale of ['ko', 'en'] as const) {
       const liveEquity = page.locator('#calculator .fh-equity input')
       await expect(liveEquity).toHaveValue('123,456')
       const stored = await page.evaluate(() => localStorage.getItem('leverage_calculator_draft'))
-      const title = locale === 'ko' ? '설명용 예제입니다' : 'This is a read-only example'
+      const title = locale === 'ko' ? '직접 계산해 보세요' : 'Try your own numbers'
       const dialog = page.getByRole('dialog', { name: title, exact: true })
       const keepReading = locale === 'ko' ? '예제 계속 보기' : 'Keep viewing examples'
-      const openCalculator = locale === 'ko' ? '실제 계산기 열기' : 'Open live calculator'
+      const openCalculator = locale === 'ko' ? '계산기로 이동' : 'Go to calculator'
       const previews = page.locator('.calc-example__interactive-preview')
 
       await expect(dialog).toHaveCount(0)
@@ -52,6 +52,7 @@ for (const locale of ['ko', 'en'] as const) {
         if (width === 360) await page.touchscreen.tap(x, y)
         else await page.mouse.click(x, y)
         await expect(dialog).toBeVisible()
+        await expect(dialog).not.toContainText(locale === 'ko' ? '기존에 입력한 값' : 'Your existing inputs')
         await expect(dialog.getByRole('heading', { name: title })).toBeFocused()
         await expect(dialog.getByRole('button', { name: openCalculator })).toBeInViewport()
         expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
@@ -61,7 +62,7 @@ for (const locale of ['ko', 'en'] as const) {
         expect(viewport.width - card.x - card.width).toBeGreaterThanOrEqual(20)
         expect(card.y).toBeGreaterThanOrEqual(20)
         expect(viewport.height - card.y - card.height).toBeGreaterThanOrEqual(19)
-        expect(await dialog.evaluate(el => getComputedStyle(el).borderBottomLeftRadius)).toBe('24px')
+        expect(await dialog.evaluate(el => getComputedStyle(el).borderBottomLeftRadius)).toBe('20px')
         if (step === 0) await page.screenshot({ path: testInfo.outputPath('example-help.png') })
         await expect(preview.locator('fieldset')).toHaveAttribute('inert', '')
         await dialog.getByRole('button', { name: keepReading }).click()
@@ -75,7 +76,7 @@ for (const locale of ['ko', 'en'] as const) {
       await trigger.press('Enter')
       await expect(dialog).toBeVisible()
       await page.keyboard.press('Shift+Tab')
-      await expect(dialog.getByRole('button', { name: openCalculator })).toBeFocused()
+      await expect(dialog.getByRole('button', { name: keepReading })).toBeFocused()
       await page.keyboard.press('Tab')
       await expect(dialog.getByRole('button', { name: locale === 'ko' ? '닫기' : 'Close', exact: true })).toBeFocused()
       await page.keyboard.press('Escape')
